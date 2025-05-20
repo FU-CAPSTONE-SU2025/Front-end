@@ -1,7 +1,8 @@
 import React from 'react'
 
-export default function Dummy() {
+ const Dummy: React.FC = ()=> {
   return (
     <div>dummy</div>
   )
 }
+export default Dummy

@@ -9,3 +9,5 @@ export const useAuths = create<AuthState>((set) => ({
     logout: () => set({ isAuthenticated: false, userRole: null }),
     setUserRole: (role) => set({ userRole: role }),
   }));
+  // Utility to access store state outside of React components
+export const getAuthState = () => useAuths.getState();

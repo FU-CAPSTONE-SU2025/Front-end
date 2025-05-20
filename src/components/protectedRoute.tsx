@@ -1,21 +1,19 @@
-// src/components/ProtectedRoute.tsx
-import { Navigate, useLocation } from 'react-router';
-import { useAuths } from '../hooks/useAuths';
-import { ProtectedRouteProps } from '../interface/IAuthen';
+// src/router/authLoader.ts
+import { redirect } from 'react-router';
+import { getAuthState } from '../hooks/useAuths';
 
+export const protectedLoader = (allowedRoles: string[]) => {
+  return () => {
+    const { isAuthenticated, userRole } = getAuthState();
 
+    if (!isAuthenticated) {
+      return redirect('/login');
+    }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ component: Component, allowedRoles }) => {
-  const { isAuthenticated, userRole } = useAuths();
-  const location = useLocation();
+    if (userRole && !allowedRoles.includes(userRole)) {
+      return redirect('/404');
+    }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (userRole && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/404" replace />;
-  }
-
-  return <Component />;
+    return null; // Proceed to render the route
+  };
 };
