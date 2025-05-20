@@ -1,0 +1,128 @@
+
+  .backgroundImage {
+    width: 150%;
+    height: 100%;
+    object-fit: cover;
+    position: fixed;
+    top: 0;
+    left: 0;
+    animation: slide 60s linear infinite;
+    transition: filter 0.3s ease-in-out;
+  }
+  
+  .container {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    align-self: center;
+  }
+  
+  .registerCard {
+    width: 30vw;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.8); /* semi-transparent white */
+    backdrop-filter: blur(1px); /* blur effect */
+    padding: 24px;
+    text-align: center;
+  }
+  
+  .title {
+    color: #363636 !important;
+    margin-bottom: 16px;
+  }
+  
+  .description {
+    color: #242424 !important;
+    margin-bottom: 24px;
+    font-size: 16px;
+  }
+  
+  .submitButton {
+    background-color: #ff3b3b !important;
+    border-color: #ff3b3b !important;
+    width: 100%;
+  }
+  
+  .submitButton:hover {
+    background-color: #ff2a2a !important;
+    border-color: #ff2a2a !important;
+  }
+  
+  .loginLink {
+    color: #242424 !important;
+    font-size: 14px;
+  }
+  
+  .loginLink:hover {
+    color: #ff2a2a !important;
+  }
+  
+  @media (max-width: 768px) {
+    .container {
+      position: static;
+      min-height: 100vh;
+      width: 100%;
+      left: 0;
+      top: 0;
+      justify-content: center;
+      align-items: center;
+    }
+  
+    .registerCard {
+      width: 90vw;
+    }
+  }
+
+
+  
+  @media (max-width: 768px) {
+    .container {
+      position: static;
+      min-height: 100vh;
+      width: 100%;
+      left: 0;
+      top: 0;
+      justify-content: center;
+      align-items: center;
+    }
+  
+    .loginCard {
+      width: 90vw;
+    }
+  }
+
+  @keyframes slide {
+    0% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(-33.33%); 
+    }
+    100% {
+        transform: translateX(0); 
+      }
+  }
+  
+  @media (max-width: 768px) {
+    .container {
+      flex-direction: column;
+    }
+  
+    .leftSide,
+    .leftSideHovered {
+      flex: 0 0 40%;
+      min-height: 200px;
+    }
+  
+    .rightSide,
+    .rightSideHovered {
+      flex: 0 0 60%;
+    }
+  }
