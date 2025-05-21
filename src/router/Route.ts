@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router";
 import Dummy from "../pages/dummy";
 import NotFound from "../pages/notfound";
 import { protectedLoader } from "../components/protectedRoute";
+import Login from "../pages/common/login";
 
 export const routes = createBrowserRouter([
     {
@@ -37,7 +38,7 @@ export const routes = createBrowserRouter([
     },
     {
         path:"/",
-        Component: Dummy,
+        Component: Login,
     },
     {
         // path:"/login",
