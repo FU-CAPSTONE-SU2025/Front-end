@@ -9,5 +9,22 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // This is the extra step to deploy on github, in case something f-up
+      // So, basically, GithubPage can help you deploy a static page. However to deploy a SPA, we need to do a bit different.
+      // Please check the Vite.config.ts file for the extra routing line
+      // the JS below is to help with the redirection page in case user reload the web. If reload, the web will lost the route and return to the 404 page
+      // Lucky for us, the sessionStorage will check that and redirect us back to the main homepage (if possible)
+      // the app's root is loaded, and the correct path is then handled by the SPA router.
+      //Alternative method: npm install @sctg/vite-plugin-github-pages-spa --save-dev
+      //This package will do all of that for you, but still, check the  Vite.config.ts file for the added part
+      (function () {
+        const redirect = sessionStorage.getItem('redirect');
+        if (redirect) {
+          sessionStorage.removeItem('redirect');
+          history.replaceState(null, null, redirect); // no data, no unused probably safe :>
+        }
+      })();
+    </script>
   </body>
 </html>
