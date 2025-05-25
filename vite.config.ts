@@ -13,5 +13,6 @@ export default defineConfig({
   ],
   base: '/Front-end/',
   //this too is the added part
+  // The repo name aka github base url, maybe lol
   
 })
