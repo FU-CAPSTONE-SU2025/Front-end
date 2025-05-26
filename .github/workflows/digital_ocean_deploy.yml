@@ -48,3 +48,5 @@ jobs:
         # 2. pull the latest image
         # 3. check - stop - remove any currently running instance of the containers
         # 4. Update and re-run the container with the lastest update/code with the config-ed port, check the nginx file for port number.
+        # Noted: ${{secrets.SSH_KEY}} is the SSH PRIVATE KEY, aka the -----BEGIN OPENSSH PRIVATE KEY-----
+        ## While the DigitalOcean Key you input is the PUBLIC KEY, don't mistake
