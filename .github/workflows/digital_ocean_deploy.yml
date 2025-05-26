@@ -47,4 +47,4 @@ jobs:
         # 1. Connect to the droplet docker app, login with username and password
         # 2. pull the latest image
         # 3. check - stop - remove any currently running instance of the containers
-        # 4. Update and re-run the container with the lastest update/code with the config-ed port, check the nginx file for port number
+        # 4. Update and re-run the container with the lastest update/code with the config-ed port, check the nginx file for port number,
