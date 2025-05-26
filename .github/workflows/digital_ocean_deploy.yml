@@ -50,4 +50,4 @@ jobs:
         # 4. Update and re-run the container with the lastest update/code with the config-ed port, check the nginx file for port number.
         # Noted: ${{secrets.SSH_KEY}} is the SSH PRIVATE KEY, aka the -----BEGIN OPENSSH PRIVATE KEY-----
         ## While the DigitalOcean Key you input is the PUBLIC KEY, don't mistake
-        # Extra Noted: port 5173(port on server):5173(port on docker, this instance is Nginx config as 5173) is as follow:
+        # Extra Noted: port 5173(port on server):5173(port on docker, this instance is Nginx config as 5173), because Nginx is being config to run on port 5173, not the default 80. Adjust accordingly
