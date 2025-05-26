@@ -23,7 +23,7 @@ jobs:
         # The account is store in the ball, github secret key - only I know it, lol
 
       - name: Push container to Docker Image
-        run: docker/build-push-action@v6
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
