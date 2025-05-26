@@ -30,9 +30,9 @@ jobs:
           push: true
           tags: ${{secrets.DOCKER_USERNAME}}/ai-sea:latest
         # Push to containerize by running the script Dockerfile, check the code folder to see that file, also the Nginx config
-        
+
       - name: Connect and Deploy to the DigitalOcean Droplet Ubuntu VM
-        uses: appleboy/ssh-action#v1.0.3
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{secrets.SSH_HOST}}
           username: ${{secrets.SSH_USERNAME}}
