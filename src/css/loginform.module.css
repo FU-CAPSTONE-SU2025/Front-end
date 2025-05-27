@@ -23,6 +23,7 @@
   
   .loginCard {
     width: 30vw;
+    min-width: 400px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     background: rgba(255, 255, 255, 0.8); /* semi-transparent white */
@@ -97,17 +98,32 @@
   
   @media (max-width: 768px) {
     .container {
-      flex-direction: column;
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      align-self: center;
     }
-  
-    .leftSide,
-    .leftSideHovered {
-      flex: 0 0 40%;
-      min-height: 200px;
+     .loginCard {
+    width: 30vw;
+    min-width: 300px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.8); /* semi-transparent white */
+    backdrop-filter: blur(1px); /* blur effect */
+    padding: 24px;
+    text-align: center;
     }
-  
-    .rightSide,
-    .rightSideHovered {
-      flex: 0 0 60%;
-    }
+    .description {
+    color: #242424 !important;
+    padding: 10px 10px 10px 10px ;
+    font-size: 16px;
+
+  }
+
   }
