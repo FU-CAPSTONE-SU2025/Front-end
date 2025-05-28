@@ -4,15 +4,16 @@ import { getAuthState } from '../hooks/useAuths';
 
 export const protectedLoader = (allowedRoles: string[]) => {
   return () => {
-    const { isAuthenticated, userRole } = getAuthState();
+    // const { isAuthenticated, userRole } = getAuthState();
 
-    if (!isAuthenticated) {
-      return redirect('/login');
-    }
+    // if (!isAuthenticated) {
+    //   return redirect('/');
+    // }
 
-    if (userRole && !allowedRoles.includes(userRole)) {
-      return redirect('/404');
-    }
+    // if (userRole && !allowedRoles.includes(userRole)) {
+    //   return redirect('/404');
+    // }
+    // NOTE: Uncommment these code above in production, they are for protection, duh
 
     return null; // Proceed to render the route
   };

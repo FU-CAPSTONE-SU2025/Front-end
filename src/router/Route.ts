@@ -4,11 +4,12 @@ import Dummy from "../pages/dummy";
 import NotFound from "../pages/notfound";
 import { protectedLoader } from "../components/protectedRoute";
 import Login from "../pages/common/login";
+import AdminNavBar from "../components/admin/adminNavBar";
 
 export const routes = createBrowserRouter([
     {
         path:"/admin",
-        Component: Dummy,
+        Component: AdminNavBar,
         loader: protectedLoader(['admin']), 
         // Loader make sure the custom Role-checking function is called 
         // and execute before running the Routes, including children routes
