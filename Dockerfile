@@ -1,7 +1,7 @@
 FROM node:18 AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm i --save
+RUN npm ci
 COPY . .
 RUN CI=false npm run build
 # building a docker image
