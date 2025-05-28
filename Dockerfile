@@ -3,7 +3,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN CI=false npm run build
+RUN rm -rf node_modules/vite-plugin-checker*
+RUN npm run build
 # building a docker image
 # 1. Choose the working directory
 # 2. Copy the package.json and package-lock.json files to the working directory
