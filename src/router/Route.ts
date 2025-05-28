@@ -5,6 +5,15 @@ import NotFound from "../pages/notfound";
 import { protectedLoader } from "../components/protectedRoute";
 import Login from "../pages/common/login";
 import AdminNavBar from "../components/admin/adminNavBar";
+import AccountPage from "../pages/admin/account";
+import StudentsPage from "../pages/admin/students";
+import StaffPage from "../pages/admin/staff";
+import AdvisorsPage from "../pages/admin/advisors";
+import ManagersPage from "../pages/admin/managers";
+import LogsPage from "../pages/admin/logs";
+import ImportPage from "../pages/admin/import";
+
+// Import new admin pages
 
 export const routes = createBrowserRouter([
     {
@@ -20,16 +29,32 @@ export const routes = createBrowserRouter([
                 Component: Dummy,
             },
             {
-                path:"job",
-                Component:Dummy
+                path:"account",
+                Component: AccountPage
             },
             {
-                path:"job/:id",
-                Component:Dummy
+                path:"students",
+                Component: StudentsPage
             },
             {
-                path:"profile/:id",
-                Component:Dummy
+                path:"staff",
+                Component: StaffPage
+            },
+            {
+                path:"advisors",
+                Component: AdvisorsPage
+            },
+            {
+                path:"managers",
+                Component: ManagersPage
+            },
+            {
+                path:"logs",
+                Component: LogsPage
+            },
+            {
+                path:"import",
+                Component: ImportPage
             }
         ]
     },
