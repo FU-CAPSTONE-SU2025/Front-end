@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm i --save
 COPY . .
-RUN npm run build
+RUN CI=false npm run build
 # building a docker image
 # 1. Choose the working directory
 # 2. Copy the package.json and package-lock.json files to the working directory
