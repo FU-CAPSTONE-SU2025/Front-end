@@ -5,6 +5,7 @@ export default function AccountPage() {
     <div className={styles.container}>
       <h1>My Account</h1>
       <p>This is the admin account page.</p>
+       <p>Testing</p>
     </div>
   );
 }
