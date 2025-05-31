@@ -12,6 +12,8 @@ import AdvisorsPage from "../pages/admin/advisors";
 import ManagersPage from "../pages/admin/managers";
 import LogsPage from "../pages/admin/logs";
 import ImportPage from "../pages/admin/import";
+import Header from "../components/student/header";
+import { Home} from "../pages/student/home";
 
 // Import new admin pages
 
@@ -59,8 +61,16 @@ export const routes = createBrowserRouter([
         ]
     },
     {
-        // index:true,
-        // Component: LandingPage,
+        path:"/student",
+        Component: Header,
+        loader: protectedLoader(['student']), 
+           children:[
+            {
+                index:true,
+                Component: Home,
+            },
+          
+        ]
     },
     {
         path:"/",
