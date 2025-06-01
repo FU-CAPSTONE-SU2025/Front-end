@@ -11,39 +11,58 @@ const Header: React.FC = () => {
 
   // Animation variants for navigation links
   const navItemVariants = {
-    hidden: { opacity: 0, y: -10 },
+    hidden: { opacity: 0, x: -10 },
     visible: (i: number) => ({
       opacity: 1,
-      y: 0,
-      transition: { delay: i * 0.1, duration: 0.3 },
+      x: 0,
+      transition: { delay: i * 0.15, duration: 0.3, ease: 'easeOut' },
     }),
   };
 
   // Animation variants for mobile menu
   const mobileMenuVariants = {
-    hidden: { opacity: 0, y: -20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } },
-    exit: { opacity: 0, y: -20, transition: { duration: 0.2 } },
+    hidden: { opacity: 0, x: -100 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+    exit: { opacity: 0, x: -100, transition: { duration: 0.3 } },
   };
 
   return (
-    <header className="fixed top-0 left-0 w-full flex justify-between items-center px-3 sm:px-6 lg:px-8 py-2.5 z-20 bg-white bg-opacity-10 backdrop-blur-md shadow-sm">
-      {/* Hamburger Menu Button (Visible on Mobile, Left) */}
-      <motion.button
-        className="lg:hidden text-black focus:outline-none"
-        onClick={toggleMenu}
-        aria-label="Toggle menu"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}></path>
-        </svg>
-      </motion.button>
+    <header className="fixed top-0 left-0 w-full flex justify-between items-center px-3 sm:px-6 lg:px-8 py-3 z-20 bg-white bg-opacity-15 backdrop-blur-lg shadow-sm">
+      {/* Left Section: Hamburger (Mobile) / Logo (Desktop) */}
+      <div className="flex items-center">
+        {/* Hamburger Menu Button (Visible on Mobile) */}
+        <div className="lg:hidden">
+          <motion.button
+            className="text-black focus:outline-none"
+            onClick={toggleMenu}
+            aria-label="Toggle menu"
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}></path>
+            </svg>
+          </motion.button>
+        </div>
 
-      {/* Logo (Center on Mobile, Left on Desktop) */}
+        {/* Logo (Hidden on Mobile when Hamburger is visible, Visible on Desktop) */}
+        <motion.div
+          className="hidden lg:flex items-center min-w-[120px]"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <img
+            src="/img/Logo.svg"
+            alt="AI SEA Logo"
+            className="h-8 w-auto sm:h-10 transition-transform hover:scale-105"
+          />
+        </motion.div>
+      </div>
+
+      {/* Logo (Center on Mobile Only) */}
       <motion.div
-        className="flex items-center absolute left-1/2 transform -translate-x-1/2 lg:static lg:transform-none"
+        className="flex items-center absolute left-1/2 transform -translate-x-1/2 lg:hidden"
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.4 }}
@@ -51,12 +70,12 @@ const Header: React.FC = () => {
         <img
           src="/img/Logo.svg"
           alt="AI SEA Logo"
-          className="h-7 w-auto sm:h-9 transition-transform hover:scale-105"
+          className="h-8 w-auto sm:h-10 transition-transform hover:scale-105"
         />
       </motion.div>
 
-      {/* Menu (Desktop) */}
-      <nav className="hidden lg:flex flex-row items-center gap-8">
+      {/* Menu (Desktop, Centered) */}
+      <nav className="hidden lg:flex flex-row items-center gap-8 flex-1 justify-center">
         {['Dashboard', 'Semester Planner', 'Course Tracking', 'Resource Explorer'].map((item, index) => (
           <motion.a
             key={item}
@@ -65,28 +84,31 @@ const Header: React.FC = () => {
             initial="hidden"
             animate="visible"
             variants={navItemVariants}
-            className="text-black text-sm font-medium hover:text-orange-500 transition-colors duration-300 relative group"
+            className="text-black text-sm font-semibold uppercase tracking-wide hover:text-orange-500 transition-colors duration-300 relative group !text-black whitespace-nowrap"
             whileHover={{ scale: 1.05 }}
+            style={{ color: 'black' }}
           >
             {item}
-            <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute left-0 bottom-[-2px] w-0 h-[2px] bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
           </motion.a>
         ))}
       </nav>
 
       {/* User Section (Desktop & Mobile, Right) */}
-      <div className="flex items-center gap-1.5 sm:gap-2.5">
+      <div className="flex items-center gap-2 sm:gap-3 lg:min-w-[280px] justify-end">
         <motion.a
           href="#"
-          className="bg-orange-500 text-white px-1.5 sm:px-2.5 py-0.5 rounded-md font-bold text-[10px] sm:text-xs hover:bg-orange-600 transition-all duration-300"
+          className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-2 sm:px-3 py-1 rounded-lg font-bold text-[10px] sm:text-xs lg:text-sm lg:px-4 lg:py-1.5 hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-sm"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          style={{ color: 'white' }}
         >
-          FPTU - HCM
+          <span className="lg:inline hidden">FPTU - HỒ CHÍ MINH</span>
+          <span className="lg:hidden">FPTU - HCM</span>
         </motion.a>
-        <Badge count={1} color="#f97316">
+        <Badge count={1} color="#f97316" offset={[-4, 4]}>
           <motion.div
-            className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 bg-opacity-50 rounded-full flex items-center justify-center"
+            className="w-8 h-8 sm:w-9 sm:h-9 bg-gray-100 bg-opacity-50 rounded-full flex items-center justify-center"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -101,9 +123,9 @@ const Header: React.FC = () => {
             </svg>
           </motion.div>
         </Badge>
-        <Badge count={2} color="#f97316">
+        <Badge count={2} color="#f97316" offset={[-4, 4]}>
           <motion.div
-            className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 bg-opacity-50 rounded-full flex items-center justify-center"
+            className="w-8 h-8 sm:w-9 sm:h-9 bg-gray-100 bg-opacity-50 rounded-full flex items-center justify-center"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -121,37 +143,42 @@ const Header: React.FC = () => {
         <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
           <Avatar
             src="https://i.pravatar.cc/150?img=3"
-            size={{ xs: 20, sm: 24, md: 26, lg: 28 }}
+            size={{ xs: 22, sm: 26, md: 28, lg: 30 }}
             className="ring-1 ring-orange-200 hover:ring-orange-400 transition-all duration-300"
           />
         </motion.div>
       </div>
 
-      {/* Mobile Menu (Navigation Only) */}
+      {/* Mobile Menu (Navigation Only, Left Half) */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
-            className="lg:hidden absolute top-12 left-0 w-full bg-white bg-opacity-10 backdrop-blur-md shadow-lg p-4 flex flex-col items-center gap-4"
+            className="lg:hidden absolute top-14 left-0 w-1/2 bg-white bg-opacity-20 backdrop-blur-lg shadow-lg p-5 flex flex-col items-start gap-4"
             variants={mobileMenuVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
           >
             {['Dashboard', 'Semester Planner', 'Course Tracking', 'Resource Explorer'].map((item, index) => (
-              <motion.a
-                key={item}
-                href="#"
-                custom={index}
-                variants={navItemVariants}
-                initial="hidden"
-                animate="visible"
-                className="text-black text-sm font-medium hover:text-orange-500 transition-colors duration-300 relative group w-full text-center py-2"
-                onClick={() => setIsMenuOpen(false)}
-                whileHover={{ scale: 1.05 }}
-              >
-                {item}
-                <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
-              </motion.a>
+              <div key={item} className="w-full">
+                <motion.a
+                  href="#"
+                  custom={index}
+                  variants={navItemVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="text-black text-sm font-semibold uppercase tracking-wide hover:text-orange-500 transition-colors duration-300 relative group w-full py-2.5 block !text-black"
+                  onClick={() => setIsMenuOpen(false)}
+                  whileHover={{ scale: 1.05 }}
+                  style={{ color: 'black' }}
+                >
+                  {item}
+                  <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
+                </motion.a>
+                {index < 3 && (
+                  <hr className="w-full border-t border-gray-300 opacity-50 my-2" />
+                )}
+              </div>
             ))}
           </motion.div>
         )}
