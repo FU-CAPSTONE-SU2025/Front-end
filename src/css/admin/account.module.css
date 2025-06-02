@@ -1,6 +1,6 @@
 
 .container {
-  width: calc(100% - 250px); /* Fixed your syntax */
+  width: calc(100% - 250px);
   position: absolute;
   left: 0;
   top: 0;
@@ -17,6 +17,7 @@
   width: auto;
   height: 100%;
   padding: 0.625rem; /* 10px */
+  padding-left: 5%;
   position: relative;
   outline-offset: -1px;
   display: flex;
@@ -26,14 +27,13 @@
   gap: 0.625rem; /* 10px */
   background: white;
   box-sizing: border-box;
-  padding-left: 5%;
 }
 
 .userInfo {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap:10px; /* 10px */
+  gap: 10px; /* 10px */
 }
 
 .avatar {
@@ -93,6 +93,7 @@
   align-items: center;
   box-sizing: border-box;
 }
+
 .datefield {
   width: 20rem; /* 320px */
   height: 2.5rem; /* 40px */
@@ -109,12 +110,12 @@
   align-items: center;
   box-sizing: border-box;
 }
+
 .datePicker {
   width: 70%;
   border-radius: 0px;
   padding: 0.5rem;
   border: none;
-
 }
 
 .fieldContent {
@@ -129,6 +130,60 @@
   font-weight: 400;
   line-height: 1.25rem; /* 20px */
   word-break: break-word;
+  border: none;
+  background: transparent;
+  width: 100%;
+}
+
+.errorContainer {
+  width: 100%;
+  padding: 0.5rem; /* 8px */
+  background: #fee2e2; /* Light red background for visibility */
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem; /* 4px */
+}
+
+.error {
+  color: red;
+  font-size: 0.75rem; /* 12px */
+}
+
+.editActions {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.625rem; /* 10px */
+  width: 100%;
+}
+.editActive {
+ 
+  background: #ffa600; /* color change for edit mode */
+  border: #000000 1px solid;
+}
+.textEditActive{
+   color:#000000 !important;
+}
+
+.saveButton,
+.cancelButton {
+  width: 10rem; /* 160px, half of field width for balance */
+  height: 2.25rem; /* 36px */
+  padding: 0.5rem 1rem; /* 8px 16px */
+  background: var(--Zinc-900, #18181b);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.625rem; /* 10px */
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.cancelButton {
+  background: #dc2626; /* Red for cancel */
 }
 
 .actionPanel {
@@ -169,7 +224,7 @@
 }
 
 .actionButton {
-  width:  18rem; /* 288px */
+  width: 18rem; /* 288px */
   height: 2.25rem; /* 36px */
   padding: 0.5rem 1rem; /* 8px 16px */
   background: var(--Zinc-900, #18181b);
@@ -181,6 +236,14 @@
   gap: 0.625rem; /* 10px */
   cursor: pointer;
   box-sizing: border-box;
+}
+
+.editActive {
+  background: #FFFF00; /* Yellow for edit mode */
+}
+
+.textEditActive {
+  color: #000000; /* Black text for visibility on yellow background */
 }
 
 .buttonContent {
@@ -215,6 +278,7 @@
     width: 100%;
     height: auto;
     padding: 0.9375rem; /* 15px */
+    padding-left: 5%;
   }
 
   .userInfo {
@@ -238,10 +302,34 @@
     width: 100%;
   }
 
-  .field {
+  .field,
+  .datefield {
     width: 100%;
     max-width: 100%;
     min-width: 100%;
+    padding: 0.5rem; /* 8px */
+  }
+
+  .datePicker {
+    height: 2.25rem; /* 36px */
+  }
+
+  .errorContainer {
+    padding: 0.375rem; /* 6px */
+  }
+
+  .error {
+    font-size: 0.6875rem; /* 11px */
+  }
+
+  .editActions {
+    flex-direction: column;
+    gap: 0.5rem; /* 8px */
+  }
+
+  .saveButton,
+  .cancelButton {
+    width: 100%;
     padding: 0.5rem; /* 8px */
   }
 
@@ -274,6 +362,7 @@
   .profileCard,
   .actionPanel {
     padding: 0.625rem; /* 10px */
+    padding-left: 5%;
   }
 
   .avatar {
@@ -287,7 +376,8 @@
     font-size: 0.625rem; /* 10px */
   }
 
-  .field {
+  .field,
+  .datefield {
     padding: 0.375rem; /* 6px */
   }
 
@@ -296,9 +386,17 @@
     line-height: 1.125rem; /* 18px */
   }
 
+  .datePicker {
+    height: 2rem; /* 32px */
+  }
+
   .actionTitle {
     font-size: 1.5rem; /* 24px */
     line-height: 2.125rem; /* 34px */
+  }
+
+  .actionButton {
+    padding: 0.375rem; /* 6px */
   }
 
   .buttonContent {
@@ -316,6 +414,7 @@
   .profileCard,
   .actionPanel {
     padding: 0.5rem; /* 8px */
+    padding-left: 5%;
   }
 
   .avatar {
@@ -329,13 +428,18 @@
     font-size: max(0.625rem, 2.5vw); /* At least 10px, scales with viewport */
   }
 
-  .field {
+  .field,
+  .datefield {
     padding: 0.25rem 0.5rem; /* 4px 8px */
   }
 
   .fieldContent {
     font-size: max(0.6875rem, 2.5vw); /* At least 11px */
     line-height: 1rem; /* 16px */
+  }
+
+  .datePicker {
+    height: 1.75rem; /* 28px */
   }
 
   .actionTitle {
