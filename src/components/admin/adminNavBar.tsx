@@ -18,7 +18,7 @@ const AdminNavBar: React.FC = () => {
   const { logout } = getAuthState();
 
   const navItems: NavItem[] = [
-    { label: 'My account', icon: User, route: 'account' },
+    { label: 'My account', icon: User, route: '' },
     { label: 'Manage Student', icon: Users, route: 'students' },
     { label: 'Manage Staff', icon: Briefcase, route: 'staff' },
     { label: 'Manage Advisor', icon: BookUser, route: 'advisors' },
@@ -103,14 +103,9 @@ const AdminNavBar: React.FC = () => {
           <div className={styles.header}>
             <div className={styles.logo}>
               <img
-                src="img/Logo.svg"
+                src="/img/Logo.svg"
                 alt="AI-SEA Logo"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  (e.currentTarget.nextSibling as HTMLElement)!.style.display = 'block';
-                }}
-              />
-              <span style={{ display: 'none' }}>AISEA</span>
+              />  
             </div>
           </div>
           <nav className={styles.nav}>

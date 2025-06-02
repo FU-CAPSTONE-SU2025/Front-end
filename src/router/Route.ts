@@ -24,10 +24,6 @@ export const routes = createBrowserRouter([
     children: [
       {
         index: true,
-        Component: Dummy,
-      },
-      {
-        path: "account",
         Component: AccountPage,
       },
       {

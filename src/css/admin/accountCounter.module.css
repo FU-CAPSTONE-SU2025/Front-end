@@ -160,11 +160,6 @@
   word-break: break-word;
 }
 
-/* When sidebar is open on mobile */
-.sidebarOpen {
-  margin-left: 250px; /* Match sidebar width */
-  width: calc(100% - 250px); /* Adjust width to account for sidebar */
-}
 
 /* Responsive adjustments */
 @media (max-width: 1023px) {
@@ -219,6 +214,12 @@
 }
 
 @media (max-width: 767px) {
+    .container{
+    width: 100%; /* Full width on very small screens */
+    position: relative; /* Remove fixed positioning on very small screens */
+    display: flex;
+    flex-direction: column;
+}
   .header {
     padding: 16px; /* Slightly reduced padding */
   }
