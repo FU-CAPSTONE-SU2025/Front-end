@@ -1,0 +1,235 @@
+
+.container {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: calc(100% - 250px); /* Account for 250px sidebar on desktop */
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid black;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  z-index: 500; /* Below sidebar (z-index: 1000) */
+  background: white; /* Added for visibility */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Added for depth */
+}
+
+.header {
+  align-self: stretch;
+  height: 104px;
+  padding: 20px 0 20px 24px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+}
+
+.titleSection {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.titleWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.title {
+  color: var(--Stone-950, #0C0A09);
+  font-size: 16px;
+  font-family: 'Geist', sans-serif;
+  font-weight: 600;
+  line-height: 24px;
+  word-break: break-word;
+}
+
+.subtitleWrapper {
+  padding-top: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.subtitle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: var(--Zinc-400, #A1A1AA);
+  font-size: 14px;
+  font-family: 'Geist', sans-serif;
+  font-weight: 400;
+  line-height: 20px;
+  word-break: break-word;
+}
+
+.counters {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.counter {
+  width: 171.2px;
+  padding: 24px 32px;
+  border-left: 1px solid var(--Zinc-800, #27272A);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.counterAcademic {
+  width: 171.2px;
+  padding: 24px 32px;
+  border-left: 1px solid black;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.counterContent {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.counterLabel {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #FF914D;
+  font-size: 12px;
+  font-family: 'Geist', sans-serif;
+  font-weight: 400;
+  line-height: 16px;
+  word-break: break-word;
+}
+
+.counterLabelAcademic {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #004AAD;
+  font-size: 12px;
+  font-family: 'Geist', sans-serif;
+  font-weight: 400;
+  line-height: 16px;
+  word-break: break-word;
+}
+
+.counterLabelAdvisor {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #00BF63;
+  font-size: 12px;
+  font-family: 'Geist', sans-serif;
+  font-weight: 400;
+  line-height: 16px;
+  word-break: break-word;
+}
+
+.counterValue {
+  align-self: stretch;
+  height: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: var(--Gray-950, #030712);
+  font-size: 30px;
+  font-family: 'Geist', sans-serif;
+  font-weight: 700;
+  line-height: 36px;
+  word-break: break-word;
+}
+
+/* When sidebar is open on mobile */
+.sidebarOpen {
+  margin-left: 250px; /* Match sidebar width */
+  width: calc(100% - 250px); /* Adjust width to account for sidebar */
+}
+
+/* Responsive adjustments */
+@media (max-width: 1023px) {
+  .container {
+    width: 100%; /* Full width on mobile (sidebar hidden by default) */
+    position: relative; /* Remove fixed positioning on mobile */
+    margin: 0; /* Remove any margins */
+  }
+
+  .header {
+    padding: 20px; /* Slightly increased padding for better spacing */
+    flex-direction: column; /* Stack title and counters vertically */
+    align-items: flex-start;
+    height: auto; /* Allow height to grow */
+  }
+
+  .counters {
+    flex-direction: column; /* Stack counters vertically */
+    width: 100%; /* Full width */
+  }
+
+  .counter,
+  .counterAcademic {
+    width: 100%; /* Full width for each counter */
+    padding: 16px 0; /* Reduced horizontal padding, keep vertical */
+    border-left: none; /* Remove vertical borders */
+    border-top: 1px solid var(--Zinc-800, #27272A); /* Add horizontal separator */
+  }
+
+  .counter:first-child {
+    border-top: none; /* Remove border from first counter */
+  }
+
+  .counterAcademic {
+    border-top: 1px solid black; /* Maintain black border for Academic Staff */
+  }
+
+  .counterValue {
+    font-size: 24px; /* Smaller font size on mobile */
+    line-height: 28px;
+  }
+
+  .title {
+    font-size: 14px; /* Smaller title */
+    line-height: 20px;
+  }
+
+  .subtitle {
+    font-size: 12px; /* Smaller subtitle */
+    line-height: 16px;
+  }
+}
+
+@media (max-width: 767px) {
+  .header {
+    padding: 16px; /* Slightly reduced padding */
+  }
+
+  .counter,
+  .counterAcademic {
+    padding: 12px 0; /* Adjusted padding */
+  }
+
+  .counterValue {
+    font-size: 20px; /* Even smaller font */
+    line-height: 24px;
+  }
+}

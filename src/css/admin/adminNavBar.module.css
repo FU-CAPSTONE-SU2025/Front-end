@@ -2,15 +2,18 @@
 .sidebar {
   width: 250px;
   height: 100vh;
-  background: #004AAD;
+  min-height:fit-content;
+  background: linear-gradient(180deg, #004AAD 0%, #003A8C 100%);
   position: fixed;
   top: 0;
   left: 0;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
-  transition: transform 0.3s ease;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  overflow-y: auto;
 }
 
 .header {
@@ -19,44 +22,73 @@
   position: relative;
   display: flex;
   justify-content: center;
-  padding: 5px 5px 5px 5px;
+  align-items: center;
+  padding: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .logo {
-  width: 70px;
-  height: 70px;
-  background: #004AAD;
+  width: 80%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 1rem;
-  
+  font-family: 'Inter', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .nav {
   flex: 1;
-  padding: 1rem 0.5rem;
+  padding: 1.5rem 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .navItem {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 2px;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
   color: white;
-  font-family: Inter, sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
+  position: relative;
+  transition: all 0.3s ease;
 }
 
 .navItem:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.02);
+  color: #E6F0FA;
+}
+
+.navItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background: #FF914D;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.navItem:hover::before {
+  opacity: 1;
 }
 
 .icon {
@@ -65,12 +97,17 @@
   fill: none;
   stroke: white;
   stroke-width: 2;
+  transition: stroke 0.3s ease;
+}
+
+.navItem:hover .icon {
+  stroke: #E6F0FA;
 }
 
 .divider {
   width: 100%;
   height: 1px;
-  background: white;
+  background: rgba(255, 255, 255, 0.3);
   margin: 0.5rem 0;
 }
 
@@ -78,7 +115,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   background: rgba(255, 0, 0, 0.5);
   color: #FECACA;
   font-family: 'Arial Black', sans-serif;
@@ -86,10 +123,12 @@
   font-weight: 900;
   text-decoration: none;
   border-bottom: 1px solid white;
+  transition: all 0.3s ease;
 }
 
 .logout:hover {
   background: rgba(255, 0, 0, 0.7);
+  transform: scale(1.02);
 }
 
 .logoutIcon {
@@ -99,18 +138,25 @@
   stroke: #FECACA;
   stroke-width: 2;
   opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.logout:hover .logoutIcon {
+  opacity: 1;
 }
 
 .footer {
-  padding: 0.5rem 1rem;
-  color: white;
-  font-family: Inter, sans-serif;
+  padding: 0.75rem 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-family: 'Inter', sans-serif;
   font-size: 0.875rem;
   font-weight: 400;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .hamburger {
-  display: none;
+  display: none; /* Hidden by default on wide screens */
   position: fixed;
   top: 1rem;
   left: 1rem;
@@ -118,29 +164,37 @@
   background: #004AAD;
   color: white;
   font-size: 1.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem;
   border: none;
   cursor: pointer;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.hamburger:hover {
+  opacity: 1;
+  background: #003A8C;
 }
 
 /* Responsive */
 @media (max-width: 1023px) {
   .sidebar {
-    transform: translateX(-100%);
+    transform: translateX(-100%); /* Hidden by default on mobile */
   }
 
-  .open {
-    transform: translateX(0);
+  .sidebar.open {
+    transform: translateX(0); /* Shown when open */
   }
 
   .hamburger {
-    display: flex;
-    justify-content: center;
-    opacity: 30%;
-    transition: all 0.3s ease-in-out;
-  }
-   .hamburger:hover {
-    opacity: 100%;
+    transform: translateX(0);
+    display: flex; /* Show hamburger on mobile */
   }
 }
 
@@ -152,13 +206,20 @@
 
   .navItem {
     font-size: 0.75rem;
+    padding: 0.5rem 1rem;
   }
 
   .logout {
     font-size: 0.875rem;
+    padding: 0.5rem 1rem;
   }
 
   .footer {
     font-size: 0.75rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .logo {
+    font-size: 1rem;
   }
 }
