@@ -6,6 +6,7 @@ import AccountCounter from '../../components/admin/accountCounter';
 import { DatePicker } from 'antd';
 import dayjs from 'dayjs';
 import { validateEmail, validatePhone } from '../../components/common/validation';
+import DataImport from '../../components/admin/dataImport';
 
 // Animation variants for the profile card and action panel
 const cardVariants = {
@@ -33,6 +34,7 @@ const Profile: React.FC = () => {
   const [phone, setPhone] = useState<string>("Phone");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
+  const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
 
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);
@@ -44,6 +46,7 @@ const Profile: React.FC = () => {
 
   const handleCancel = () => {
     setIsEditing(false);
+    setErrors({});
     // Reset to initial values
     setFirstName("First Name");
     setLastName("Last Name");
@@ -52,7 +55,6 @@ const Profile: React.FC = () => {
     setAddress("Address");
     setPhone("Phone");
     setSelectedDate(null);
-    setErrors({});
   };
 
   const handleSave = () => {
@@ -63,16 +65,30 @@ const Profile: React.FC = () => {
 
     setErrors(newErrors);
 
-    // Check if there are any errors
     if (Object.values(newErrors).every((error) => error === null)) {
       setIsEditing(false);
       setErrors({});
-      // Here you would typically save the data to a backend
       console.log("Saving data:", { firstName, lastName, email, password, address, phone, selectedDate });
     }
   };
 
-  // Check if there are any errors to display
+  const handleImport = () => {
+    setIsImportOpen(true);
+    setIsEditing(true);
+  };
+
+  const handleDataImported = (data: { [key: string]: string }) => {
+    setFirstName(data.firstName || firstName);
+    setLastName(data.lastName || lastName);
+    setEmail(data.email || email);
+    setPassword(data.password || password);
+    setAddress(data.address || address);
+    setPhone(data.phone || phone);
+    if (data.dateOfBirth) {
+      setSelectedDate(dayjs(data.dateOfBirth).toDate());
+    }
+  };
+
   const hasErrors = Object.values(errors).some((error) => error !== null);
 
   return (
@@ -195,7 +211,7 @@ const Profile: React.FC = () => {
                 data-type="Primary"
                 variants={buttonVariants}
                 whileHover="hover"
-                onClick={action === 'Edit Account' ? handleEdit : undefined}
+                onClick={action === 'Edit Account' ? handleEdit : action === 'Import Data From xlsx' ? handleImport : undefined}
               >
                 <div className={`${styles.buttonContent} ${action === 'Edit Account' && isEditing ? styles.textEditActive : ''}`}>
                   {action}
@@ -204,6 +220,11 @@ const Profile: React.FC = () => {
             ))}
           </div>
         </motion.div>
+          {isImportOpen && (
+          <div className={styles.modalOverlay}>
+            <DataImport onClose={() => {setIsImportOpen(false);setIsEditing(true)}} onDataImported={handleDataImported} />
+          </div>
+        )}
       </div>
     </>
   );
