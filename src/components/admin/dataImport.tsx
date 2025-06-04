@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
-import styles from '../../css/admin/DataImport.module.css';
+import styles from '../../css/admin/dataImport.module.css';
 
 type DataImportProps = {
   onClose: () => void;
