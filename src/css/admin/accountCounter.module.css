@@ -107,7 +107,19 @@
   gap: 4px;
 }
 
-.counterLabel {
+.counterLabelStudent {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #FF914D;
+  font-size: 12px;
+  font-family: 'Geist', sans-serif;
+  font-weight: 400;
+  line-height: 16px;
+  word-break: break-word;
+}
+.counterLabelManager {
   align-self: stretch;
   display: flex;
   flex-direction: column;
@@ -120,7 +132,7 @@
   word-break: break-word;
 }
 
-.counterLabelAcademic {
+.counterLabelStaff {
   align-self: stretch;
   display: flex;
   flex-direction: column;

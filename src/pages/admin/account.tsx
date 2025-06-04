@@ -7,6 +7,11 @@ import { DatePicker } from 'antd';
 import dayjs from 'dayjs';
 import { validateEmail, validatePhone } from '../../components/common/validation';
 import DataImport from '../../components/admin/dataImport';
+//Data imports for mock data
+import {advisors} from '../../../data/mockAdvisor';
+import {students} from '../../../data/mockStudent';
+import {staffs} from '../../../data/mockStaff';
+import {managers} from '../../../data/mockManager';
 
 // Animation variants for the profile card and action panel
 const cardVariants = {
@@ -93,7 +98,13 @@ const Profile: React.FC = () => {
 
   return (
     <>
-      <AccountCounter />
+      <AccountCounter 
+        label={["Student", "Academic Staff", "Advisor", "Manager"]}
+        student={students}
+        staff={staffs}
+        advisor={advisors}
+        manager={managers}
+      />
       <div className={styles.container}>
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
           <div className={styles.userInfo}>
