@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, Outlet } from 'react-router';
 import { User, Users, Briefcase, BookUser, UserCog, Activity, Upload, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import styles from '../../css/admin/AdminNavBar.module.css';
+import styles from '../../css/admin/adminNavBar.module.css';
 import { getAuthState } from '../../hooks/useAuths';
 
 // Interface for navigation items
