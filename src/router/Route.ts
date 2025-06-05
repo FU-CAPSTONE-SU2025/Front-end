@@ -1,5 +1,4 @@
 
-import Dummy from "../pages/dummy";
 import NotFound from "../pages/notfound";
 import { protectedLoader } from "../components/protectedRoute";
 import Login from "../pages/common/login";
@@ -17,10 +16,15 @@ import { createBrowserRouter } from "react-router";
 import StudentLayout from "../components/student/layout";
 
 export const routes = createBrowserRouter([
+  // Usage: 
+  // protectedLoader is used to protect routes based on user roles.
+  // The first argument is an array of allowed roles.
+  // If the user does not have the required role, they will be redirected to the login page or a 404 page.
+  // Example: protectedLoader(['1', '2']) means only users with roles '1' or '2' can access the route.
   {
     path: "/admin",
     Component: AdminNavBar,
-    loader: protectedLoader(['admin']),
+    loader: protectedLoader(['1','2']),
     children: [
       {
         index: true,

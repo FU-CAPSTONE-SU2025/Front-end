@@ -2,18 +2,22 @@ import React, { useState } from 'react';
 import { Button, Card, Form, Input, Typography } from 'antd';
 import { useGoogleLogin } from '@react-oauth/google';
 import { GoogleAccountAuthen, LoginAccount, LoginAccountWithGoogle } from '../../api/Account/AccountAPI';
-import { GoogleAccountRequestProps, LoginProps } from '../../interface/IAccount';
+import { DemoAccountProps, GoogleAccountRequestProps, LoginProps } from '../../interface/IAccount';
 import { GoogleOutlined } from '@ant-design/icons';
-import loginImage from '/img/login.png';
 import styles from '../../css/loginform.module.css';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import { TokenProps } from '../../interface/IAuthen';
+import { getAuthState, getTokenState, useAuths, useToken } from '../../hooks/useAuths';
+import { jwtDecode } from 'jwt-decode';
 
 const { Title, Text } = Typography;
 
 const Login: React.FC = () => {
+  const nav = useNavigate();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
-
+  const {setAccessToken,setRefreshToken,accessToken} = getTokenState()
+  const { login, setUserRole } = getAuthState();
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setIsGoogleLoading(true);
@@ -39,12 +43,33 @@ const Login: React.FC = () => {
       alert('Google Login failed. Please try again.');
     },
   });
-
-  const onEmailLogin = async(values: LoginProps) => {
+  // Login with userName and password - with the added authentication check
+  const onNormalLogin = async(values: LoginProps) => {
+    //console.log('Login values:', values);
     setIsEmailLoading(true);
-    const response = await LoginAccount(values)
+    const response:TokenProps|null = await LoginAccount(values)
     if (response!=null) {
       alert('Login successful');
+      setAccessToken(response.accessToken);
+      setRefreshToken(response.refreshToken);
+      const accountData:DemoAccountProps = jwtDecode(response.accessToken)
+      // Check that user is authenticated
+      // set user role
+      login()
+      setUserRole(accountData.Role)
+      //console.log("Login Redirected to: ",accountData.Role)
+      if(accountData.Role === "2"){
+        nav('/admin')
+      }
+      else if(accountData.Role === "1"){
+        nav('/admin')
+      }
+      else if(accountData.Role === "0"){
+        nav('/guest')
+      }
+      else
+        nav('/')
+      // ADD ROUTE HERE
     }else{
       alert('Login failed. Please try again.');
     }
@@ -52,12 +77,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className={styles.background}>
-      <img
-        src={loginImage}
-        alt="AISEA Background"
-        className={styles.backgroundImage}
-      />
+  <div className={styles.background}>
     <div className={styles.container}>
       <Card className={styles.loginCard}>
         <Title level={2} className={styles.title}>
@@ -74,22 +94,22 @@ const Login: React.FC = () => {
           Login with Google
         </Button>
         <Text className={styles.description}>
-          ---Or use your email and password---
+          ---Or use your username and password---
         </Text>
         <Form
-          name="email-login"
-          onFinish={onEmailLogin}
+          name="username-login"
+          onFinish={onNormalLogin}
           layout="vertical"
           autoComplete="off"
         >
           <Form.Item
-            name="email"
+            name="userName"
             rules={[
-              { required: true, message: 'Please enter your email!' },
-              { type: 'email', message: 'Please enter a valid email!' },
+              { required: true, message: 'Please enter your username!' },
+              { type: 'string', message: 'Please enter a valid username!' },
             ]}
           >
-            <Input placeholder="Email" size="large" />
+            <Input placeholder="userName" size="large" />
           </Form.Item>
           <Form.Item
             name="password"
@@ -108,7 +128,7 @@ const Login: React.FC = () => {
               Login
             </Button>
             <Typography className={styles.comment}>
-                * Note: Login using your FPTU email account. Via '@fpt.edu.vn' or FEID email
+                * Note: Login using your FPTU account. Via '@fpt.edu.vn' or FEID email
               </Typography>
           </Form.Item>
           <Form.Item>
@@ -119,7 +139,7 @@ const Login: React.FC = () => {
         </Form>
       </Card>
     </div>
-    </div>
+  </div>
   );
 };
 

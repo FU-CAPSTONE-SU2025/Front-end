@@ -1,4 +1,410 @@
+
 .container {
-  padding: 2rem;
-  background: #fff;
+  width: calc(100% - 250px);
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: 6.625rem; /* 106px */
+  margin-left: 250px;
+  box-sizing: border-box;
+  background: #f0f4f8;
+  padding: 10px;
+}
+
+.profileCard {
+  width: auto;
+  height: auto;
+  padding: 0.625rem; /* 10px */
+  padding-left: 5%;
+  position: relative;
+  outline-offset: -1px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.625rem; /* 10px */
+  background: white;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 10px; /* 10px */
+  width: 100%;
+}
+
+.avatar {
+  width: 7.5rem; /* 120px */
+  height: 7.5rem; /* 120px */
+  border-radius: 9999px;
+}
+
+.name,
+.role {
+  color: black;
+  font-size: 0.875rem; /* 14px */
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.email {
+  color: #2662d9;
+  font-size: 0.875rem; /* 14px */
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.formFields {
+  margin-top: 5%;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 1.875rem; /* 30px */
+}
+
+.fieldRow {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.625rem; /* 10px */
+}
+
+.field {
+  width: 20rem; /* 320px */
+  height: 2.5rem; /* 40px */
+  max-width: 20rem; /* 320px */
+  min-width: 20rem; /* 320px */
+  max-height: 2.5rem; /* 40px */
+  min-height: 2.5rem; /* 40px */
+  padding: 0.5rem 0.75rem; /* 8px 12px */
+  background: var(--White, white);
+  border-radius: 6px;
+  outline: 1px solid var(--Zinc-200, #e4e4e7);
+  outline-offset: -1px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.datefield {
+  width: 20rem; /* 320px */
+  height: 2.5rem; /* 40px */
+  min-width: 20rem; /* 320px */
+  max-height: 2.5rem; /* 40px */
+  min-height: 2.5rem; /* 40px */
+  padding: 0.5rem 0.75rem; /* 8px 12px */
+  background: var(--White, white);
+  border-radius: 6px;
+  outline: 1px solid var(--Zinc-200, #e4e4e7);
+  outline-offset: -1px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.datePicker {
+  width: 70%;
+  border-radius: 0px;
+  padding: 0.5rem;
+  border: none;
+}
+
+.fieldContent {
+  flex: 1 1 0;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px; /* 10px */
+  color: var(--Zinc-500, #71717a);
+  font-size: 0.875rem; /* 14px */
+  font-family: 'Geist', sans-serif;
+  font-weight: 400;
+  line-height: 1.25rem; /* 20px */
+  word-break: break-word;
+  border: none;
+  background: transparent;
+  width: 100%;
+}
+
+.errorContainer {
+  width: 100%;
+  padding: 0.5rem; /* 8px */
+  background: #fee2e2;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem; /* 4px */
+}
+
+.error {
+  color: red;
+  font-size: 0.75rem; /* 12px */
+}
+
+.editActions {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.625rem; /* 10px */
+  width: 100%;
+}
+
+.editActive {
+  background: #ffa600;
+  border: #000000 1px solid;
+}
+
+.textEditActive {
+  color: #000000 !important;
+}
+
+.saveButton,
+.cancelButton {
+  width: 10rem; /* 160px */
+  height: 2.25rem; /* 36px */
+  padding: 0.5rem 1rem; /* 8px 16px */
+  background: var(--Zinc-900, #18181b);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.625rem; /* 10px */
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.cancelButton {
+  background: #dc2626;
+}
+
+.actionPanel {
+  width: 100%;
+  height: auto;
+  padding: 0.625rem; /* 10px */
+  background: white;
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.625rem; /* 10px */
+  margin-top: 1rem;
+  box-sizing: border-box;
+}
+
+.actionTitle {
+  align-self: stretch;
+  text-align: center;
+  color: black;
+  font-size: 1.5rem; /* Adjusted to match image */
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  word-break: break-word;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem; /* Adjusted for spacing in image */
+  width: 100%;
+}
+
+.actionButton {
+  width: 10rem; /* Adjusted to match image button width */
+  height: 2rem; /* Adjusted to match image button height */
+  padding: 0.25rem 0.5rem;
+  background: #1e40af; /* Dark blue from image */
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.importButton {
+  background: #1e40af; /* Same as actionButton */
+}
+
+.buttonContent {
+  color: white;
+  font-size: 0.875rem; /* 14px */
+  font-family: 'Geist', sans-serif;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+/* Search Bar and Filters */
+.searchBar {
+  display: flex;
+  gap: 0.625rem;
+  margin-bottom: 0.625rem;
+  width: 100%;
+}
+
+.searchBar input,
+.searchBar select {
+  padding: 0.375rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+/* Table Styling */
+.studentTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.studentTable th,
+.studentTable td {
+  padding: 0.25rem;
+  border: 1px solid #ddd;
+  font-size: 0.75rem; /* Compact text */
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.studentTable th {
+  background: #f0f0f0;
+  font-weight: 500;
+}
+
+.studentTable td input[type="checkbox"] {
+  margin: 0;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.625rem;
+  padding: 0.375rem;
+  background: #f0f4f8;
+}
+
+.pagination button {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1023px) {
+  .container {
+    width: 100vw;
+    position: relative;
+    left: 0;
+    top: 0;
+    padding-left: 4rem;
+    padding-right: 1.25rem;
+    margin-top: 0;
+    margin-left: 0;
+  }
+
+  .profileCard {
+    width: 100%;
+    height: auto;
+    padding: 0.9375rem;
+  }
+
+  .studentTable th,
+  .studentTable td {
+    font-size: 0.625rem;
+  }
+
+  .actionPanel {
+    width: 100%;
+    margin-top: 0.9375rem;
+  }
+
+  .actionButton {
+    width: 8rem;
+    height: 1.75rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .container {
+    padding-left: 4rem;
+    padding-right: 0.9375rem;
+  }
+
+  .profileCard,
+  .actionPanel {
+    padding: 0.625rem;
+  }
+
+  .studentTable th,
+  .studentTable td {
+    font-size: 0.5rem;
+  }
+
+  .actionButton {
+    width: 6rem;
+    height: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding-left: 3.5rem;
+    padding-right: 0.625rem;
+  }
+
+  .profileCard,
+  .actionPanel {
+    padding: 0.5rem;
+  }
+
+  .studentTable th,
+  .studentTable td {
+    font-size: 0.45rem;
+  }
+
+  .actionButton {
+    width: 5rem;
+    height: 1.25rem;
+  }
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 100px;
+  width: 100vw;
+  height: 100vh;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  justify-self: center;
+  z-index: 5000;
 }

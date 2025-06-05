@@ -51,6 +51,7 @@ export const axiosRead = (props: AxiosProp) =>
 
 export const axiosUpdate = (props: AxiosProp) =>
     makeRequest("PUT", props.url, props.data, props.headers);
+
 export const axiosPatch = (props: AxiosProp) =>
     makeRequest("PATCH", props.url, props.data, props.headers);
 

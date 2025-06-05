@@ -1,9 +1,9 @@
 const header = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    'Authorization': `Bearer ${import.meta.env.VITE_API_KEY}`,
+   
 }
-const baseUrl = import.meta.env.VITE_API_MOCKAPI_BASEURL
+const baseUrl = import.meta.env.VITE_API_AISEA_API_BASEURL+"/api"
 
 export {header,baseUrl}
 
