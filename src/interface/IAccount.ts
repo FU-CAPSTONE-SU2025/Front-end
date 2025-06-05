@@ -9,8 +9,16 @@ export interface AccountProps{
     role: string,
     id: string
 }
+export interface DemoAccountProps{
+    LoginAtTime: string
+    RandKeySession: string
+    Role: string
+    UserName: string
+    exp: number
+    iss: "AISEA_Issuer"|string
+}
 export interface LoginProps{
-    email: string,
+    userName: string,
     password: string
 }
 export interface AccountPropsCreate{

@@ -1,12 +1,14 @@
-.backgroundImage{
-    width: 150%;
-    height: 100%;
-    object-fit: cover;
-    position: fixed;
-    top: 0;
-    left: 0;
-    animation: slide 60s linear infinite;
-    transition: filter 0.3s ease-in-out;
+.background {
+  width: 100vw;
+  height: 100vh;
+  background-image: url('/img/login.png');
+  background-repeat: repeat-x;
+  object-fit: cover;
+  animation: scrollBg 60s linear infinite;
+  background-attachment: fixed;
+  background-position: 0 0;
+  margin: 0;
+  z-index: 1;
 }
 .container {
     position: absolute;
@@ -84,17 +86,17 @@
     }
   }
 
-  @keyframes slide {
-    0% {
-      transform: translateX(0);
-    }
-    50% {
-      transform: translateX(-33.33%); 
-    }
-    100% {
-        transform: translateX(0); 
-      }
+@keyframes scrollBg {
+  0% {
+    background-position: 0 0;
   }
+  50% {
+    background-position: -100vw 0;
+  }
+  100% {
+    background-position: 100vw 0;
+  }
+}
   
   @media (max-width: 768px) {
     .container {
