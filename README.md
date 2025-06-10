@@ -1,94 +1,125 @@
-# AI-Based Academic Advisor for SE Students at FPT University (AISEA)
+# AISEA Front-End: AI-Based Academic Advisor for SE Students at FPT University
 
-## Project Overview
-- **Class**: Software Engineering (SE)
-- **Duration**: May 2025 to August 2025
-- **Profession**: Software Engineer
-- **Specialty**: Software Engineering
-- **Register Types**: Lecturer, Students
-- **Project Name**:
-  - **English**: AI-Based Academic Advisor for SE Students at FPT University
-  - **Vietnamese**: Hệ thống cố vấn học tập dựa trên AI dành cho sinh viên ngành Kỹ thuật phần mềm tại Đại học FPT
-  - **Abbreviation**: AISEA
+Welcome to the **AISEA Front-End** repository—a modern, responsive web application built for the [AISEA project](https://github.com/FU-CAPSTONE-SU2025), supporting Software Engineering (SE) students at FPT University with AI-powered academic advising.
 
-## Context
-FPT University promotes advanced technologies in education, but Software Engineering (SE) students face challenges in managing their academic roadmap, including:
-- Navigating the **Program** (training program), **Curriculum** (standardized structure), **Combos** (subject groupings for specialization), and individual **Subjects**.
-- Aligning studies with graduation requirements, GPA optimization, and career goals.
-- Current systems (e.g., FPT Academic Portal, Learning Material System) provide static data but lack personalized advisory features.
+---
 
-## Proposed Solution
-AISEA is a smart academic assistant designed to support personalized learning paths and decision-making for SE students at FPT University. It integrates with existing systems to provide tailored guidance.
+## 🚀 Project Overview
 
-### Key Features
-- **AI-Powered Combo Advising**: Suggests specialization combos (e.g., AI, Web, IoT) based on student interests and academic history.
-- **Semester Planning Assistant**: Recommends subject combinations with balanced workload.
-- **Course-Specific Study Tips**: Generates tips from syllabus and learning materials.
-- **GPA Calculator and Transcript Tracker**: Tracks academic progress visually.
-- **Data Integration**: Extracts and imports data from FPTU Academic Portal and Learning Material System.
-- **Personalized Dashboard**: Displays progress, goals, and deadlines.
+**AISEA** (AI-based Academic Advisor for SE students at FPT University) is a smart, interactive platform that helps SE students:
+- Personalize their learning paths
+- Optimize course selections and combos
+- Track progress and GPA
+- Receive tailored advice using AI
 
-## Actors
-| Actor          | Role Description                                                                 |
-|----------------|----------------------------------------------------------------------------------|
-| **Student**    | Primary user receiving personalized academic support.                            |
-|                | - Views learning roadmap based on Curriculum.                                    |
-|                | - Receives AI-based suggestions for Combos and subjects.                         |
-|                | - Plans semester schedules and subject combinations.                             |
-|                | - Gets course-specific learning strategies using Syllabus data.                  |
-|                | - Calculates GPA, tracks progress, and receives deadline alerts.                 |
-|                | - Explores course details, prerequisites, and outcomes.                          |
-|                | - Interacts with advisors or requests feedback.                                  |
-| **Advisor**    | Provides direct academic advising.                                               |
-|                | - Accesses student profiles and academic trajectories.                           |
-|                | - Recommends combos and strategies based on performance.                         |
-|                | - Provides manual guidance with AI support.                                      |
-|                | - Assesses appropriateness of course selections.                                 |
-| **Academic Staff** | Supports academic data operations and student records.                        |
-|                | - Updates academic records (GPA, transcripts, registrations).                    |
-|                | - Inputs or edits Subject and Syllabus data.                                     |
-|                | - Assigns or approves specialization Combos.                                     |
-|                | - Assists in academic advising when needed.                                      |
-| **Manager**    | Oversees program structure, curricula, and combos.                               |
-|                | - Manages Programs, Curricula, and Combos.                                       |
-|                | - Monitors academic trends and combo selections across cohorts.                  |
-|                | - Approves or updates subject groups and curriculum changes.                     |
-|                | - Accesses analytics on student performance and program decisions.               |
-| **Admin**      | Manages system access, configuration, and integration.                           |
-|                | - Manages users (create, update, delete accounts).                               |
-|                | - Configures system and integrates external APIs.                                |
-|                | - Monitors activity logs and system performance.                                 |
+This repository contains the **client-side application**—developed with modern web technologies—to deliver a seamless, intuitive user experience.
 
-## Non-Functional Requirements
-- **API Consistency & Compatibility**: Use RESTful API standards for client-server communication.
-- **Role-Based Access Control**: Restrict features by user role (e.g., Admin, Advisor) to enhance security.
+---
 
-## System Requirements and Deliverables
+## 🛠️ Tech Stack
 
-### Theory and Practice (Documentation)
-Complete software development lifecycle documentation using UML 2.0, including:
-- User Requirements Document (URD)
-- Software Requirements Specification (SRS)
-- Software Architecture Document (SAD)
-- Detailed Design Document (DDD)
-- Implementation Documentation
-- Test Documentation
-- Installation Guide
-- Source Code Documentation
-- Deployment Package Documentation
+- **Framework:** React (with TypeScript) <!-- or Angular, update as needed -->
+- **Languages:** TypeScript, JavaScript, HTML5, CSS3
+- **State Management:** Redux Toolkit (or Context API, if used)
+- **Styling:** CSS Modules, SCSS, or styled-components (adapt to your setup)
+- **API Integration:** Axios (RESTful API communication)
+- **Authentication:** JWT-based (with support for role-based access)
+- **Testing:** Jest, React Testing Library (if applicable)
+- **CI/CD:** GitHub Actions (for automated testing and deployments)
+- **Containerization/Deployment:** Docker, AWS (if applicable)
+- **AI Integration:** Gemini AI, Google Agent Dev Kit (as part of the backend)
 
-### Server-Side Technologies
-- **Server**: .NET Core
-- **Database**: SQL Server, MySQL Server, PostgreSQL, or MongoDB
-- **Authentication**: JSON Web Tokens (JWT)
-- **Deployment**: Docker/AWS for containerization
-- **Third-Party Services**: Gemini AI, Google Agent Dev Kit, or similar
+---
 
-### Client-Side Technologies
-- **Framework**: React or Angular for web application
-- **Technologies**: HTML5, CSS3, TypeScript, ReactJS/Angular
+## ✨ Key Features
 
-### Program Components
-- **RESTful API**: Supports all client-server communication.
-- **Web App**: Interface for admin and users.
-- **AI Chatbot**: Provides interactive academic advising.
+- **Interactive Dashboard:** See your academic progress, goals, and deadlines at a glance.
+- **AI-Powered Combo Selection:** Get personalized suggestions for specialization combos (e.g., AI, Web, IoT) based on your interests and transcript.
+- **Smart Semester Planning:** Receive balanced course recommendations tailored to graduation and GPA targets.
+- **Course-Specific Study Tips:** Access AI-generated learning strategies for each subject using integrated syllabus data.
+- **GPA Calculator & Tracker:** Visualize your academic standings and simulate outcomes.
+- **Data Integration:** Securely import data from FPTU Academic Portal and Learning Material System.
+- **Role-Based Access:** Distinct interfaces for Students, Advisors, Academic Staff, Managers, and Admins.
+- **Responsive Design:** Optimized for desktop and mobile devices.
+
+---
+
+## 👥 User Roles
+
+| Role           | Description                                                      |
+|----------------|------------------------------------------------------------------|
+| **Student**    | Personalized support, planning, and actionable advice.           |
+| **Advisor**    | Academic guidance with AI-driven suggestions.                    |
+| **Academic Staff** | Data management and support.                                 |
+| **Manager**    | Program oversight and analytics.                                 |
+| **Admin**      | Account management and system configuration.                     |
+
+---
+
+## 📦 Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/FU-CAPSTONE-SU2025/Front-end.git
+cd Front-end
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+# or
+yarn install
+```
+
+### 3. Run the Application
+
+```bash
+npm start
+# or
+yarn start
+```
+
+The app will be available at [http://localhost:3000](http://localhost:3000).
+
+---
+
+## 🔗 Environment Configuration
+
+- Set up environment variables in `.env` for API endpoints, authentication, and third-party integrations.
+- Ensure connection to the AISEA backend API for full functionality.
+
+---
+
+## 🧩 Project Structure
+
+```
+/src
+  /components
+  /pages
+  /services
+  /store
+  /assets
+  /utils
+  App.tsx
+  index.tsx
+```
+
+---
+
+## 📄 Documentation & Deliverables
+
+- User Requirements, SRS, System Design, and API docs are available in the `/docs` directory or [project wiki](https://drive.google.com/drive/u/1/folders/1Z9PZd7Un842QkpQYVt6cMeUGcW2ZJDjd).
+- For backend/API details, see [AISEA-Back-End](https://github.com/FU-CAPSTONE-SU2025/Back-end).
+
+
+---
+
+## 📧 Contact
+
+For questions or support, open an issue or contact the development team at [blazehendrix007@gmail.com].
+
+---
+
+**AISEA Front-End** — Empowering SE students at FPT University with smart academic guidance.
