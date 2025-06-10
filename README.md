@@ -20,13 +20,13 @@ This repository contains the **client-side application**—developed with modern
 
 - **Framework:** React (with TypeScript) <!-- or Angular, update as needed -->
 - **Languages:** TypeScript, JavaScript, HTML5, CSS3
-- **State Management:** Redux Toolkit (or Context API, if used)
-- **Styling:** CSS Modules, SCSS, or styled-components (adapt to your setup)
+- **State Management:** Zustand 
+- **Styling:** CSS Modules, SCSS, or Antd and Tailwind
 - **API Integration:** Axios (RESTful API communication)
 - **Authentication:** JWT-based (with support for role-based access)
-- **Testing:** Jest, React Testing Library (if applicable)
+- **Testing:** Jest
 - **CI/CD:** GitHub Actions (for automated testing and deployments)
-- **Containerization/Deployment:** Docker, AWS (if applicable)
+- **Containerization/Deployment:** Docker deployment with DigitalOcean Server Hosting
 - **AI Integration:** Gemini AI, Google Agent Dev Kit (as part of the backend)
 
 ---
@@ -51,7 +51,7 @@ This repository contains the **client-side application**—developed with modern
 | **Student**    | Personalized support, planning, and actionable advice.           |
 | **Advisor**    | Academic guidance with AI-driven suggestions.                    |
 | **Academic Staff** | Data management and support.                                 |
-| **Manager**    | Program oversight and analytics.                                 |
+| **Manager**    | Programs oversight and analytics.                                 |
 | **Admin**      | Account management and system configuration.                     |
 
 ---
