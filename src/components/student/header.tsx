@@ -27,7 +27,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 w-full flex justify-between items-center px-3 sm:px-6 lg:px-8 py-3 z-20 bg-white bg-opacity-15 backdrop-blur-lg shadow-sm">
+    <header className="fixed top-0 left-0 w-full z-50 bg-white/60 backdrop-blur-md shadow-md px-8 py-4 flex items-center justify-between transition-all duration-300">
       {/* Left Section: Hamburger (Mobile) / Logo (Desktop) */}
       <div className="flex items-center">
         {/* Hamburger Menu Button (Visible on Mobile) */}
@@ -76,7 +76,7 @@ const Header: React.FC = () => {
 
       {/* Menu (Desktop, Centered) */}
       <nav className="hidden lg:flex flex-row items-center gap-8 flex-1 justify-center">
-        {['Dashboard', 'Semester Planner', 'Course Tracking', 'Resource Explorer'].map((item, index) => (
+        {['Dashboard', 'Semester Planner', 'Course Tracking', 'Resource Explorer', 'Advisor Support'].map((item, index) => (
           <motion.a
             key={item}
             href="#"
@@ -159,7 +159,7 @@ const Header: React.FC = () => {
             animate="visible"
             exit="exit"
           >
-            {['Dashboard', 'Semester Planner', 'Course Tracking', 'Resource Explorer'].map((item, index) => (
+            {['Dashboard', 'Semester Planner', 'Course Tracking', 'Resource Explorer', 'Advisor Support'].map((item, index) => (
               <div key={item} className="w-full">
                 <motion.a
                   href="#"
