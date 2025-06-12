@@ -15,6 +15,8 @@ import ImportPage from "../pages/admin/import";
 import { Home } from "../pages/student/home";
 import { createBrowserRouter } from "react-router";
 import StudentLayout from "../components/student/layout";
+import AdviosrSupport from "../pages/student/adviosrSupport";
+import BookingPage from "../pages/student/booking";
 
 export const routes = createBrowserRouter([
   {
@@ -60,6 +62,14 @@ export const routes = createBrowserRouter([
       {
         index: true,
         Component: Home,
+      },
+       {
+        path: "advisorSupport",
+        Component: AdviosrSupport,
+      },
+      {
+        path: "bookingAdvisor",
+        Component: BookingPage,
       },
     ],
   },
