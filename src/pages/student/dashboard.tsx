@@ -48,20 +48,20 @@ const COLORS = ['#3B82F6', '#F97316'];
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  hover: { scale: 1.02, boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)', transition: { duration: 0.3 } },
+  hover: { scale: 1.01, boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)', transition: { duration: 0.3 } },
 };
 
 const Dashboard = () => (
-  <div className="min-h-screen mt-150 flex flex-col lg:flex-row ">
+  <div className="min-h-screen mt-150 flex flex-col lg:flex-row max-w-screen-xl mx-auto py-4 px-4">
     {/* Left: User Info */}
     <motion.div
-      className="w-full lg:w-1/3 flex flex-col items-center glassmorphism rounded-2xl p-8"
+      className="w-full lg:w-1/3 flex flex-col items-center glassmorphism rounded-2xl p-8 box-border"
       initial="hidden"
       animate="visible"
       variants={cardVariants}
       whileHover="hover"
     >
-      <motion.div whileHover={{ scale: 1.05, rotate: 2 }} transition={{ duration: 0.3 }}>
+      <motion.div whileHover={{ scale: 1.03, rotate: 2 }} transition={{ duration: 0.3 }}>
         <Avatar
           src={user.avatar}
           size={180}
@@ -76,7 +76,7 @@ const Dashboard = () => (
           <Tooltip title={ach.label} key={idx}>
             <motion.span
               className="text-4xl cursor-pointer"
-              whileHover={{ scale: 1.3, rotate: 10 }}
+              whileHover={{ scale: 1.2, rotate: 10 }}
               transition={{ duration: 0.2 }}
             >
               {ach.icon}
@@ -97,7 +97,7 @@ const Dashboard = () => (
     </motion.div>
 
     {/* Right: Courses and Charts */}
-    <div className="w-full lg:w-2/3 flex flex-col gap-6">
+    <div className="w-full lg:w-2/3 flex flex-col gap-6 box-border">
       {/* Courses */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {courses.map((course) => (
@@ -109,7 +109,7 @@ const Dashboard = () => (
             whileHover="hover"
           >
             <Card
-              className="rounded-xl glassmorphism border-0"
+              className="rounded-xl glassmorphism border-0 max-w-full"
               title={
                 <div className="flex items-center gap-2">
                   <StarFilled className="text-yellow-400" />
@@ -143,7 +143,7 @@ const Dashboard = () => (
         {/* Bar Chart */}
         <motion.div variants={cardVariants} initial="hidden" animate="visible" whileHover="hover">
           <Card
-            className="rounded-xl glassmorphism border-0"
+            className="rounded-xl glassmorphism border-0 max-w-full"
             title={<span className="font-semibold text-lg">Academic Scores</span>}
           >
             <ResponsiveContainer width="100%" height={220}>
@@ -159,7 +159,7 @@ const Dashboard = () => (
         {/* Line Chart */}
         <motion.div variants={cardVariants} initial="hidden" animate="visible" whileHover="hover">
           <Card
-            className="rounded-xl glassmorphism border-0"
+            className="rounded-xl glassmorphism border-0 max-w-full"
             title={<span className="font-semibold text-lg">Score Trend</span>}
           >
             <ResponsiveContainer width="100%" height={220}>
@@ -187,7 +187,7 @@ const Dashboard = () => (
           whileHover="hover"
         >
           <Card
-            className="rounded-xl glassmorphism border-0"
+            className="rounded-xl glassmorphism border-0 max-w-full"
             title={<span className="font-semibold text-lg">Pass/Fail Ratio</span>}
           >
             <ResponsiveContainer width="100%" height={220}>
