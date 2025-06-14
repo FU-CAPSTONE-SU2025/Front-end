@@ -1,41 +1,43 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Modal } from 'antd';
 import styles from '../../css/admin/students.module.css';
-import { students } from '../../../data/mockStudent';
+import { staffs } from '../../../data/mockStaff';
 import DataImport from '../../components/admin/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 
-const StudentList: React.FC = () => {
+const StaffList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
   const [filterValue, setFilterValue] = useState<string>('');
-  const studentsPerPage = 10;
+  const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
+  const [selectedStaffs, setSelectedStaffs] = useState<string[]>([]);
+  const staffsPerPage = 10;
 
   // Filtering logic
-  const filteredStudents = students.filter(student => {
-    const matchesSearch = student.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          student.Id.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredStaffs = staffs.filter(staff => {
+    const matchesSearch = staff.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          staff.Id.toLowerCase().includes(searchQuery.toLowerCase());
     let matchesFilter = true;
 
     if (filterType === 'major') {
-      matchesFilter = student.Id.startsWith(filterValue);
+      matchesFilter = staff.Id.startsWith(filterValue);
     } else if (filterType === 'campus') {
-      matchesFilter = student.Campus === filterValue;
+      matchesFilter = staff.Campus === filterValue;
     } else if (filterType === 'date') {
-      matchesFilter = student.AddDated === filterValue;
+      matchesFilter = staff.AddDated === filterValue;
     }
 
     return matchesSearch && matchesFilter;
   });
 
   // Pagination logic
-  const indexOfLastStudent = currentPage * studentsPerPage;
-  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
-  const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
-  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
+  const indexOfLastStaff = currentPage * staffsPerPage;
+  const indexOfFirstStaff = indexOfLastStaff - staffsPerPage;
+  const currentStaffs = filteredStaffs.slice(indexOfFirstStaff, indexOfLastStaff);
+  const totalPages = Math.ceil(filteredStaffs.length / staffsPerPage);
 
   // Animation variants
   const cardVariants = {
@@ -57,7 +59,7 @@ const StudentList: React.FC = () => {
   };
 
   const handleDataImported = (data: { [key: string]: string }) => {
-    const newStudent = {
+    const newStaff = {
       Id: `${['SE', 'SS', 'CE'][Math.floor(Math.random() * 3)]}${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
       Email: data.email || '',
       Name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
@@ -66,7 +68,7 @@ const StudentList: React.FC = () => {
       Campus: ['HCMC Campus', 'Ha Noi Campus', 'Da Nang Campus'][Math.floor(Math.random() * 3)],
       AddDated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('/').join('/'),
     };
-    students.push(newStudent);
+    staffs.push(newStaff);
     setCurrentPage(1);
     setIsImportOpen(false);
   };
@@ -82,15 +84,60 @@ const StudentList: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const handleDeleteModeToggle = () => {
+    setIsDeleteMode(!isDeleteMode);
+    setSelectedStaffs([]);
+  };
+
+  const handleStaffSelection = (staffId: string) => {
+    if (selectedStaffs.includes(staffId)) {
+      setSelectedStaffs(selectedStaffs.filter(id => id !== staffId));
+    } else {
+      setSelectedStaffs([...selectedStaffs, staffId]);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    Modal.confirm({
+      title: `Confirm Deletion`,
+      content: `Are you sure you want to delete ${selectedStaffs.length} staff account(s)?`,
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: () => {
+        console.log('Deleting staffs:', selectedStaffs); // Debug log
+        selectedStaffs.forEach(id => {
+          const index = staffs.findIndex(staff => staff.Id === id);
+          if (index !== -1) staffs.splice(index, 1);
+        });
+        setSelectedStaffs([]);
+        setIsDeleteMode(false);
+        setCurrentPage(1);
+      },
+      onCancel: () => {
+        console.log('Modal cancelled'); // Debug log
+      },
+      maskStyle: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
+      centered: true,
+      zIndex: 10000,
+      className: styles.customModal,
+    });
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteMode(false);
+    setSelectedStaffs([]);
+  };
+
   return (
     <div className={styles.container}>
       <AccountCounter 
-        label={"Student"}
-        student={students}
+        label={"Academic Staff"}
+        staff={staffs}
       />
       <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
         <div className={styles.userInfo}>
-          <h2>Student List</h2>
+          <h2>{isDeleteMode ? 'Delete Staff Account' : 'Staff List'}</h2>
           <div className={styles.searchBar}>
             <input
               type="text"
@@ -123,7 +170,7 @@ const StudentList: React.FC = () => {
             {filterType === 'date' && (
               <select value={filterValue} onChange={handleFilterValueChange}>
                 <option value="">Select Date</option>
-                {[...new Set(students.map(s => s.AddDated))].sort().map(date => (
+                {[...new Set(staffs.map(s => s.AddDated))].sort().map(date => (
                   <option key={date} value={date}>{date}</option>
                 ))}
               </select>
@@ -132,7 +179,19 @@ const StudentList: React.FC = () => {
           <table className={styles.studentTable}>
             <thead>
               <tr>
-                <th><input type="checkbox" /></th>
+                <th className={isDeleteMode ? '' : styles.hidden}>
+                  <input 
+                    type="checkbox" 
+                    checked={selectedStaffs.length === currentStaffs.length && currentStaffs.length > 0}
+                    onChange={() => {
+                      if (selectedStaffs.length === currentStaffs.length) {
+                        setSelectedStaffs([]);
+                      } else {
+                        setSelectedStaffs(currentStaffs.map(staff => staff.Id));
+                      }
+                    }}
+                  />
+                </th>
                 <th>Id</th>
                 <th>Email</th>
                 <th>Name</th>
@@ -143,22 +202,30 @@ const StudentList: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {currentStudents.map((student) => (
-                <tr key={student.Id}>
-                  <td><input type="checkbox" /></td>
-                  <td>{student.Id}</td>
-                  <td>{student.Email}</td>
-                  <td>{student.Name}</td>
-                  <td>{student.PhoneNumber}</td>
-                  <td>{student.Address}</td>
-                  <td>{student.Campus}</td>
-                  <td>{student.AddDated}</td>
+              {currentStaffs.map((staff) => (
+                <tr key={staff.Id}>
+                  <td className={isDeleteMode ? '' : styles.hidden}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedStaffs.includes(staff.Id)}
+                      onChange={() => handleStaffSelection(staff.Id)}
+                    />
+                  </td>
+                  <td>{staff.Id}</td>
+                  <td>{staff.Email}</td>
+                  <td>{staff.Name}</td>
+                  <td>{staff.PhoneNumber}</td>
+                  <td>{staff.Address}</td>
+                  <td>{staff.Campus}</td>
+                  <td>{staff.AddDated}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           <div className={styles.pagination}>
-            <span>{currentStudents.length} of {filteredStudents.length} row(s) selected.</span>
+            <span>
+              Showing {indexOfFirstStaff + 1} to {Math.min(indexOfLastStaff, filteredStaffs.length)} of {filteredStaffs.length} entries
+            </span>
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
@@ -175,21 +242,54 @@ const StudentList: React.FC = () => {
         </div>
       </motion.div>
       <motion.div className={styles.actionPanel} variants={actionPanelVariants} initial="hidden" animate="visible">
-        <div className={styles.actionTitle}>Admin functions:</div>
+        <div className={styles.actionTitle}>Action:</div>
         <div className={styles.actions}>
           {['Add New Account', 'Delete Account', 'Import Data From xlsx'].map((action, index) => (
             <motion.div
               key={index}
-              className={styles.actionButton}
+              className={`${styles.actionButton} ${action === 'Delete Account' ? styles.deleteButton : ''}`}
               variants={actionPanelVariants}
-              whileHover={{ scale: 1.05 }}
-              onClick={action === 'Import Data From xlsx' ? handleImport : undefined}
+              whileHover={{ scale: isDeleteMode ? 1 : 1.05 }}
+              onClick={
+                isDeleteMode ? undefined :
+                action === 'Import Data From xlsx' ? handleImport :
+                action === 'Delete Account' ? handleDeleteModeToggle : undefined
+              }
             >
-              <div className={styles.buttonContent}>{action}</div>
+              <div className={`${styles.buttonContent} ${isDeleteMode ? styles.disabledButton : ''}`}>
+                {action}
+              </div>
             </motion.div>
           ))}
         </div>
       </motion.div>
+      {isDeleteMode && (
+        <motion.div 
+          className={styles.deleteActions}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.button
+            className={`${styles.cancelButton} ${styles.deleteActionButton}`}
+            whileHover={{ scale: 1.05 }}
+            onClick={handleCancelDelete}
+          >
+            Cancel
+          </motion.button>
+          <motion.button
+            className={`${styles.deleteActionButton} ${styles.deleteConfirmButton}`}
+            whileHover={{ scale: 1.05 }}
+            onClick={() => {
+              console.log('Delete button clicked'); // Debug log
+              handleConfirmDelete();
+            }}
+            disabled={selectedStaffs.length === 0}
+          >
+            Delete
+          </motion.button>
+        </motion.div>
+      )}
       {isImportOpen && (
         <div className={styles.modalOverlay}>
           <DataImport onClose={() => setIsImportOpen(false)} onDataImported={handleDataImported} />
@@ -199,4 +299,4 @@ const StudentList: React.FC = () => {
   );
 };
 
-export default StudentList;
+export default StaffList;

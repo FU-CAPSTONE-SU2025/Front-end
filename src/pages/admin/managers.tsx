@@ -1,41 +1,43 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Modal } from 'antd';
 import styles from '../../css/admin/students.module.css';
-import { students } from '../../../data/mockStudent';
+import { managers } from '../../../data/mockManager';
 import DataImport from '../../components/admin/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 
-const StudentList: React.FC = () => {
+const ManagerList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
   const [filterValue, setFilterValue] = useState<string>('');
-  const studentsPerPage = 10;
+  const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
+  const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
+  const managersPerPage = 10;
 
   // Filtering logic
-  const filteredStudents = students.filter(student => {
-    const matchesSearch = student.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          student.Id.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredManagers = managers.filter(manager => {
+    const matchesSearch = manager.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          manager.Id.toLowerCase().includes(searchQuery.toLowerCase());
     let matchesFilter = true;
 
     if (filterType === 'major') {
-      matchesFilter = student.Id.startsWith(filterValue);
+      matchesFilter = manager.Id.startsWith(filterValue);
     } else if (filterType === 'campus') {
-      matchesFilter = student.Campus === filterValue;
+      matchesFilter = manager.Campus === filterValue;
     } else if (filterType === 'date') {
-      matchesFilter = student.AddDated === filterValue;
+      matchesFilter = manager.AddDated === filterValue;
     }
 
     return matchesSearch && matchesFilter;
   });
 
   // Pagination logic
-  const indexOfLastStudent = currentPage * studentsPerPage;
-  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
-  const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
-  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
+  const indexOfLastManager = currentPage * managersPerPage;
+  const indexOfFirstManager = indexOfLastManager - managersPerPage;
+  const currentManagers = filteredManagers.slice(indexOfFirstManager, indexOfLastManager);
+  const totalPages = Math.ceil(filteredManagers.length / managersPerPage);
 
   // Animation variants
   const cardVariants = {
@@ -57,7 +59,7 @@ const StudentList: React.FC = () => {
   };
 
   const handleDataImported = (data: { [key: string]: string }) => {
-    const newStudent = {
+    const newManager = {
       Id: `${['SE', 'SS', 'CE'][Math.floor(Math.random() * 3)]}${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
       Email: data.email || '',
       Name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
@@ -66,7 +68,7 @@ const StudentList: React.FC = () => {
       Campus: ['HCMC Campus', 'Ha Noi Campus', 'Da Nang Campus'][Math.floor(Math.random() * 3)],
       AddDated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('/').join('/'),
     };
-    students.push(newStudent);
+    managers.push(newManager);
     setCurrentPage(1);
     setIsImportOpen(false);
   };
@@ -82,15 +84,60 @@ const StudentList: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const handleDeleteModeToggle = () => {
+    setIsDeleteMode(!isDeleteMode);
+    setSelectedManagers([]);
+  };
+
+  const handleManagerSelection = (managerId: string) => {
+    if (selectedManagers.includes(managerId)) {
+      setSelectedManagers(selectedManagers.filter(id => id !== managerId));
+    } else {
+      setSelectedManagers([...selectedManagers, managerId]);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    Modal.confirm({
+      title: `Confirm Deletion`,
+      content: `Are you sure you want to delete ${selectedManagers.length} manager account(s)?`,
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: () => {
+        console.log('Deleting managers:', selectedManagers); // Debug log
+        selectedManagers.forEach(id => {
+          const index = managers.findIndex(manager => manager.Id === id);
+          if (index !== -1) managers.splice(index, 1);
+        });
+        setSelectedManagers([]);
+        setIsDeleteMode(false);
+        setCurrentPage(1);
+      },
+      onCancel: () => {
+        console.log('Modal cancelled'); // Debug log
+      },
+      maskStyle: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
+      centered: true,
+      zIndex: 10000,
+      className: styles.customModal,
+    });
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteMode(false);
+    setSelectedManagers([]);
+  };
+
   return (
     <div className={styles.container}>
       <AccountCounter 
-        label={"Student"}
-        student={students}
+        label={"Manager"}
+        manager={managers}
       />
       <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
         <div className={styles.userInfo}>
-          <h2>Student List</h2>
+          <h2>{isDeleteMode ? 'Delete Manager Account' : 'Manager List'}</h2>
           <div className={styles.searchBar}>
             <input
               type="text"
@@ -123,7 +170,7 @@ const StudentList: React.FC = () => {
             {filterType === 'date' && (
               <select value={filterValue} onChange={handleFilterValueChange}>
                 <option value="">Select Date</option>
-                {[...new Set(students.map(s => s.AddDated))].sort().map(date => (
+                {[...new Set(managers.map(m => m.AddDated))].sort().map(date => (
                   <option key={date} value={date}>{date}</option>
                 ))}
               </select>
@@ -132,7 +179,19 @@ const StudentList: React.FC = () => {
           <table className={styles.studentTable}>
             <thead>
               <tr>
-                <th><input type="checkbox" /></th>
+                <th className={isDeleteMode ? '' : styles.hidden}>
+                  <input 
+                    type="checkbox" 
+                    checked={selectedManagers.length === currentManagers.length && currentManagers.length > 0}
+                    onChange={() => {
+                      if (selectedManagers.length === currentManagers.length) {
+                        setSelectedManagers([]);
+                      } else {
+                        setSelectedManagers(currentManagers.map(manager => manager.Id));
+                      }
+                    }}
+                  />
+                </th>
                 <th>Id</th>
                 <th>Email</th>
                 <th>Name</th>
@@ -143,22 +202,30 @@ const StudentList: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {currentStudents.map((student) => (
-                <tr key={student.Id}>
-                  <td><input type="checkbox" /></td>
-                  <td>{student.Id}</td>
-                  <td>{student.Email}</td>
-                  <td>{student.Name}</td>
-                  <td>{student.PhoneNumber}</td>
-                  <td>{student.Address}</td>
-                  <td>{student.Campus}</td>
-                  <td>{student.AddDated}</td>
+              {currentManagers.map((manager) => (
+                <tr key={manager.Id}>
+                  <td className={isDeleteMode ? '' : styles.hidden}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedManagers.includes(manager.Id)}
+                      onChange={() => handleManagerSelection(manager.Id)}
+                    />
+                  </td>
+                  <td>{manager.Id}</td>
+                  <td>{manager.Email}</td>
+                  <td>{manager.Name}</td>
+                  <td>{manager.PhoneNumber}</td>
+                  <td>{manager.Address}</td>
+                  <td>{manager.Campus}</td>
+                  <td>{manager.AddDated}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           <div className={styles.pagination}>
-            <span>{currentStudents.length} of {filteredStudents.length} row(s) selected.</span>
+            <span>
+              Showing {indexOfFirstManager + 1} to {Math.min(indexOfLastManager, filteredManagers.length)} of {filteredManagers.length} entries
+            </span>
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
@@ -175,21 +242,54 @@ const StudentList: React.FC = () => {
         </div>
       </motion.div>
       <motion.div className={styles.actionPanel} variants={actionPanelVariants} initial="hidden" animate="visible">
-        <div className={styles.actionTitle}>Admin functions:</div>
+        <div className={styles.actionTitle}>Action:</div>
         <div className={styles.actions}>
           {['Add New Account', 'Delete Account', 'Import Data From xlsx'].map((action, index) => (
             <motion.div
               key={index}
-              className={styles.actionButton}
+              className={`${styles.actionButton} ${action === 'Delete Account' ? styles.deleteButton : ''}`}
               variants={actionPanelVariants}
-              whileHover={{ scale: 1.05 }}
-              onClick={action === 'Import Data From xlsx' ? handleImport : undefined}
+              whileHover={{ scale: isDeleteMode ? 1 : 1.05 }}
+              onClick={
+                isDeleteMode ? undefined :
+                action === 'Import Data From xlsx' ? handleImport :
+                action === 'Delete Account' ? handleDeleteModeToggle : undefined
+              }
             >
-              <div className={styles.buttonContent}>{action}</div>
+              <div className={`${styles.buttonContent} ${isDeleteMode ? styles.disabledButton : ''}`}>
+                {action}
+              </div>
             </motion.div>
           ))}
         </div>
       </motion.div>
+      {isDeleteMode && (
+        <motion.div 
+          className={styles.deleteActions}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.button
+            className={`${styles.cancelButton} ${styles.deleteActionButton}`}
+            whileHover={{ scale: 1.05 }}
+            onClick={handleCancelDelete}
+          >
+            Cancel
+          </motion.button>
+          <motion.button
+            className={`${styles.deleteActionButton} ${styles.deleteConfirmButton}`}
+            whileHover={{ scale: 1.05 }}
+            onClick={() => {
+              console.log('Delete button clicked'); // Debug log
+              handleConfirmDelete();
+            }}
+            disabled={selectedManagers.length === 0}
+          >
+            Delete
+          </motion.button>
+        </motion.div>
+      )}
       {isImportOpen && (
         <div className={styles.modalOverlay}>
           <DataImport onClose={() => setIsImportOpen(false)} onDataImported={handleDataImported} />
@@ -199,4 +299,4 @@ const StudentList: React.FC = () => {
   );
 };
 
-export default StudentList;
+export default ManagerList;
