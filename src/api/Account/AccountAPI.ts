@@ -1,7 +1,9 @@
 import { axiosCreate, axiosRead } from "../AxiosCRUD";
 import { baseUrl, header } from "../template";
 import { AccountProps, AccountPropsCreate, LoginProps } from "../../interface/IAccount";
-const accountUrl = baseUrl+"/account"
+import { TokenProps } from "../../interface/IAuthen";
+// const accountUrl = baseUrl+"/account"
+const accountUrl = baseUrl+"/DemoSample" // Coomment, this is just the demo
 const googleLoginURL = import.meta.env.VITE_API_GOOLGE_LOGIN_URL
 
 export const GoogleAccountAuthen = async (data: string) => {
@@ -24,15 +26,15 @@ export const GoogleAccountAuthen = async (data: string) => {
         return null
     }
 }
-export const LoginAccount = async (data: LoginProps):Promise<AccountProps|null> => {
+export const LoginAccount = async (data: LoginProps):Promise<TokenProps|null> => {
     const props = {
-        data: null,
-        url: accountUrl+`?email=${data.email}&password=${data.password}`,
+        data: data,
+        url: accountUrl+`/login`,
         headers: header
     }
-    const result = await axiosRead(props)
+    const result = await axiosCreate(props)
     if (result.success) {
-        //console.log(result.data)
+        console.log(result.data)
         return result.data
     }
     else {
@@ -41,7 +43,7 @@ export const LoginAccount = async (data: LoginProps):Promise<AccountProps|null> 
     }
 
 }
-export const LoginAccountWithGoogle = async (email: string):Promise<AccountProps|null> => {
+export const LoginAccountWithGoogle = async (email: string):Promise<TokenProps|null> => {
     const props = {
         data: null,
         url: accountUrl+`?email=${email}`,
