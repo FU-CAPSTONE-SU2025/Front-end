@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Badge, Avatar } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
+import Messenger from './messenger';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -114,14 +115,7 @@ const Header: React.FC = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >
-            <svg
-              className="w-4 h-4 sm:w-5 sm:h-5 text-black cursor-pointer"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-4.072A9.863 9.863 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-            </svg>
+          <Messenger />
           </motion.div>
         </Badge>
         <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>

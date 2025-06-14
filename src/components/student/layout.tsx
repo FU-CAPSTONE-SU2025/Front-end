@@ -3,14 +3,14 @@ import Header from './header';
 import Footer from './footer';
 import { Outlet } from 'react-router';
 
-const StudentLayout: React.FC = () => {
+const StudentLayout = () => {
   return (
     <>
       <Header />
-      <div className="bg-gradient-to-br from-orange-500 to-blue-900 min-h-screen  pt-16">
-      <div className='container '>
-      <Outlet />
-      </div>
+      <div className="bg-gradient-to-br from-orange-500 to-blue-900 min-h-screen pt-16">
+        <div className="w-full  mx-auto px-4">
+          <Outlet />
+        </div>
       </div>
       <Footer />
     </>

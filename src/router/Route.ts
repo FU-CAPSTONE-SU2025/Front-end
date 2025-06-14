@@ -11,12 +11,10 @@ import AdvisorsPage from "../pages/admin/advisors";
 import ManagersPage from "../pages/admin/managers";
 import LogsPage from "../pages/admin/logs";
 import ImportPage from "../pages/admin/import";
-
-import Dashboard from "../pages/student/home";
+import Dashboard from "../pages/student/dashboard";
 import { createBrowserRouter } from "react-router";
 import StudentLayout from "../components/student/layout";
-import AdviosrSupport from "../pages/student/adviosrSupport";
-import BookingPage from "../pages/student/booking";
+import BookingPage from "../pages/student/bookingAdvisor";
 
 export const routes = createBrowserRouter([
   {
@@ -62,10 +60,6 @@ export const routes = createBrowserRouter([
       {
         index: true,
         Component: Dashboard,
-      },
-       {
-        path: "advisorSupport",
-        Component: AdviosrSupport,
       },
       {
         path: "bookingAdvisor",
