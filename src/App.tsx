@@ -1,5 +1,6 @@
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import './App.css'
+import '@ant-design/v5-patch-for-react-19';
 import { routes } from './router/Route'
 import { RouterProvider } from 'react-router'
 

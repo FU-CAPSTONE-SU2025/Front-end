@@ -212,7 +212,6 @@ const Profile: React.FC = () => {
           </div>
         </motion.div>
         <motion.div className={styles.actionPanel} variants={actionPanelVariants} initial="hidden" animate="visible">
-          <div className={styles.actionTitle}>Action</div>
           <div className={styles.actions}>
             {['Edit Account', 'Import Data From xlsx', 'Delete Account', 'Logout'].map((action, index) => (
               <motion.div

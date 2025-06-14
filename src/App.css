@@ -6,6 +6,7 @@
   color: #363636; /* Primary text */
 }
 
+
 /* Override Antd button styles */
 .ant-btn-primary {
   background-color: #ff3b3b !important;
