@@ -12,7 +12,7 @@ import ManagersPage from "../pages/admin/managers";
 import LogsPage from "../pages/admin/logs";
 import ImportPage from "../pages/admin/import";
 
-import { Home } from "../pages/student/home";
+import Dashboard from "../pages/student/home";
 import { createBrowserRouter } from "react-router";
 import StudentLayout from "../components/student/layout";
 import AdviosrSupport from "../pages/student/adviosrSupport";
@@ -61,7 +61,7 @@ export const routes = createBrowserRouter([
     children: [
       {
         index: true,
-        Component: Home,
+        Component: Dashboard,
       },
        {
         path: "advisorSupport",
@@ -81,4 +81,4 @@ export const routes = createBrowserRouter([
     path: "/404",
     Component: NotFound,
   },
-]);
+]); 
