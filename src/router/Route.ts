@@ -14,6 +14,7 @@ import Dashboard from "../pages/student/dashboard";
 import { createBrowserRouter } from "react-router";
 import StudentLayout from "../components/student/layout";
 import BookingPage from "../pages/student/bookingAdvisor";
+import ResourceExplorer from "../pages/student/resourceExplorer";
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -68,6 +69,10 @@ export const routes = createBrowserRouter([
       {
         path: "bookingAdvisor",
         Component: BookingPage,
+      },
+      {
+        path: "resourceExplorer",
+        Component: ResourceExplorer,
       },
     ],
   },
