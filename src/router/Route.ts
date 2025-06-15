@@ -9,13 +9,14 @@ import AdvisorsPage from "../pages/admin/advisors";
 import ManagersPage from "../pages/admin/managers";
 import LogsPage from "../pages/admin/logs";
 import ImportPage from "../pages/admin/import";
-
-import { Home } from "../pages/student/home";
+import Dashboard from "../pages/student/dashboard";
 import { createBrowserRouter } from "react-router";
 import StudentLayout from "../components/student/layout";
 import AdviosrSupport from "../pages/student/adviosrSupport";
 import BookingPage from "../pages/student/booking";
 import AdminLayout from "../components/admin/adminLayout";
+import BookingPage from "../pages/student/bookingAdvisor";
+import ResourceExplorer from "../pages/student/resourceExplorer";
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -65,15 +66,15 @@ export const routes = createBrowserRouter([
     children: [
       {
         index: true,
-        Component: Home,
-      },
-       {
-        path: "advisorSupport",
-        Component: AdviosrSupport,
+        Component: Dashboard,
       },
       {
         path: "bookingAdvisor",
         Component: BookingPage,
+      },
+      {
+        path: "resourceExplorer",
+        Component: ResourceExplorer,
       },
     ],
   },
@@ -85,4 +86,4 @@ export const routes = createBrowserRouter([
     path: "/404",
     Component: NotFound,
   },
-]);
+]); 

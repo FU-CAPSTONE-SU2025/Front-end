@@ -49,7 +49,7 @@ const BookingPage = () => {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="min-h-screen flex items-center justify-center p-4 font-inter"
+      className="min-h-screen flex items-center justify-center p-4 font-inter pt-16"
     >
       <motion.div
         className="w-full max-w-6xl bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20"
@@ -63,7 +63,6 @@ const BookingPage = () => {
         <p className="text-center mb-8 text-lg text-gray-200 opacity-80">
           Select a date, time, and advisor to book your session
         </p>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Calendar Section */}
           <motion.div
@@ -86,7 +85,6 @@ const BookingPage = () => {
               />
             </motion.div>
           </motion.div>
-
           {/* Time Slots and Advisors Section */}
           <div className="col-span-1 lg:col-span-2 grid grid-cols-1 xl:grid-cols-2 gap-8">
             {/* Time Slots */}
@@ -126,7 +124,6 @@ const BookingPage = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-
             {/* Advisors */}
             <AnimatePresence>
               {selectedTime && (
@@ -208,7 +205,6 @@ const BookingPage = () => {
             </AnimatePresence>
           </div>
         </div>
-
         {/* Booking Summary and Button */}
         <AnimatePresence>
           {selectedDate && selectedTime && selectedAdvisor && (
@@ -257,7 +253,6 @@ const BookingPage = () => {
             </motion.div>
           )}
         </AnimatePresence>
-
         {/* Confirmation Modal */}
         <div
           className={`fixed inset-0 bg-black/50 flex items-center justify-center transition-opacity duration-300 ${
