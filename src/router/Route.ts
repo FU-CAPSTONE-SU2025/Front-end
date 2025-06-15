@@ -16,6 +16,7 @@ import { createBrowserRouter } from "react-router";
 import StudentLayout from "../components/student/layout";
 import BookingPage from "../pages/student/bookingAdvisor";
 import ResourceExplorer from "../pages/student/resourceExplorer";
+import CourseTracking from "../pages/student/courseTracking";
 
 export const routes = createBrowserRouter([
   {
@@ -70,6 +71,10 @@ export const routes = createBrowserRouter([
         path: "resourceExplorer",
         Component: ResourceExplorer,
       },
+      {
+        path: "courseTracking",
+        Component: CourseTracking,
+      }
     ],
   },
   {
