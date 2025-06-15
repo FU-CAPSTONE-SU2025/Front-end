@@ -1,13 +1,25 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Modal } from 'antd';
+import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
 import styles from '../../css/admin/students.module.css';
 import { managers } from '../../../data/mockManager';
 import DataImport from '../../components/admin/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
+import DataTable from '../../components/common/dataTable';
+
+const { Option } = Select;
+
+interface Manager {
+  Id: string;
+  Email: string;
+  Name: string;
+  PhoneNumber: string;
+  Address: string;
+  Campus: string;
+  AddDated: string;
+}
 
 const ManagerList: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
@@ -16,7 +28,7 @@ const ManagerList: React.FC = () => {
   const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
   const managersPerPage = 10;
 
-  // Filtering logic
+  // Filtering logic - only applied to the displayed managers
   const filteredManagers = managers.filter(manager => {
     const matchesSearch = manager.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           manager.Id.toLowerCase().includes(searchQuery.toLowerCase());
@@ -33,25 +45,10 @@ const ManagerList: React.FC = () => {
     return matchesSearch && matchesFilter;
   });
 
-  // Pagination logic
-  const indexOfLastManager = currentPage * managersPerPage;
-  const indexOfFirstManager = indexOfLastManager - managersPerPage;
-  const currentManagers = filteredManagers.slice(indexOfFirstManager, indexOfLastManager);
-  const totalPages = Math.ceil(filteredManagers.length / managersPerPage);
-
   // Animation variants
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-  };
-
-  const actionPanelVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3, delay: 0.2 } },
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
   };
 
   const handleImport = () => {
@@ -69,32 +66,21 @@ const ManagerList: React.FC = () => {
       AddDated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('/').join('/'),
     };
     managers.push(newManager);
-    setCurrentPage(1);
     setIsImportOpen(false);
   };
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const type = e.target.value;
-    setFilterType(type);
+  const handleFilterChange = (value: string) => {
+    setFilterType(value);
     setFilterValue('');
   };
 
-  const handleFilterValueChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFilterValue(e.target.value);
-    setCurrentPage(1);
+  const handleFilterValueChange = (value: string) => {
+    setFilterValue(value);
   };
 
   const handleDeleteModeToggle = () => {
     setIsDeleteMode(!isDeleteMode);
     setSelectedManagers([]);
-  };
-
-  const handleManagerSelection = (managerId: string) => {
-    if (selectedManagers.includes(managerId)) {
-      setSelectedManagers(selectedManagers.filter(id => id !== managerId));
-    } else {
-      setSelectedManagers([...selectedManagers, managerId]);
-    }
   };
 
   const handleConfirmDelete = () => {
@@ -105,17 +91,12 @@ const ManagerList: React.FC = () => {
       okType: 'danger',
       cancelText: 'Cancel',
       onOk: () => {
-        console.log('Deleting managers:', selectedManagers); // Debug log
         selectedManagers.forEach(id => {
           const index = managers.findIndex(manager => manager.Id === id);
           if (index !== -1) managers.splice(index, 1);
         });
         setSelectedManagers([]);
         setIsDeleteMode(false);
-        setCurrentPage(1);
-      },
-      onCancel: () => {
-        console.log('Modal cancelled'); // Debug log
       },
       maskStyle: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
       centered: true,
@@ -129,173 +110,172 @@ const ManagerList: React.FC = () => {
     setSelectedManagers([]);
   };
 
+  // Table columns
+  const columns = [
+    { title: 'Id', dataIndex: 'Id', key: 'Id', width: 100 },
+    { title: 'Email', dataIndex: 'Email', key: 'Email', width: 200 },
+    { title: 'Name', dataIndex: 'Name', key: 'Name', width: 150 },
+    { title: 'Phone Number', dataIndex: 'PhoneNumber', key: 'PhoneNumber', width: 120 },
+    { title: 'Address', dataIndex: 'Address', key: 'Address', width: 200 },
+    { title: 'Campus', dataIndex: 'Campus', key: 'Campus', width: 120 },
+    { title: 'Added', dataIndex: 'AddDated', key: 'AddDated', width: 100 },
+  ];
+
+  // Row selection for delete mode
+  const rowSelection = isDeleteMode
+    ? {
+        selectedRowKeys: selectedManagers,
+        onChange: (selectedRowKeys: React.Key[]) => {
+          setSelectedManagers(selectedRowKeys as string[]);
+        },
+        getCheckboxProps: (record: Manager) => ({
+          name: record.Id,
+        }),
+      }
+    : undefined;
+
   return (
-    <div className={styles.container}>
-      <AccountCounter 
-        label={"Manager"}
-        manager={managers}
-      />
-      <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
-        <div className={styles.userInfo}>
-          <h2>{isDeleteMode ? 'Delete Manager Account' : 'Manager List'}</h2>
-          <div className={styles.searchBar}>
-            <input
-              type="text"
-              placeholder="Search Name or Id..."
-              value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-            />
-            <select value={filterType} onChange={handleFilterChange}>
-              <option value="">Filter</option>
-              <option value="major">By Major</option>
-              <option value="campus">By Campus</option>
-              <option value="date">By Date</option>
-            </select>
-            {filterType === 'major' && (
-              <select value={filterValue} onChange={handleFilterValueChange}>
-                <option value="">Select Major</option>
-                <option value="SE">SE</option>
-                <option value="SS">SS</option>
-                <option value="CE">CE</option>
-              </select>
-            )}
-            {filterType === 'campus' && (
-              <select value={filterValue} onChange={handleFilterValueChange}>
-                <option value="">Select Campus</option>
-                <option value="HCMC Campus">HCMC Campus</option>
-                <option value="Ha Noi Campus">Ha Noi Campus</option>
-                <option value="Da Nang Campus">Da Nang Campus</option>
-              </select>
-            )}
-            {filterType === 'date' && (
-              <select value={filterValue} onChange={handleFilterValueChange}>
-                <option value="">Select Date</option>
-                {[...new Set(managers.map(m => m.AddDated))].sort().map(date => (
-                  <option key={date} value={date}>{date}</option>
-                ))}
-              </select>
-            )}
-          </div>
-          <table className={styles.studentTable}>
-            <thead>
-              <tr>
-                <th className={isDeleteMode ? '' : styles.hidden}>
-                  <input 
-                    type="checkbox" 
-                    checked={selectedManagers.length === currentManagers.length && currentManagers.length > 0}
-                    onChange={() => {
-                      if (selectedManagers.length === currentManagers.length) {
-                        setSelectedManagers([]);
-                      } else {
-                        setSelectedManagers(currentManagers.map(manager => manager.Id));
-                      }
-                    }}
-                  />
-                </th>
-                <th>Id</th>
-                <th>Email</th>
-                <th>Name</th>
-                <th>PhoneNumber</th>
-                <th>Address</th>
-                <th>Campus</th>
-                <th>Added</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentManagers.map((manager) => (
-                <tr key={manager.Id}>
-                  <td className={isDeleteMode ? '' : styles.hidden}>
-                    <input 
-                      type="checkbox" 
-                      checked={selectedManagers.includes(manager.Id)}
-                      onChange={() => handleManagerSelection(manager.Id)}
-                    />
-                  </td>
-                  <td>{manager.Id}</td>
-                  <td>{manager.Email}</td>
-                  <td>{manager.Name}</td>
-                  <td>{manager.PhoneNumber}</td>
-                  <td>{manager.Address}</td>
-                  <td>{manager.Campus}</td>
-                  <td>{manager.AddDated}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className={styles.pagination}>
-            <span>
-              Showing {indexOfFirstManager + 1} to {Math.min(indexOfLastManager, filteredManagers.length)} of {filteredManagers.length} entries
-            </span>
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      </motion.div>
-      <motion.div className={styles.actionPanel} variants={actionPanelVariants} initial="hidden" animate="visible">
-        <div className={styles.actionTitle}>Action:</div>
-        <div className={styles.actions}>
-          {['Add New Account', 'Delete Account', 'Import Data From xlsx'].map((action, index) => (
-            <motion.div
-              key={index}
-              className={`${styles.actionButton} ${action === 'Delete Account' ? styles.deleteButton : ''}`}
-              variants={actionPanelVariants}
-              whileHover={{ scale: isDeleteMode ? 1 : 1.05 }}
-              onClick={
-                isDeleteMode ? undefined :
-                action === 'Import Data From xlsx' ? handleImport :
-                action === 'Delete Account' ? handleDeleteModeToggle : undefined
-              }
-            >
-              <div className={`${styles.buttonContent} ${isDeleteMode ? styles.disabledButton : ''}`}>
-                {action}
+    <ConfigProvider
+      theme={{
+        components: {
+          Table: {
+            headerBg: 'rgba(255, 255, 255, 0.1)',
+            headerColor: '#ffffff',
+            rowHoverBg: 'rgba(255, 255, 255, 0.05)',
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+          },
+        },
+      }}
+    >
+      <div className={styles.container}>
+        <AccountCounter label="Manager" manager={managers} />
+        <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
+          <div className={styles.userInfo}>
+            <h2>{isDeleteMode ? 'Delete Manager Account' : 'List Of Managers On the System'}</h2>
+            <div className={styles.controlBar}>
+              <div className={styles.searchBar}>
+                <Input
+                  placeholder="Search Name or Id..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                  }}
+                  style={{ width: 200 }}
+                />
+                <Select
+                  value={filterType}
+                  onChange={handleFilterChange}
+                  style={{ width: 120 }}
+                  placeholder="Filter"
+                >
+                  <Option value="">Filter</Option>
+                  <Option value="major">By Major</Option>
+                  <Option value="campus">By Campus</Option>
+                  <Option value="date">By Date</Option>
+                </Select>
+                {filterType === 'major' && (
+                  <Select
+                    value={filterValue}
+                    onChange={handleFilterValueChange}
+                    style={{ width: 120 }}
+                    placeholder="Select Major"
+                  >
+                    <Option value="">Select Major</Option>
+                    <Option value="SE">SE</Option>
+                    <Option value="SS">SS</Option>
+                    <Option value="CE">CE</Option>
+                  </Select>
+                )}
+                {filterType === 'campus' && (
+                  <Select
+                    value={filterValue}
+                    onChange={handleFilterValueChange}
+                    style={{ width: 120 }}
+                    placeholder="Select Campus"
+                  >
+                    <Option value="">Select Campus</Option>
+                    <Option value="HCMC Campus">HCMC Campus</Option>
+                    <Option value="Ha Noi Campus">Ha Noi Campus</Option>
+                    <Option value="Da Nang Campus">Da Nang Campus</Option>
+                  </Select>
+                )}
+                {filterType === 'date' && (
+                  <Select
+                    value={filterValue}
+                    onChange={handleFilterValueChange}
+                    style={{ width: 120 }}
+                    placeholder="Select Date"
+                  >
+                    <Option value="">Select Date</Option>
+                    {[...new Set(managers.map(m => m.AddDated))].sort().map(date => (
+                      <Option key={date} value={date}>{date}</Option>
+                    ))}
+                  </Select>
+                )}
               </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-      {isDeleteMode && (
-        <motion.div 
-          className={styles.deleteActions}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <motion.button
-            className={`${styles.cancelButton} ${styles.deleteActionButton}`}
-            whileHover={{ scale: 1.05 }}
-            onClick={handleCancelDelete}
-          >
-            Cancel
-          </motion.button>
-          <motion.button
-            className={`${styles.deleteActionButton} ${styles.deleteConfirmButton}`}
-            whileHover={{ scale: 1.05 }}
-            onClick={() => {
-              console.log('Delete button clicked'); // Debug log
-              handleConfirmDelete();
-            }}
-            disabled={selectedManagers.length === 0}
-          >
-            Delete
-          </motion.button>
+              <div className={styles.actions}>
+                {['Add New Account', 'Delete Account', 'Import Data From xlsx'].map((action, index) => (
+                  <motion.div
+                    key={index}
+                    className={`${styles.actionButton} ${action === 'Delete Account' ? styles.deleteButton : ''}`}
+                    whileHover={{ scale: isDeleteMode ? 1 : 1.05 }}
+                    onClick={
+                      isDeleteMode
+                        ? undefined
+                        : action === 'Import Data From xlsx'
+                        ? handleImport
+                        : action === 'Delete Account'
+                        ? handleDeleteModeToggle
+                        : undefined
+                    }
+                  >
+                    <div className={`${styles.buttonContent} ${isDeleteMode ? styles.disabledButton : ''}`}>
+                      {action}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+            {/* External Table display, pre-styling and ease-to-custom */}
+            <DataTable
+              columns={columns}
+              data={filteredManagers}
+              rowSelection={rowSelection}
+              dataPerPage={managersPerPage}
+            />
+            {isDeleteMode && (
+              <motion.div
+                className={styles.deleteActions}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <motion.button
+                  className={`${styles.cancelButton} ${styles.deleteActionButton}`}
+                  whileHover={{ scale: 1.05 }}
+                  onClick={handleCancelDelete}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  className={`${styles.deleteActionButton} ${styles.deleteConfirmButton}`}
+                  whileHover={{ scale: 1.05 }}
+                  onClick={handleConfirmDelete}
+                  disabled={selectedManagers.length === 0}
+                >
+                  Delete
+                </motion.button>
+              </motion.div>
+            )}
+          </div>
         </motion.div>
-      )}
-      {isImportOpen && (
-        <div className={styles.modalOverlay}>
-          <DataImport onClose={() => setIsImportOpen(false)} onDataImported={handleDataImported} />
-        </div>
-      )}
-    </div>
+        {isImportOpen && (
+          <div className={styles.modalOverlay}>
+            <DataImport onClose={() => setIsImportOpen(false)} onDataImported={handleDataImported} />
+          </div>
+        )}
+      </div>
+    </ConfigProvider>
   );
 };
 

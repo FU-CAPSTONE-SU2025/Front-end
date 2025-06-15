@@ -5,6 +5,7 @@ import styles from '../../css/admin/students.module.css';
 import { students } from '../../../data/mockStudent';
 import DataImport from '../../components/admin/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
+import DataTable from '../../components/common/dataTable';
 
 const { Option } = Select;
 
@@ -19,7 +20,6 @@ interface Student {
 }
 
 const StudentList: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
@@ -28,7 +28,7 @@ const StudentList: React.FC = () => {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const studentsPerPage = 10;
 
-  // Filtering logic
+  // Filtering logic - only applied to the displayed students (other roles can be filtered similarly)
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           student.Id.toLowerCase().includes(searchQuery.toLowerCase());
@@ -66,7 +66,6 @@ const StudentList: React.FC = () => {
       AddDated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('/').join('/'),
     };
     students.push(newStudent);
-    setCurrentPage(1);
     setIsImportOpen(false);
   };
 
@@ -77,7 +76,6 @@ const StudentList: React.FC = () => {
 
   const handleFilterValueChange = (value: string) => {
     setFilterValue(value);
-    setCurrentPage(1);
   };
 
   const handleDeleteModeToggle = () => {
@@ -99,7 +97,6 @@ const StudentList: React.FC = () => {
         });
         setSelectedStudents([]);
         setIsDeleteMode(false);
-        setCurrentPage(1);
       },
       maskStyle: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
       centered: true,
@@ -162,7 +159,6 @@ const StudentList: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
-                    setCurrentPage(1);
                   }}
                   style={{ width: 200 }}
                 />
@@ -240,22 +236,12 @@ const StudentList: React.FC = () => {
                 ))}
               </div>
             </div>
-            <Table
-              className={styles.studentTable}
+            {/* External Table display, pre-styling and ease-to-custom */}
+            <DataTable
               columns={columns}
-              dataSource={filteredStudents}
+              data={filteredStudents}
               rowSelection={rowSelection}
-              pagination={{
-                current: currentPage,
-                pageSize: studentsPerPage,
-                total: filteredStudents.length,
-                onChange: (page) => setCurrentPage(page),
-                showSizeChanger: false,
-              }}
-              rowKey="Id"
-              bordered
-              size="middle"
-              scroll={{ x: 'max-content' }}
+              dataPerPage={studentsPerPage}
             />
             {isDeleteMode && (
               <motion.div
