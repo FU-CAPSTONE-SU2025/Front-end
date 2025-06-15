@@ -12,8 +12,6 @@ import ImportPage from "../pages/admin/import";
 import Dashboard from "../pages/student/dashboard";
 import { createBrowserRouter } from "react-router";
 import StudentLayout from "../components/student/layout";
-import AdviosrSupport from "../pages/student/adviosrSupport";
-import BookingPage from "../pages/student/booking";
 import AdminLayout from "../components/admin/adminLayout";
 import BookingPage from "../pages/student/bookingAdvisor";
 import ResourceExplorer from "../pages/student/resourceExplorer";
