@@ -2,7 +2,6 @@
 import NotFound from "../pages/notfound";
 import { protectedLoader } from "../components/protectedRoute";
 import Login from "../pages/common/login";
-import AdminNavBar from "../components/admin/adminNavBar";
 import AccountPage from "../pages/admin/account";
 import StudentsPage from "../pages/admin/students";
 import StaffPage from "../pages/admin/staff";
@@ -16,6 +15,7 @@ import { createBrowserRouter } from "react-router";
 import StudentLayout from "../components/student/layout";
 import AdviosrSupport from "../pages/student/adviosrSupport";
 import BookingPage from "../pages/student/booking";
+import AdminLayout from "../components/admin/adminLayout";
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -25,7 +25,7 @@ export const routes = createBrowserRouter([
   // Example: protectedLoader(['1', '2']) means only users with roles '1' or '2' can access the route.
   {
     path: "/admin",
-    Component: AdminNavBar,
+    Component: AdminLayout,
     loader: protectedLoader(['1','2']),
     children: [
       {

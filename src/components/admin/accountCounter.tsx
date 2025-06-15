@@ -56,7 +56,7 @@ const AccountCounter: React.FC<AccountCounterProps> = ({label="user", student,st
             <div className={styles.title}>AISEA System</div>
           </div>
           <div className={styles.subtitleWrapper}>
-            <div className={styles.subtitle}>Showing total {label!=null&&[label].length>1?"users":label} across the system</div>
+            <div className={styles.subtitle}>Showing total {Array.isArray(label)?"Users":label.length>1?label:""} across the system</div>
           </div>
         </div>
         

@@ -134,7 +134,7 @@ const AdminNavBar: React.FC = () => {
           </nav>
         </motion.aside>
       </AnimatePresence>
-      <Outlet />
+
     </>
   );
 };

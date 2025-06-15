@@ -1,16 +1,16 @@
-
 .container {
   width: calc(100% - 250px);
   position: absolute;
   left: 0;
   top: 0;
-  height: 100%;
+  height: 100vh;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-top: 6.625rem; /* 106px */
+  padding-top: 6.625rem; /* 106px */
   margin-left: 250px;
   box-sizing: border-box;
+ 
 }
 
 .profileCard {
@@ -25,8 +25,12 @@
   justify-content: flex-start;
   align-items: flex-start;
   gap: 0.625rem; /* 10px */
-  background: white;
   box-sizing: border-box;
+  background: rgba(255,255,255,0.18) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
 }
 
 .userInfo {
@@ -171,7 +175,7 @@
   width: 10rem; /* 160px, half of field width for balance */
   height: 2.25rem; /* 36px */
   padding: 0.5rem 1rem; /* 8px 16px */
-  background: var(--Zinc-900, #18181b);
+  background: var(--Zinc-900, #ffffff);
   border-radius: 6px;
   display: flex;
   flex-direction: column;
@@ -184,30 +188,34 @@
 
 .cancelButton {
   background: #dc2626; /* Red for cancel */
+  color: #ffffff !important; 
 }
 
 .actionPanel {
   width: auto;
-  position: fixed;
-  right: 0.625rem; /* 10px */
+  position: relative;
+  right: 0;
   top: 0;
   height: 100%;
   padding: 0.625rem; /* 10px */
-  background: white;
-  outline: 1px solid #000000;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
   gap: 0.625rem; /* 10px */
-  margin-top: 6.625rem; /* 106px */
+  padding-top: 6.625rem; /* 106px */
   box-sizing: border-box;
+  background: rgba(255,255,255,0.18) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
 }
 
 .actionTitle {
   align-self: stretch;
   text-align: center;
-  color: black;
+  color: rgb(0, 0, 0);
   font-size: 2.25rem; /* 36px */
   font-family: 'Inter', sans-serif;
   font-weight: 400;
@@ -228,7 +236,7 @@
   width: 18rem; /* 288px */
   height: 2.25rem; /* 36px */
   padding: 0.5rem 1rem; /* 8px 16px */
-  background: var(--Zinc-900, #18181b);
+  background: var(--Zinc-900, #ffffff);
   border-radius: 6px;
   display: flex;
   flex-direction: column;
@@ -244,7 +252,7 @@
 }
 
 .textEditActive {
-  color: #000000; /* Black text for visibility on yellow background */
+  color: #ffffff; /* Black text for visibility on yellow background */
 }
 
 .buttonContent {
@@ -252,12 +260,15 @@
   justify-content: center;
   align-items: center;
   gap: 0.625rem; /* 10px */
-  color: var(--Zinc-50, #fafafa);
+  color: var(--Zinc-50, #000000);
   font-size: 0.875rem; /* 14px */
   font-family: 'Geist', sans-serif;
   font-weight: 500;
   line-height: 1.25rem; /* 20px */
   word-break: break-word;
+}
+.cancelButton .buttonContent{
+  color: white; /* white text for visibility */
 }
 
 /* Responsive adjustments */
