@@ -15,6 +15,7 @@ import StudentLayout from "../components/student/layout";
 import AdminLayout from "../components/admin/adminLayout";
 import BookingPage from "../pages/student/bookingAdvisor";
 import ResourceExplorer from "../pages/student/resourceExplorer";
+import CourseTracking from "../pages/student/courseTracking";
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -74,6 +75,10 @@ export const routes = createBrowserRouter([
         path: "resourceExplorer",
         Component: ResourceExplorer,
       },
+      {
+        path: "courseTracking",
+        Component: CourseTracking,
+      }
     ],
   },
   {
