@@ -1,5 +1,5 @@
 import {create} from 'zustand';
-import { AuthState, TokenState } from '../interface/IAuthen';
+import { AuthState, TokenState } from '../interfaces/IAuthen';
 
 // Using Zustand for state management, this is for storing a presisting Login state for role routing
 export const useAuths = create<AuthState>((set) => ({

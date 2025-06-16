@@ -1,7 +1,7 @@
 import { axiosCreate, axiosRead } from "../AxiosCRUD";
 import { baseUrl, header } from "../template";
-import { AccountProps, AccountPropsCreate, LoginProps } from "../../interface/IAccount";
-import { TokenProps } from "../../interface/IAuthen";
+import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
+import { TokenProps } from "../../interfaces/IAuthen";
 // const accountUrl = baseUrl+"/account"
 const accountUrl = baseUrl+"/DemoSample" // Coomment, this is just the demo
 const googleLoginURL = import.meta.env.VITE_API_GOOLGE_LOGIN_URL

@@ -1,8 +1,7 @@
-
 .sidebar {
   width: 250px;
   height: 100vh;
-  min-height:fit-content;
+  min-height: fit-content;
   background: linear-gradient(180deg, #004AAD 0%, #003A8C 100%);
   position: fixed;
   top: 0;
@@ -75,6 +74,17 @@
   color: #E6F0FA;
 }
 
+.navItem.active {
+  background: rgba(255, 145, 77, 0.3); /* Orange accent for active state */
+  color: #E6F0FA !important;
+  font-weight: 700;
+  transform: scale(1.02);
+}
+
+.navItem.active::before {
+  opacity: 1; /* Show orange bar for active state */
+}
+
 .navItem::before {
   content: '';
   position: absolute;
@@ -100,7 +110,7 @@
   transition: stroke 0.3s ease;
 }
 
-.navItem:hover .icon {
+.navItem:hover .icon, .navItem.active .icon {
   stroke: #E6F0FA;
 }
 
@@ -205,6 +215,11 @@
   }
 
   .navItem {
+    font-size: 0.75rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .navItem.active {
     font-size: 0.75rem;
     padding: 0.5rem 1rem;
   }

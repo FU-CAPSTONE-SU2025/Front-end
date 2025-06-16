@@ -1,0 +1,16 @@
+a.container {
+  width: calc(100% - 250px);
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: auto; /* Let content determine height */
+  min-height: calc(100vh - 6.625rem); /* Account for margin-top */
+  display: flex; /* Complete flexbox layout */
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: 6.625rem; /* 106px */
+  margin-left: 250px;
+  box-sizing: border-box;
+  background: transparent; /* Show AdminLayout gradient */
+  z-index: 2; /* Above AdminLayout background */
+}

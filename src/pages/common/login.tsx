@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { Button, Card, Form, Input, Typography } from 'antd';
 import { useGoogleLogin } from '@react-oauth/google';
 import { GoogleAccountAuthen, LoginAccount, LoginAccountWithGoogle } from '../../api/Account/AccountAPI';
-import { DemoAccountProps, GoogleAccountRequestProps, LoginProps } from '../../interface/IAccount';
+import { DemoAccountProps, GoogleAccountRequestProps, LoginProps } from '../../interfaces/IAccount';
 import { GoogleOutlined } from '@ant-design/icons';
 import styles from '../../css/loginform.module.css';
 import { Link, useNavigate } from 'react-router';
-import { TokenProps } from '../../interface/IAuthen';
+import { TokenProps } from '../../interfaces/IAuthen';
 import { getAuthState, getTokenState, useAuths, useToken } from '../../hooks/useAuths';
 import { jwtDecode } from 'jwt-decode';
 

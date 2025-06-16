@@ -1,0 +1,188 @@
+.container {
+  width: calc(100% - 250px);
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: auto; /* Let content determine height */
+  min-height: calc(100vh - 6.625rem); /* Account for margin-top */
+  display: flex; /* Complete flexbox layout */
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: 6.625rem; /* 106px */
+  margin-left: 250px;
+  box-sizing: border-box;
+  background: transparent; /* Show AdminLayout gradient */
+  z-index: 2; /* Above AdminLayout background */
+}
+
+.formCard {
+  width: auto;
+  max-width: 600px; /* Limit form width for readability */
+  margin: 0 auto; /* Center form */
+  padding: 25px;
+  background: rgba(255,255,255,0.18) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+  box-sizing: border-box;
+}
+
+.form {
+  width: 100%;
+}
+
+.form :global(.ant-form-item-label > label) {
+  color: white; /* Improved readability */
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}
+
+.form :global(.ant-input),
+.form :global(.ant-select-selector) {
+  background: rgba(255,255,255,0.1) !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+  color: white !important;
+  border-radius: 4px !important;
+}
+
+.form :global(.ant-input::placeholder),
+.form :global(.ant-select-placeholder) {
+  color: rgba(255,255,255,0.5) !important;
+}
+
+.form :global(.ant-select-arrow) {
+  color: white !important;
+}
+
+.formActions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin-top: 1.5rem;
+}
+
+.formActions :global(.ant-btn) {
+  background: rgba(30, 64, 175, 0.8); /* #1e40af with transparency */
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
+}
+
+.formActions :global(.ant-btn-primary:hover) {
+  background: rgba(30, 64, 175, 1) !important;
+}
+
+.formActions :global(.ant-btn-dangerous) {
+  background: rgba(220, 38, 38, 0.8); /* #dc2626 with transparency */
+}
+
+.formActions :global(.ant-btn-dangerous:hover) {
+  background: rgba(220, 38, 38, 1) !important;
+}
+
+.formActions :global(.ant-btn-default) {
+  background: rgba(255,255,255,0.1);
+}
+
+.formActions :global(.ant-btn-default:hover) {
+  background: rgba(255,255,255,0.2) !important;
+}
+
+.customModal {
+  z-index: 10000 !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  visibility: visible !important;
+  background: rgba(255,255,255,0.18) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+}
+
+.customModal :global(.ant-modal-content) {
+  background: transparent !important;
+  color: white !important;
+}
+
+.customModal :global(.ant-modal-header) {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255,255,255,0.3) !important;
+}
+
+.customModal :global(.ant-modal-title) {
+  color: white !important;
+}
+
+.customModal :global(.ant-modal-body) {
+  color: white !important;
+}
+
+.customModal :global(.ant-modal-footer) {
+  border-top: 1px solid rgba(255,255,255,0.3) !important;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 100px;
+  width: 100vw;
+  height: 100vh;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5000;
+}
+
+@media (max-width: 1023px) {
+  .container {
+    width: 100vw;
+    position: relative;
+    left: 0;
+    top: 0;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin-top: 0;
+    margin-left: 0;
+  }
+
+  .formCard {
+    width: 100%;
+    padding: 0.9375rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .formCard {
+    padding: 0.625rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+
+  .formCard {
+    padding: 0.5rem;
+  }
+
+  .formActions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .formActions :global(.ant-btn) {
+    width: 100%;
+  }
+}
