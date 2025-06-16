@@ -16,7 +16,7 @@
 }
 
 .formCard {
-  width: auto;
+  width: 100%;
   max-width: 600px; /* Limit form width for readability */
   margin: 0 auto; /* Center form */
   padding: 25px;
