@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
+import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
 import { managers } from '../../../data/mockManager';
 import DataImport from '../../components/admin/dataImport';
@@ -27,6 +28,7 @@ const ManagerList: React.FC = () => {
   const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
   const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
   const managersPerPage = 10;
+  const nav = useNavigate();
 
   // Filtering logic - only applied to the displayed managers
   const filteredManagers = managers.filter(manager => {
@@ -108,6 +110,18 @@ const ManagerList: React.FC = () => {
   const handleCancelDelete = () => {
     setIsDeleteMode(false);
     setSelectedManagers([]);
+  };
+
+  // Redirect to edit page when a manager row is clicked
+  const handleRowClick = (data: Manager) => {
+    if (!isDeleteMode) {
+      nav(`/admin/edit/manager/${data.Id}`);
+    }
+  };
+
+  // navigating to create page for adding new manager
+  const handleAddNewAccount = () => {
+    nav('/admin/edit/manager');
   };
 
   // Table columns
@@ -222,6 +236,8 @@ const ManagerList: React.FC = () => {
                     onClick={
                       isDeleteMode
                         ? undefined
+                        : action === 'Add New Account'
+                        ? handleAddNewAccount
                         : action === 'Import Data From xlsx'
                         ? handleImport
                         : action === 'Delete Account'
@@ -242,6 +258,9 @@ const ManagerList: React.FC = () => {
               data={filteredManagers}
               rowSelection={rowSelection}
               dataPerPage={managersPerPage}
+              onRow={(record: Manager) => ({
+                onClick: () => handleRowClick(record),
+              })}
             />
             {isDeleteMode && (
               <motion.div

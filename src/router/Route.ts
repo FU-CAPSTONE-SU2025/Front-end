@@ -8,13 +8,13 @@ import StaffPage from "../pages/admin/staff";
 import AdvisorsPage from "../pages/admin/advisors";
 import ManagersPage from "../pages/admin/managers";
 import LogsPage from "../pages/admin/logs";
-import ImportPage from "../pages/admin/import";
 import Dashboard from "../pages/student/dashboard";
 import { createBrowserRouter } from "react-router";
 import StudentLayout from "../components/student/layout";
 import AdminLayout from "../components/admin/adminLayout";
 import BookingPage from "../pages/student/bookingAdvisor";
 import ResourceExplorer from "../pages/student/resourceExplorer";
+import EditAccount from "../pages/admin/editAccount";
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -48,12 +48,13 @@ export const routes = createBrowserRouter([
         Component: ManagersPage,
       },
       {
-        path: "logs",
-        Component: LogsPage,
+        path:"edit/:role/:id?",
+        Component:EditAccount,
+        
       },
       {
-        path: "import",
-        Component: ImportPage,
+        path: "logs",
+        Component: LogsPage,
       },
     ],
   },

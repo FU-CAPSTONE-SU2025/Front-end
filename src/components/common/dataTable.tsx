@@ -12,9 +12,10 @@ type DataProps = {
     data: any[]
     rowSelection: any
     dataPerPage: number
+    onRow?: (record: any, rowIndex?: number) => React.HTMLAttributes<HTMLElement>
 }
 
-export default function DataTable({columns,data,rowSelection,dataPerPage}: DataProps) {
+export default function DataTable({columns,data,rowSelection,dataPerPage,onRow}: DataProps) {
   const [currentPage, setCurrentPage] = useState<number>(1);
     return (
     <>
@@ -23,6 +24,7 @@ export default function DataTable({columns,data,rowSelection,dataPerPage}: DataP
               columns={columns}
               dataSource={data}
               rowSelection={rowSelection}
+              onRow={onRow}
               pagination={{
                 current: currentPage,
                 pageSize: dataPerPage,

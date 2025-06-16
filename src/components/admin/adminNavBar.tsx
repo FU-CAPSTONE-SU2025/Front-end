@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
-import { Link, Outlet } from 'react-router';
-import { User, Users, Briefcase, BookUser, UserCog, Activity, Upload, LogOut } from 'lucide-react';
+import { Link, useLocation } from 'react-router';
+import { User, Users, Briefcase, BookUser, UserCog, Activity, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../../css/admin/adminNavBar.module.css';
 import { getAuthState } from '../../hooks/useAuths';
@@ -16,6 +15,7 @@ interface NavItem {
 const AdminNavBar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(true);
   const { logout } = getAuthState();
+  const location = useLocation();
 
   const navItems: NavItem[] = [
     { label: 'My account', icon: User, route: '' },
@@ -24,8 +24,36 @@ const AdminNavBar: React.FC = () => {
     { label: 'Manage Advisor', icon: BookUser, route: 'advisors' },
     { label: 'Manage Manager', icon: UserCog, route: 'managers' },
     { label: 'View system log and monitoring', icon: Activity, route: 'logs' },
-    { label: 'Import Data', icon: Upload, route: 'import' },
   ];
+
+  // Determine active route, handling nested routes under /admin/*
+  const getActiveRoute = (route: string) => {
+    // Remove /admin prefix and normalize path
+    const path = location.pathname.replace(/^\/admin/, '').toLowerCase() || '/';
+    console.log('Normalized path:', path); // Debug log
+
+    // Normalize route for comparison
+    const normalizedRoute = route === '' ? '/' : `/${route.toLowerCase()}`;
+    // Map sub-routes to their parent
+    if (path.startsWith('/edit/student') || path === '/students' || path.startsWith('/students')) return 'students';
+    if (path.startsWith('/edit/staff') || path === '/staff' || path.startsWith('/staff')) return 'staff';
+    if (path.startsWith('/edit/advisor') || path === '/advisors' || path.startsWith('/advisors')) return 'advisors';
+    if (path.startsWith('/edit/manager') || path === '/managers' || path.startsWith('/managers')) return 'managers';
+    if (path.startsWith('/logs') || path === '/logs') return 'logs';
+    // Exact match or trailing slash
+    if (path === normalizedRoute || path === `${normalizedRoute}/`) return route;
+
+    return null;
+  };
+
+  // Debug active route changes
+  useEffect(() => {
+    console.log('Active routes:', navItems.map(item => ({
+      label: item.label,
+      route: item.route,
+      isActive: getActiveRoute(item.route) === item.route,
+    })));
+  }, [location.pathname]);
 
   // Sidebar animation variants
   const sidebarVariants = {
@@ -105,7 +133,7 @@ const AdminNavBar: React.FC = () => {
               <img
                 src="/img/Logo.svg"
                 alt="AI-SEA Logo"
-              />  
+              />
             </div>
           </div>
           <nav className={styles.nav}>
@@ -118,7 +146,10 @@ const AdminNavBar: React.FC = () => {
                   animate={isOpen ? 'visible' : 'hidden'}
                   variants={navItemVariants}
                 >
-                  <Link to={item.route} className={styles.navItem}>
+                  <Link
+                    to={item.route}
+                    className={`${styles.navItem} ${getActiveRoute(item.route) === item.route ? styles.active : ''}`}
+                  >
                     <item.icon className={styles.icon} aria-hidden="true" />
                     <span>{item.label}</span>
                   </Link>
@@ -134,7 +165,6 @@ const AdminNavBar: React.FC = () => {
           </nav>
         </motion.aside>
       </AnimatePresence>
-
     </>
   );
 };

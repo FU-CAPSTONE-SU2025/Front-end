@@ -6,18 +6,11 @@ import { students } from '../../../data/mockStudent';
 import DataImport from '../../components/admin/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
+import { useNavigate } from 'react-router';
+import { StudentBase } from '../../interfaces/IRoleAccount';
 
 const { Option } = Select;
 
-interface Student {
-  Id: string;
-  Email: string;
-  Name: string;
-  PhoneNumber: string;
-  Address: string;
-  Campus: string;
-  AddDated: string;
-}
 
 const StudentList: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
@@ -26,6 +19,20 @@ const StudentList: React.FC = () => {
   const [filterValue, setFilterValue] = useState<string>('');
   const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const nav = useNavigate();
+  
+  // Redirect to edit page when a student row is clicked
+  const handleRowClick = (data: StudentBase) => {
+    if (!isDeleteMode) {
+      nav(`/admin/edit/student/${data.Id}`);
+    }
+  };
+  // navigating to create page for adding new student
+  const handleAddNewAccount = () => {
+    nav('/admin/edit/student');
+  };
+  
+  // Pagination settings
   const studentsPerPage = 10;
 
   // Filtering logic - only applied to the displayed students (other roles can be filtered similarly)
@@ -128,7 +135,7 @@ const StudentList: React.FC = () => {
         onChange: (selectedRowKeys: React.Key[]) => {
           setSelectedStudents(selectedRowKeys as string[]);
         },
-        getCheckboxProps: (record: Student) => ({
+        getCheckboxProps: (record: StudentBase) => ({
           name: record.Id,
         }),
       }
@@ -215,13 +222,15 @@ const StudentList: React.FC = () => {
               </div>
               <div className={styles.actions}>
                 {['Add New Account', 'Delete Account', 'Import Data From xlsx'].map((action, index) => (
-                  <motion.div
+                <motion.div
                     key={index}
                     className={`${styles.actionButton} ${action === 'Delete Account' ? styles.deleteButton : ''}`}
                     whileHover={{ scale: isDeleteMode ? 1 : 1.05 }}
                     onClick={
                       isDeleteMode
                         ? undefined
+                        : action === 'Add New Account'
+                        ? handleAddNewAccount // Navigate to create page
                         : action === 'Import Data From xlsx'
                         ? handleImport
                         : action === 'Delete Account'
@@ -237,11 +246,14 @@ const StudentList: React.FC = () => {
               </div>
             </div>
             {/* External Table display, pre-styling and ease-to-custom */}
-            <DataTable
+             <DataTable
               columns={columns}
               data={filteredStudents}
               rowSelection={rowSelection}
               dataPerPage={studentsPerPage}
+              onRow={(record: StudentBase) => ({
+                onClick: () => handleRowClick(record), // Navigate to edit page
+              })}
             />
             {isDeleteMode && (
               <motion.div

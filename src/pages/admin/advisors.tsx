@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
+import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
 import { advisors } from '../../../data/mockAdvisor';
 import DataImport from '../../components/admin/dataImport';
@@ -27,6 +28,7 @@ const AdvisorList: React.FC = () => {
   const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
   const [selectedAdvisors, setSelectedAdvisors] = useState<string[]>([]);
   const advisorsPerPage = 10;
+  const nav = useNavigate();
 
   // Filtering logic - only applied to the displayed advisors
   const filteredAdvisors = advisors.filter(advisor => {
@@ -108,6 +110,18 @@ const AdvisorList: React.FC = () => {
   const handleCancelDelete = () => {
     setIsDeleteMode(false);
     setSelectedAdvisors([]);
+  };
+
+  // Redirect to edit page when an advisor row is clicked
+  const handleRowClick = (data: Advisor) => {
+    if (!isDeleteMode) {
+      nav(`/admin/edit/advisor/${data.Id}`);
+    }
+  };
+
+  // navigating to create page for adding new advisor
+  const handleAddNewAccount = () => {
+    nav('/admin/edit/advisor');
   };
 
   // Table columns
@@ -222,6 +236,8 @@ const AdvisorList: React.FC = () => {
                     onClick={
                       isDeleteMode
                         ? undefined
+                        : action === 'Add New Account'
+                        ? handleAddNewAccount
                         : action === 'Import Data From xlsx'
                         ? handleImport
                         : action === 'Delete Account'
@@ -242,6 +258,9 @@ const AdvisorList: React.FC = () => {
               data={filteredAdvisors}
               rowSelection={rowSelection}
               dataPerPage={advisorsPerPage}
+              onRow={(record: Advisor) => ({
+                onClick: () => handleRowClick(record),
+              })}
             />
             {isDeleteMode && (
               <motion.div

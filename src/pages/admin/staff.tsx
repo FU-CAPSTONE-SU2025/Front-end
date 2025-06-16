@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
+import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
 import { staffs } from '../../../data/mockStaff';
 import DataImport from '../../components/admin/dataImport';
@@ -27,6 +28,7 @@ const StaffList: React.FC = () => {
   const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
   const [selectedStaffs, setSelectedStaffs] = useState<string[]>([]);
   const staffsPerPage = 10;
+  const nav = useNavigate();
 
   // Filtering logic - only applied to the displayed staffs (other roles can be filtered similarly)
   const filteredStaffs = staffs.filter(staff => {
@@ -108,6 +110,18 @@ const StaffList: React.FC = () => {
   const handleCancelDelete = () => {
     setIsDeleteMode(false);
     setSelectedStaffs([]);
+  };
+
+  // Redirect to edit page when a staff row is clicked
+  const handleRowClick = (data: Staff) => {
+    if (!isDeleteMode) {
+      nav(`/admin/edit/staff/${data.Id}`);
+    }
+  };
+
+  // navigating to create page for adding new staff
+  const handleAddNewAccount = () => {
+    nav('/admin/edit/staff');
   };
 
   // Table columns
@@ -222,6 +236,8 @@ const StaffList: React.FC = () => {
                     onClick={
                       isDeleteMode
                         ? undefined
+                        : action === 'Add New Account'
+                        ? handleAddNewAccount
                         : action === 'Import Data From xlsx'
                         ? handleImport
                         : action === 'Delete Account'
@@ -242,6 +258,9 @@ const StaffList: React.FC = () => {
               data={filteredStaffs}
               rowSelection={rowSelection}
               dataPerPage={staffsPerPage}
+              onRow={(record: Staff) => ({
+                onClick: () => handleRowClick(record),
+              })}
             />
             {isDeleteMode && (
               <motion.div
