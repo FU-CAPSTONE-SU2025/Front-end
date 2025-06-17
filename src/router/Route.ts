@@ -16,6 +16,8 @@ import BookingPage from "../pages/student/bookingAdvisor";
 import ResourceExplorer from "../pages/student/resourceExplorer";
 import CourseTracking from "../pages/student/courseTracking";
 import EditAccount from "../pages/admin/editAccount";
+import SemesterPlanner from "../pages/student/semesterPlanner";
+import SemesterPlannerDetail from "../pages/student/semesterPlannerDetail";
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -79,7 +81,16 @@ export const routes = createBrowserRouter([
       {
         path: "courseTracking",
         Component: CourseTracking,
-      }
+      },
+      {
+        path: "semesterPlanner",
+        Component: SemesterPlanner,
+      },
+      {
+        path: "semesterPlannerDetail",
+        Component: SemesterPlannerDetail,
+      },
+     
     ],
   },
   {
