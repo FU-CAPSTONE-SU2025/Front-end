@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Card, Form, Input, Typography } from 'antd';
 import { useGoogleLogin } from '@react-oauth/google';
-import { GoogleAccountAuthen, LoginAccount, LoginAccountWithGoogle } from '../../api/Account/AccountAPI';
+import { GoogleAccountAuthen, LoginAccount, LoginAccountWithGoogle, TestToken } from '../../api/Account/AccountAPI';
 import { DemoAccountProps, GoogleAccountRequestProps, LoginProps } from '../../interfaces/IAccount';
 import { GoogleOutlined } from '@ant-design/icons';
 import styles from '../../css/loginform.module.css';
@@ -23,10 +23,31 @@ const Login: React.FC = () => {
       setIsGoogleLoading(true);
       try {
         const { access_token } = tokenResponse;
+        //console.log('Google Account:', access_token);
         const userAccount: GoogleAccountRequestProps = await GoogleAccountAuthen(access_token);
-        const response = await LoginAccountWithGoogle(userAccount.email);
-        if (response!=null) {
+        if (userAccount!=null) {
           alert('Login successful');
+          //console.log("User: ",userAccount)
+          setAccessToken(userAccount.accessToken);
+          setRefreshToken(userAccount.refreshToken);
+          login()
+          setUserRole(userAccount.roleId)
+          const testToken = await TestToken();
+          console.log("Response testToken: ",testToken)
+          if(testToken==null){
+            //console.log("Test Token: ",testToken)
+          alert('Token is invalid. Please try again.');
+          }
+
+          if(userAccount.roleId === 1){
+            nav('/admin')
+          }
+          else if(userAccount.roleId === 0){
+            nav('/guest')
+          }
+          else
+            nav('/')
+          // ADD ROUTE HERE
         }else{
           alert('Login failed. Please try again.');
         }
@@ -58,10 +79,7 @@ const Login: React.FC = () => {
       login()
       setUserRole(accountData.Role)
       //console.log("Login Redirected to: ",accountData.Role)
-      if(accountData.Role === "2"){
-        nav('/admin')
-      }
-      else if(accountData.Role === "1"){
+      if(accountData.Role === "1"){
         nav('/admin')
       }
       else if(accountData.Role === "0"){

@@ -30,7 +30,7 @@ const AdminNavBar: React.FC = () => {
   const getActiveRoute = (route: string) => {
     // Remove /admin prefix and normalize path
     const path = location.pathname.replace(/^\/admin/, '').toLowerCase() || '/';
-    console.log('Normalized path:', path); // Debug log
+    //console.log('Normalized path:', path); // Debug log
 
     // Normalize route for comparison
     const normalizedRoute = route === '' ? '/' : `/${route.toLowerCase()}`;
@@ -45,15 +45,6 @@ const AdminNavBar: React.FC = () => {
 
     return null;
   };
-
-  // Debug active route changes
-  useEffect(() => {
-    console.log('Active routes:', navItems.map(item => ({
-      label: item.label,
-      route: item.route,
-      isActive: getActiveRoute(item.route) === item.route,
-    })));
-  }, [location.pathname]);
 
   // Sidebar animation variants
   const sidebarVariants = {

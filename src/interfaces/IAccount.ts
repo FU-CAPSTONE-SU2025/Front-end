@@ -1,13 +1,18 @@
+import { InputNumberProps } from "antd/lib"
+import { StringGradients } from "antd/lib/progress/progress"
+import { renderToString } from "react-dom/server"
+
 export interface AccountProps{
-    email: string,
-    createdAt: Date,
-    name: string,
-    avatar: string,
-    username: string,
-    password: string,
-    isActive: boolean,
-    role: string,
-    id: string
+  id: number
+  username :string
+  password_hash :string
+  email :string
+  avatar :string
+  first_name :string
+  last_name :string
+  date_of_birth :Date
+  address :string
+  role_id :number
 }
 export interface DemoAccountProps{
     LoginAtTime: string
@@ -33,10 +38,13 @@ export interface AccountPropsCreate{
 }
 export interface GoogleAccountRequestProps {
     email: string
-    email_verified: boolean
-    family_name: string
-    given_name: string
-    picture: string
     sub: string,
-    roleId:string
+    roleId:string|number
+    accessToken:string
+    avatarUrl: string
+    dateOfBirth: string
+    firstName:string
+    lastName: string
+    refreshToken: string
+    username: string
   }

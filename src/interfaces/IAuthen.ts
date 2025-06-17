@@ -1,9 +1,9 @@
 export interface AuthState {
     isAuthenticated: boolean;
-    userRole: string | null;
+    userRole: string | number | null;
     login: () => void;
     logout: () => void;
-    setUserRole: (role: string) => void;
+    setUserRole: (role: number|string) => void;
   };
   export interface TokenState {
     accessToken: string | null;

@@ -1,8 +1,21 @@
-const header = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-   
+import { getTokenState } from "../hooks/useAuths"
+
+
+const getHeader = () =>{
+    const {accessToken,refreshToken} = getTokenState()
+    const header = {
+    "Content-Type": 'application/json',
+    Accept: 'application/json',
+    Authorization : `Bearer ${accessToken??null}`,
+    RefreshToken: refreshToken??null,
 }
+    return header
+}
+const header = getHeader()
+
+// Base URL for the API
+// This is used to define the base URL for the API calls
+// It can be changed based on the environment (development, production, etc.)
 const baseUrl = import.meta.env.VITE_API_AISEA_API_BASEURL+"/api"
 
 export {header,baseUrl}
