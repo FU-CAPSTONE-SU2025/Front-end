@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import styles from '../../css/admin/account.module.css';
 import AccountCounter from '../../components/admin/accountCounter';
@@ -12,6 +12,7 @@ import {advisors} from '../../../data/mockAdvisor';
 import {students} from '../../../data/mockStudent';
 import {staffs} from '../../../data/mockStaff';
 import {managers} from '../../../data/mockManager';
+import { GetActiveUser } from '../../api/Account/UserAPI';
 
 // Animation variants for the profile card and action panel
 const cardVariants = {
@@ -40,6 +41,13 @@ const Profile: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
+  useEffect(() => {
+    const getActiveUser= async() => {
+      console.log("Fetching active user data...");
+       await GetActiveUser()
+    }
+    getActiveUser()
+  },[])
 
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);

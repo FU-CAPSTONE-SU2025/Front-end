@@ -1,8 +1,8 @@
-import { getTokenState } from "../hooks/useAuths"
+import { getAuthState } from "../hooks/useAuths"
 
 
 function GetHeader(){
-    const {accessToken,refreshToken} = getTokenState()
+    const {accessToken,refreshToken} = getAuthState()
     const header = {
         "Content-Type": 'application/json',
         Accept: 'application/json',

@@ -6,8 +6,7 @@ import { GoogleAccountRequestProps, LoginProps } from '../../interfaces/IAccount
 import { GoogleOutlined } from '@ant-design/icons';
 import styles from '../../css/loginform.module.css';
 import { Link, useNavigate } from 'react-router';
-import { getAuthState, getTokenState, useAuths, useToken } from '../../hooks/useAuths';
-import { GetActiveUser } from '../../api/Account/UserAPI';
+import { getAuthState } from '../../hooks/useAuths';
 
 const { Title, Text } = Typography;
 
@@ -16,8 +15,7 @@ const { Title, Text } = Typography;
 const Login: React.FC = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
-  const {setAccessToken,setRefreshToken} = getTokenState()
-  const { login, setUserRole } = getAuthState();
+  const { login,setAccessToken,setRefreshToken } = getAuthState();
   const nav = useNavigate();
   // Login navigation based on roleId
   // 1: Admin, 0: Student, others: Guest -> TOBEADDED
@@ -37,6 +35,7 @@ const Login: React.FC = () => {
     onSuccess: async (tokenResponse) => {
       setIsGoogleLoading(true);
       try {
+        
         const { access_token } = tokenResponse;
         //console.log('Google Account:', access_token);
         const userAccount: GoogleAccountRequestProps = await LoginGoogleAccount(access_token);
@@ -45,9 +44,9 @@ const Login: React.FC = () => {
           //console.log("User: ",userAccount),
           setAccessToken(userAccount.accessToken);
           setRefreshToken(userAccount.refreshToken);
-          login()
-          setUserRole(userAccount.roleId)
+          login(userAccount.roleId)
           RoleNavigation(userAccount.roleId)
+         
         }else{
           alert('Login failed. Please try again.');
         }
@@ -71,11 +70,10 @@ const Login: React.FC = () => {
     const userAccount:GoogleAccountRequestProps|null = await LoginAccount(values)
     if (userAccount!=null) {
       alert('Login successful');
-       setAccessToken(userAccount.accessToken);
+        setAccessToken(userAccount.accessToken);
           setRefreshToken(userAccount.refreshToken);
-          login()
-      //console.log("Login Redirected to: ",accountData.Role)
-    RoleNavigation(userAccount.roleId)
+          login(userAccount.roleId)
+          RoleNavigation(userAccount.roleId)
     }else{
       alert('Login failed. Please try again.');
     }

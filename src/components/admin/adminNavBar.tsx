@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router';
 import { User, Users, Briefcase, BookUser, UserCog, Activity, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../../css/admin/adminNavBar.module.css';
-import { getAuthState, getTokenState } from '../../hooks/useAuths';
+import { getAuthState } from '../../hooks/useAuths';
 
 // Interface for navigation items
 interface NavItem {
@@ -14,13 +14,10 @@ interface NavItem {
 
 const AdminNavBar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(true);
-  const { logout } = getAuthState();
-  const {removeAccessToken, removeRefreshToken} = getTokenState()
+  const {logout} = getAuthState()
   const location = useLocation();
   const handleLogout = () => {
     logout();
-    removeAccessToken();
-    removeRefreshToken();
   }
 
   const navItems: NavItem[] = [

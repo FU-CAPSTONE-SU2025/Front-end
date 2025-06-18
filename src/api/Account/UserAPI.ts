@@ -9,12 +9,12 @@ export const GetActiveUser = async ():Promise<TokenProps|null> => {
     const props = {
         data: null,
         url: userURL+`/active`,
-        headers:GetHeader()
     }
-    //console.log("Test Token header: ",header)
+    const header = GetHeader()
+    console.log("Header: ",header) 
     const result = await axiosRead(props)
     if (result.success) {
-        //console.log(result.data)
+        console.log(result.data)
         return result.data
     }
     else {
