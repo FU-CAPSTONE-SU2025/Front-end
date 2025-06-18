@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from 'antd';
 import { motion } from 'framer-motion';
-import styles from "../css/notfound.module.css";
+import styles from "../css/notFound.module.css";
 // Animation variants for the container
 const containerVariants = {
   hidden: { opacity: 0, scale: 0.8 },
