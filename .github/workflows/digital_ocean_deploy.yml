@@ -28,6 +28,11 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{secrets.DOCKER_USERNAME}}/ai-sea:latest
+          build-args: |
+            VITE_API_AISEA_API_BASEURL=${{secrets.VITE_API_AISEA_API_BASEURL}}
+            VITE_API_GOOGLE_CLIENT_ID=${{secrets.VITE_API_GOOGLE_CLIENT_ID}}
+            VITE_API_GOOGLE_CLIENT_SECRET=${{secrets.VITE_API_GOOGLE_CLIENT_SECRET}}
+            VITE_THERE_IS_AN_EGG=${{secrets.VITE_THERE_IS_AN_EGG}}
         # Push to containerize by running the script Dockerfile, check the code folder to see that file, also the Nginx config
 
       - name: Connect and Deploy to the DigitalOcean Droplet Ubuntu VM
@@ -43,10 +48,6 @@ jobs:
             docker stop ai-sea || true
             docker rm ai-sea || true
             docker run -d --name ai-sea \
-              -e VITE_API_AISEA_API_BASEURL=${{secrets.VITE_API_AISEA_API_BASEURL}} \
-              -e VITE_API_GOOGLE_CLIENT_ID=${{secrets.VITE_API_GOOGLE_CLIENT_ID}} \
-              -e VITE_API_GOOGLE_CLIENT_SECRET=${{secrets.VITE_API_GOOGLE_CLIENT_SECRET}} \
-              -e VITE_THERE_IS_AN_EGG=${{secrets.VITE_THERE_IS_AN_EGG}} \
               -p 80:80 -p 443:443 ${{secrets.DOCKER_USERNAME}}/ai-sea:latest
         # 1. Connect to the droplet docker app, login with username and password
         # 2. pull the latest image
