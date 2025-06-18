@@ -47,8 +47,6 @@ const Login: React.FC = () => {
           setRefreshToken(userAccount.refreshToken);
           login()
           setUserRole(userAccount.roleId)
-          const test = await GetActiveUser()
-          console.log("Test User: ",test)
           RoleNavigation(userAccount.roleId)
         }else{
           alert('Login failed. Please try again.');
