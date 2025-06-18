@@ -1,7 +1,6 @@
 import { axiosCreate, axiosRead } from "../AxiosCRUD";
-import { baseUrl, header } from "../template";
-import { AccountProps, AccountPropsCreate, GoogleAccountRequestProps, LoginProps } from "../../interfaces/IAccount";
-import { TokenProps } from "../../interfaces/IAuthen";
+import { baseUrl, GetHeader } from "../template";
+import { LoginProps } from "../../interfaces/IAccount";
 // const accountUrl = baseUrl+"/account"
 const accountUrl = baseUrl+"/Auth"
 const googleLoginURL = baseUrl+"/Auth/google"
@@ -31,7 +30,7 @@ export const LoginAccount = async (data: LoginProps) => {
     const props = {
         data: data,
         url: accountUrl+`/login`,
-        headers: header
+        headers: GetHeader()
     }
     const result = await axiosCreate(props)
     if (result.success) {

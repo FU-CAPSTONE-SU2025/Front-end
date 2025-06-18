@@ -7,6 +7,7 @@ import { GoogleOutlined } from '@ant-design/icons';
 import styles from '../../css/loginform.module.css';
 import { Link, useNavigate } from 'react-router';
 import { getAuthState, getTokenState, useAuths, useToken } from '../../hooks/useAuths';
+import { GetActiveUser } from '../../api/Account/UserAPI';
 
 const { Title, Text } = Typography;
 
@@ -41,11 +42,13 @@ const Login: React.FC = () => {
         const userAccount: GoogleAccountRequestProps = await LoginGoogleAccount(access_token);
         if (userAccount!=null) {
           alert('Login successful');
-          //console.log("User: ",userAccount)
+          //console.log("User: ",userAccount),
           setAccessToken(userAccount.accessToken);
           setRefreshToken(userAccount.refreshToken);
           login()
           setUserRole(userAccount.roleId)
+          const test = await GetActiveUser()
+          console.log("Test User: ",test)
           RoleNavigation(userAccount.roleId)
         }else{
           alert('Login failed. Please try again.');
