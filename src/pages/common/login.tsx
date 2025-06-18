@@ -6,10 +6,7 @@ import { GoogleAccountRequestProps, LoginProps } from '../../interfaces/IAccount
 import { GoogleOutlined } from '@ant-design/icons';
 import styles from '../../css/loginform.module.css';
 import { Link, useNavigate } from 'react-router';
-import { TokenProps } from '../../interfaces/IAuthen';
 import { getAuthState, getTokenState, useAuths, useToken } from '../../hooks/useAuths';
-import { jwtDecode } from 'jwt-decode';
-import { GetActiveUser } from '../../api/Account/UserAPI';
 
 const { Title, Text } = Typography;
 
@@ -21,6 +18,8 @@ const Login: React.FC = () => {
   const {setAccessToken,setRefreshToken} = getTokenState()
   const { login, setUserRole } = getAuthState();
   const nav = useNavigate();
+  // Login navigation based on roleId
+  // 1: Admin, 0: Student, others: Guest -> TOBEADDED
   function RoleNavigation (roleId:number){
      if(roleId === 1){
         nav('/admin')
@@ -47,12 +46,6 @@ const Login: React.FC = () => {
           setRefreshToken(userAccount.refreshToken);
           login()
           setUserRole(userAccount.roleId)
-          // const testToken = await GetActiveUser();
-          // console.log("Response testToken: ",testToken)
-          // if(testToken==null){
-          //   //console.log("Test Token: ",testToken)
-          // alert('Token is invalid. Please try again.');
-          // }
           RoleNavigation(userAccount.roleId)
         }else{
           alert('Login failed. Please try again.');
@@ -70,7 +63,7 @@ const Login: React.FC = () => {
       alert('Google Login failed. Please try again.');
     },
   });
-  // Login with userName and password - with the added authentication check
+  // Login with username and password - with the added authentication check
   const onNormalLogin = async(values: LoginProps) => {
     //console.log('Login values:', values);
     setIsEmailLoading(true);
@@ -115,13 +108,13 @@ const Login: React.FC = () => {
           autoComplete="off"
         >
           <Form.Item
-            name="userName"
+            name="username"
             rules={[
               { required: true, message: 'Please enter your username!' },
               { type: 'string', message: 'Please enter a valid username!' },
             ]}
           >
-            <Input placeholder="userName" size="large" />
+            <Input placeholder="username" size="large" />
           </Form.Item>
           <Form.Item
             name="password"

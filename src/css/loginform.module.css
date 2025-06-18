@@ -1,14 +1,14 @@
 .background {
-  width: 200vw;
-  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  height: 100%;
   background-image: url('/img/login.png');
   background-repeat: repeat-x;
   object-fit: cover;
   animation: scrollBg 30s linear infinite;
   background-attachment: fixed;
-  background-position: 0 0;
-  margin: 0;
   z-index: 1;
+  top: 0;
 }
 .container {
     position: absolute;
@@ -25,7 +25,7 @@
   
   .loginCard {
     width: 30vw;
-    min-width: 400px;
+    min-width: 450px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     background: rgba(255, 255, 255, 0.8); /* semi-transparent white */
@@ -113,7 +113,6 @@
     }
      .loginCard {
     width: 30vw;
-    min-width: 300px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     background: rgba(255, 255, 255, 0.8); /* semi-transparent white */
