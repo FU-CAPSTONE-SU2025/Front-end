@@ -1,19 +1,17 @@
-import { axiosCreate, axiosRead } from "../AxiosCRUD";
+ import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, header } from "../template";
 import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
 import { TokenProps } from "../../interfaces/IAuthen";
-// const accountUrl = baseUrl+"/account"
-const accountUrl = baseUrl+"/DemoSample" // Commment, this is just the demo
-const googleLoginURL = baseUrl+"/Auth/google"
-const testTokenURL = baseUrl+"/DemoSample"
 
-export const TestToken = async ():Promise<TokenProps|null> => {
+const userURL = baseUrl+"/User"
+
+export const GetActiveUser = async ():Promise<TokenProps|null> => {
     const props = {
         data: null,
-        url: testTokenURL,
+        url: userURL+`/active`,
         headers:header
     }
-    console.log("Test Token header: ",header)
+    //console.log("Test Token header: ",header)
     const result = await axiosRead(props)
     if (result.success) {
         //console.log(result.data)
@@ -25,64 +23,10 @@ export const TestToken = async ():Promise<TokenProps|null> => {
     }
 }
 
-export const GoogleAccountAuthen = async (data: string) => {
-    const googleHeader = {
-        Authorization: `Bearer ${data}`,
-        "Content-Type": "application/json"
-    }
-    const props = {
-        data: null,
-        url: googleLoginURL,
-        headers: googleHeader
-    }
-    const result = await axiosRead(props)
-    if (result.success) {
-        //console.log(result)
-        return result.data
-    }
-    else {
-        console.log(result.error)
-        return null
-    }
-}
-export const LoginAccount = async (data: LoginProps):Promise<TokenProps|null> => {
+export const RegisterUser = async (data: AccountPropsCreate):Promise<any> => {
     const props = {
         data: data,
-        url: accountUrl+`/login`,
-        headers: header
-    }
-    const result = await axiosCreate(props)
-    if (result.success) {
-        console.log(result.data)
-        return result.data
-    }
-    else {
-        console.log(result.error)
-        return null
-    }
-
-}
-export const LoginAccountWithGoogle = async (email: string):Promise<TokenProps|null> => {
-    const props = {
-        data: null,
-        url: accountUrl+`?email=${email}`,
-        headers: header
-    }
-    const result = await axiosRead(props)
-    if (result.success) {
-        //console.log(result.data)
-        return result.data
-    }
-    else {
-        console.log(result.error)
-        return null
-    }
-
-}
-export const RegisterAccount = async (data: AccountPropsCreate):Promise<any> => {
-    const props = {
-        data: data,
-        url: accountUrl,
+        url: userURL,
         headers: header
     }
     const result = await axiosCreate(props)
@@ -94,12 +38,28 @@ export const RegisterAccount = async (data: AccountPropsCreate):Promise<any> => 
         console.log(result.error)
         return null
     }
-
 }
-export const FetchAccount = async ():Promise<AccountProps[]> => {
+export const RegisterMultipleUser = async (data: AccountPropsCreate[]):Promise<any> => {
+    const props = {
+        data: data,
+        url: userURL,
+        headers: header
+    }
+    const result = await axiosCreate(props)
+    if (result.success) {
+        //console.log(result.data)
+        return result.data
+    }
+    else {
+        console.log(result.error)
+        return null
+    }
+}
+
+export const FetchUserList = async ():Promise<AccountProps[]> => {
     const props = {
         data: null,
-        url: accountUrl,
+        url: userURL,
         headers: header
     }
     const result = await axiosRead(props)
@@ -112,10 +72,10 @@ export const FetchAccount = async ():Promise<AccountProps[]> => {
         return []
     }
 }
-export const FetchAccountById = async ():Promise<AccountProps|null> => {
+export const FetchUserById = async (userId:number):Promise<AccountProps|null> => {
     const props = {
         data: null,
-        url: accountUrl,
+        url: userURL+`/`+userId,
         headers: header
     }
     const result = await axiosRead(props)
@@ -127,5 +87,36 @@ export const FetchAccountById = async ():Promise<AccountProps|null> => {
         console.log(result.error)
         return null
     }
-
+}
+export const UpdateUser = async (userId:number):Promise<AccountProps|null> => {
+    const props = {
+        data: null,
+        url: userURL+`/`+userId,
+        headers: header
+    }
+    const result = await axiosUpdate(props)
+    if (result.success) {
+        //console.log(result.data)
+        return result.data
+    }
+    else {
+        console.log(result.error)
+        return null
+    }
+}
+export const DisableUser = async (userId:number):Promise<AccountProps|null> => {
+    const props = {
+        data: null,
+        url: userURL+`/`+userId,
+        headers: header
+    }
+    const result = await axiosDelete(props)
+    if (result.success) {
+        //console.log(result.data)
+        return result.data
+    }
+    else {
+        console.log(result.error)
+        return null
+    }
 }

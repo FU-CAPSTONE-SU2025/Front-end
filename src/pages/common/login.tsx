@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Card, Form, Input, Typography } from 'antd';
 import { useGoogleLogin } from '@react-oauth/google';
-import { GoogleAccountAuthen, LoginAccount, LoginAccountWithGoogle, TestToken } from '../../api/Account/AccountAPI';
+import { LoginGoogleAccount, LoginAccount } from '../../api/Account/AuthAPI';
 import { DemoAccountProps, GoogleAccountRequestProps, LoginProps } from '../../interfaces/IAccount';
 import { GoogleOutlined } from '@ant-design/icons';
 import styles from '../../css/loginform.module.css';
@@ -9,6 +9,7 @@ import { Link, useNavigate } from 'react-router';
 import { TokenProps } from '../../interfaces/IAuthen';
 import { getAuthState, getTokenState, useAuths, useToken } from '../../hooks/useAuths';
 import { jwtDecode } from 'jwt-decode';
+import { GetActiveUser } from '../../api/Account/UserAPI';
 
 const { Title, Text } = Typography;
 
@@ -24,7 +25,7 @@ const Login: React.FC = () => {
       try {
         const { access_token } = tokenResponse;
         //console.log('Google Account:', access_token);
-        const userAccount: GoogleAccountRequestProps = await GoogleAccountAuthen(access_token);
+        const userAccount: GoogleAccountRequestProps = await LoginGoogleAccount(access_token);
         if (userAccount!=null) {
           alert('Login successful');
           //console.log("User: ",userAccount)
@@ -32,13 +33,12 @@ const Login: React.FC = () => {
           setRefreshToken(userAccount.refreshToken);
           login()
           setUserRole(userAccount.roleId)
-          const testToken = await TestToken();
+          const testToken = await GetActiveUser();
           console.log("Response testToken: ",testToken)
           if(testToken==null){
             //console.log("Test Token: ",testToken)
           alert('Token is invalid. Please try again.');
           }
-
           if(userAccount.roleId === 1){
             nav('/admin')
           }
