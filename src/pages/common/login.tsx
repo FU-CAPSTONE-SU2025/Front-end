@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Card, Form, Input, Typography } from 'antd';
 import { useGoogleLogin } from '@react-oauth/google';
 import { LoginGoogleAccount, LoginAccount } from '../../api/Account/AuthAPI';
-import { DemoAccountProps, GoogleAccountRequestProps, LoginProps } from '../../interfaces/IAccount';
+import { GoogleAccountRequestProps, LoginProps } from '../../interfaces/IAccount';
 import { GoogleOutlined } from '@ant-design/icons';
 import styles from '../../css/loginform.module.css';
 import { Link, useNavigate } from 'react-router';
@@ -13,12 +13,26 @@ import { GetActiveUser } from '../../api/Account/UserAPI';
 
 const { Title, Text } = Typography;
 
+
+
 const Login: React.FC = () => {
-  const nav = useNavigate();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
-  const {setAccessToken,setRefreshToken,accessToken} = getTokenState()
+  const {setAccessToken,setRefreshToken} = getTokenState()
   const { login, setUserRole } = getAuthState();
+  const nav = useNavigate();
+  function RoleNavigation (roleId:number){
+     if(roleId === 1){
+        nav('/admin')
+      }
+      else if(roleId === 0){
+        nav('/student')
+      }
+      else
+        nav('/')
+      // ADD ROUTE HERE
+  return null
+}
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setIsGoogleLoading(true);
@@ -33,21 +47,13 @@ const Login: React.FC = () => {
           setRefreshToken(userAccount.refreshToken);
           login()
           setUserRole(userAccount.roleId)
-          const testToken = await GetActiveUser();
-          console.log("Response testToken: ",testToken)
-          if(testToken==null){
-            //console.log("Test Token: ",testToken)
-          alert('Token is invalid. Please try again.');
-          }
-          if(userAccount.roleId === 1){
-            nav('/admin')
-          }
-          else if(userAccount.roleId === 0){
-            nav('/guest')
-          }
-          else
-            nav('/')
-          // ADD ROUTE HERE
+          // const testToken = await GetActiveUser();
+          // console.log("Response testToken: ",testToken)
+          // if(testToken==null){
+          //   //console.log("Test Token: ",testToken)
+          // alert('Token is invalid. Please try again.');
+          // }
+          RoleNavigation(userAccount.roleId)
         }else{
           alert('Login failed. Please try again.');
         }
@@ -68,26 +74,14 @@ const Login: React.FC = () => {
   const onNormalLogin = async(values: LoginProps) => {
     //console.log('Login values:', values);
     setIsEmailLoading(true);
-    const response:TokenProps|null = await LoginAccount(values)
-    if (response!=null) {
+    const userAccount:GoogleAccountRequestProps|null = await LoginAccount(values)
+    if (userAccount!=null) {
       alert('Login successful');
-      setAccessToken(response.accessToken);
-      setRefreshToken(response.refreshToken);
-      const accountData:DemoAccountProps = jwtDecode(response.accessToken)
-      // Check that user is authenticated
-      // set user role
-      login()
-      setUserRole(accountData.Role)
+       setAccessToken(userAccount.accessToken);
+          setRefreshToken(userAccount.refreshToken);
+          login()
       //console.log("Login Redirected to: ",accountData.Role)
-      if(accountData.Role === "1"){
-        nav('/admin')
-      }
-      else if(accountData.Role === "0"){
-        nav('/guest')
-      }
-      else
-        nav('/')
-      // ADD ROUTE HERE
+    RoleNavigation(userAccount.roleId)
     }else{
       alert('Login failed. Please try again.');
     }

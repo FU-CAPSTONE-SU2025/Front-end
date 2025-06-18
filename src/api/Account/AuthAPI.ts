@@ -1,6 +1,6 @@
 import { axiosCreate, axiosRead } from "../AxiosCRUD";
 import { baseUrl, header } from "../template";
-import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
+import { AccountProps, AccountPropsCreate, GoogleAccountRequestProps, LoginProps } from "../../interfaces/IAccount";
 import { TokenProps } from "../../interfaces/IAuthen";
 // const accountUrl = baseUrl+"/account"
 const accountUrl = baseUrl+"/Auth"
@@ -27,7 +27,7 @@ export const LoginGoogleAccount = async (data: string) => {
         return null
     }
 }
-export const LoginAccount = async (data: LoginProps):Promise<TokenProps|null> => {
+export const LoginAccount = async (data: LoginProps) => {
     const props = {
         data: data,
         url: accountUrl+`/login`,
