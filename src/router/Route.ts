@@ -18,6 +18,7 @@ import CourseTracking from "../pages/student/courseTracking";
 import EditAccount from "../pages/admin/editAccount";
 import SemesterPlanner from "../pages/student/semesterPlanner";
 import SemesterPlannerDetail from "../pages/student/semesterPlannerDetail";
+import ForgetPassword from "../pages/common/forgetPassword";
 
 
 export const routes = createBrowserRouter([
@@ -97,6 +98,10 @@ export const routes = createBrowserRouter([
   {
     path: "/",
     Component: Login,
+  },
+  {
+    path: "/forgetpassword",
+    Component: ForgetPassword,
   },
   {
     path: "/404",

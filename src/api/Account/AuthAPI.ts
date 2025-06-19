@@ -45,3 +45,36 @@ export const LoginAccount = async (data: LoginProps) => {
 
 }
 
+//send email
+export const SendEmail = async (data:any) => {
+      const props = {
+        data: data,
+        url: accountUrl+`/send-reset-code`,
+        headers: null
+    }
+    const result = await axiosCreate(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        console.log(result.error)
+        return null
+    }
+
+}
+export const ResetPassword = async (data:any) => {
+      const props = {
+        data: data,
+        url: accountUrl+`/send-reset-code`,
+        headers: null
+    }
+    const result = await axiosCreate(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        console.log(result.error)
+        return null
+    }
+
+}
