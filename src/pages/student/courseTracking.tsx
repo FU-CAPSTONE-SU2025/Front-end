@@ -103,13 +103,13 @@ const CourseTracking = () => {
   const [semester, setSemester] = useState(semesters[0].value);
 
   return (
-    <div className="min-h-screen mt-180 ">
+    <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden">
       {/* Header Section */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mb-8"
+        className="mb-8 w-full"
       >
         <h1 className="text-4xl font-bold text-white mb-4">Course Dashboard</h1>
         <Select
@@ -124,7 +124,7 @@ const CourseTracking = () => {
       </motion.div>
 
       {/* Course Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-12 w-full">
         {courses.map((course, idx) => (
           <motion.div
             key={idx}
@@ -132,9 +132,10 @@ const CourseTracking = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: idx * 0.1 }}
             whileHover={{ scale: 1.03, boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2)' }}
+            className="w-full"
           >
             <Card
-              className="h-40 bg-gradient-to-br from-teal-500 to-teal-700 border-none rounded-xl shadow-lg overflow-hidden"
+              className="h-40 bg-gradient-to-br from-teal-500 to-teal-700 border-none rounded-xl shadow-lg overflow-hidden w-full"
               hoverable
             >
               <div className="flex flex-col justify-between h-full p-4">
@@ -151,7 +152,7 @@ const CourseTracking = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="mb-12"
+        className="mb-12 w-full"
       >
         <h2 className="text-2xl font-semibold text-white mb-4">Activity Overview</h2>
         <CommitChart />
@@ -162,9 +163,10 @@ const CourseTracking = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
+        className="w-full"
       >
         <h2 className="text-2xl font-semibold text-white mb-4">Important Exams</h2>
-        <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl p-6 shadow-lg">
+        <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl p-6 shadow-lg w-full">
           <Timeline mode="alternate" className="mt-4">
             {importantExams.map((exam, idx) => (
               <Timeline.Item

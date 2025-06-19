@@ -66,15 +66,15 @@ const nodeTypes = {
 
 const SemesterPlannerDetail = () => {
   return (
-    <div className="min-h-screen mt-120 bg-gradient-to-br from-orange-500 to-blue-900 flex flex-col items-center py-6 px-2">
+    <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden bg-gradient-to-br from-orange-500 to-blue-900 items-center py-6">
       {/* Top Info Card */}
       <motion.div
-        className="w-full max-w-5xl bg-white/10 border border-white/30 rounded-2xl p-6 mb-6 shadow-lg"
+        className="w-full bg-white/10 border border-white/30 rounded-2xl p-6 mb-6 shadow-lg"
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full">
           <div>
             <div className="text-xs text-white/80 font-semibold tracking-wider mb-1">SUMMER SEMESTER 27/05/2025 - 15/09/2025</div>
             <div className="text-3xl md:text-4xl font-bold text-white mb-2">Backend Developer</div>
@@ -99,7 +99,7 @@ const SemesterPlannerDetail = () => {
       </motion.div>
 
       {/* Course Status */}
-      <div className="w-full max-w-5xl flex flex-row flex-wrap gap-3 mb-4">
+      <div className="w-full flex flex-row flex-wrap gap-3 mb-4">
         {courseStatus.map((c) => (
           <div key={c.name} className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg shadow border border-white/30">
             {statusIcon(c.status)}
@@ -109,7 +109,7 @@ const SemesterPlannerDetail = () => {
       </div>
 
       {/* React Flow Roadmap */}
-      <div className="w-full max-w-6xl h-[700px] bg-white/10 rounded-2xl border border-white/20 shadow-lg overflow-hidden">
+      <div className="w-full h-[700px] bg-white/10 rounded-2xl border border-white/20 shadow-lg overflow-hidden">
         <ReactFlow
           nodes={nodes}
           edges={edges}
