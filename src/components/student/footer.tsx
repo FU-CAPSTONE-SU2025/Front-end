@@ -26,12 +26,13 @@ const Footer: React.FC = () => {
 
   return (
     <motion.footer
-      className="bg-gradient-to-r from-gray-900 to-gray-800 text-white max-w-none py-8 px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row justify-between items-center gap-8 shrink-0"
+      className="w-full bg-gradient-to-r from-gray-900 to-gray-800 text-white py-8 flex flex-col md:flex-row items-center justify-between gap-8 shrink-0 px-0"
       variants={footerVariants}
       initial="hidden"
       animate="visible"
+      style={{ boxSizing: 'border-box' }}
     >
-      <div className="flex flex-col items-center sm:items-start text-center sm:text-left w-full sm:w-auto">
+      <div className="flex flex-col items-center md:items-start text-center md:text-left w-full md:w-1/2 px-4">
         <motion.h3
           className="text-xl font-bold mb-4 tracking-tight"
           initial={{ opacity: 0, x: -20 }}
@@ -68,12 +69,13 @@ const Footer: React.FC = () => {
         </div>
       </div>
       <motion.div
-        className="flex flex-col items-center sm:items-end"
+        className="flex flex-col items-center md:items-end w-full md:w-1/2 px-4"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.3, duration: 0.5 }}
       >
-          <img src='/img/Logo.svg' alt="AI SEA Logo" className="h-12 w-auto mb-2" />
+        <img src='/img/Logo.svg' alt="AI SEA Logo" className="h-12 w-auto mb-2" />
+        <span className="text-gray-300 text-sm mt-2">&copy; {new Date().getFullYear()} AI SEA. All rights reserved.</span>
       </motion.div>
     </motion.footer>
   );

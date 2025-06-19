@@ -46,13 +46,19 @@ const pieData = [
 const COLORS = ['#3B82F6', '#F97316'];
 
 const Dashboard = () => (
-  <div className="pt-20 flex flex-col lg:flex-row w-full gap-6 overflow-x-hidden">
+  <div className="pt-20 flex  lg:flex-row w-full gap-6 ">
     <div className="w-full lg:w-1/3 flex flex-col items-center">
-      <UserInfoCard user={user} />
+      <div className="w-full flex flex-col items-center">
+        <UserInfoCard user={user} />
+      </div>
     </div>
     <div className="w-full lg:w-2/3 flex flex-col gap-6">
-      <CourseList courses={courses} />
-      <AcademicCharts academicData={academicData} pieData={pieData} COLORS={COLORS} />
+      <div className="w-full">
+        <CourseList courses={courses} />
+      </div>
+      <div className="w-full">
+        <AcademicCharts academicData={academicData} pieData={pieData} COLORS={COLORS} />
+      </div>
     </div>
   </div>
 );

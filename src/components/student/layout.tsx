@@ -7,10 +7,12 @@ const StudentLayout = () => {
   return (
     <>
       <Header />
-   
+      <div className="flex flex-col min-h-screen w-full">
+        <div className="flex-1 w-full">
           <Outlet />
-   
-      <Footer />
+        </div>
+        <Footer />
+      </div>
     </>
   );
 };

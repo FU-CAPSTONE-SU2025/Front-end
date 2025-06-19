@@ -64,13 +64,13 @@ const ResourceExplorer: React.FC = () => {
   const [search, setSearch] = useState('');
 
   return (
-    <div className="min-h-screen mt-120  p-6 md:p-10">
+    <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden">
       {/* Card list */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-10"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-10 w-full"
       >
         {subjectCards.map((card, idx) => (
           <motion.div
@@ -79,9 +79,10 @@ const ResourceExplorer: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: idx * 0.1, duration: 0.3 }}
             whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+            className="w-full"
           >
             <Card
-              className="bg-white/10 backdrop-blur-lg border-none shadow-xl hover:shadow-2xl transition-shadow rounded-2xl"
+              className="bg-white/10 backdrop-blur-lg border-none shadow-xl hover:shadow-2xl transition-shadow rounded-2xl w-full"
               bodyStyle={{ padding: '20px' }}
             >
               <div className="text-white font-bold text-xl">{card.code}</div>
@@ -96,7 +97,7 @@ const ResourceExplorer: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="flex justify-center mb-10"
+        className="flex justify-center mb-10 w-full"
       >
         <Input
           placeholder="Search by subject code..."
@@ -112,7 +113,7 @@ const ResourceExplorer: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.5 }}
-        className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-xl"
+        className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-xl w-full"
       >
         <AnimatePresence>
           <Table
