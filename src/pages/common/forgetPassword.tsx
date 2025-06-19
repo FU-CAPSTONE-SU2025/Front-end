@@ -40,7 +40,7 @@ const itemVariants = {
 
 const iconVariants = {
   hidden: { opacity: 0, rotate: -10 },
-  visible: { opacity: 0.1, rotate: 0, transition: { duration: 0.5, delay: 0.4 } },
+  visible: { opacity: 1, rotate: 0, transition: { duration: 0.5, delay: 0.4 } },
 };
 
 const ForgetPassword: React.FC = () => {
@@ -192,7 +192,7 @@ const ForgetPassword: React.FC = () => {
     return (
       <motion.div className={styles.card} variants={cardVariants} initial="hidden" animate="visible">
         <motion.div className={styles.mailIcon} variants={iconVariants}>
-          <Mail size={120} strokeWidth={1} />
+          <Mail size={240} strokeWidth={1} />
         </motion.div>
         <motion.h2 className={styles.title} variants={itemVariants}>
           Enter Verification Code and New Password

@@ -10,7 +10,7 @@ export interface AccountProps{
   last_name :string
   date_of_birth :Date
   address :string
-  role_id :number
+  role_id :number | 0 | 1 | 2| 3 | 4 
 }
 
 export interface LoginProps{

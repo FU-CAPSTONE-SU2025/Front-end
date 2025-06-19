@@ -26,7 +26,8 @@ const Footer: React.FC = () => {
 
   return (
     <motion.footer
-      className="bg-gradient-to-r from-gray-900 to-gray-800 text-white max-w-none py-8 px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row justify-between items-center gap-8 shrink-0"
+      className="bg-gradient-to-r from-gray-900 to-gray-800 text-white w-full max-w-none py-8 px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row justify-between items-center gap-8 shrink-0"
+      
       variants={footerVariants}
       initial="hidden"
       animate="visible"
