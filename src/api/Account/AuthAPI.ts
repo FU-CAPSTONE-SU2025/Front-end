@@ -1,7 +1,6 @@
 import { axiosCreate, axiosRead } from "../AxiosCRUD";
-import { baseUrl, header } from "../template";
-import { AccountProps, AccountPropsCreate, GoogleAccountRequestProps, LoginProps } from "../../interfaces/IAccount";
-import { TokenProps } from "../../interfaces/IAuthen";
+import { baseUrl, GetHeader } from "../template";
+import { LoginProps } from "../../interfaces/IAccount";
 // const accountUrl = baseUrl+"/account"
 const accountUrl = baseUrl+"/Auth"
 const googleLoginURL = baseUrl+"/Auth/google"
@@ -19,7 +18,6 @@ export const LoginGoogleAccount = async (data: string) => {
     }
     const result = await axiosRead(props)
     if (result.success) {
-        //console.log(result)
         return result.data
     }
     else {
@@ -31,15 +29,48 @@ export const LoginAccount = async (data: LoginProps) => {
     const props = {
         data: data,
         url: accountUrl+`/login`,
-        headers: header
+        headers: GetHeader()
     }
     const result = await axiosCreate(props)
     if (result.success) {
-        console.log(result.data)
         return result.data
     }
     else {
         console.log(result.error)
+        return null
+    }
+
+
+}
+export const Logout = async () => {
+    const props = {
+        data: null,
+        url: accountUrl+`/logout`,
+        headers: GetHeader()
+    }
+    const response = await axiosRead(props)
+    if (response.success) {
+        return response.data
+    }
+    else {
+        return null
+    }
+
+}
+
+export const RefreshToken = async () => {
+    const props = {
+        data: null,
+        url: accountUrl+`/login`,
+        headers: GetHeader()
+    }
+    const newAccessToken = await axiosRead(props)
+    if (newAccessToken.success) {
+        console.log(newAccessToken.data)
+        return newAccessToken.data
+    }
+    else {
+        console.log(newAccessToken.error)
         return null
     }
 

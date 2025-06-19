@@ -1,5 +1,5 @@
  import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
-import { baseUrl, header } from "../template";
+import { baseUrl, GetHeader } from "../template";
 import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
 import { TokenProps } from "../../interfaces/IAuthen";
 
@@ -9,12 +9,12 @@ export const GetActiveUser = async ():Promise<TokenProps|null> => {
     const props = {
         data: null,
         url: userURL+`/active`,
-        headers:header
     }
-    //console.log("Test Token header: ",header)
+    const header = GetHeader()
+    console.log("Header: ",header) 
     const result = await axiosRead(props)
     if (result.success) {
-        //console.log(result.data)
+        console.log(result.data)
         return result.data
     }
     else {
@@ -27,7 +27,7 @@ export const RegisterUser = async (data: AccountPropsCreate):Promise<any> => {
     const props = {
         data: data,
         url: userURL,
-        headers: header
+        headers: GetHeader()
     }
     const result = await axiosCreate(props)
     if (result.success) {
@@ -43,7 +43,7 @@ export const RegisterMultipleUser = async (data: AccountPropsCreate[]):Promise<a
     const props = {
         data: data,
         url: userURL,
-        headers: header
+        headers: GetHeader()
     }
     const result = await axiosCreate(props)
     if (result.success) {
@@ -60,7 +60,7 @@ export const FetchUserList = async ():Promise<AccountProps[]> => {
     const props = {
         data: null,
         url: userURL,
-        headers: header
+        headers: GetHeader()
     }
     const result = await axiosRead(props)
     if (result.success) {
@@ -76,7 +76,7 @@ export const FetchUserById = async (userId:number):Promise<AccountProps|null> =>
     const props = {
         data: null,
         url: userURL+`/`+userId,
-        headers: header
+        headers: GetHeader()
     }
     const result = await axiosRead(props)
     if (result.success) {
@@ -92,7 +92,7 @@ export const UpdateUser = async (userId:number):Promise<AccountProps|null> => {
     const props = {
         data: null,
         url: userURL+`/`+userId,
-        headers: header
+        headers: GetHeader()
     }
     const result = await axiosUpdate(props)
     if (result.success) {
@@ -108,7 +108,7 @@ export const DisableUser = async (userId:number):Promise<AccountProps|null> => {
     const props = {
         data: null,
         url: userURL+`/`+userId,
-        headers: header
+        headers: GetHeader()
     }
     const result = await axiosDelete(props)
     if (result.success) {
