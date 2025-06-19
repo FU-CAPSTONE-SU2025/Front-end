@@ -14,8 +14,11 @@ interface NavItem {
 
 const AdminNavBar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(true);
-  const { logout } = getAuthState();
+  const {logout} = getAuthState()
   const location = useLocation();
+  const handleLogout = () => {
+    logout();
+  }
 
   const navItems: NavItem[] = [
     { label: 'My account', icon: User, route: '' },
@@ -148,7 +151,7 @@ const AdminNavBar: React.FC = () => {
               </React.Fragment>
             ))}
             <hr className={styles.divider} />
-            <Link to="/" className={styles.logout} onClick={logout}>
+            <Link to="/" className={styles.logout} onClick={handleLogout}>
               <span>Log out</span>
               <LogOut className={styles.logoutIcon} aria-hidden="true" />
             </Link>

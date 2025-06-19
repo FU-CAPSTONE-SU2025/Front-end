@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Avatar, Button, Drawer } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageOutlined } from '@ant-design/icons';
-
 import ReactDOM from 'react-dom';
 import ChatBox from './chatBox';
 

@@ -9,7 +9,7 @@ import AdvisorsPage from "../pages/admin/advisors";
 import ManagersPage from "../pages/admin/managers";
 import LogsPage from "../pages/admin/logs";
 import Dashboard from "../pages/student/dashboard";
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, useNavigate } from "react-router";
 import StudentLayout from "../components/student/layout";
 import AdminLayout from "../components/admin/adminLayout";
 import BookingPage from "../pages/student/bookingAdvisor";
@@ -18,6 +18,7 @@ import CourseTracking from "../pages/student/courseTracking";
 import EditAccount from "../pages/admin/editAccount";
 import SemesterPlanner from "../pages/student/semesterPlanner";
 import SemesterPlannerDetail from "../pages/student/semesterPlannerDetail";
+
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -28,7 +29,7 @@ export const routes = createBrowserRouter([
   {
     path: "/admin",
     Component: AdminLayout,
-    loader: protectedLoader(['1','2']),
+    loader: protectedLoader(['1']),
     children: [
       {
         index: true,

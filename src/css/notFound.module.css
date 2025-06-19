@@ -1,0 +1,95 @@
+.container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent; /* Inherit AdminLayout gradient */
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2; /* Above content, below potential modals */
+}
+
+.card {
+  width: auto;
+  max-width: 600px; /* Limit width for readability */
+  padding: 2rem;
+  background: rgba(255,255,255,0.18) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.card h1 {
+  color: white;
+  font-family: 'Inter', sans-serif;
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.card p {
+  color: white;
+  font-family: 'Geist', sans-serif;
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+}
+
+.backButton {
+  background: rgba(30, 64, 175, 0.8) !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+  color: white !important;
+  border-radius: 4px !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.backButton:hover {
+  background: rgba(30, 64, 175, 1) !important;
+}
+
+.backButton:global(.ant-btn-default) {
+  background: rgba(255,255,255,0.1) !important;
+}
+
+.backButton:global(.ant-btn-default:hover) {
+  background: rgba(255,255,255,0.2) !important;
+}
+
+@media (max-width: 767px) {
+  .card {
+    padding: 1.5rem;
+    max-width: 90%;
+  }
+
+  .card h1 {
+    font-size: 2.5rem;
+  }
+
+  .card p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 1rem;
+  }
+
+  .card h1 {
+    font-size: 2rem;
+  }
+
+  .card p {
+    font-size: 0.875rem;
+  }
+
+  .backButton {
+    width: 100%;
+    margin-bottom: 0.5rem;
+    margin-left: 0 !important;
+  }
+}
