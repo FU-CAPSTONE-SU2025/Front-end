@@ -1,6 +1,0 @@
-body {
-  min-height: 100vh; /* Equivalent to min-h-screen */
-  width: 100%; /* Full viewport width */
-  background: linear-gradient(to bottom right, #f97316, #1e3a8a); /* bg-gradient-to-br from-orange-500 to-blue-900 */
-  z-index: 1; /* Base z-index for background */
-}
