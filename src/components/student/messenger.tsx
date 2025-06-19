@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Avatar, Button, Drawer } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageOutlined } from '@ant-design/icons';
-import ChatBox from './chatBox';
 import ReactDOM from 'react-dom';
+import ChatBox from './chatBox';
 
 interface Chat {
   id: number;

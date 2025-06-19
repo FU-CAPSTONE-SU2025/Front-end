@@ -27,8 +27,9 @@ body {
   margin: 0;
   display: flex;
   place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  min-width: auto;
+  min-height: auto;
+  background: linear-gradient(to bottom right, #f97316, #1e3a8a);
 }
 
 h1 {
