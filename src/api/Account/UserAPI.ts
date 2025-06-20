@@ -88,9 +88,9 @@ export const FetchUserById = async (userId:number):Promise<AccountProps|null> =>
         return null
     }
 }
-export const UpdateUser = async (userId:number):Promise<AccountProps|null> => {
+export const UpdateUser = async (userId:number,data:any):Promise<AccountProps|null> => {
     const props = {
-        data: null,
+        data: data,
         url: userURL+`/`+userId,
         headers: GetHeader()
     }
