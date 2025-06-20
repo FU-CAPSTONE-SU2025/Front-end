@@ -25,7 +25,7 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <motion.footer
+    <motion.div
       className="w-full bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6 sm:py-8 flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8 shrink-0 px-4 sm:px-6 lg:px-8"
       variants={footerVariants}
       initial="hidden"
@@ -81,7 +81,7 @@ const Footer: React.FC = () => {
           &copy; {new Date().getFullYear()} AI SEA. All rights reserved.
         </span>
       </motion.div>
-    </motion.footer>
+    </motion.div>
   );
 };
 

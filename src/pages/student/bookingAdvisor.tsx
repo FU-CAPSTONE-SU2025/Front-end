@@ -49,7 +49,7 @@ const BookingPage = () => {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden font-inter"
+      className=" flex flex-col w-full min-h-screen overflow-x-hidden font-inter"
     >
       <motion.div
         className="w-full bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 mx-auto"

@@ -109,7 +109,7 @@ const CourseTracking = () => {
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mb-8 w-full"
+        className="mb-8 lg:mt-1000 w-full"
       >
         <h1 className="text-4xl font-bold text-white mb-4">Course Dashboard</h1>
         <Select
