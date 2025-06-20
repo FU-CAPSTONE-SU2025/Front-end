@@ -7,7 +7,7 @@ import DataImport from '../../components/admin/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
 import { useNavigate } from 'react-router';
-import { StudentBase } from '../../interfaces/IStudent';
+import { AccountProps } from '../../interfaces/IAccount';
 
 const { Option } = Select;
 
@@ -22,9 +22,9 @@ const StudentList: React.FC = () => {
   const nav = useNavigate();
   
   // Redirect to edit page when a student row is clicked
-  const handleRowClick = (data: StudentBase) => {
+  const handleRowClick = (data: AccountProps) => {
     if (!isDeleteMode) {
-      nav(`/admin/edit/student/${data.Id}`);
+      nav(`/admin/edit/student/${data.id}`);
     }
   };
   // navigating to create page for adding new student
@@ -135,8 +135,8 @@ const StudentList: React.FC = () => {
         onChange: (selectedRowKeys: React.Key[]) => {
           setSelectedStudents(selectedRowKeys as string[]);
         },
-        getCheckboxProps: (record: StudentBase) => ({
-          name: record.Id,
+        getCheckboxProps: (record: AccountProps) => ({
+          name: record.id,
         }),
       }
     : undefined;
@@ -251,7 +251,7 @@ const StudentList: React.FC = () => {
               data={filteredStudents}
               rowSelection={rowSelection}
               dataPerPage={studentsPerPage}
-              onRow={(record: StudentBase) => ({
+              onRow={(record: AccountProps) => ({
                 onClick: () => handleRowClick(record), // Navigate to edit page
               })}
             />
