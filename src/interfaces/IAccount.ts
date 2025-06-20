@@ -3,14 +3,14 @@
 export interface AccountProps{
   id: number
   username :string
-  password_hash :string
+  password :string
   email :string
   avatar :string
-  first_name :string
-  last_name :string
-  date_of_birth :Date
+  firstName :string
+  lastName :string
+  dateOfBirth :Date
   address :string
-  role_id :number | 0 | 1 | 2| 3 | 4 
+  roleId :number | 0 | 1 | 2| 3 | 4 
 }
 
 export interface LoginProps{

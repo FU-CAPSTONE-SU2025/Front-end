@@ -5,7 +5,6 @@ import AdminNavBar from './adminNavBar';
 export default function AdminLayout() {
   return (
     <>
-   
      <div className={styles.body}>
        <AdminNavBar/>
         <Outlet />

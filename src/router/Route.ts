@@ -20,6 +20,8 @@ import SemesterPlanner from "../pages/student/semesterPlanner";
 import SemesterPlannerDetail from "../pages/student/semesterPlannerDetail";
 import ForgetPassword from "../pages/common/forgetPassword";
 import Dummy from "../pages/dummy";
+import StaffProfile from "../pages/staff/profile";
+import StaffLayout from "../components/staff/staffLayout";
 
 
 export const routes = createBrowserRouter([
@@ -98,10 +100,25 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/staff",
-    Component: Dummy,
+    Component: StaffLayout, // Replace with actual component for staff navigation
     loader: protectedLoader(['2']),
     children:[
-
+      {
+        index: true,
+        Component: StaffProfile, // Replace with actual component for staff dashboard
+      },
+      {
+        path: "transcript",
+        Component: StaffProfile, // Replace with actual component for staff transcript
+      },
+      {
+        path: "syllabus",
+        Component: StaffProfile, // Replace with actual component for staff syllabus
+      },
+      {
+        path: "subjects",
+        Component: StaffProfile, // Replace with actual component for staff subjects
+      }
     ]
 
   },

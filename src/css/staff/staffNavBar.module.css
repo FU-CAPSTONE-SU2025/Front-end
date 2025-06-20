@@ -1,0 +1,175 @@
+.navBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.7); /* Less transparent glass */
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 1000;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.logo {
+  width: 150px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.nav {
+  display: flex;
+  flex: 1;
+  justify-content: flex-end; /* Lean tabs toward right */
+  gap: 1.5rem;
+  padding-right: 2rem;
+}
+
+.navItem {
+  color: rgb(0, 0, 0);
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+  color: #E6F0FA;
+}
+
+.navItem.active {
+  background: rgba(255, 145, 77, 1); /* Orange accent from AdminNavBar */
+  color: #ffffff !important;
+  font-weight: 700;
+  transform: scale(1.05);
+}
+
+.toggleButton {
+  display: none; /* Hidden on desktop */
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1001;
+  background:#f97316;
+  color: white;
+  padding: 0.5rem;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.toggleButton:hover {
+  opacity: 1;
+  background: #f97316;
+}
+
+.toggleIcon {
+  width: 24px;
+  height: 24px;
+}
+
+@media (max-width: 1023px) {
+  .navBar {
+    transform: translateY(-100%); /* Hidden by default on mobile */
+  }
+
+  .navBar.open {
+    transform: translateY(0); /* Slide in when open */
+  }
+
+  .toggleButton {
+    display: flex; /* Show on mobile */
+    opacity: 0.7;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+  }
+
+  .logo {
+    width: 120px;
+    height: 48px;
+  }
+
+  .nav {
+    flex-direction: column;
+    width: 100%;
+    padding-right: 0;
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+
+  .navItem {
+    font-size: 0.875rem;
+     margin: 1.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .logo {
+    width: 100px;
+    height: 40px;
+  }
+
+  .navItem {
+    font-size: 0.75rem;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .toggleButton {
+    width: 40px;
+    height: 40px;
+    top: 0.75rem;
+    left: 0.75rem;
+    opacity: 0.7;
+  }
+
+  .toggleIcon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .logo {
+    width: 80px;
+    height: 32px;
+  }
+
+  .navItem {
+    font-size: 0.625rem;
+    padding: 1.5rem;
+  }
+}

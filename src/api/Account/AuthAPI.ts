@@ -29,7 +29,6 @@ export const LoginAccount = async (data: LoginProps) => {
     const props = {
         data: data,
         url: accountUrl+`/login`,
-        headers: GetHeader()
     }
     const result = await axiosCreate(props)
     if (result.success) {
@@ -46,7 +45,6 @@ export const Logout = async () => {
     const props = {
         data: null,
         url: accountUrl+`/logout`,
-        headers: GetHeader()
     }
     const response = await axiosRead(props)
     if (response.success) {
@@ -62,7 +60,6 @@ export const RefreshToken = async () => {
     const props = {
         data: null,
         url: accountUrl+`/login`,
-        headers: GetHeader()
     }
     const newAccessToken = await axiosRead(props)
     if (newAccessToken.success) {
