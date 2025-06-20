@@ -67,7 +67,7 @@ const Dashboard = () => {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="pt-20 lg:mt-235 md:mt-200 pb-8 flex-1  min-h-screen bg-transparent"
+      className="pt-20  pb-8 flex-1  min-h-screen bg-transparent"
     >
       {/* Header Section */}
       <motion.div
