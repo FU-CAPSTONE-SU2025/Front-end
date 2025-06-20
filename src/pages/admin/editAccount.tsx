@@ -8,6 +8,7 @@ import { staffs } from '../../../data/mockStaff';
 import { managers } from '../../../data/mockManager';
 import { advisors } from '../../../data/mockAdvisor';
 import { IAccountBase } from '../../interfaces/IRoleAccount';
+import { RegisterUser, UpdateUser, DisableUser } from '../../api/Account/UserAPI';
 
 const { Option } = Select;
 
@@ -52,6 +53,7 @@ const EditAccount: React.FC = () => {
     });
   };
 
+  // Add Account
   const handleAddAccount = () => {
     form.validateFields().then((values) => {
       Modal.confirm({
@@ -68,12 +70,14 @@ const EditAccount: React.FC = () => {
           try {
             const newAccount = {
               ...values,
-            
               AddDated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('/').join('/'),
             };
-            await mockApiCall('POST', `/api/${role}/create`, newAccount);
-          
-            nav(-1); // Navigate back
+            if (role === 'student') {
+              await RegisterUser(newAccount);
+            } else {
+              await mockApiCall('POST', `/api/${role}/create`, newAccount);
+            }
+            nav(-1);
           } catch (error) {
             console.error('Create failed:', error);
           } finally {
@@ -84,6 +88,7 @@ const EditAccount: React.FC = () => {
     });
   };
 
+  // Update Account
   const handleUpdateAccount = () => {
     form.validateFields().then((values) => {
       Modal.confirm({
@@ -99,9 +104,12 @@ const EditAccount: React.FC = () => {
           setLoading(true);
           try {
             const updatedAccount = { ...values, Id: id };
-            await mockApiCall('PUT', `/api/${role}/${id}`, updatedAccount);
-           
-            nav(-1); // Navigate back
+            if (role === 'student') {
+              await UpdateUser(id as unknown as number, updatedAccount);
+            } else {
+              await mockApiCall('PUT', `/api/${role}/${id}`, updatedAccount);
+            }
+            nav(-1);
           } catch (error) {
             console.error('Update failed:', error);
           } finally {
@@ -112,6 +120,7 @@ const EditAccount: React.FC = () => {
     });
   };
 
+  // Delete Account
   const handleDeleteAccount = () => {
     if (!id) return;
     Modal.confirm({
@@ -127,9 +136,12 @@ const EditAccount: React.FC = () => {
       onOk: async () => {
         setLoading(true);
         try {
-          await mockApiCall('DELETE', `/api/${role}/${id}`, null);
-         
-          nav(-1); // Navigate back
+          if (role === 'student') {
+            await DisableUser(id as unknown as number);
+          } else {
+            await mockApiCall('DELETE', `/api/${role}/${id}`, null);
+          }
+          nav(-1);
         } catch (error) {
           console.error('Delete failed:', error);
         } finally {

@@ -137,7 +137,7 @@ const Login: React.FC = () => {
           </Form.Item>
           <Form.Item>
               <Typography.Link className={styles.registerLink}>
-                <Link to="/register">Don't have an account? Register here</Link>
+                <Link to="/forgetpassword">Forgot your password? Go here</Link>
               </Typography.Link>
             </Form.Item>
         </Form>

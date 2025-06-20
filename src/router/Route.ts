@@ -18,6 +18,8 @@ import CourseTracking from "../pages/student/courseTracking";
 import EditAccount from "../pages/admin/editAccount";
 import SemesterPlanner from "../pages/student/semesterPlanner";
 import SemesterPlannerDetail from "../pages/student/semesterPlannerDetail";
+import ForgetPassword from "../pages/common/forgetPassword";
+import Dummy from "../pages/dummy";
 
 
 export const routes = createBrowserRouter([
@@ -65,7 +67,7 @@ export const routes = createBrowserRouter([
   {
     path: "/student",
     Component: StudentLayout, 
-    loader: protectedLoader(['student']),
+    loader: protectedLoader(['5']),
     children: [
       {
         index: true,
@@ -95,8 +97,37 @@ export const routes = createBrowserRouter([
     ],
   },
   {
+    path: "/staff",
+    Component: Dummy,
+    loader: protectedLoader(['2']),
+    children:[
+
+    ]
+
+  },
+   {
+    path: "/advisor",
+    Component: Dummy,
+    loader: protectedLoader(['3']),
+    children:[
+      
+    ]
+  },
+   {
+    path: "/manager",
+    Component: Dummy,
+    loader: protectedLoader(['4']),
+    children:[
+      
+    ]
+  },
+  {
     path: "/",
     Component: Login,
+  },
+  {
+    path: "/forgetpassword",
+    Component: ForgetPassword,
   },
   {
     path: "/404",

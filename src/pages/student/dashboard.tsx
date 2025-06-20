@@ -2,8 +2,11 @@ import CourseList from '../../components/student/courseList';
 import AcademicCharts from '../../components/student/academicCharts';
 import UserInfoCard from '../../components/student/userInfoCard';
 import { motion } from 'framer-motion';
-import SemesterSelect from '../../components/student/SemesterSelect';
+
 import { useState } from 'react';
+import SemesterSelect from '../../components/student/selectSemester';
+
+
 
 const user = {
   name: 'Le Nguyen Thien An',
@@ -64,11 +67,11 @@ const Dashboard = () => {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="pt-20 lg:mt-235 md:mt-200 pb-8 flex-1 w-full min-h-screen bg-transparent"
+      className="pt-20  pb-8 flex-1  min-h-screen bg-transparent"
     >
       {/* Header Section */}
       <motion.div
-        className="w-full px-4 sm:px-6 lg:px-8 mb-8"
+        className="px-4 sm:px-6 lg:px-8 mb-8"
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
