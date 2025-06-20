@@ -52,7 +52,7 @@ const SemesterSelect: React.FC<SemesterSelectProps> = ({ value, options, onChang
         .custom-semester-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled),
         .custom-semester-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled),
         .custom-semester-dropdown .ant-select-item-option:hover:not(.ant-select-item-option-disabled) {
-          background-color: #fb923c !important; /* Tailwind orange-400 */
+          background-color: #fb923c !important; 
           color: #fff !important;
           font-weight: 700 !important;
         }

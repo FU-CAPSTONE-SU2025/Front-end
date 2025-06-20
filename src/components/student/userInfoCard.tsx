@@ -1,8 +1,11 @@
 import { motion } from 'framer-motion';
-import { Avatar, Tooltip, Modal, Button } from 'antd';
-import { UserOutlined, RiseOutlined } from '@ant-design/icons';
+import { Avatar, Tooltip, Button } from 'antd';
+import { UserOutlined, RiseOutlined, EyeOutlined, EditOutlined } from '@ant-design/icons';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer, LabelList } from 'recharts';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import GpaHistoryModal from './gpaFull';
+
+
 
 interface Achievement {
   icon: string;
@@ -34,8 +37,25 @@ function getTotalGpa(gpaHistory: GpaBySemester[]) {
 
 const UserInfoCard: React.FC<{ user: UserInfo }> = ({ user }) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(user.avatar);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const recentGpa = user.gpaHistory.slice(-3);
   const totalGpa = getTotalGpa(user.gpaHistory);
+
+  const handleEditAvatar = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setAvatarUrl(ev.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <motion.div
@@ -46,14 +66,32 @@ const UserInfoCard: React.FC<{ user: UserInfo }> = ({ user }) => {
       whileHover="hover"
     >
       <div className="flex flex-col items-center text-center z-10 relative">
-        <motion.div whileHover={{ scale: 1.05, rotate: 2 }} transition={{ duration: 0.3 }}>
-          <Avatar
-            src={user.avatar}
-            size={{ xs: 100, sm: 120, md: 140, lg: 160, xl: 180, xxl: 180 }}
-            icon={<UserOutlined />}
-            className="border-4 border-white/30 shadow-2xl mb-6"
+        <div className="relative mb-6">
+          <motion.div whileHover={{ scale: 1.05, rotate: 2 }} transition={{ duration: 0.3 }}>
+            <Avatar
+              src={avatarUrl}
+              size={{ xs: 100, sm: 120, md: 140, lg: 160, xl: 180, xxl: 180 }}
+              icon={<UserOutlined />}
+              className="border-4 border-white/30 shadow-2xl"
+            />
+          </motion.div>
+          <button
+            type="button"
+            className="absolute bottom-2 right-2 w-7 h-7 flex items-center justify-center bg-transparent hover:bg-orange-500 text-white border border-white rounded-full shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            style={{ zIndex: 2 }}
+            onClick={handleEditAvatar}
+            aria-label="Edit avatar"
+          >
+            <EditOutlined style={{ fontSize: 15, margin: 0, padding: 0, color: '#fff' }} />
+          </button>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={handleAvatarChange}
           />
-        </motion.div>
+        </div>
         <div className="text-2xl sm:text-3xl font-bold text-white mb-2">
           {user.name}
         </div>
@@ -77,66 +115,47 @@ const UserInfoCard: React.FC<{ user: UserInfo }> = ({ user }) => {
         <div className="w-full bg-white/10 rounded-2xl p-4 shadow border border-white/20 mb-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-white font-semibold text-lg">
-              <RiseOutlined className="text-blue-400 text-xl" />
-              GPA by Semester
+              <RiseOutlined className="text-orange-400 text-xl" />
+              Grade Point Average
             </div>
-            <Button
-              type="primary"
-              className="ml-2 font-bold px-4"
-              onClick={() => setModalOpen(true)}
-              size="middle"
-              icon={<RiseOutlined />}
-            >
-              View All
-            </Button>
+            <Tooltip title="View Full History">
+              <Button
+                type="text"
+                shape="circle"
+                icon={<EyeOutlined style={{ color: '#fff', fontSize: 20 }} />}
+                onClick={() => setModalOpen(true)}
+                size="large"
+                className="border border-white bg-transparent hover:bg-orange-500 focus:bg-orange-500 text-white flex items-center justify-center transition-all duration-200"
+                style={{ width: 32, height: 32, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              />
+            </Tooltip>
           </div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-gray-400 text-base font-semibold">Recent 3 semesters</span>
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500 text-white font-bold text-lg shadow">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500 text-white font-bold text-lg shadow">
               <RiseOutlined /> {totalGpa}
             </span>
           </div>
           <ResponsiveContainer width="100%" height={120}>
-            <BarChart data={recentGpa} barSize={32}>
-              <XAxis dataKey="semester" stroke="#222" fontSize={14} tickLine={false} axisLine={false} />
-              <YAxis domain={[0, 4]} fontSize={14} stroke="#222" tickLine={false} axisLine={false} />
-              <ReTooltip wrapperStyle={{ zIndex: 1000 }} contentStyle={{ background: '#fff', color: '#222', borderRadius: 12, fontWeight: 600, fontSize: 16 }} />
-              <Bar dataKey="gpa" fill="#3B82F6" radius={[10, 10, 0, 0]} animationDuration={1000}>
-                <LabelList dataKey="gpa" position="top" fill="#222" fontSize={16} fontWeight={700} />
+            <BarChart data={recentGpa} margin={{ top: 20, right: 0, left: 0, bottom: -10 }}>
+              <XAxis dataKey="semester" stroke="#a0a0a0" fontSize={12} tickLine={false} axisLine={false} />
+              <ReTooltip
+                cursor={{ fill: 'rgba(255,255,255,0.1)' }}
+                contentStyle={{ background: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: 12, color: 'white', fontWeight: 600, fontSize: 16 }}
+              />
+              <Bar dataKey="gpa" fill="#F97316" radius={[8, 8, 8, 8]} animationDuration={1000}>
+                <LabelList dataKey="gpa" position="top" fill="#f0f0f0" fontSize={14} fontWeight={600} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
-        {/* GPA Modal (keep simple) */}
-        <Modal
+      
+        <GpaHistoryModal
           open={modalOpen}
-          onCancel={() => setModalOpen(false)}
-          footer={null}
-          centered
-          className="gpa-modal-card"
-          bodyStyle={{ background: 'rgba(255,255,255,0.97)', borderRadius: 24, padding: 32, boxShadow: '0 8px 32px rgba(0,0,0,0.10)' }}
-        >
-          <div className="mb-6 flex flex-col items-center">
-            <div className="flex items-center gap-2 text-2xl font-bold text-gray-800 mb-1">
-              <RiseOutlined className="text-blue-400 text-2xl" />
-              Full GPA History
-            </div>
-            <div className="text-base text-gray-500 mb-2">From <span className="font-bold text-gray-800">{user.gpaHistory[0]?.semester}</span> to <span className="font-bold text-gray-800">{user.gpaHistory[user.gpaHistory.length-1]?.semester}</span></div>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500 text-white font-bold text-xl shadow mb-2">
-              <RiseOutlined /> Total GPA: {totalGpa}
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={user.gpaHistory} barSize={32}>
-              <XAxis dataKey="semester" stroke="#222" fontSize={15} tickLine={false} axisLine={false} />
-              <YAxis domain={[0, 4]} fontSize={15} stroke="#222" tickLine={false} axisLine={false} />
-              <ReTooltip wrapperStyle={{ zIndex: 1000 }} contentStyle={{ background: '#fff', color: '#222', borderRadius: 12, fontWeight: 600, fontSize: 16 }} />
-              <Bar dataKey="gpa" fill="#3B82F6" radius={[10, 10, 0, 0]} animationDuration={1000}>
-                <LabelList dataKey="gpa" position="top" fill="#222" fontSize={16} fontWeight={700} />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </Modal>
+          onClose={() => setModalOpen(false)}
+          gpaHistory={user.gpaHistory}
+          totalGpa={totalGpa}
+        />
       </div>
     </motion.div>
   );

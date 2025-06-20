@@ -13,9 +13,9 @@ const user = {
   quote: 'SE170104',
   avatar: '/avatar.jpg',
   achievements: [
-    { icon: '🏆', label: 'Top 3' },
-    { icon: '🎉', label: 'YOLO' },
-    { icon: '😺', label: 'Cat King' },
+    { icon: '🏆', label: 'Excellent student in SUMMER 2024' },
+    { icon: '🎉', label: 'Godd student in SUMMER 2025' },
+    { icon: '😺', label: 'Handsome student in SUMMER 2025' },
   ],
   gpaHistory: [
     { semester: 'Fall 21', gpa: 3.2 },
@@ -38,36 +38,74 @@ const courses = [
   { name: 'Basic Cross-Platform Application Programming With .NET', code: 'PRN212', progress: 60 },
 ];
 
-const academicData = [
-  { name: 'Math', score: 8.5 },
-  { name: 'Physics', score: 7.2 },
-  { name: 'Chemistry', score: 9.1 },
-  { name: 'English', score: 8.0 },
-  { name: 'Programming', score: 7.8 },
+const semestersAcademicData = [
+  {
+    semester: 'Fall 23',
+    attendance: [
+      { subject: 'PRO192', attendance: 95 },
+      { subject: 'DBI202', attendance: 90 },
+      { subject: 'LAB211', attendance: 100 },
+      { subject: 'CSD201', attendance: 88 },
+      { subject: 'JPD113', attendance: 93 },
+    ],
+    scores: [
+      { category: 'Final Exam', score: 7.5 },
+      { category: 'Assignments', score: 8 },
+      { category: 'Practical', score: 9 },
+      { category: 'Midterm', score: 7 },
+      { category: 'Presentation', score: 8.5 },
+    ]
+  },
+  {
+    semester: 'Spring 24',
+    attendance: [
+      { subject: 'PRN221', attendance: 98 },
+      { subject: 'SWP391', attendance: 92 },
+      { subject: 'SWT301', attendance: 100 },
+      { subject: 'SWR302', attendance: 85 },
+      { subject: 'JPD123', attendance: 91 },
+    ],
+    scores: [
+      { category: 'Final Exam', score: 8.0 },
+      { category: 'Assignments', score: 8.5 },
+      { category: 'Practical', score: 7.5 },
+      { category: 'Midterm', score: 9.0 },
+      { category: 'Presentation', score: 8.0 },
+    ]
+  },
+  {
+    semester: 'Summer 24',
+    attendance: [
+      { subject: 'WED201c', attendance: 94 },
+      { subject: 'IOT102', attendance: 96 },
+      { subject: 'KMS201', attendance: 89 },
+      { subject: 'VNR202', attendance: 99 },
+    ],
+    scores: [
+      { category: 'Final Exam', score: 9.0 },
+      { category: 'Assignments', score: 7.0 },
+      { category: 'Practical', score: 8.0 },
+      { category: 'Midterm', score: 8.5 },
+      { category: 'Presentation', score: 9.5 },
+    ]
+  },
 ];
-
-const pieData = [
-  { name: 'Passed', value: 4 },
-  { name: 'Failed', value: 1 },
-];
-
-const COLORS = ['#3B82F6', '#F97316'];
 
 const semesterOptions = [
-  { label: 'SUMMER 2025', value: 'SUMMER 2025' },
-  { label: 'SPRING 2025', value: 'SPRING 2025' },
-  { label: 'FALL 2024', value: 'FALL 2024' },
+  { label: 'SUMMER 2024', value: 'Summer 24' },
+  { label: 'SPRING 2024', value: 'Spring 24' },
+  { label: 'FALL 2023', value: 'Fall 23' },
 ];
 
 const Dashboard = () => {
-  const [selectedSemester, setSelectedSemester] = useState('SUMMER 2025');
+  const [selectedSemester, setSelectedSemester] = useState('Summer 24');
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="pt-20  pb-8 flex-1  min-h-screen bg-transparent"
+      className="pt-20 mt-2   pb-8 flex-1  min-h-screen bg-transparent"
     >
       {/* Header Section */}
       <motion.div
@@ -76,7 +114,7 @@ const Dashboard = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
       >
-        <p className="text-lg sm:text-xl text-gray-200 opacity-80 max-w-2xl mx-auto text-center">
+        <p className="text-lg sm:text-xl    text-gray-200 opacity-80 max-w-2xl mx-auto text-center">
           Welcome back! Here's your academic overview and progress tracking.
         </p>
       </motion.div>
@@ -128,7 +166,7 @@ const Dashboard = () => {
 
             {/* Analytics Section */}
             <motion.div
-              className="w-full bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-4 sm:p-6 lg:p-8"
+              className="w-full p-4 sm:p-6 lg:p-8"
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.5 }}
@@ -141,7 +179,7 @@ const Dashboard = () => {
                   Visualize your performance and track your achievements
                 </p>
               </div>
-              <AcademicCharts academicData={academicData} pieData={pieData} COLORS={COLORS} />
+              <AcademicCharts semesters={semestersAcademicData} selectedSemester={selectedSemester} />
             </motion.div>
           </motion.div>
         </div>
