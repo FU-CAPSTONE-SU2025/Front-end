@@ -34,7 +34,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-white/70 backdrop-blur-md shadow transition-all duration-300">
-      <div className="flex items-center justify-between px-8 py-4">
+      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
         {/* Logo & Hamburger */}
         <div className="flex items-center">
           {/* Hamburger for mobile */}
@@ -75,11 +75,11 @@ const Header: React.FC = () => {
           <img
             src="/img/Logo.svg"
             alt="AI SEA Logo"
-            className="h-8 w-auto sm:h-10 transition-transform hover:scale-105"
+            className="h-6 sm:h-8 w-auto transition-transform hover:scale-105"
           />
         </motion.div>
         {/* Nav desktop */}
-        <nav className="hidden lg:flex flex-row items-center gap-8 flex-1 justify-center">
+        <nav className="hidden lg:flex flex-row items-center gap-6 xl:gap-8 flex-1 justify-center">
           {navItems.map((item, index) => (
             <motion.a
               key={item}
@@ -88,7 +88,7 @@ const Header: React.FC = () => {
               initial="hidden"
               animate="visible"
               variants={navItemVariants}
-              className="text-black  text-sm font-semibold uppercase tracking-wide hover:text-orange-500 transition-colors duration-300 relative group whitespace-nowrap"
+              className="text-black text-xs xl:text-sm font-semibold uppercase tracking-wide hover:text-orange-500 transition-colors duration-300 relative group whitespace-nowrap"
               whileHover={{ scale: 1.05 }}
             >
               {item}
@@ -97,10 +97,10 @@ const Header: React.FC = () => {
           ))}
         </nav>
         {/* Right actions */}
-        <div className="flex items-center gap-2 sm:gap-3 lg:min-w-[280px] justify-end">
+        <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 lg:min-w-[280px] justify-end">
           <motion.a
             href="#"
-            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-2 sm:px-3 py-1 rounded-lg font-bold text-[10px] sm:text-xs lg:text-sm lg:px-4 lg:py-1.5 hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-sm"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-2 sm:px-3 py-1 rounded-lg font-bold text-[8px] sm:text-xs lg:text-sm lg:px-4 lg:py-1.5 hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-sm whitespace-nowrap"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -112,7 +112,7 @@ const Header: React.FC = () => {
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
             <Avatar
               src="https://i.pravatar.cc/150?img=3"
-              size={{ xs: 22, sm: 26, md: 28, lg: 30 }}
+              size={{ xs: 20, sm: 24, md: 26, lg: 28, xl: 30 }}
               className="ring-1 ring-orange-200 hover:ring-orange-400 transition-all duration-300"
             />
           </motion.div>
@@ -121,7 +121,7 @@ const Header: React.FC = () => {
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
-              className="lg:hidden absolute top-14 left-0 w-1/2 bg-white/80 backdrop-blur-lg shadow-lg p-5 flex flex-col items-start gap-4"
+              className="lg:hidden absolute top-full left-0 w-full sm:w-80 bg-white/90 backdrop-blur-lg shadow-lg p-4 sm:p-5 flex flex-col items-start gap-3 sm:gap-4 border-t border-gray-200"
               variants={mobileMenuVariants}
               initial="hidden"
               animate="visible"
@@ -135,7 +135,7 @@ const Header: React.FC = () => {
                     variants={navItemVariants}
                     initial="hidden"
                     animate="visible"
-                    className="text-black text-sm font-semibold uppercase tracking-wide hover:text-orange-500 transition-colors duration-300 relative group w-full py-2.5 block"
+                    className="text-black text-sm font-semibold uppercase tracking-wide hover:text-orange-500 transition-colors duration-300 relative group w-full py-2 sm:py-2.5 block"
                     onClick={() => setIsMenuOpen(false)}
                     whileHover={{ scale: 1.05 }}
                   >
