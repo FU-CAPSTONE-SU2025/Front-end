@@ -81,26 +81,25 @@ const Header: React.FC = () => {
         {/* Nav desktop */}
         <nav className="hidden lg:flex flex-row items-center gap-6 xl:gap-8 flex-1 justify-center">
           {navItems.map((item, index) => (
-            <motion.a
+            <motion.div
               key={item}
-              href="#"
               custom={index}
               initial="hidden"
               animate="visible"
               variants={navItemVariants}
-              className="text-black text-xs xl:text-sm font-semibold uppercase tracking-wide hover:text-orange-500 transition-colors duration-300 relative group whitespace-nowrap"
+              className="text-black  text-xs xl:text-sm font-semibold uppercase tracking-wide hover:text-orange-500 transition-colors duration-300 relative group whitespace-nowrap cursor-pointer"
               whileHover={{ scale: 1.05 }}
             >
               {item}
               <span className="absolute left-0 bottom-[-2px] w-0 h-[2px] bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
-            </motion.a>
+            </motion.div>
           ))}
         </nav>
         {/* Right actions */}
         <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 lg:min-w-[280px] justify-end">
           <motion.a
             href="#"
-            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-2 sm:px-3 py-1 rounded-lg font-bold text-[8px] sm:text-xs lg:text-sm lg:px-4 lg:py-1.5 hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-sm whitespace-nowrap"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 text-black px-2 sm:px-3 py-1 rounded-lg font-bold text-[8px] sm:text-xs lg:text-sm lg:px-4 lg:py-1.5 hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-sm whitespace-nowrap"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -129,19 +128,18 @@ const Header: React.FC = () => {
             >
               {navItems.map((item, index) => (
                 <div key={item} className="w-full">
-                  <motion.a
-                    href="#"
+                  <motion.div
                     custom={index}
                     variants={navItemVariants}
                     initial="hidden"
                     animate="visible"
-                    className="text-black text-sm font-semibold uppercase tracking-wide hover:text-orange-500 transition-colors duration-300 relative group w-full py-2 sm:py-2.5 block"
+                    className="text-black text-sm font-semibold uppercase tracking-wide hover:text-orange-500 transition-colors duration-300 relative group w-full py-2 sm:py-2.5 block cursor-pointer"
                     onClick={() => setIsMenuOpen(false)}
                     whileHover={{ scale: 1.05 }}
                   >
                     {item}
                     <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
-                  </motion.a>
+                  </motion.div>
                   {index < navItems.length - 1 && (
                     <hr className="w-full border-t border-gray-300 opacity-50 my-2" />
                   )}
