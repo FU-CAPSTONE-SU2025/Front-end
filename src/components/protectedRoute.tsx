@@ -4,12 +4,7 @@ import { getAuthState } from '../hooks/useAuths';
 import { jwtDecode } from 'jwt-decode';
 
 export const protectedLoader = (allowedRoles: string[]) => {
-  // Role code as follows:
-  // 1. Admin -> 1
-  // 2. Staff -> 2
-  // 3. Advisor -> 3
-  // 4. Manager -> 4
-  // 5. Student -> 5
+
   return () => {
     // const { userRole,accessToken } = getAuthState();
     // console.log("Protected Route Check: ", userRole);

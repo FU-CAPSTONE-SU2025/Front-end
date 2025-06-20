@@ -7,7 +7,7 @@ import DataImport from '../../components/admin/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
 import { useNavigate } from 'react-router';
-import { StudentBase } from '../../interfaces/IRoleAccount';
+import { StudentBase } from '../../interfaces/IStudent';
 
 const { Option } = Select;
 

@@ -1,14 +1,12 @@
 export interface StudentBase {
-
+  userId: number
+  studentCode:string
+  enrollDate:Date
+  currentGpa:number
 }
 export interface CreateStudent {
- id: number
-  username :string
-  password :string
-  email :string
-  firstName :string
-  lastName :string
-  dateOfBirth :Date
-  roleId :0
+  userId: number
+  studentCode:string
+  enrollDate:Date
+  currentGpa:number
 }
-
