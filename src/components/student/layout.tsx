@@ -5,13 +5,13 @@ import { Outlet } from 'react-router';
 
 const StudentLayout = () => {
   return (
-    <>
+    <div className="flex flex-col min-h-screen w-full overflow-x-hidden">
       <Header />
-   
-          <Outlet />
-   
+      <main className="flex-1 w-full relative">
+        <Outlet />
+      </main>
       <Footer />
-    </>
+    </div>
   );
 };
 

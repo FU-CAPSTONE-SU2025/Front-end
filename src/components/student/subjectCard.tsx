@@ -10,7 +10,7 @@ interface SubjectCardProps {
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  hover: { scale: 1.01, boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)', transition: { duration: 0.3 } },
+  hover: { scale: 1.02, boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)', transition: { duration: 0.3 } },
 };
 
 function getProgressColor(progress: number) {
@@ -25,20 +25,32 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ code, name, progress }) => (
     initial="hidden"
     animate="visible"
     whileHover="hover"
-    className="backdrop-blur-lg bg-white/5 border border-white rounded-2xl p-5 flex flex-col gap-2 min-w-[320px] max-w-xs relative shadow-lg"
-    style={{ minHeight: 90 }}
+    className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-4 lg:p-5 flex flex-col gap-3 relative shadow-lg transition-all duration-300"
+    style={{ minHeight: '120px' }}
   >
     <div className="flex items-center justify-between">
-      <span className="text-white font-bold text-xl tracking-wide">{code}</span>
+      <span className="text-white font-bold text-lg lg:text-xl tracking-wide truncate">
+        {code}
+      </span>
       <div
-        className={`rounded-full px-3 py-0.5 text-xs font-semibold absolute top-4 right-4 border ${getProgressColor(progress)}`}
+        className={`rounded-full px-3 py-1 text-xs font-semibold border ${getProgressColor(progress)}`}
         style={{backdropFilter: 'blur(2px)'}}
       >
         {progress}%
       </div>
     </div>
-    <div className="text-white text-sm font-medium mt-1 mb-3 leading-tight">
+    <div className="text-white text-sm lg:text-base font-medium leading-tight line-clamp-3 flex-1">
       {name}
+    </div>
+    
+    {/* Progress Bar */}
+    <div className="w-full bg-white/10 rounded-full h-2">
+      <motion.div
+        className={`h-2 rounded-full ${progress >= 80 ? 'bg-green-500' : progress >= 50 ? 'bg-yellow-400' : 'bg-red-500'}`}
+        initial={{ width: 0 }}
+        animate={{ width: `${progress}%` }}
+        transition={{ duration: 1, delay: 0.5 }}
+      />
     </div>
   </motion.div>
 );
