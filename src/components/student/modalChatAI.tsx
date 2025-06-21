@@ -7,6 +7,8 @@ interface Message {
   id: number;
   fromMe: boolean;
   text: string;
+  time: string;
+  chatSessionId?: number;
 }
 
 interface ChatHistoryItem {
@@ -83,6 +85,9 @@ const ModalChatAI: React.FC<ModalChatAIProps> = ({
                 {!msg.fromMe && <Avatar src={AI_BOT.avatar} size={32} className="mt-1" />}
                 <div className={`px-4 py-2.5 rounded-xl max-w-[70%] leading-relaxed ${msg.fromMe ? 'bg-blue-600 text-white' : 'bg-[#222222]'}`}>
                   {msg.text}
+                  <div className={`text-[10px] mt-2 opacity-60 ${msg.fromMe ? 'text-right' : 'text-left'}`}>
+                    {msg.time}
+                  </div>
                 </div>
               </div>
             ))}
