@@ -1,6 +1,8 @@
 import { axiosCreate, axiosRead } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { LoginProps } from "../../interfaces/IAccount";
+import { TokenProps } from "../../interfaces/IAuthen";
+import { getAuthState, useAuths } from "../../hooks/useAuths";
 // const accountUrl = baseUrl+"/account"
 const accountUrl = baseUrl+"/Auth"
 const googleLoginURL = baseUrl+"/Auth/google"
@@ -63,12 +65,16 @@ export const RefreshToken = async () => {
     }
     const newAccessToken = await axiosRead(props)
     if (newAccessToken.success) {
-        console.log(newAccessToken.data)
-        return newAccessToken.data
+        const {setAccessToken,setRefreshToken} = getAuthState()
+        //console.log(newAccessToken.data)
+        const tokens:TokenProps = newAccessToken.data
+         setAccessToken(tokens.accessToken);
+          setRefreshToken(tokens.refreshToken);
+        return true
     }
     else {
         console.log(newAccessToken.error)
-        return null
+        return false
     }
 
 }

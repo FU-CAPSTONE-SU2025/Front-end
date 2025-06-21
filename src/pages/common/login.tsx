@@ -23,13 +23,21 @@ const Login: React.FC = () => {
      if(roleId === 1){
         nav('/admin')
       }
-      else if(roleId === 0){
+      else if(roleId === 5){
         nav('/student')
       }
-      else
-        nav('/')
+      else if(roleId === 2){
+        nav('/staff')
+      }
+      else if(roleId === 3){
+        nav('/advisor')
+      }
+      else if (roleId === 4){
+        nav('/manager')
+      }else{
+         nav('/404')
+      }
       // ADD ROUTE HERE
-  return null
 }
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -70,7 +78,7 @@ const Login: React.FC = () => {
     const userAccount:GoogleAccountRequestProps|null = await LoginAccount(values)
     if (userAccount!=null) {
       alert('Login successful');
-        setAccessToken(userAccount.accessToken);
+          setAccessToken(userAccount.accessToken);
           setRefreshToken(userAccount.refreshToken);
           login(userAccount.roleId)
           RoleNavigation(userAccount.roleId)

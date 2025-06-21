@@ -9,7 +9,7 @@ import AdvisorsPage from "../pages/admin/advisors";
 import ManagersPage from "../pages/admin/managers";
 import LogsPage from "../pages/admin/logs";
 import Dashboard from "../pages/student/dashboard";
-import { createBrowserRouter, useNavigate } from "react-router";
+import { createBrowserRouter } from "react-router";
 import StudentLayout from "../components/student/layout";
 import AdminLayout from "../components/admin/adminLayout";
 import BookingPage from "../pages/student/bookingAdvisor";
@@ -100,7 +100,7 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/staff",
-    Component: StaffLayout, // Replace with actual component for staff navigation
+    Component: StaffLayout, 
     loader: protectedLoader(['2']),
     children:[
       {
@@ -109,15 +109,15 @@ export const routes = createBrowserRouter([
       },
       {
         path: "transcript",
-        Component: StaffProfile, // Replace with actual component for staff transcript
+        Component: StaffProfile,
       },
       {
         path: "syllabus",
-        Component: StaffProfile, // Replace with actual component for staff syllabus
+        Component: StaffProfile, 
       },
       {
         path: "subjects",
-        Component: StaffProfile, // Replace with actual component for staff subjects
+        Component: StaffProfile, 
       }
     ]
 

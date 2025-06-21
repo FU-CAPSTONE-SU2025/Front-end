@@ -7,6 +7,7 @@
   z-index: 2; /* Below NavBar (z-index: 1000) */
   position: relative;
   padding: 2rem 0;
+  min-width: 80vw;
 }
 
 .cardWrapper {
@@ -21,7 +22,7 @@
 .card {
   flex: 1;
   padding: 24px;
-  background: rgba(255, 255, 255, 0.3); /* Less transparent glass */
+  background: rgba(255, 255, 255, 0.7); /* Less transparent glass */
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border-radius: 16px;
