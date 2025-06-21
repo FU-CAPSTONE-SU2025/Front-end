@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import styles from '../../css/admin/editAccount.module.css';
 import { RegisterStudent } from '../../api/student/StudentAPI';
 import { RegisterStaff } from '../../api/staff/StaffAPI';
+import { AccountPropsCreate } from '../../interfaces/IAccount';
 
 const { Option } = Select;
 
@@ -12,6 +13,11 @@ type ParamsProps = {
   role: string;
   id?: string;
 };
+
+type AxiosResult={
+  data:any|null,
+  error:any|null
+}
 
 const campusOptions = [
   { label: 'Ho Chi Minh', value: 'Ho Chi Minh' },
@@ -40,31 +46,49 @@ const EditAccount: React.FC = () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
-
       // Prepare payload
-      let payload: any = {
+      let payload: AccountPropsCreate = {
         ...values,
         dateOfBirth: values.dateOfBirth.format('YYYY-MM-DD'),
         password: values.password,
       };
-
+      let response:AxiosResult|null = null
       if (isStudent) {
         payload = {
           ...payload,
-          enrolledAt: values.enrolledAt.format('YYYY-MM-DD'),
-          careerGoal: values.careerGoal,
+          studentProfileData:{
+            enrolledAt: values.enrolledAt.format('YYYY-MM-DD'),
+            careerGoal: values.careerGoal,
+          },
+          roleId : 5
         };
-        await RegisterStudent(payload);
+        console.log("student: ",payload)
+        response = await RegisterStudent(payload);
+      
       } else if (isStaff) {
         payload = {
           ...payload,
+          roleId : 1,
+          staffProfileData:{
           campus: values.campus,
           department: values.department,
           position: values.position,
           startWorkAt: values.startWorkAt.format('YYYY-MM-DD'),
           endWorkAt: values.endWorkAt ? values.endWorkAt.format('YYYY-MM-DD') : null,
+          },
         };
-        await RegisterStaff(payload);
+        console.log("staff: ",payload)
+        response = await RegisterStaff(payload);
+      }
+      if(response!=null){
+        if(response.data){
+          message.success('Account saved successfully!');
+        }
+        if(response.error){
+          message.error('Something is wrong: ',response.error);
+        }
+      }else{
+        message.error('Something is wrong')
       }
       message.success('Account saved successfully!');
       nav(-1);
@@ -189,7 +213,7 @@ const EditAccount: React.FC = () => {
                 htmlType="submit"
                 loading={loading}
                 style={{ marginRight: 8 }}
-                onClick={() => form.submit()}
+                onClick={() => handleSubmit()}
               >
                 Save Account
               </Button>

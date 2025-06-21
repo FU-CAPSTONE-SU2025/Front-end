@@ -36,7 +36,7 @@ export const RegisterStudent = async (data: AccountPropsCreate):Promise<any> => 
     }
     else {
         console.log(result.error)
-        return null
+        return result.error
     }
 }
 export const RegisterMultipleStudent = async (data: AccountPropsCreate[]):Promise<any> => {

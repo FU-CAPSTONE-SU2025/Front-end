@@ -28,7 +28,6 @@ export const makeRequest = async (
     url: string,
     data?: any,
     header?: any,
-    retryCount = 0
 ): Promise<AxiosResult> => {
     try {
         const config: AxiosRequestConfig = {
@@ -46,11 +45,14 @@ export const makeRequest = async (
             console.error("Axios error response:", error.response);
             const errorResponse:AxiosErrorResponse|undefined = error.response
             if (errorResponse && errorResponse.status === 401) {
+                let retry = 0;
                 console.error("Unauthorized access - possibly token expired or invalid");
-                if (retryCount < MAX_REFRESH_RETRIES) {
+                if (retry < MAX_REFRESH_RETRIES) {
                     const refreshResult = await RefreshToken();
+                    console.log("Attempting to refresh token: ",refreshResult)
                     if (refreshResult) {
-                        return makeRequest(method, url, data, retryCount + 1);
+                        retry +=1
+                        return makeRequest(method, url, data);
                     }
                 }
             }
