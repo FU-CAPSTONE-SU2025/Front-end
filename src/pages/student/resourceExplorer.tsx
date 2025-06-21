@@ -1,131 +1,115 @@
 import React, { useState } from 'react';
-import { Card, Input, Table } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { motion, AnimatePresence } from 'framer-motion';
-import { SearchOutlined } from '@ant-design/icons';
+import { motion } from 'framer-motion';
+import SearchBar from '../../components/student/searchBar';
+import ResourceTable from '../../components/student/resourceTable';
+import SubjectDetailModal from '../../components/student/subjectDetailModal';
 
-// Mock data for cards
-const subjectCards = Array(5).fill({
-  code: 'PRN212',
-  name: 'Basic Cross-Platform Application Programming With .NET',
-});
-
-// Mock data for table
-const tableData = Array.from({ length: 14 }, (_, i) => ({
-  key: i + 1,
-  syllabusId: i + 1,
-  subjectCode: 'PRN212',
-  subjectName: 'Basic Cross-Platform Application Programming With .NET',
-  syllabusName: 'Basis Cross-Platform Application Programming With .NET_Lập trình ứng dụng đa nền tảng cơ bản với .NET',
-  syllabusLink: '#',
-}));
-
-const columns: ColumnsType<any> = [
+// Mock data for current semester subjects
+const currentSemesterSubjects = [
   {
-    title: 'Syllabus ID',
-    dataIndex: 'syllabusId',
-    key: 'syllabusId',
-    align: 'center',
-    width: 100,
+    code: 'PRN212',
+    name: 'Basic Cross-Platform Application Programming With .NET',
+    progress: 85,
   },
   {
-    title: 'Subject Code',
-    dataIndex: 'subjectCode',
-    key: 'subjectCode',
-    align: 'center',
-    width: 120,
+    code: 'PRN221',
+    name: 'Advanced Cross-Platform Application Programming With .NET',
+    progress: 65,
   },
   {
-    title: 'Subject Name',
-    dataIndex: 'subjectName',
-    key: 'subjectName',
-    align: 'left',
-    width: 300,
+    code: 'PRN231',
+    name: 'Web Application Development With ASP.NET Core',
+    progress: 45,
   },
   {
-    title: 'Syllabus Name',
-    dataIndex: 'syllabusName',
-    key: 'syllabusName',
-    align: 'left',
-    render: (text: string, record) => (
-      <a
-        href={record.syllabusLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-400 hover:text-blue-300 transition-colors"
-      >
-        {text}
-      </a>
-    ),
+    code: 'PRN241',
+    name: 'Mobile Application Development With Xamarin',
+    progress: 90,
+  },
+  {
+    code: 'PRN251',
+    name: 'Cloud Application Development With Azure',
+    progress: 75,
   },
 ];
 
 const ResourceExplorer: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState<any>(null);
+
+  const handleOpenModal = (subject: any) => {
+    setSelectedSubject(subject);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedSubject(null);
+  };
 
   return (
-    <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden">
-      {/* Card list */}
+    <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden px-4 lg:px-6">
+      {/* Current Semester Subjects */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-10 w-full"
+        className="mb-6 w-full max-w-7xl mx-auto"
       >
-        {subjectCards.map((card, idx) => (
-          <motion.div
-            key={idx}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: idx * 0.1, duration: 0.3 }}
-            whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
-            className="w-full"
-          >
-            <Card
-              className="bg-white/10 backdrop-blur-lg border-none shadow-xl hover:shadow-2xl transition-shadow rounded-2xl w-full"
-              bodyStyle={{ padding: '20px' }}
-            >
-              <div className="text-white font-bold text-xl">{card.code}</div>
-              <div className="text-gray-200 text-sm mt-2">{card.name}</div>
-            </Card>
-          </motion.div>
-        ))}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 shadow-xl border border-white/20">
+          <h2 className="text-lg font-bold text-white mb-3">
+            Current Semester Subjects
+          </h2>
+          <div className="space-y-2">
+            {currentSemesterSubjects.map((subject, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05, duration: 0.2 }}
+                className="flex items-center justify-between p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200"
+              >
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="text-yellow-300 font-bold text-sm whitespace-nowrap">
+                    {subject.code}
+                  </span>
+                  <h3 className="text-white font-medium text-sm truncate">
+                    {subject.name}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2 ml-2">
+                  <span className="text-white font-bold text-sm">
+                    {subject.progress}%
+                  </span>
+                  <div className="w-12 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-300"
+                      style={{ width: `${subject.progress}%` }}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </motion.div>
 
-      {/* Search Input */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="flex justify-center mb-10 w-full"
-      >
-        <Input
-          placeholder="Search by subject code..."
-          prefix={<SearchOutlined className="text-gray-400" />}
+      {/* Search Bar */}
+      <div className="mb-6 w-full max-w-7xl mx-auto">
+        <SearchBar
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-lg bg-white/10 border-none text-white placeholder-gray-400 rounded-full py-3 px-6 focus:ring-2 focus:ring-blue-400"
+          onChange={setSearch}
+          placeholder="Search by subject code or name..."
+          className="mb-0"
         />
-      </motion.div>
+      </div>
 
-      {/* Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-        className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-xl w-full"
-      >
-        <AnimatePresence>
-          <Table
-            columns={columns}
-            dataSource={tableData.filter((row) => row.subjectCode.toLowerCase().includes(search.toLowerCase()))}
-            pagination={{ pageSize: 10, showSizeChanger: false }}
-            bordered={false}
-            className="custom-table"
-            rowClassName="bg-transparent hover:bg-white/5 transition-colors"
-          />
-        </AnimatePresence>
-      </motion.div>
+      {/* Table - Only shows when search is performed */}
+      <ResourceTable searchTerm={search} onSubjectSelect={handleOpenModal} />
+
+      <SubjectDetailModal
+        visible={!!selectedSubject}
+        onClose={handleCloseModal}
+        subject={selectedSubject}
+      />
     </div>
   );
 };

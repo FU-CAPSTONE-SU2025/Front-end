@@ -3,8 +3,13 @@ import { baseUrl, GetHeader } from "../template";
 
 const aiUrl = baseUrl + "/ChatBot";
 
+interface ApiResponse {
+  message: string;
+  chatSessionId: number;
+}
+
 // Gửi câu hỏi tới AI và nhận câu trả lời
-export const sendAiMessage = async (message: string) => {
+export const sendAiMessage = async (message: string): Promise<ApiResponse> => {
   const props = {
     data: { message },
     url: aiUrl,
@@ -12,10 +17,10 @@ export const sendAiMessage = async (message: string) => {
   };
   const result = await axiosCreate(props);
   if (result.success) {
-    return result.data;
+    return result.data as ApiResponse;
   } else {
     console.log(result.error);
-    return null;
+    throw new Error(result.error || 'Failed to send message to AI');
   }
 };
 

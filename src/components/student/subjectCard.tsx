@@ -25,11 +25,12 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ code, name, progress }) => (
     initial="hidden"
     animate="visible"
     whileHover="hover"
-    className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-4 lg:p-5 flex flex-col gap-3 relative shadow-lg transition-all duration-300"
-    style={{ minHeight: '120px' }}
+    className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-5 lg:p-6 flex flex-col gap-4 relative shadow-lg transition-all duration-300 h-full"
+    style={{ minHeight: '200px' }}
   >
+    {/* Header with code and progress badge */}
     <div className="flex items-center justify-between">
-      <span className="text-white font-bold text-lg lg:text-xl tracking-wide truncate">
+      <span className="text-white font-bold text-xl lg:text-2xl tracking-wide">
         {code}
       </span>
       <div
@@ -39,18 +40,22 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ code, name, progress }) => (
         {progress}%
       </div>
     </div>
-    <div className="text-white text-sm lg:text-base font-medium leading-tight line-clamp-3 flex-1">
+    
+    {/* Subject name - takes up available space */}
+    <div className="text-white/90 text-base lg:text-lg font-medium leading-relaxed flex-1">
       {name}
     </div>
     
-    {/* Progress Bar */}
-    <div className="w-full bg-white/10 rounded-full h-2">
-      <motion.div
-        className={`h-2 rounded-full ${progress >= 80 ? 'bg-green-500' : progress >= 50 ? 'bg-yellow-400' : 'bg-red-500'}`}
-        initial={{ width: 0 }}
-        animate={{ width: `${progress}%` }}
-        transition={{ duration: 1, delay: 0.5 }}
-      />
+    {/* Progress Bar - stays at bottom */}
+    <div className="mt-auto">
+      <div className="w-full bg-white/10 rounded-full h-2.5">
+        <motion.div
+          className={`h-2.5 rounded-full ${progress >= 80 ? 'bg-green-500' : progress >= 50 ? 'bg-yellow-400' : 'bg-red-500'}`}
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 1, delay: 0.5 }}
+        />
+      </div>
     </div>
   </motion.div>
 );

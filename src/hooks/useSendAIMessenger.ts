@@ -3,11 +3,10 @@ import { useMutation } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { sendAiMessage } from '../api/student/AiChatBox';
 
-// Định nghĩa interface cho phản hồi từ API (tùy thuộc vào cấu trúc dữ liệu thực tế)
-interface AiResponse {
-  success: boolean;
-  data: any; // Thay bằng type cụ thể nếu biết cấu trúc dữ liệu
-  error?: string;
+// Định nghĩa interface cho phản hồi từ API
+interface ApiResponse {
+  message: string;
+  chatSessionId: number;
 }
 
 // Định nghĩa interface cho lỗi
@@ -17,14 +16,14 @@ interface ErrorResponse {
 
 // Custom hook để gửi tin nhắn tới AI
 export const useSendAiMessage = () => {
-  return useMutation<AiResponse, AxiosError<ErrorResponse>, string>({
+  return useMutation<ApiResponse, AxiosError<ErrorResponse>, string>({
     mutationFn: sendAiMessage,
     onSuccess: (data) => {
       // Xử lý khi gửi tin nhắn thành công
-      if (data.success) {
-        console.log('AI response:', data.data);
+      if (data && data.message) {
+        console.log('AI response:', data.message, 'Session ID:', data.chatSessionId);
       } else {
-        console.error('Failed to get AI response:', data.error);
+        console.error('Failed to get AI response:', data);
       }
     },
     onError: (error) => {

@@ -1,0 +1,153 @@
+import React from 'react';
+import { Table } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FileSearchOutlined, CodeOutlined, BookOutlined } from '@ant-design/icons';
+
+interface ResourceTableProps {
+  searchTerm: string;
+  onSubjectSelect: (subject: any) => void;
+}
+
+// Mock data for table
+const tableData = Array.from({ length: 14 }, (_, i) => ({
+  key: i + 1,
+  syllabusId: i + 1,
+  code: `PRN21${i % 3}`,
+  name: `Sample Subject Name ${i + 1}`,
+  credit: 3,
+  timeAllocation: 'Study hour (150h) = 49.5h contact hours + 1h final exam + 85 practical exam + 99.5h self-study',
+  preRequisite: ['PRO192', 'DBI202'],
+  details: {
+    description: `This is a sample description for subject PRN21${i % 3}. It covers the fundamental concepts and practical applications required for this field of study.`,
+    objectives: [
+      { 
+        id: 1, 
+        icon: <CodeOutlined />, 
+        main: 'Understand core concepts', 
+        sub: ['Concept A', 'Concept B'] 
+      },
+      { 
+        id: 2, 
+        icon: <BookOutlined />, 
+        main: 'Develop practical skills', 
+        sub: ['Skill X', 'Skill Y'] 
+      },
+    ],
+  },
+  tips: 'Practice regularly and collaborate with peers to succeed.',
+  syllabusName: `Syllabus for Sample Subject ${i + 1}`,
+  syllabusLink: '#',
+}));
+
+const getColumns = (onSubjectSelect: (subject: any) => void): ColumnsType<any> => [
+  {
+    title: 'Syllabus ID',
+    dataIndex: 'syllabusId',
+    key: 'syllabusId',
+    align: 'center',
+    width: 110,
+    render: (text: string) => (
+      <span className="font-medium text-white whitespace-nowrap">{text}</span>
+    ),
+  },
+  {
+    title: 'Subject Code',
+    dataIndex: 'code',
+    key: 'code',
+    align: 'center',
+    width: 150,
+    render: (text: string) => (
+      <span className="font-bold text-orange-400 whitespace-nowrap">{text}</span>
+    ),
+  },
+  {
+    title: 'Subject Name',
+    dataIndex: 'name',
+    key: 'name',
+    align: 'left',
+    width: 300,
+    render: (text: string) => (
+      <span className="text-gray-200">{text}</span>
+    ),
+  },
+  {
+    title: 'Syllabus Name',
+    dataIndex: 'syllabusName',
+    key: 'syllabusName',
+    align: 'left',
+    render: (text: string, record) => (
+      <span
+        onClick={() => onSubjectSelect(record)}
+        className="cursor-pointer text-cyan-400 hover:text-cyan-300 hover:underline transition-colors duration-200"
+        role="button"
+        tabIndex={0}
+        onKeyPress={(e) => { if (e.key === 'Enter') onSubjectSelect(record); }}
+      >
+        {text}
+      </span>
+    ),
+  },
+];
+
+const ResourceTable: React.FC<ResourceTableProps> = ({ searchTerm, onSubjectSelect }) => {
+  const columns = getColumns(onSubjectSelect);
+
+  const filteredData = tableData.filter((row) => 
+    row.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    row.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (!searchTerm.trim()) {
+    return null;
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.5 }}
+      className="bg-gray-900/40 backdrop-blur-sm rounded-xl p-4 shadow-2xl shadow-black/20 w-full max-w-7xl mx-auto border border-white/20"
+    >
+      <div className="mb-4 px-2">
+        <h3 className="text-xl font-semibold text-white">
+          Search Results
+        </h3>
+        <p className="text-gray-400 text-sm">
+          Found {filteredData.length} result{filteredData.length !== 1 ? 's' : ''} for "{searchTerm}"
+        </p>
+      </div>
+      
+      <AnimatePresence>
+        <div className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-black/25 [&_.ant-table-tbody>tr>td]:!bg-transparent [&_.ant-table-thead>tr>th]:border-b-2 [&_.ant-table-thead>tr>th]:border-white/10 [&_.ant-table-thead>tr>th]:!text-white [&_.ant-table-thead>tr>th]:font-bold [&_.ant-table-thead>tr>th]:uppercase [&_.ant-table-thead>tr>th]:tracking-wider [&_.ant-table-thead>tr>th]:text-xs [&_.ant-table-thead>tr>th]:py-3 [&_.ant-table-tbody>tr>td]:py-4 [&_.ant-pagination-item]:bg-white/10 [&_.ant-pagination-item]:border-white/20 [&_.ant-pagination-item>a]:text-white [&_.ant-pagination-item:hover]:bg-white/20 [&_.ant-pagination-item-active]:bg-orange-500/50 [&_.ant-pagination-item-active]:border-orange-500/80 [&_.ant-pagination-prev]:bg-white/10 [&_.ant-pagination-prev>button]:text-white [&_.ant-pagination-next]:bg-white/10 [&_.ant-pagination-next>button]:text-white [&_.ant-pagination-disabled>button]:text-white/30 [&_.ant-pagination-prev:hover]:bg-white/20 [&_.ant-pagination-next:hover]:bg-white/20 [&_.ant-empty-description]:text-white/60">
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            pagination={{ 
+              pageSize: 10, 
+              showSizeChanger: false
+            }}
+            bordered={false}
+            rowClassName="border-b border-white/10 hover:!bg-white/5 transition-colors duration-200"
+            locale={{
+              emptyText: (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <FileSearchOutlined style={{ fontSize: '48px', color: 'rgba(255, 255, 255, 0.25)' }} />
+                  <p className="text-white font-semibold text-lg mt-4">
+                    No results found for "{searchTerm}"
+                  </p>
+                  <p className="text-gray-400 text-sm mt-1">
+                    Try searching with different keywords or check for typos.
+                  </p>
+                </div>
+              )
+            }}
+          />
+        </div>
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
+export default ResourceTable; 
