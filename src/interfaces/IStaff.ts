@@ -10,3 +10,10 @@ export interface CreateStaff {
   department:string
   position:string
 }
+export interface StaffProfileData{
+    campus: string,
+    department: string,
+    position:string,
+    startWorkAt:Date
+    endWorkAt: Date
+}

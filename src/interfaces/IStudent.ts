@@ -12,3 +12,7 @@ export interface CreateStudent {
   enrollDate:Date
   currentGpa:number
 }
+export interface StudentProfileData{
+    enrolledAt: Date
+    careerGoal: string
+}

@@ -1,3 +1,5 @@
+import { StaffProfileData } from "./IStaff"
+import { StudentProfileData } from "./IStudent"
 
 
 export interface AccountProps{
@@ -25,6 +27,8 @@ export interface AccountPropsCreate{
     lastName:string,
     dateOfBirth:string|Date,
     roleId:number
+    studentProfileData: StudentProfileData | null,
+    staffProfileData: StaffProfileData | null
 }
 export interface GoogleAccountRequestProps {
     email: string
