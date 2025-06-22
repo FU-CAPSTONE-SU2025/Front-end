@@ -1,11 +1,10 @@
  import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
-import { TokenProps } from "../../interfaces/IAuthen";
+import { AccountProps, AccountPropsCreate, ActiveAccountProps, LoginProps } from "../../interfaces/IAccount";
 
 const userURL = baseUrl+"/User"
 
-export const GetActiveUser = async ():Promise<TokenProps|null> => {
+export const GetActiveUser = async ():Promise<ActiveAccountProps|null> => {
     const props = {
         data: null,
         url: userURL+`/active`,

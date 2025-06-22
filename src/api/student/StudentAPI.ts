@@ -1,14 +1,14 @@
  import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
-import { TokenProps } from "../../interfaces/IAuthen";
+import { pagedStudentData, StudentBase } from "../../interfaces/IStudent";
 
-const userURL = baseUrl+"/User"
+const userURL = baseUrl+"/User/student"
 
-export const GetActiveUser = async ():Promise<TokenProps|null> => {
+export const GetAllStudent = async ():Promise<pagedStudentData|null> => {
     const props = {
         data: null,
-        url: userURL+`/active`,
+        url: userURL+`/paged`,
     }
     const header = GetHeader()
     console.log("Header: ",header) 

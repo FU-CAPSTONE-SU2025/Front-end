@@ -11,7 +11,7 @@ const mockStaff: StaffBase = {
   username: 'staffUser123',
   password: 'securePass123',
   email: 'staff@example.com',
-  avatar: '/img/avatar-placeholder.png',
+  avatarUrl: '/img/avatar-placeholder.png',
   firstName: 'Jane',
   lastName: 'Doe',
   dateOfBirth: new Date('1990-05-15'),
@@ -99,7 +99,7 @@ const StaffProfile: React.FC = () => {
           >
             <h2 className={styles.title}>Staff Information</h2>
             <div className={styles.avatarWrapper}>
-              <Avatar src={mockStaff.avatar} size={100} className={styles.avatar} />
+              <Avatar src={mockStaff.avatarUrl} size={100} className={styles.avatar} />
             </div>
             <Descriptions column={1} bordered className={styles.description}>
               <Descriptions.Item label="Username">{mockStaff.username}</Descriptions.Item>

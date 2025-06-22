@@ -1,17 +1,38 @@
 import { StaffProfileData } from "./IStaff"
 import { StudentProfileData } from "./IStudent"
 
+export type ActiveCategoriesProp = {
+  admin: ActiveAccountProps[];
+  staff: ActiveAccountProps[];
+  advisor: ActiveAccountProps[];
+  manager: ActiveAccountProps[];
+  student: ActiveAccountProps[];
+};
+export interface ActiveAccountProps{
+  id: number
+  username :string
+  password :string
+  email :string
+  avatarUrl :string
+  firstName :string
+  lastName :string
+  dateOfBirth :Date
+  address :string
+  phone:string
+  roleName : "Admin" | "Academic Staff" |"Advisor"|"Manager"|"Student"
+}
 
 export interface AccountProps{
   id: number
   username :string
   password :string
   email :string
-  avatar :string
+  avatarUrl :string
   firstName :string
   lastName :string
   dateOfBirth :Date
   address :string
+  phone:string
   roleId :number | 0 | 1 | 2| 3 | 4 
 }
 
