@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
 import { useNavigate } from 'react-router';
@@ -7,6 +7,7 @@ import { staffs } from '../../../data/mockStaff';
 import DataImport from '../../components/admin/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
+import useActiveUserData from '../../hooks/useActiveUserData';
 
 const { Option } = Select;
 
@@ -27,8 +28,12 @@ const StaffList: React.FC = () => {
   const [filterValue, setFilterValue] = useState<string>('');
   const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
   const [selectedStaffs, setSelectedStaffs] = useState<string[]>([]);
+    const { categorizedData, refetch } = useActiveUserData();
   const staffsPerPage = 10;
   const nav = useNavigate();
+   useEffect(()=>{
+    refetch()
+  },[])
 
   // Filtering logic - only applied to the displayed staffs (other roles can be filtered similarly)
   const filteredStaffs = staffs.filter(staff => {
@@ -162,7 +167,7 @@ const StaffList: React.FC = () => {
       }}
     >
       <div className={styles.container}>
-        <AccountCounter label="Academic Staff" staff={staffs} />
+        <AccountCounter label="Academic Staff" staff={categorizedData?.staff} />
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
           <div className={styles.userInfo}>
             <h2>{isDeleteMode ? 'Delete Staff Account' : 'List Of Staff On the System'}</h2>

@@ -1,16 +1,63 @@
-a.container {
+.container {
   width: calc(100% - 250px);
   position: absolute;
   left: 0;
   top: 0;
-  height: auto; /* Let content determine height */
-  min-height: calc(100vh - 6.625rem); /* Account for margin-top */
-  display: flex; /* Complete flexbox layout */
+  min-height: calc(100vh);
+  display: flex;
   flex-direction: column;
   align-items: stretch;
-  margin-top: 6.625rem; /* 106px */
+  margin-top: 1.625rem;
   margin-left: 250px;
   box-sizing: border-box;
-  background: transparent; /* Show AdminLayout gradient */
-  z-index: 2; /* Above AdminLayout background */
+  background: transparent;
+  z-index: 2;
+  padding: 2rem 2rem 2rem 2rem;
+}
+
+.ant-row {
+  width: 100%;
+}
+
+.formCard, .profileCard {
+  background: rgba(255,255,255,0.5);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.3);
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
+  margin-bottom: 24px;
+}
+
+.formCard {
+  padding: 32px 24px;
+}
+
+.profileCard {
+  padding: 32px 24px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+@media (max-width: 991px) {
+  .container {
+    padding: 1rem;
+  }
+  .formCard, .profileCard {
+    padding: 20px 10px;
+  }
+}
+
+@media (max-width: 767px) {
+  .ant-row {
+    flex-direction: column !important;
+  }
+  .formCard, .profileCard {
+    margin-bottom: 16px;
+  }
 }

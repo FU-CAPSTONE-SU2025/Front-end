@@ -61,14 +61,15 @@ export const Logout = async () => {
 export const RefreshToken = async () => {
     const props = {
         data: null,
-        url: accountUrl+`/login`,
+        url: accountUrl+`/refresh-token`,
     }
     const newAccessToken = await axiosRead(props)
     if (newAccessToken.success) {
         const {setAccessToken,setRefreshToken} = getAuthState()
         //console.log(newAccessToken.data)
         const tokens:TokenProps = newAccessToken.data
-         setAccessToken(tokens.accessToken);
+        console.log("New token: ",newAccessToken.data)
+          setAccessToken(tokens.accessToken);
           setRefreshToken(tokens.refreshToken);
         return true
     }

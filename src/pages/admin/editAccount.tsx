@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Form, Input, Select, Button, ConfigProvider, Modal } from 'antd';
-import styles from '../../css/editAccount.module.css';
-import DataImport from '../../components/admin/dataImport';
-import { students } from '../../../data/mockStudent';
-import { staffs } from '../../../data/mockStaff';
-import { managers } from '../../../data/mockManager';
-import { advisors } from '../../../data/mockAdvisor';
-import { RegisterUser, UpdateUser, DisableUser } from '../../api/Account/UserAPI';
+import { Form, Input, Select, Button, DatePicker, Card, ConfigProvider, Row, Col, message } from 'antd';
+import dayjs from 'dayjs';
+import styles from '../../css/admin/editAccount.module.css';
+import { RegisterStudent } from '../../api/student/StudentAPI';
+import { RegisterStaff } from '../../api/staff/StaffAPI';
+import { AccountPropsCreate } from '../../interfaces/IAccount';
 
 const { Option } = Select;
 
@@ -16,256 +14,218 @@ type ParamsProps = {
   id?: string;
 };
 
+type AxiosResult={
+  data:any|null,
+  error:any|null
+}
+
+const campusOptions = [
+  { label: 'Ho Chi Minh', value: 'Ho Chi Minh' },
+  { label: 'Ha Noi', value: 'Ha Noi' },
+  { label: 'Da Nang', value: 'Da Nang' },
+  { label: 'Can Tho', value: 'Can Tho' },
+  { label: 'Quy Nhon', value: 'Quy Nhon' },
+];
+
 const EditAccount: React.FC = () => {
   const params = useParams<ParamsProps>();
-  const { role, id } = params;
+  const { role } = params;
   const nav = useNavigate();
   const [form] = Form.useForm();
-  const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
-  // Mock data sources by role
-  const dataSources: Record<string, any[]> = {
-    student: students,
-    advisor: advisors,
-    manager: managers,
-    staff: staffs,
-  };
+  // Role checks
+  const isStudent = role === 'student';
+  const isStaff = role === 'staff' || role === 'manager' || role === 'advisor';
 
-  // Fetch initial data for edit mode
-  useEffect(() => {
-    if (role && id && dataSources[role.toLowerCase()]) {
-      const record = dataSources[role.toLowerCase()].find(item => item.Id === id);
-      if (record) {
-        form.setFieldsValue(record);
+  // Default date for DatePicker
+  const today = dayjs();
+
+  // Submit handler
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      setLoading(true);
+      // Prepare payload
+      let payload: AccountPropsCreate = {
+        ...values,
+        dateOfBirth: values.dateOfBirth.format('YYYY-MM-DD'),
+        password: values.password,
+      };
+      let response:AxiosResult|null = null
+      if (isStudent) {
+        payload = {
+          ...payload,
+          studentProfileData:{
+            enrolledAt: values.enrolledAt.format('YYYY-MM-DD'),
+            careerGoal: values.careerGoal,
+          },
+          roleId : 5
+        };
+        console.log("student: ",payload)
+        response = await RegisterStudent(payload);
+      
+      } else if (isStaff) {
+        payload = {
+          ...payload,
+          roleId : 1,
+          staffProfileData:{
+          campus: values.campus,
+          department: values.department,
+          position: values.position,
+          startWorkAt: values.startWorkAt.format('YYYY-MM-DD'),
+          endWorkAt: values.endWorkAt ? values.endWorkAt.format('YYYY-MM-DD') : null,
+          },
+        };
+        console.log("staff: ",payload)
+        response = await RegisterStaff(payload);
       }
-    }
-  }, [role, id, form]);
-
-  // Mock API calls
-  const mockApiCall = async (method: string, url: string, data: any): Promise<void> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        console.log(`Mock ${method} request to ${url} with data:`, data);
-        resolve();
-      }, 1000); // Simulate 1s network delay
-    });
-  };
-
-  // Add Account
-  const handleAddAccount = () => {
-    form.validateFields().then((values) => {
-      Modal.confirm({
-        title: 'Confirm Create Account',
-        content: `Are you sure you want to create a new ${role} account?`,
-        okText: 'Create',
-        cancelText: 'Cancel',
-        maskStyle: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
-        centered: true,
-        zIndex: 10000,
-        className: styles.customModal,
-        onOk: async () => {
-          setLoading(true);
-          try {
-            const newAccount = {
-              ...values,
-              AddDated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('/').join('/'),
-            };
-            if (role === 'student') {
-              await RegisterUser(newAccount);
-            } else {
-              await mockApiCall('POST', `/api/${role}/create`, newAccount);
-            }
-            nav(-1);
-          } catch (error) {
-            console.error('Create failed:', error);
-          } finally {
-            setLoading(false);
-          }
-        },
-      });
-    });
-  };
-
-  // Update Account
-  const handleUpdateAccount = () => {
-    form.validateFields().then((values) => {
-      Modal.confirm({
-        title: 'Confirm Update Account',
-        content: `Are you sure you want to update this ${role} account?`,
-        okText: 'Update',
-        cancelText: 'Cancel',
-        maskStyle: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
-        centered: true,
-        zIndex: 10000,
-        className: styles.customModal,
-        onOk: async () => {
-          setLoading(true);
-          try {
-            const updatedAccount = { ...values, Id: id };
-            if (role === 'student') {
-              await UpdateUser(id as unknown as number, updatedAccount);
-            } else {
-              await mockApiCall('PUT', `/api/${role}/${id}`, updatedAccount);
-            }
-            nav(-1);
-          } catch (error) {
-            console.error('Update failed:', error);
-          } finally {
-            setLoading(false);
-          }
-        },
-      });
-    });
-  };
-
-  // Delete Account
-  const handleDeleteAccount = () => {
-    if (!id) return;
-    Modal.confirm({
-      title: 'Confirm Delete Account',
-      content: `Are you sure you want to delete this ${role} account?`,
-      okText: 'Delete',
-      okType: 'danger',
-      cancelText: 'Cancel',
-      maskStyle: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
-      centered: true,
-      zIndex: 10000,
-      className: styles.customModal,
-      onOk: async () => {
-        setLoading(true);
-        try {
-          if (role === 'student') {
-            await DisableUser(id as unknown as number);
-          } else {
-            await mockApiCall('DELETE', `/api/${role}/${id}`, null);
-          }
-          nav(-1);
-        } catch (error) {
-          console.error('Delete failed:', error);
-        } finally {
-          setLoading(false);
+      if(response!=null){
+        if(response.data){
+          message.success('Account saved successfully!');
         }
-      },
-    });
-  };
-
-  const handleImport = () => {
-    setIsImportOpen(true);
-  };
-
-  const handleDataImported = (data: { [key: string]: string }) => {
-    const newAccount = {
-      Id: `${role?.toUpperCase().slice(0, 2)}${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-      Email: data.email || '',
-      Name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
-      PhoneNumber: data.phone || '',
-      Address: data.address || '',
-      Campus: ['HCMC Campus', 'Ha Noi Campus', 'Da Nang Campus'][Math.floor(Math.random() * 3)],
-      AddDated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('/').join('/'),
-    };
-    if (role && dataSources[role.toLowerCase()]) {
-      dataSources[role.toLowerCase()].push(newAccount);
+        if(response.error){
+          message.error('Something is wrong: ',response.error);
+        }
+      }else{
+        message.error('Something is wrong')
+      }
+      message.success('Account saved successfully!');
+      nav(-1);
+    } catch (error) {
+      message.error('Failed to save account.');
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
-    setIsImportOpen(false);
-    nav(-1); // Navigate back after import
   };
 
   return (
     <ConfigProvider>
       <div className={styles.container}>
-        <div className={styles.formCard}>
-          <h2>{role && id ? `Edit ${role} Account` : `Add New ${role || 'Account'}`}</h2>
-          <Form
-            form={form}
-            layout="vertical"
-            className={styles.form}
-            disabled={loading}
-          >
-            <Form.Item
-              label="Email"
-              name="Email"
-              rules={[
-                { required: true, message: 'Please enter an email' },
-                { type: 'email', message: 'Please enter a valid email' },
-              ]}
-            >
-              <Input placeholder="Enter email" />
-            </Form.Item>
-            <Form.Item
-              label="Name"
-              name="Name"
-              rules={[{ required: true, message: 'Please enter a name' }]}
-            >
-              <Input placeholder="Enter name" />
-            </Form.Item>
-            <Form.Item
-              label="Phone Number"
-              name="PhoneNumber"
-              rules={[{ required: true, message: 'Please enter a phone number' }]}
-            >
-              <Input placeholder="Enter phone number" />
-            </Form.Item>
-            <Form.Item
-              label="Address"
-              name="Address"
-              rules={[{ required: true, message: 'Please enter an address' }]}
-            >
-              <Input placeholder="Enter address" />
-            </Form.Item>
-            <Form.Item
-              label="Campus"
-              name="Campus"
-              rules={[{ required: true, message: 'Please select a campus' }]}
-            >
-              <Select placeholder="Select campus">
-                <Option value="HCMC Campus">HCMC Campus</Option>
-                <Option value="Ha Noi Campus">Ha Noi Campus</Option>
-                <Option value="Da Nang Campus">Da Nang Campus</Option>
-              </Select>
-            </Form.Item>
-            <div className={styles.formActions}>
+        <Row gutter={24} justify="center">
+          <Col xs={24} md={12}>
+            <Card className={styles.formCard} title="Account Information">
+              <Form
+                form={form}
+                layout="vertical"
+                initialValues={{
+                  dateOfBirth: today,
+                  enrolledAt: today,
+                  startWorkAt: today,
+                  endWorkAt: today,
+                }}
+                disabled={loading}
+                onFinish={handleSubmit}
+              >
+                <Form.Item label="Email" name="email" rules={[{ required: true, type: 'email' }]}>
+                  <Input placeholder="Enter email" />
+                </Form.Item>
+                <Form.Item label="Username" name="username" rules={[{ required: true }]}>
+                  <Input placeholder="Enter username" />
+                </Form.Item>
+                <Form.Item label="First Name" name="firstName" rules={[{ required: true }]}>
+                  <Input placeholder="Enter first name" />
+                </Form.Item>
+                <Form.Item label="Last Name" name="lastName" rules={[{ required: true }]}>
+                  <Input placeholder="Enter last name" />
+                </Form.Item>
+                <Form.Item label="Date of Birth" name="dateOfBirth" rules={[{ required: true }]}>
+                  <DatePicker style={{ width: '100%' }} />
+                </Form.Item>
+                <Form.Item label="Address" name="address" rules={[{ required: true }]}>
+                  <Input placeholder="Enter address" />
+                </Form.Item>
+                <Form.Item
+                  label="Password"
+                  name="password"
+                  rules={[
+                    { required: true, message: 'Please input your password!' },
+                    { min: 6, message: 'Password must be at least 6 characters.' },
+                  ]}
+                  hasFeedback
+                >
+                  <Input.Password placeholder="Enter password" />
+                </Form.Item>
+                <Form.Item
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  dependencies={['password']}
+                  hasFeedback
+                  rules={[
+                    { required: true, message: 'Please confirm your password!' },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue('password') === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error('Passwords do not match!'));
+                      },
+                    }),
+                  ]}
+                >
+                  <Input.Password placeholder="Confirm password" />
+                </Form.Item>
+              </Form>
+            </Card>
+          </Col>
+          <Col xs={24} md={12}>
+            {isStudent && (
+              <Card className={styles.profileCard} title="Student Profile">
+                <Form form={form} layout="vertical">
+                  <Form.Item label="Enrolled At" name="enrolledAt" rules={[{ required: true }]}>
+                    <DatePicker style={{ width: '100%' }} />
+                  </Form.Item>
+                  <Form.Item label="Career Goal" name="careerGoal" rules={[{ required: true }]}>
+                    <Input placeholder="Enter career goal" />
+                  </Form.Item>
+                </Form>
+              </Card>
+            )}
+            {isStaff && (
+              <Card className={styles.profileCard} title="Staff Profile">
+                <Form form={form} layout="vertical">
+                  <Form.Item label="Campus" name="campus" rules={[{ required: true }]}>
+                    <Select placeholder="Select campus">
+                      {campusOptions.map(opt => (
+                        <Option key={opt.value} value={opt.value}>{opt.label}</Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                  <Form.Item label="Department" name="department" rules={[{ required: true }]}>
+                    <Input placeholder="Enter department" />
+                  </Form.Item>
+                  <Form.Item label="Position" name="position" rules={[{ required: true }]}>
+                    <Input placeholder="Enter position" />
+                  </Form.Item>
+                  <Form.Item label="Start Work At" name="startWorkAt" rules={[{ required: true }]}>
+                    <DatePicker style={{ width: '100%' }} />
+                  </Form.Item>
+                  <Form.Item label="End Work At" name="endWorkAt">
+                    <DatePicker style={{ width: '100%' }} />
+                  </Form.Item>
+                </Form>
+              </Card>
+            )}
+            <div className={styles.formActions} style={{ marginTop: 24 }}>
               <Button
                 type="primary"
-                onClick={role && id ? handleUpdateAccount : handleAddAccount}
+                htmlType="submit"
                 loading={loading}
+                style={{ marginRight: 8 }}
+                onClick={() => handleSubmit()}
               >
-                {role && id ? 'Update Account' : 'Add Account'}
+                Save Account
               </Button>
-              {role && id && (
-                <Button
-                  type="primary"
-                  danger
-                  onClick={handleDeleteAccount}
-                  loading={loading}
-                >
-                  Delete Account
-                </Button>
-              )}
-              <Button
-                type="default"
-                onClick={handleImport}
-                loading={loading}
-              >
-                Import from XLSX
-              </Button>
-              <Button
-                onClick={() => nav(-1)}
-                disabled={loading}
-              >
+              <Button onClick={() => nav(-1)} disabled={loading}>
                 Cancel
               </Button>
             </div>
-          </Form>
-        </div>
-        {isImportOpen && (
-          <div className={styles.modalOverlay}>
-            <DataImport onClose={() => setIsImportOpen(false)} onDataImported={handleDataImported} />
-          </div>
-        )}
+          </Col>
+        </Row>
       </div>
     </ConfigProvider>
   );
 };
 
-export default EditAccount;
+export default EditAccount

@@ -1,25 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
 import styles from '../../css/admin/students.module.css';
-import { students } from '../../../data/mockStudent';
 import DataImport from '../../components/admin/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
 import { useNavigate } from 'react-router';
 import { AccountProps } from '../../interfaces/IAccount';
+import useActiveUserData from '../../hooks/useActiveUserData';
+import useCRUDStudent from '../../hooks/useCRUDStudent';
+import { StudentBase } from '../../interfaces/IStudent';
 
 const { Option } = Select;
-
-
 const StudentList: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
   const [filterValue, setFilterValue] = useState<string>('');
   const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
-  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<number[]>([]); // based on student Id
+    const { categorizedData, refetch } = useActiveUserData();
+    const {studentList, getAllStudent} = useCRUDStudent();
   const nav = useNavigate();
+  useEffect(()=>{
+    refetch()
+    getAllStudent()
+  },[])
   
   // Redirect to edit page when a student row is clicked
   const handleRowClick = (data: AccountProps) => {
@@ -36,17 +42,17 @@ const StudentList: React.FC = () => {
   const studentsPerPage = 10;
 
   // Filtering logic - only applied to the displayed students (other roles can be filtered similarly)
-  const filteredStudents = students.filter(student => {
-    const matchesSearch = student.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          student.Id.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredStudents = studentList.filter(student => {
+    const matchesSearch = student.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          student.id.toString().includes(searchQuery.toLowerCase());
     let matchesFilter = true;
 
     if (filterType === 'major') {
-      matchesFilter = student.Id.startsWith(filterValue);
+      matchesFilter = student.studentDataListResponse.careerGoal.startsWith(filterValue);
     } else if (filterType === 'campus') {
-      matchesFilter = student.Campus === filterValue;
+      matchesFilter = student.studentDataListResponse.careerGoal === filterValue;
     } else if (filterType === 'date') {
-      matchesFilter = student.AddDated === filterValue;
+      matchesFilter = student.dateOfBirth.toISOString() === filterValue;
     }
 
     return matchesSearch && matchesFilter;
@@ -63,17 +69,9 @@ const StudentList: React.FC = () => {
   };
 
   const handleDataImported = (data: { [key: string]: string }) => {
-    const newStudent = {
-      Id: `${['SE', 'SS', 'CE'][Math.floor(Math.random() * 3)]}${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-      Email: data.email || '',
-      Name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
-      PhoneNumber: data.phone || '',
-      Address: data.address || '',
-      Campus: ['HCMC Campus', 'Ha Noi Campus', 'Da Nang Campus'][Math.floor(Math.random() * 3)],
-      AddDated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('/').join('/'),
-    };
-    students.push(newStudent);
-    setIsImportOpen(false);
+   // TBA
+    // studentList.push(newStudent);
+    // setIsImportOpen(false);
   };
 
   const handleFilterChange = (value: string) => {
@@ -99,8 +97,8 @@ const StudentList: React.FC = () => {
       cancelText: 'Cancel',
       onOk: () => {
         selectedStudents.forEach(id => {
-          const index = students.findIndex(student => student.Id === id);
-          if (index !== -1) students.splice(index, 1);
+          const index = studentList.findIndex(student => student.id === id);
+          if (index !== -1) studentList.splice(index, 1);
         });
         setSelectedStudents([]);
         setIsDeleteMode(false);
@@ -118,24 +116,34 @@ const StudentList: React.FC = () => {
   };
 
   // Table columns
-  const columns = [
-    { title: 'Id', dataIndex: 'Id', key: 'Id', width: 100 },
-    { title: 'Email', dataIndex: 'Email', key: 'Email', width: 200 },
-    { title: 'Name', dataIndex: 'Name', key: 'Name', width: 150 },
-    { title: 'Phone Number', dataIndex: 'PhoneNumber', key: 'PhoneNumber', width: 120 },
-    { title: 'Address', dataIndex: 'Address', key: 'Address', width: 200 },
-    { title: 'Campus', dataIndex: 'Campus', key: 'Campus', width: 120 },
-    { title: 'Added', dataIndex: 'AddDated', key: 'AddDated', width: 100 },
-  ];
+const columns = [
+  { title: 'ID', dataIndex: 'id', key: 'id', width: 100 },
+  { title: 'Username', dataIndex: 'username', key: 'username', width: 150 },
+  { title: 'Email', dataIndex: 'email', key: 'email', width: 200 },
+  { title: 'First Name', dataIndex: 'firstName', key: 'firstName', width: 120 },
+  { title: 'Last Name', dataIndex: 'lastName', key: 'lastName', width: 120 },
+  { title: 'Date of Birth', dataIndex: 'dateOfBirth', key: 'dateOfBirth', width: 120,
+    render: (date: Date) => date ? new Date(date).toLocaleDateString() : '' },
+  { title: 'Role', dataIndex: 'roleName', key: 'roleName', width: 120 },
+  { title: 'Status', dataIndex: 'status', key: 'status', width: 100 },
+  { title: 'Enrolled At', dataIndex: 'enrolledAt', key: 'enrolledAt', width: 120,
+    render: (_: any, record: StudentBase) =>
+      record.studentDataListResponse?.enrolledAt
+        ? new Date(record.studentDataListResponse.enrolledAt).toLocaleDateString()
+        : '' },
+  { title: 'Career Goal', dataIndex: 'careerGoal', key: 'careerGoal', width: 180,
+    render: (_: any, record: StudentBase) =>
+      record.studentDataListResponse?.careerGoal || '' },
+];
 
   // Row selection for delete mode
   const rowSelection = isDeleteMode
     ? {
         selectedRowKeys: selectedStudents,
         onChange: (selectedRowKeys: React.Key[]) => {
-          setSelectedStudents(selectedRowKeys as string[]);
+          setSelectedStudents(selectedRowKeys as number[]);
         },
-        getCheckboxProps: (record: AccountProps) => ({
+        getCheckboxProps: (record: StudentBase) => ({
           name: record.id,
         }),
       }
@@ -155,7 +163,7 @@ const StudentList: React.FC = () => {
       }}
     >
       <div className={styles.container}>
-        <AccountCounter label="Student" student={students} />
+        <AccountCounter label="Student" student={categorizedData?.student} />
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
           <div className={styles.userInfo}>
             <h2>{isDeleteMode ? 'Delete Student Account' : 'List Of Students On the System'}</h2>
@@ -213,10 +221,13 @@ const StudentList: React.FC = () => {
                     style={{ width: 120 }}
                     placeholder="Select Date"
                   >
-                    <Option value="">Select Date</Option>
-                    {[...new Set(students.map(s => s.AddDated))].sort().map(date => (
-                      <Option key={date} value={date}>{date}</Option>
-                    ))}
+                    <Option value="">Select Date Of Birth</Option>
+                    {[...new Set(studentList.map(s => s.dateOfBirth))].sort().map(date => {
+                      const dateStr = typeof date === 'string' ? date : new Date(date).toISOString();
+                      return (
+                        <Option key={dateStr} value={dateStr}>{dateStr}</Option>
+                      );
+                    })}
                   </Select>
                 )}
               </div>
@@ -248,11 +259,11 @@ const StudentList: React.FC = () => {
             {/* External Table display, pre-styling and ease-to-custom */}
              <DataTable
               columns={columns}
-              data={filteredStudents}
+              data={studentList?studentList:[]}
               rowSelection={rowSelection}
               dataPerPage={studentsPerPage}
-              onRow={(record: AccountProps) => ({
-                onClick: () => handleRowClick(record), // Navigate to edit page
+              onRow={(record: StudentBase) => ({
+                onClick: () => handleRowClick(record),
               })}
             />
             {isDeleteMode && (
