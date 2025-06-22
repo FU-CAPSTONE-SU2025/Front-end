@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Badge, Avatar } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router';
 import Messenger from './messenger';
 import Notification from './notification';
 
