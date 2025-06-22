@@ -1,21 +1,33 @@
 import React, { useState } from 'react';
 import { Badge, Avatar } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Messenger from './messenger';
 import Notification from './notification';
 
 const navItems = [
-  'Dashboard',
-  'Semester Planner',
-  'Course Tracking',
-  'Resource Explorer',
-  'Advisor Support',
+  { name: 'Dashboard', path: '/student' },
+  { name: 'Semester Planner', path: '/student/semesterPlanner' },
+  { name: 'Course Tracking', path: '/student/courseTracking' },
+  { name: 'Resource Explorer', path: '/student/resourceExplorer' },
+  { name: 'Advisor Support', path: '/student/bookingAdvisor' },
 ];
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const toggleMenu = () => setIsMenuOpen((open) => !open);
+
+  const handleNavClick = (path: string) => {
+    navigate(path);
+    setIsMenuOpen(false);
+  };
+
+  const isActiveRoute = (path: string) => {
+    return location.pathname === path;
+  };
 
   const navItemVariants = {
     hidden: { opacity: 0, x: -10 },
@@ -53,10 +65,11 @@ const Header: React.FC = () => {
           </div>
           {/* Logo desktop */}
           <motion.div
-            className="hidden lg:flex items-center min-w-[120px]"
+            className="hidden lg:flex items-center min-w-[120px] cursor-pointer"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.4 }}
+            onClick={() => navigate('/student')}
           >
             <img
               src="/img/Logo.svg"
@@ -67,10 +80,11 @@ const Header: React.FC = () => {
         </div>
         {/* Logo mobile center */}
         <motion.div
-          className="flex items-center absolute left-1/2 transform -translate-x-1/2 lg:hidden"
+          className="flex items-center absolute left-1/2 transform -translate-x-1/2 lg:hidden cursor-pointer"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.4 }}
+          onClick={() => navigate('/student')}
         >
           <img
             src="/img/Logo.svg"
@@ -82,16 +96,23 @@ const Header: React.FC = () => {
         <nav className="hidden lg:flex flex-row items-center gap-6 xl:gap-8 flex-1 justify-center">
           {navItems.map((item, index) => (
             <motion.div
-              key={item}
+              key={item.name}
               custom={index}
               initial="hidden"
               animate="visible"
               variants={navItemVariants}
-              className="text-black  text-xs xl:text-sm font-semibold uppercase tracking-wide hover:text-orange-500 transition-colors duration-300 relative group whitespace-nowrap cursor-pointer"
+              className={`text-black text-xs xl:text-sm font-semibold uppercase tracking-wide transition-colors duration-300 relative group whitespace-nowrap cursor-pointer ${
+                isActiveRoute(item.path) 
+                  ? 'text-orange-500' 
+                  : 'hover:text-orange-500'
+              }`}
               whileHover={{ scale: 1.05 }}
+              onClick={() => handleNavClick(item.path)}
             >
-              {item}
-              <span className="absolute left-0 bottom-[-2px] w-0 h-[2px] bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
+              {item.name}
+              <span className={`absolute left-0 bottom-[-2px] h-[2px] bg-orange-500 transition-all duration-300 ${
+                isActiveRoute(item.path) ? 'w-full' : 'w-0 group-hover:w-full'
+              }`}></span>
             </motion.div>
           ))}
         </nav>
@@ -127,18 +148,24 @@ const Header: React.FC = () => {
               exit="exit"
             >
               {navItems.map((item, index) => (
-                <div key={item} className="w-full">
+                <div key={item.name} className="w-full">
                   <motion.div
                     custom={index}
                     variants={navItemVariants}
                     initial="hidden"
                     animate="visible"
-                    className="text-black text-sm font-semibold uppercase tracking-wide hover:text-orange-500 transition-colors duration-300 relative group w-full py-2 sm:py-2.5 block cursor-pointer"
-                    onClick={() => setIsMenuOpen(false)}
+                    className={`text-black text-sm font-semibold uppercase tracking-wide transition-colors duration-300 relative group w-full py-2 sm:py-2.5 block cursor-pointer ${
+                      isActiveRoute(item.path) 
+                        ? 'text-orange-500' 
+                        : 'hover:text-orange-500'
+                    }`}
+                    onClick={() => handleNavClick(item.path)}
                     whileHover={{ scale: 1.05 }}
                   >
-                    {item}
-                    <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
+                    {item.name}
+                    <span className={`absolute left-0 bottom-0 h-[2px] bg-orange-500 transition-all duration-300 ${
+                      isActiveRoute(item.path) ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}></span>
                   </motion.div>
                   {index < navItems.length - 1 && (
                     <hr className="w-full border-t border-gray-300 opacity-50 my-2" />
