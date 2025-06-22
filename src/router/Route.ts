@@ -8,7 +8,7 @@ import AdvisorsPage from "../pages/admin/advisors";
 import ManagersPage from "../pages/admin/managers";
 import LogsPage from "../pages/admin/logs";
 import Dashboard from "../pages/student/dashboard";
-import { createBrowserRouter, useNavigate } from "react-router";
+import { createBrowserRouter } from "react-router";
 import StudentLayout from "../components/student/layout";
 import AdminLayout from "../components/admin/adminLayout";
 import BookingPage from "../pages/student/bookingAdvisor";
@@ -20,6 +20,8 @@ import SemesterPlannerDetail from "../pages/student/semesterPlannerDetail";
 import ForgetPassword from "../pages/common/forgetPassword";
 import Dummy from "../pages/dummy";
 import SubjectDetails from '../pages/student/subjectDetails';
+import StaffProfile from "../pages/staff/profile";
+import StaffLayout from "../components/staff/staffLayout";
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -100,10 +102,25 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/staff",
-    Component: Dummy,
+    Component: StaffLayout, 
     loader: protectedLoader(['2']),
     children:[
-
+      {
+        index: true,
+        Component: StaffProfile, // Replace with actual component for staff dashboard
+      },
+      {
+        path: "transcript",
+        Component: StaffProfile,
+      },
+      {
+        path: "syllabus",
+        Component: StaffProfile, 
+      },
+      {
+        path: "subjects",
+        Component: StaffProfile, 
+      }
     ]
 
   },

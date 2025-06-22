@@ -1,17 +1,6 @@
 @import "tailwindcss";
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
- 
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
-
 body {
   background: linear-gradient(to bottom right, #f97316, #1e3a8a);
   background-repeat: no-repeat;
@@ -21,7 +10,6 @@ body {
 
 h1 {
   font-size: 3.2em;
-  line-height: 1.1;
 }
 
 button {
@@ -43,13 +31,3 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-
-  button {
-    background-color: #f9f9f9;
-  }
-}

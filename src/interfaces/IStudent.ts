@@ -1,4 +1,6 @@
-export interface StudentBase {
+import { AccountProps } from "./IAccount"
+
+export interface StudentBase extends AccountProps {
   userId: number
   studentCode:string
   enrollDate:Date

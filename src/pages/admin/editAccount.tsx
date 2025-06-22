@@ -7,7 +7,6 @@ import { students } from '../../../data/mockStudent';
 import { staffs } from '../../../data/mockStaff';
 import { managers } from '../../../data/mockManager';
 import { advisors } from '../../../data/mockAdvisor';
-import { IAccountBase } from '../../interfaces/IRoleAccount';
 import { RegisterUser, UpdateUser, DisableUser } from '../../api/Account/UserAPI';
 
 const { Option } = Select;
@@ -26,7 +25,7 @@ const EditAccount: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
 
   // Mock data sources by role
-  const dataSources: Record<string, IAccountBase[]> = {
+  const dataSources: Record<string, any[]> = {
     student: students,
     advisor: advisors,
     manager: managers,

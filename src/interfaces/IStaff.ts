@@ -1,5 +1,7 @@
-export interface StaffBase {
-  userId:number
+import { AccountProps } from "./IAccount"
+
+export interface StaffBase extends AccountProps {
+  userId: number 
   department:string
   position:string
 }
