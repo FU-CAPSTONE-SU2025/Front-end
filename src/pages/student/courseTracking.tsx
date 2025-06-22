@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Select, Card, Timeline } from 'antd';
+import { Select, Card } from 'antd';
 import { motion } from 'framer-motion';
+import SubjectCard from '../../components/student/subjectCard';
+import CommitChart from '../../components/student/commitChart';
+import ImportantExams from '../../components/student/importantExams';
 
 const semesters = [
   { label: 'Summer 2025 Semester', value: 'summer2025' },
@@ -9,11 +12,11 @@ const semesters = [
 ];
 
 const courses = [
-  { code: 'PRN212', name: 'Basic Cross-Platform Application Programming With .NET' },
-  { code: 'PRN212', name: 'Basic Cross-Platform Application Programming With .NET' },
-  { code: 'PRN212', name: 'Basic Cross-Platform Application Programming With .NET' },
-  { code: 'PRN212', name: 'Basic Cross-Platform Application Programming With .NET' },
-  { code: 'PRN212', name: 'Basic Cross-Platform Application Programming With .NET' },
+  { code: 'PRN212', name: 'Basic Cross-Platform Application Programming With .NET', progress: 85 },
+  { code: 'PRM231', name: 'Project Management', progress: 72 },
+  { code: 'PMG201c', name: 'Programming Fundamentals', progress: 95 },
+  { code: 'CSD201', name: 'Data Structures and Algorithms', progress: 68 },
+  { code: 'WED201c', name: 'Web Development', progress: 88 },
 ];
 
 const importantExams = [
@@ -55,150 +58,139 @@ const importantExams = [
   },
 ];
 
-// Fake GitHub-style commit chart data
-const days = Array.from({ length: 52 * 7 }, (_, i) => i);
-const getRandom = () => Math.floor(Math.random() * 5);
-const commitData = days.map(() => getRandom());
-
-const CommitChart = () => (
-  <div className="overflow-x-auto p-4 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl shadow-lg">
-    <div className="grid grid-cols-52 grid-rows-7 gap-1.5">
-      {commitData.map((level, idx) => (
-        <motion.div
-          key={idx}
-          className={`w-4 h-4 rounded-sm transition-colors duration-300 ${
-            level === 0
-              ? 'bg-gray-700'
-              : level === 1
-              ? 'bg-teal-300'
-              : level === 2
-              ? 'bg-teal-400'
-              : level === 3
-              ? 'bg-teal-500'
-              : 'bg-teal-600'
-          }`}
-          whileHover={{ scale: 1.2, zIndex: 10 }}
-          title={`Commits: ${level}`}
-        />
-      ))}
-    </div>
-    <div className="flex justify-between text-xs mt-4 text-gray-300 font-medium">
-      <span>Jan</span>
-      <span>Feb</span>
-      <span>Mar</span>
-      <span>Apr</span>
-      <span>May</span>
-      <span>Jun</span>
-      <span>Jul</span>
-      <span>Aug</span>
-      <span>Sep</span>
-      <span>Oct</span>
-      <span>Nov</span>
-      <span>Dec</span>
-    </div>
-  </div>
-);
-
 const CourseTracking = () => {
   const [semester, setSemester] = useState(semesters[0].value);
+  const [isGitHubConnected, setIsGitHubConnected] = useState(false);
+
+  const handleGitHubConnect = () => {
+    setIsGitHubConnected(true);
+    // Here you would typically redirect to GitHub OAuth or handle the authentication flow
+    console.log('Connecting to GitHub...');
+  };
 
   return (
     <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden">
-      {/* Header Section */}
-      <motion.div
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-8 lg:mt-1000 w-full"
-      >
-        <h1 className="text-4xl font-bold text-white mb-4">Course Dashboard</h1>
-        <Select
-          value={semester}
-          onChange={setSemester}
-          options={semesters}
-          className="w-full max-w-xs"
-          size="large"
-          popupClassName="bg-gray-800 text-white"
-          style={{ color: 'white' }}
-        />
-      </motion.div>
+      {/* Main Container */}
+      <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        {/* Header Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-12"
+        >
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Course Dashboard
+            </h1>
+            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+              Track your academic progress and stay on top of important deadlines
+            </p>
+          </div>
+          
+          <div className="flex justify-center">
+            <Select
+              value={semester}
+              onChange={setSemester}
+              options={semesters}
+              className="w-full max-w-md"
+              size="large"
+              popupClassName="bg-gray-800 text-white"
+              style={{ color: 'white' }}
+            />
+          </div>
+        </motion.div>
 
-      {/* Course Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-12 w-full">
-        {courses.map((course, idx) => (
-          <motion.div
-            key={idx}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: idx * 0.1 }}
-            whileHover={{ scale: 1.03, boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2)' }}
-            className="w-full"
-          >
-            <Card
-              className="h-40 bg-gradient-to-br from-teal-500 to-teal-700 border-none rounded-xl shadow-lg overflow-hidden w-full"
-              hoverable
-            >
-              <div className="flex flex-col justify-between h-full p-4">
-                <div className="font-bold text-xl text-white">{course.code}</div>
-                <div className="text-sm text-gray-100 opacity-90 line-clamp-2">{course.name}</div>
-              </div>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Commit Chart */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="mb-12 w-full"
-      >
-        <h2 className="text-2xl font-semibold text-white mb-4">Activity Overview</h2>
-        <CommitChart />
-      </motion.div>
-
-      {/* Important Exams */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-        className="w-full"
-      >
-        <h2 className="text-2xl font-semibold text-white mb-4">Important Exams</h2>
-        <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl p-6 shadow-lg w-full">
-          <Timeline mode="alternate" className="mt-4">
-            {importantExams.map((exam, idx) => (
-              <Timeline.Item
+        {/* Course Cards Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mb-16"
+        >
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-white mb-2">Your Courses</h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-blue-400 mx-auto rounded-full"></div>
+          </div>
+          
+          {/* First row - 3 cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8 max-w-6xl mx-auto">
+            {courses.slice(0, 3).map((course, idx) => (
+              <motion.div
                 key={idx}
-                label={
-                  <span className="text-gray-300 font-medium text-sm">{exam.date}</span>
-                }
-                color="teal"
-                dot={
-                  <motion.div
-                    className="w-3 h-3 bg-teal-500 rounded-full"
-                    whileHover={{ scale: 1.5 }}
-                  />
-                }
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.1 }}
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="w-full"
               >
-                <motion.div
-                  className="text-white"
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: idx * 0.1 }}
-                >
-                  <div className="font-semibold text-lg">{exam.type}</div>
-                  <div className="bg-gray-700 bg-opacity-50 rounded-lg p-3 mt-2">
-                    <div className="font-bold text-teal-300">{exam.course}</div>
-                    <div className="text-sm text-gray-300 opacity-90">{exam.name}</div>
-                  </div>
-                </motion.div>
-              </Timeline.Item>
+                <SubjectCard
+                  code={course.code}
+                  name={course.name}
+                  progress={course.progress}
+                />
+              </motion.div>
             ))}
-          </Timeline>
-        </div>
-      </motion.div>
+          </div>
+          
+          {/* Second row - 2 cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {courses.slice(3, 5).map((course, idx) => (
+              <motion.div
+                key={idx + 3}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: (idx + 3) * 0.1 }}
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="w-full"
+              >
+                <SubjectCard
+                  code={course.code}
+                  name={course.name}
+                  progress={course.progress}
+                />
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Activity Overview Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-16"
+        >
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-white mb-2">Activity Overview</h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-blue-400 mx-auto rounded-full"></div>
+          </div>
+          
+          <div className="max-w-5xl mx-auto">
+            <CommitChart 
+              isConnected={isGitHubConnected}
+              onConnect={handleGitHubConnect}
+            />
+          </div>
+        </motion.div>
+
+        {/* Important Exams Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mb-16"
+        >
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-white mb-2">Important Exams</h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-blue-400 mx-auto rounded-full"></div>
+          </div>
+          
+          <div className="max-w-6xl mx-auto">
+            <ImportantExams exams={importantExams} />
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 };

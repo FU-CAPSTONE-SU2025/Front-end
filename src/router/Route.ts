@@ -1,4 +1,3 @@
-
 import NotFound from "../pages/notfound";
 import { protectedLoader } from "../components/protectedRoute";
 import Login from "../pages/common/login";
@@ -20,9 +19,9 @@ import SemesterPlanner from "../pages/student/semesterPlanner";
 import SemesterPlannerDetail from "../pages/student/semesterPlannerDetail";
 import ForgetPassword from "../pages/common/forgetPassword";
 import Dummy from "../pages/dummy";
+import SubjectDetails from '../pages/student/subjectDetails';
 import StaffProfile from "../pages/staff/profile";
 import StaffLayout from "../components/staff/staffLayout";
-
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -88,14 +87,17 @@ export const routes = createBrowserRouter([
         Component: CourseTracking,
       },
       {
+        path: 'course-tracking/:subjectCode',
+        Component: SubjectDetails,
+      },
+      {
         path: "semesterPlanner",
         Component: SemesterPlanner,
       },
       {
-        path: "semesterPlannerDetail",
+        path: "semesterPlanner/:id",
         Component: SemesterPlannerDetail,
-      },
-     
+      }
     ],
   },
   {
