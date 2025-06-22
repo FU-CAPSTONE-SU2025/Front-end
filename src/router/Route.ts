@@ -120,6 +120,14 @@ export const routes = createBrowserRouter([
       {
         path: "subjects",
         Component: StaffProfile, 
+      },
+      {
+         path: "programs",
+        Component: StaffProfile, 
+      },
+      {
+         path: "curriculums",
+        Component: StaffProfile, 
       }
     ]
 

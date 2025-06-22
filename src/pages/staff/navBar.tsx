@@ -17,7 +17,8 @@ const StaffNavBar: React.FC = () => {
   const navItems: NavItem[] = [
     { label: 'Profile', route: '/staff' },
     { label: 'Student Transcript', route: '/staff/transcript' },
-    { label: 'Syllabus', route: '/staff/syllabus' },
+    { label: 'Programs', route: '/staff/programs' },
+    { label: 'Curriculum', route: '/staff/curriculums' },
     { label: 'Subjects', route: '/staff/subjects' },
   ];
 

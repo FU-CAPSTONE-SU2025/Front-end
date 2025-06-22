@@ -21,6 +21,7 @@ const mockStaff: StaffBase = {
   userId: 1,
   roleId: 3,
   id: 1,
+  phone: ''
 };
 
 // Animation variants
