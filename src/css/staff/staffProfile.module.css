@@ -6,101 +6,116 @@
   align-items: center;
   z-index: 2; /* Below NavBar (z-index: 1000) */
   position: relative;
-  padding: 2rem 0;
+  padding: 2.5rem 0 2rem 0;
   min-width: 80vw;
+  background: none;
 }
 
 .cardWrapper {
   display: flex;
-  gap: 2rem;
+  gap: 2.5rem;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   margin-top: 5%;
 }
 
-.card {
+.card, .actionCard {
   flex: 1;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.7); /* Less transparent glass */
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 2.2rem 2.5rem 1.5rem 2.5rem;
+  background: rgba(213, 165, 165, 0.56);
+  border-radius: 24px;
+  box-shadow: 0 12px 40px rgba(30, 64, 175, 0.13);
+  backdrop-filter: blur(36px) saturate(200%);
+  -webkit-backdrop-filter: blur(36px) saturate(200%);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  position: relative;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
 }
 
 .rightColumn {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-}
-
-.actionCard {
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  gap: 2.5rem;
 }
 
 .title {
-  color: white;
-  font-family: 'Inter', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
+  color: #fff;
+  font-family: 'Inter', 'Geist', 'Segoe UI', Arial, sans-serif;
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 1.5rem;
   text-align: center;
+  text-shadow: 0 2px 12px rgba(30,64,175,0.18);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
 }
 
 .avatarWrapper {
   display: flex;
   justify-content: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .avatar {
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border: 3px solid rgba(255,255,255,0.25);
+  box-shadow: 0 4px 18px rgba(30, 64, 175, 0.13);
+  background: rgba(255,255,255,0.18);
+  border-radius: 50%;
 }
 
 .description :global(.ant-descriptions-item-label) {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
+
+  color: #fff !important;
+  font-family: 'Inter', 'Geist', sans-serif;
+  font-weight: 800;
+  padding: 0.5rem 1.3rem;
+  font-size: 1.08rem;
+  
 }
 
 .description :global(.ant-descriptions-item-content) {
-  color: white;
-  font-family: 'Geist', sans-serif;
+  background: rgba(255,255,255,0.13);
+  color: #fff;
+  font-family: 'Geist', 'Inter', sans-serif;
+  border-radius: 0 0 8px 8px;
+  padding: 0.7rem 1.2rem;
+  font-size: 1.08rem;
 }
 
 .actionButtons {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.2rem;
+  width: 100%;
 }
 
 .actionButton {
-  background: rgba(30, 64, 175, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  border-radius: 4px;
-  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.18);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  color: #fff;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 1rem 0;
+  box-shadow: 0 2px 10px rgba(30, 64, 175, 0.10);
+  transition: background 0.3s cubic-bezier(.4,1.4,.6,1), color 0.3s cubic-bezier(.4,1.4,.6,1), box-shadow 0.3s cubic-bezier(.4,1.4,.6,1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
 }
 
 .actionButton:hover {
-  background: rgba(30, 64, 175, 1);
-}
-
-.actionButton:global(.ant-btn-default) {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.actionButton:global(.ant-btn-default:hover) {
-  background: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(90deg, #f97316 0%, #1E40AF 100%);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(30, 64, 175, 0.13);
+  border: 1.5px solid rgba(255,255,255,0.35);
 }
 
 @media (max-width: 1023px) {
@@ -114,12 +129,12 @@
 
   .cardWrapper {
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 2rem;
   }
 
   .card, .actionCard {
     width: 100%;
-    
+    padding: 1.2rem 1.2rem 1rem 1.2rem;
   }
 }
 
@@ -129,16 +144,16 @@
   }
 
   .card, .actionCard {
-    padding: 16px;
+    padding: 0.8rem 0.8rem 0.7rem 0.8rem;
   }
 
   .title {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
   }
 
   .avatar {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
   }
 }
 
@@ -148,7 +163,7 @@
   }
 
   .card, .actionCard {
-    padding: 12px;
+    padding: 0.5rem 0.5rem 0.4rem 0.5rem;
   }
 
   .title {
@@ -156,16 +171,18 @@
   }
 
   .avatar {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
   }
 
   .description :global(.ant-descriptions-item-label),
   .description :global(.ant-descriptions-item-content) {
-    font-size: 0.875rem;
+    font-size: 0.95rem;
+    padding: 0.5rem 0.7rem;
   }
 
   .actionButton {
-    font-size: 0.875rem;
+    font-size: 0.95rem;
+    padding: 0.7rem 0;
   }
 }

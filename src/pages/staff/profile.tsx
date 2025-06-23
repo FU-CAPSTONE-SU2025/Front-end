@@ -98,7 +98,7 @@ const StaffProfile: React.FC = () => {
             animate="visible"
             onAnimationComplete={() => console.log('Left card animation complete')}
           >
-            <h2 className={styles.title}>Staff Information</h2>
+            <h2 className={styles.title}>Profile Information</h2>
             <div className={styles.avatarWrapper}>
               <Avatar src={mockStaff.avatarUrl} size={100} className={styles.avatar} />
             </div>
@@ -123,7 +123,7 @@ const StaffProfile: React.FC = () => {
               animate="visible"
               onAnimationComplete={() => console.log('Right card animation complete')}
             >
-              <h2 className={styles.title}>Professional Details</h2>
+              <h2 className={styles.title}>Staff's Details</h2>
               <Descriptions column={1} bordered className={styles.description}>
                 <Descriptions.Item label="Department">{mockStaff.department}</Descriptions.Item>
                 <Descriptions.Item label="Position">{mockStaff.position}</Descriptions.Item>
