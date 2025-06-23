@@ -24,6 +24,10 @@ import StaffProfile from "../pages/staff/profile";
 import StaffLayout from "../components/staff/staffLayout";
 import ManagerLayout from "../components/manager/managerLayout";
 import HomePage from '../pages/manager/home';
+import StaffTranscript from "../pages/staff/transcript";
+import CurriculumPage from "../pages/staff/curriculum";
+import ProgramPage from "../pages/staff/program";
+import SubjectPage from "../pages/staff/subject";
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -109,27 +113,28 @@ export const routes = createBrowserRouter([
     children:[
       {
         index: true,
-        Component: StaffProfile, // Replace with actual component for staff dashboard
+        Component: StaffProfile, 
       },
       {
         path: "transcript",
-        Component: StaffProfile,
+        Component: StaffTranscript,
       },
       {
         path: "syllabus",
-        Component: StaffProfile, 
+        Component: Dummy, 
       },
       {
         path: "subjects",
-        Component: StaffProfile, 
+        Component: SubjectPage, 
       },
       {
          path: "programs",
-        Component: StaffProfile, 
+        Component: ProgramPage, 
+        
       },
       {
          path: "curriculums",
-        Component: StaffProfile, 
+        Component: CurriculumPage, 
       }
     ]
 
