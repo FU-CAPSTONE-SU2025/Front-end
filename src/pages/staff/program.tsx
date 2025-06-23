@@ -3,11 +3,13 @@ import { Input, Button, Collapse, Affix } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { programs, curriculums } from '../../data/schoolData';
+import { useNavigate } from 'react-router';
 
 const { Panel } = Collapse;
 
 const ProgramPage: React.FC = () => {
   const [search, setSearch] = useState('');
+  const navigate = useNavigate();
   const filteredPrograms = programs.filter(
     p => p.programName.toLowerCase().includes(search.toLowerCase()) || p.id.toString().includes(search)
   );
@@ -44,7 +46,12 @@ const ProgramPage: React.FC = () => {
               <b>Curriculum:</b> <br/>
               {curriculums.filter(c => c.programId === program.id).map(c => (
                 <div key={c.id} style={{marginBottom: 8}}>
-                  <span style={{fontWeight: 600}}>{c.curriculumName}</span> (Effective: {new Date(c.effectiveDate).toLocaleDateString()})
+                  <span
+                    style={{fontWeight: 600, cursor: 'pointer', textDecoration: 'underline'}}
+                    onClick={() => navigate(`/staff/curriculums?title=${encodeURIComponent(c.curriculumName)}`)}
+                  >
+                    {c.curriculumName}
+                  </span> (Effective: {new Date(c.effectiveDate).toLocaleDateString()})
                 </div>
               ))}
               {/* TODO: Expand to show full curriculum details */}

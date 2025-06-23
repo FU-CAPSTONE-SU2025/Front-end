@@ -8,6 +8,7 @@ import { Input, Button, Collapse, Typography, Affix } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { curriculums, subjects, combos, curriculumSubjects, comboSubjects } from '../../data/schoolData';
+import { useSearchParams, useNavigate } from 'react-router';
 
 const { Panel } = Collapse;
 const { Title } = Typography;
@@ -20,6 +21,12 @@ const lineColor = 'rgba(30,64,175,0.18)';
 
 const CurriculumPage: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    const title = searchParams.get('title');
+    if (title) setSearch(title);
+  }, [searchParams]);
   const filteredCurriculums = curriculums.filter(
     c => c.curriculumName.toLowerCase().includes(search.toLowerCase()) || c.id.toString().includes(search)
   );
@@ -77,7 +84,15 @@ const CurriculumPage: React.FC = () => {
                         <ul style={{margin: 0, paddingLeft: 20}}>
                           {semesterSubjects.map(cs => {
                             const subj = subjects.find(s => s.id === cs.subjectId);
-                            return subj ? <li key={subj.id} style={{color: '#1E40AF'}}>{subj.subjectName} ({subj.subjectCode})</li> : null;
+                            return subj ? (
+                              <li
+                                key={subj.id}
+                                style={{color: '#1E40AF', cursor: 'pointer', textDecoration: 'underline'}}
+                                onClick={() => navigate(`/staff/subjects?title=${encodeURIComponent(subj.subjectName)}`)}
+                              >
+                                {subj.subjectName} ({subj.subjectCode})
+                              </li>
+                            ) : null;
                           })}
                         </ul>
                       </div>

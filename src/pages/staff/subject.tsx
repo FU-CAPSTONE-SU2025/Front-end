@@ -3,7 +3,7 @@ import { Table, Input, Button, Select, Affix, Collapse } from 'antd';
 import { PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { subjects, curriculums, combos, comboSubjects } from '../../data/schoolData';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -13,6 +13,12 @@ const SubjectPage: React.FC = () => {
   const [curriculumFilter, setCurriculumFilter] = useState<number | undefined>();
   const [comboFilter, setComboFilter] = useState<number | undefined>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  React.useEffect(() => {
+    const title = searchParams.get('title');
+    if (title) setSearch(title);
+  }, [searchParams]);
 
   // Filtered subjects
   let filteredSubjects = subjects.filter(s =>
