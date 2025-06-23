@@ -22,6 +22,8 @@ import Dummy from "../pages/dummy";
 import SubjectDetails from '../pages/student/subjectDetails';
 import StaffProfile from "../pages/staff/profile";
 import StaffLayout from "../components/staff/staffLayout";
+import ManagerLayout from "../components/manager/managerLayout";
+import HomePage from '../pages/manager/home';
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -134,10 +136,17 @@ export const routes = createBrowserRouter([
   },
    {
     path: "/manager",
-    Component: Dummy,
+    Component: ManagerLayout,
     loader: protectedLoader(['4']),
     children:[
-      
+      {
+        index: true,
+        Component: Dummy,
+      },
+      {
+        path: "home",
+        Component: HomePage,
+      }
     ]
   },
   {
