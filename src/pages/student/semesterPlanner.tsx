@@ -15,7 +15,7 @@ const buttonVariants = {
 
 const SemesterPlanner = () => {
   return (
-    <div className="flex mt-10 flex-col min-h-screen items-center justify-center bg-gradient-to-br from-orange-500 to-blue-900 py-12">
+    <div className="flex  flex-col min-h-screen items-center justify-center bg-gradient-to-br from-orange-500 to-blue-900 py-12">
       <motion.h1
         className="text-4xl md:text-5xl font-extrabold text-white text-center mb-4 drop-shadow-lg"
         initial={{ opacity: 0, y: -30 }}
