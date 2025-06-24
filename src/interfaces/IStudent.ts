@@ -14,9 +14,9 @@ export interface StudentBase extends AccountProps {
 
 export interface pagedStudentData {
     items: StudentBase[]
-    pageNumber: 1
-    pageSize: 10
-    totalCount: 6
+    pageNumber: number
+    pageSize: number
+    totalCount: number
 }
 
 export interface CreateStudent {

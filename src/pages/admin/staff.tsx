@@ -3,23 +3,16 @@ import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
-import { staffs } from '../../../data/mockStaff';
 import DataImport from '../../components/admin/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
 import useActiveUserData from '../../hooks/useActiveUserData';
+import useCRUDStaff from '../../hooks/useCRUDStaff';
+import { StaffProfileData } from '../../interfaces/IStaff';
 
 const { Option } = Select;
 
-interface Staff {
-  Id: string;
-  Email: string;
-  Name: string;
-  PhoneNumber: string;
-  Address: string;
-  Campus: string;
-  AddDated: string;
-}
+
 
 const StaffList: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
@@ -28,25 +21,29 @@ const StaffList: React.FC = () => {
   const [filterValue, setFilterValue] = useState<string>('');
   const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
   const [selectedStaffs, setSelectedStaffs] = useState<string[]>([]);
-    const { categorizedData, refetch } = useActiveUserData();
+  const { categorizedData, refetch } = useActiveUserData();
+  const {getAllStaff, staffList} = useCRUDStaff();
   const staffsPerPage = 10;
   const nav = useNavigate();
    useEffect(()=>{
     refetch()
+    getAllStaff()
   },[])
 
   // Filtering logic - only applied to the displayed staffs (other roles can be filtered similarly)
-  const filteredStaffs = staffs.filter(staff => {
-    const matchesSearch = staff.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          staff.Id.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredStaffs = staffList.filter((staff: StaffProfileData) => {
+    const matchesSearch =
+      (staff.firstName + ' ' + staff.lastName).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(staff.id).toLowerCase().includes(searchQuery.toLowerCase());
     let matchesFilter = true;
 
     if (filterType === 'major') {
-      matchesFilter = staff.Id.startsWith(filterValue);
+      matchesFilter = typeof staff.department === 'string' && typeof filterValue === 'string' && staff.department.startsWith(filterValue);
     } else if (filterType === 'campus') {
-      matchesFilter = staff.Campus === filterValue;
+      matchesFilter = staff.campus === filterValue;
     } else if (filterType === 'date') {
-      matchesFilter = staff.AddDated === filterValue;
+      const staffDate = staff.startWorkAt ? new Date(staff.startWorkAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+      matchesFilter = staffDate === filterValue;
     }
 
     return matchesSearch && matchesFilter;
@@ -62,19 +59,10 @@ const StaffList: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleDataImported = (data: { [key: string]: string }) => {
-    const newStaff = {
-      Id: `${['SE', 'SS', 'CE'][Math.floor(Math.random() * 3)]}${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-      Email: data.email || '',
-      Name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
-      PhoneNumber: data.phone || '',
-      Address: data.address || '',
-      Campus: ['HCMC Campus', 'Ha Noi Campus', 'Da Nang Campus'][Math.floor(Math.random() * 3)],
-      AddDated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('/').join('/'),
-    };
-    staffs.push(newStaff);
-    setIsImportOpen(false);
-  };
+  // Remove or comment out mock staff creation logic
+  // const handleDataImported = (data: { [key: string]: string }) => {
+  //   // This is for mock data only. Remove or refactor if needed for real API.
+  // };
 
   const handleFilterChange = (value: string) => {
     setFilterType(value);
@@ -99,8 +87,8 @@ const StaffList: React.FC = () => {
       cancelText: 'Cancel',
       onOk: () => {
         selectedStaffs.forEach(id => {
-          const index = staffs.findIndex(staff => staff.Id === id);
-          if (index !== -1) staffs.splice(index, 1);
+          const index = staffList.findIndex(staff => staff.id === Number(id));
+          if (index !== -1) staffList.splice(index, 1);
         });
         setSelectedStaffs([]);
         setIsDeleteMode(false);
@@ -118,9 +106,9 @@ const StaffList: React.FC = () => {
   };
 
   // Redirect to edit page when a staff row is clicked
-  const handleRowClick = (data: Staff) => {
+  const handleRowClick = (data: StaffProfileData) => {
     if (!isDeleteMode) {
-      nav(`/admin/edit/staff/${data.Id}`);
+      nav(`/admin/edit/staff/${data.id}`);
     }
   };
 
@@ -131,24 +119,24 @@ const StaffList: React.FC = () => {
 
   // Table columns
   const columns = [
-    { title: 'Id', dataIndex: 'Id', key: 'Id', width: 100 },
-    { title: 'Email', dataIndex: 'Email', key: 'Email', width: 200 },
-    { title: 'Name', dataIndex: 'Name', key: 'Name', width: 150 },
-    { title: 'Phone Number', dataIndex: 'PhoneNumber', key: 'PhoneNumber', width: 120 },
-    { title: 'Address', dataIndex: 'Address', key: 'Address', width: 200 },
-    { title: 'Campus', dataIndex: 'Campus', key: 'Campus', width: 120 },
-    { title: 'Added', dataIndex: 'AddDated', key: 'AddDated', width: 100 },
+    { title: 'Id', dataIndex: 'id', key: 'id', width: 100 },
+    { title: 'Email', dataIndex: 'email', key: 'email', width: 200 },
+    { title: 'Name', key: 'name', width: 150, render: (_: any, record: StaffProfileData) => `${record.firstName} ${record.lastName}` },
+    { title: 'Phone', dataIndex: 'phone', key: 'phone', width: 120 },
+    { title: 'Address', dataIndex: 'address', key: 'address', width: 200 },
+    { title: 'Campus', dataIndex: 'campus', key: 'campus', width: 120 },
+    { title: 'Added', key: 'added', width: 100, render: (_: any, record: StaffProfileData) => record.startWorkAt ? new Date(record.startWorkAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '' },
   ];
 
   // Row selection for delete mode
   const rowSelection = isDeleteMode
     ? {
-        selectedRowKeys: selectedStaffs,
+        selectedRowKeys: selectedStaffs.map(Number),
         onChange: (selectedRowKeys: React.Key[]) => {
-          setSelectedStaffs(selectedRowKeys as string[]);
+          setSelectedStaffs(selectedRowKeys.map(String));
         },
-        getCheckboxProps: (record: Staff) => ({
-          name: record.Id,
+        getCheckboxProps: (record: StaffProfileData) => ({
+          name: String(record.id),
         }),
       }
     : undefined;
@@ -226,8 +214,11 @@ const StaffList: React.FC = () => {
                     placeholder="Select Date"
                   >
                     <Option value="">Select Date</Option>
-                    {[...new Set(staffs.map(s => s.AddDated))].sort().map(date => (
-                      <Option key={date} value={date}>{date}</Option>
+                    {[...new Set(staffList.map(s => s.startWorkAt ? new Date(s.startWorkAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''))]
+                      .filter(date => date)
+                      .sort()
+                      .map(date => (
+                        <Option key={date} value={date}>{date}</Option>
                     ))}
                   </Select>
                 )}
@@ -263,7 +254,7 @@ const StaffList: React.FC = () => {
               data={filteredStaffs}
               rowSelection={rowSelection}
               dataPerPage={staffsPerPage}
-              onRow={(record: Staff) => ({
+              onRow={(record: StaffProfileData) => ({
                 onClick: () => handleRowClick(record),
               })}
             />
@@ -295,7 +286,7 @@ const StaffList: React.FC = () => {
         </motion.div>
         {isImportOpen && (
           <div className={styles.modalOverlay}>
-            <DataImport onClose={() => setIsImportOpen(false)} onDataImported={handleDataImported} />
+            <DataImport onClose={() => setIsImportOpen(false)} onDataImported={() => setIsImportOpen(false)} />
           </div>
         )}
       </div>

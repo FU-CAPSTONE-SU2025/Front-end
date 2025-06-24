@@ -2,7 +2,7 @@
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
 import { TokenProps } from "../../interfaces/IAuthen";
-import { StaffBase } from "../../interfaces/IStaff";
+import { pagedStaffData, StaffProfileData } from "../../interfaces/IStaff";
 
 const userURL = baseUrl+"/User/staff"
 
@@ -57,7 +57,7 @@ export const RegisterMultipleStaff = async (data: AccountPropsCreate[]):Promise<
     }
 }
 
-export const FetchStaffList = async ():Promise<StaffBase[]> => {
+export const FetchStaffList = async ():Promise<pagedStaffData> => {
     const props = {
         data: null,
         url: userURL+"/paged",

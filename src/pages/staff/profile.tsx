@@ -4,11 +4,11 @@ import { Descriptions, Avatar, Button, ConfigProvider } from 'antd';
 import { LogOut, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffProfile.module.css';
-import { StaffBase } from '../../interfaces/IStaff';
+import { StaffProfileData } from '../../interfaces/IStaff';
 import { getAuthState } from '../../hooks/useAuths';
 
 // Mock staff data (replace with API call in production)
-const mockStaff: StaffBase = {
+const mockStaff: StaffProfileData = {
   username: 'staffUser123',
   password: 'securePass123',
   email: 'staff@example.com',
@@ -19,10 +19,12 @@ const mockStaff: StaffBase = {
   address: '123 Main St, City, Country',
   department: 'Academic Services',
   position: 'Counselor',
-  userId: 1,
-  roleId: 3,
   id: 1,
-  phone: ''
+  roleId: 3,
+  phone: '',
+  campus: '',
+  startWorkAt: "",
+  endWorkAt: ""
 };
 
 // Animation variants
