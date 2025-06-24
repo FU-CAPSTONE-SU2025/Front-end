@@ -2,8 +2,9 @@
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
 import { TokenProps } from "../../interfaces/IAuthen";
+import { StaffBase } from "../../interfaces/IStaff";
 
-const userURL = baseUrl+"/User"
+const userURL = baseUrl+"/User/staff"
 
 export const GetActiveUser = async ():Promise<TokenProps|null> => {
     const props = {
@@ -56,10 +57,10 @@ export const RegisterMultipleStaff = async (data: AccountPropsCreate[]):Promise<
     }
 }
 
-export const FetchStaffList = async ():Promise<AccountProps[]> => {
+export const FetchStaffList = async ():Promise<StaffBase[]> => {
     const props = {
         data: null,
-        url: userURL,
+        url: userURL+"/paged",
         headers: GetHeader()
     }
     const result = await axiosRead(props)

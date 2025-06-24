@@ -5,6 +5,7 @@ import { LogOut, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffProfile.module.css';
 import { StaffBase } from '../../interfaces/IStaff';
+import { getAuthState } from '../../hooks/useAuths';
 
 // Mock staff data (replace with API call in production)
 const mockStaff: StaffBase = {
@@ -51,7 +52,7 @@ const buttonVariants = {
 
 const StaffProfile: React.FC = () => {
   const navigate = useNavigate();
-
+  const {logout}  = getAuthState()
   // Debug animation states
   useEffect(() => {
     console.log('StaffProfile animation triggered');
@@ -60,7 +61,7 @@ const StaffProfile: React.FC = () => {
 
   // Mock logout function (replace with actual auth logic)
   const handleLogout = () => {
-    console.log('Logging out staff user');
+    logout()
     localStorage.removeItem('authToken'); // Example placeholder
     navigate('/');
   };
