@@ -23,8 +23,8 @@ const mockStaff: StaffProfileData = {
   roleId: 3,
   phone: '',
   campus: '',
-  startWorkAt: "",
-  endWorkAt: ""
+  startWorkAt: new Date,
+  endWorkAt: new Date
 };
 
 // Animation variants

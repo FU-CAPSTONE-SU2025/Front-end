@@ -57,7 +57,7 @@ export const RegisterMultipleStaff = async (data: AccountPropsCreate[]):Promise<
     }
 }
 
-export const FetchStaffList = async ():Promise<pagedStaffData> => {
+export const FetchStaffList = async ():Promise<pagedStaffData|null> => {
     const props = {
         data: null,
         url: userURL+"/paged",
@@ -70,7 +70,7 @@ export const FetchStaffList = async ():Promise<pagedStaffData> => {
     }
     else {
         console.log(result.error)
-        return []
+        return null
     }
 }
 export const FetchStaffyId = async (userId:number):Promise<AccountProps|null> => {
