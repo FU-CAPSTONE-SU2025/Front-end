@@ -1,6 +1,6 @@
 .sttContainer {
   width: 100vw;
-  min-height: calc(100vh - 80px);
+  min-height: calc(100vh);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -15,52 +15,6 @@
   background: none;
 }
 
-.sttBackground {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(120deg, #e0e7ff 0%, #f0f9ff 100%);
-  z-index: -2;
-  opacity: 1;
-  overflow: hidden;
-}
-
-.sttBackground::before, .sttBackground::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(40px);
-  opacity: 0.25;
-  animation: floatShape 18s ease-in-out infinite alternate;
-}
-.sttBackground::before {
-  width: 400px;
-  height: 400px;
-  left: 5vw;
-  top: 10vh;
-  background: radial-gradient(circle, #1E40AF 0%, #f97316 100%);
-  animation-delay: 0s;
-}
-.sttBackground::after {
-  width: 300px;
-  height: 300px;
-  right: 8vw;
-  bottom: 8vh;
-  background: radial-gradient(circle, #f97316 0%, #1E90FF 100%);
-  animation-delay: 6s;
-}
-@keyframes floatShape {
-  0% { transform: translateY(0) scale(1); }
-  100% { transform: translateY(-40px) scale(1.08); }
-}
-
-@keyframes sttFreshBackgroundPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
 
 .sttHeader {
   margin-bottom: 2.5rem;

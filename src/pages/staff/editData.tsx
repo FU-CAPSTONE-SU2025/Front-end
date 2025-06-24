@@ -1,4 +1,3 @@
-import React from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Card, Typography, Button, Space } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
@@ -54,20 +53,20 @@ export default function EditData({}: Props) {
   const getBackPath = () => {
     switch (type?.toLowerCase()) {
       case 'curriculum':
-        return '/staff/curriculum';
+        return '/staff/curriculums';
       case 'subject':
-        return '/staff/subject';
+        return '/staff/subjects';
       case 'program':
-        return '/staff/program';
+        return '/staff/programs';
       case 'combo':
-        return '/staff/curriculum'; // Combos are managed from curriculum page
+        return '/staff/subjects'; // Combos are managed from curriculum page
       default:
-        return '/staff/curriculum';
+        return '/staff';
     }
   };
 
   return (
-    <div className={styles.sttContainer} style={{ paddingTop: '120px' }}>
+    <div className={styles.sttContainer}>
       {/* Background */}
       <div className={styles.sttBackground} />
       

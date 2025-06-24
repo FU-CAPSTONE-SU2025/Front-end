@@ -50,3 +50,9 @@ export interface ComboSubject {
   comboId: number; // Foreign key referencing Combo.id, part of composite primary key
   subjectId: number; // Foreign key referencing Subject.id, part of composite primary key
 }
+
+// Interface for Subject_Prerequisites table (junction table)
+export interface SubjectPrerequisite {
+  subject_id: number; // The subject that has a prerequisite
+  prerequisite_subject_id: number; // The subject that is the prerequisite
+}

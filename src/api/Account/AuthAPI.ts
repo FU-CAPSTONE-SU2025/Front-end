@@ -100,11 +100,12 @@ export const SendEmail = async (data:any) => {
 export const ResetPassword = async (data:any) => {
       const props = {
         data: data,
-        url: accountUrl+`/send-reset-code`,
+        url: accountUrl+`/forget-password`,
         headers: null
     }
     const result = await axiosCreate(props)
     if (result.success) {
+        console.log("Code?",result.data)
         return result.data
     }
     else {

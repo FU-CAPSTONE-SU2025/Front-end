@@ -27,6 +27,22 @@ const SubjectPage: React.FC = () => {
     (!comboFilter || comboSubjects.some(cs => cs.comboId === comboFilter && cs.subjectId === s.id))
   );
 
+  const handleAddSubject = () => {
+    navigate('/staff/editData/subject');
+  };
+
+  const handleAddCombo = () => {
+    navigate('/staff/editData/combo');
+  };
+
+  const handleEditSubject = (subjectId: number) => {
+    navigate(`/staff/editData/subject/${subjectId}`);
+  };
+
+  const handleEditCombo = (comboId: number) => {
+    navigate(`/staff/editData/combo/${comboId}`);
+  };
+
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', align: 'left' as 'left' },
     { title: 'Subject Name', dataIndex: 'subjectName', key: 'subjectName', align: 'left' as 'left' },
@@ -41,7 +57,7 @@ const SubjectPage: React.FC = () => {
         <Button
           type="link"
           icon={<EditOutlined style={{ color: '#f97316' }} />}
-          onClick={() => navigate(`/staff/subject/edit/${record.id}`)}
+          onClick={() => handleEditSubject(record.id)}
           className={styles.sttFreshEditButton}
           style={{ color: '#f97316' }}
         />
@@ -50,7 +66,7 @@ const SubjectPage: React.FC = () => {
   ];
 
   return (
-    <div className={styles.sttContainer} style={{paddingTop: '120px'}}>
+    <div className={styles.sttContainer}>
       {/* Sticky Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
         <div style={{background: 'rgba(30,58,138,0.22)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
@@ -86,13 +102,24 @@ const SubjectPage: React.FC = () => {
               <Option key={cb.id} value={cb.id}>{cb.comboName}</Option>
             ))}
           </Select>
-          <Button type="primary" icon={<PlusOutlined />} size="large" style={{borderRadius: 999}}>
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />} 
+            size="large" 
+            style={{borderRadius: 999}}
+            onClick={handleAddSubject}
+          >
             Add Subject
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} size="large" style={{borderRadius: 999, background: '#1E40AF', borderColor: '#1E40AF'}}>
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />} 
+            size="large" 
+            style={{borderRadius: 999, background: '#1E40AF', borderColor: '#1E40AF'}} 
+            onClick={handleAddCombo}
+          >
             Add Combo
           </Button>
-          {/* TODO: Implement Add Subject/Combo modals */}
         </div>
       </Affix>
       {/* Subject Table */}
@@ -113,7 +140,7 @@ const SubjectPage: React.FC = () => {
             header={<span style={{fontWeight: 700, fontSize: '1.1rem', color: '#fff'}}>Combo: {combo.comboName}</span>}
             key={combo.id}
             style={{background: 'rgba(30,58,138,0.22)', borderRadius: 16, marginBottom: 12, color: '#fff'}}
-            extra={<Button icon={<EditOutlined />} size="small" style={{borderRadius: 999, background: '#f97316', color: '#fff', border: 'none'}}>{'Edit'}</Button>}
+            extra={<Button icon={<EditOutlined />} size="small" style={{borderRadius: 999, background: '#f97316', color: '#fff', border: 'none'}} onClick={(e) => { e.stopPropagation(); handleEditCombo(combo.id); }}>{'Edit'}</Button>}
           >
             <ul style={{margin: 0, paddingLeft: 20}}>
               {comboSubjects.filter(cs => cs.comboId === combo.id).map(cs => {

@@ -5,6 +5,7 @@ import { Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/forgetPassword.module.css';
 import { ResetPassword, SendEmail } from '../../api/Account/AuthAPI';
+import { InfoCircleOutlined } from '@ant-design/icons';
 
 // Custom hook for managing cooldown
 const useCooldown = (initialCooldown: number = 0) => {
@@ -47,6 +48,7 @@ const ForgetPassword: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const [emailSent, setEmailSent] = useState<string | null>(null);
 
   // Debug render
   //console.log('ForgetPassword rendered:', { currentPage });
@@ -56,12 +58,12 @@ const ForgetPassword: React.FC = () => {
     try {
       const values = await form.validateFields();
       const props = {
-        data: { email: values.email },
+         email: values.email,
       };
-    //   const response = await SendEmail(props);
-        const response = 1
+      const response = await SendEmail(props);
       if (response) {
         setCurrentPage(2);
+        setEmailSent(values.email);
       } else {
         Modal.error({
           title: 'Error',
@@ -135,12 +137,14 @@ const ForgetPassword: React.FC = () => {
   };
 
   const InputEmail = React.memo(() => {
-    console.log('InputEmail rendered'); // Debug log
     return (
       <motion.div className={styles.card} variants={cardVariants} initial="hidden" animate="visible">
         <motion.h2 className={styles.title} variants={itemVariants}>
-          Reset Password
+          Reset Your Password
         </motion.h2>
+        <div style={{ marginBottom: 16, color: '#555', fontSize: '1rem' }}>
+          Enter your email address and we'll send you a verification code to reset your password.
+        </div>
         <Form form={form} layout="vertical" onFinish={handleClickReset}>
           <Form.Item
             name="email"
@@ -153,7 +157,6 @@ const ForgetPassword: React.FC = () => {
               placeholder="Enter your email"
               className={styles.input}
               onChange={(e) => {
-                console.log('Email input changed:', e.target.value); // Debug log
                 form.setFieldsValue({ email: e.target.value });
               }}
             />
@@ -164,17 +167,21 @@ const ForgetPassword: React.FC = () => {
               htmlType="submit"
               className={styles.submitButton}
               block
+              style={{ fontWeight: 600, fontSize: '1.1rem', borderRadius: 8 }}
             >
               Send Verification Code
             </Button>
           </Form.Item>
         </Form>
+        <div className={styles.emailTip}>
+          <InfoCircleOutlined style={{ color: '#1E40AF' }} />
+          Make sure to check your spam or promotions folder if you don't see the email in your inbox.
+        </div>
       </motion.div>
     );
   });
 
   const InputVerificationCodeAndPassword = React.memo(() => {
-    //console.log('InputVerificationCodeAndPassword rendered'); // Debug log
     const { cooldown, startCooldown } = useCooldown(30); // Start cooldown on mount
 
     const wrappedHandleResendEmail = async () => {
@@ -191,12 +198,20 @@ const ForgetPassword: React.FC = () => {
 
     return (
       <motion.div className={styles.card} variants={cardVariants} initial="hidden" animate="visible">
+        <div className={styles.infoBox}>
+          <InfoCircleOutlined style={{ marginRight: 8 }} />
+          A verification code has been sent to <b>{emailSent}</b>.<br />
+          Please check your inbox and spam folder.
+        </div>
         <motion.div className={styles.mailIcon} variants={iconVariants}>
           <Mail size={240} strokeWidth={1} />
         </motion.div>
         <motion.h2 className={styles.title} variants={itemVariants}>
-          Enter Verification Code and New Password
+          Enter Verification Code & New Password
         </motion.h2>
+        <div style={{ marginBottom: 16, color: '#555', fontSize: '1rem' }}>
+          Please enter the verification code you received via email, along with your new password.
+        </div>
         <Form form={form} layout="vertical" onFinish={handleConfirmReset}>
           <Form.Item
             name="email"
@@ -209,7 +224,6 @@ const ForgetPassword: React.FC = () => {
               placeholder="Enter your email"
               className={styles.input}
               onChange={(e) => {
-                console.log('Email input changed:', e.target.value); // Debug log
                 form.setFieldsValue({ email: e.target.value });
               }}
             />
@@ -242,6 +256,7 @@ const ForgetPassword: React.FC = () => {
               htmlType="submit"
               className={styles.submitButton}
               block
+              style={{ fontWeight: 600, fontSize: '1.1rem', borderRadius: 8 }}
             >
               Reset Password
             </Button>
@@ -253,6 +268,7 @@ const ForgetPassword: React.FC = () => {
               className={styles.resendButton}
               disabled={cooldown > 0}
               block
+              style={{ fontWeight: 500, borderRadius: 8 }}
             >
               {cooldown > 0 ? `Resend Email (${cooldown}s)` : 'Resend Email'}
             </Button>
@@ -266,6 +282,11 @@ const ForgetPassword: React.FC = () => {
     <ConfigProvider>
       <div className={styles.background}>
         <div className={styles.container}>
+          <div style={{ position: 'absolute', top: 32, left: 0, width: '100%', textAlign: 'center', zIndex: 2 }}>
+            <span className={styles.stepIndicator}>
+              Step {currentPage} of 2: {currentPage === 1 ? 'Request Reset' : 'Verify & Set New Password'}
+            </span>
+          </div>
           {currentPage === 1 ? (
             <InputEmail />
           ) : currentPage === 2 ? (

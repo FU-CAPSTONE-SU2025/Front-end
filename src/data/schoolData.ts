@@ -1,4 +1,4 @@
-import { Program, Curriculum, Subject, Syllabus, Combo, CurriculumSubject, ComboSubject } from '../interfaces/ISchoolProgram';
+import { Program, Curriculum, Subject, Syllabus, Combo, CurriculumSubject, ComboSubject, SubjectPrerequisite } from '../interfaces/ISchoolProgram';
 
 export const programs: Program[] = [
   { id: 1, programName: 'Computer Science', programCode: 'CS101' },
@@ -47,10 +47,17 @@ export const comboSubjects: ComboSubject[] = [
   { comboId: 2, subjectId: 6 },
 ];
 
+export const subjectPrerequisites: SubjectPrerequisite[] = [
+  { subject_id: 2, prerequisite_subject_id: 1 }, // CS102 requires CS101
+  { subject_id: 4, prerequisite_subject_id: 3 }, // AI202 requires AI201
+  { subject_id: 5, prerequisite_subject_id: 2 }, // CS201 requires CS102
+];
+
 // Mock fetch functions
 export const fetchPrograms = () => new Promise<Program[]>(res => setTimeout(() => res(programs), 300));
 export const fetchCurriculums = () => new Promise<Curriculum[]>(res => setTimeout(() => res(curriculums), 300));
 export const fetchSubjects = () => new Promise<Subject[]>(res => setTimeout(() => res(subjects), 300));
 export const fetchCombos = () => new Promise<Combo[]>(res => setTimeout(() => res(combos), 300));
 export const fetchCurriculumSubjects = () => new Promise<CurriculumSubject[]>(res => setTimeout(() => res(curriculumSubjects), 300));
-export const fetchComboSubjects = () => new Promise<ComboSubject[]>(res => setTimeout(() => res(comboSubjects), 300)); 
+export const fetchComboSubjects = () => new Promise<ComboSubject[]>(res => setTimeout(() => res(comboSubjects), 300));
+export const fetchSubjectPrerequisites = () => new Promise<SubjectPrerequisite[]>(res => setTimeout(() => res(subjectPrerequisites), 300)); 

@@ -137,19 +137,21 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
         </Form.Item>
 
         <Form.Item
-          label="Select Subjects"
+          label="Select Subjects for this Combo"
           name="subjects"
           rules={[
             { required: true, message: 'Please select at least one subject!' }
           ]}
+          extra="Hold Ctrl (Windows) or Cmd (Mac) to select multiple subjects. Subjects in this list will be included in this combo."
         >
           <Select
             mode="multiple"
-            placeholder="Select subjects for this combo"
+            placeholder="Select subjects to include in this combo"
             value={selectedSubjects}
             onChange={handleSubjectChange}
             style={{ borderRadius: 8 }}
             optionFilterProp="children"
+            showSearch
           >
             {subjects.map(subject => (
               <Option key={subject.id} value={subject.id}>
