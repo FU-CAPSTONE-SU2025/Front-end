@@ -24,6 +24,7 @@ import StaffProfile from "../pages/staff/profile";
 import StaffLayout from "../components/staff/staffLayout";
 import ManagerLayout from "../components/manager/managerLayout";
 import HomePage from '../pages/manager/home';
+import ComboPage from "../pages/manager/comboPage";
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -142,6 +143,10 @@ export const routes = createBrowserRouter([
       {
         index: true,
         Component: HomePage,
+      },
+      {
+        path: "combo",
+        Component: ComboPage,
       },
    
     ]
