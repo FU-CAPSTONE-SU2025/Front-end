@@ -33,8 +33,8 @@ jobs:
             VITE_API_GOOGLE_CLIENT_ID=${{secrets.VITE_API_GOOGLE_CLIENT_ID}}
             VITE_API_GOOGLE_CLIENT_SECRET=${{secrets.VITE_API_GOOGLE_CLIENT_SECRET}}
             VITE_THERE_IS_AN_EGG=${{secrets.VITE_THERE_IS_AN_EGG}}
-            VITE_GITHUB_CLIENTID = ${{secrets.VITE_GITHUB_CLIENTID}}
-            VITE_GITHUB_CLIENTSECRET = ${{secrets.VITE_GITHUB_CLIENTSECRET}}
+            VITE_GITHUB_CLIENTID=${{secrets.VITE_GITHUB_CLIENTID}}
+            VITE_GITHUB_CLIENTSECRET=${{secrets.VITE_GITHUB_CLIENTSECRET}}
         # Push to containerize by running the script Dockerfile, check the code folder to see that file, also the Nginx config
 
       - name: Connect and Deploy to the DigitalOcean Droplet Ubuntu VM
