@@ -97,7 +97,7 @@ export const routes = createBrowserRouter([
         Component: SemesterPlanner,
       },
       {
-        path: "semesterPlanner/:id",
+        path: "semesterPlanner/:roadmap",
         Component: SemesterPlannerDetail,
       }
     ],
@@ -141,12 +141,9 @@ export const routes = createBrowserRouter([
     children:[
       {
         index: true,
-        Component: Dummy,
-      },
-      {
-        path: "home",
         Component: HomePage,
-      }
+      },
+   
     ]
   },
   {
