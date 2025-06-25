@@ -50,7 +50,7 @@ jobs:
             docker stop ai-sea || true
             docker rm ai-sea || true
             docker run -d --name ai-sea \
-              -p 80:80 -p 443:443 ${{secrets.DOCKER_USERNAME}}/ai-sea:latest
+              -p 8080:80 -p 443:443 ${{secrets.DOCKER_USERNAME}}/ai-sea:latest
         # 1. Connect to the droplet docker app, login with username and password
         # 2. pull the latest image
         # 3. check - stop - remove any currently running instance of the containers
