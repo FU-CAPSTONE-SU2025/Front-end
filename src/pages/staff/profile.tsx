@@ -4,23 +4,27 @@ import { Descriptions, Avatar, Button, ConfigProvider } from 'antd';
 import { LogOut, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffProfile.module.css';
-import { StaffBase } from '../../interfaces/IStaff';
+import { StaffProfileData } from '../../interfaces/IStaff';
+import { getAuthState } from '../../hooks/useAuths';
 
 // Mock staff data (replace with API call in production)
-const mockStaff: StaffBase = {
+const mockStaff: StaffProfileData = {
   username: 'staffUser123',
   password: 'securePass123',
   email: 'staff@example.com',
-  avatar: '/img/avatar-placeholder.png',
+  avatarUrl: '/img/avatar-placeholder.png',
   firstName: 'Jane',
   lastName: 'Doe',
   dateOfBirth: new Date('1990-05-15'),
   address: '123 Main St, City, Country',
   department: 'Academic Services',
   position: 'Counselor',
-  userId: 1,
-  roleId: 3,
   id: 1,
+  roleId: 3,
+  phone: '',
+  campus: '',
+  startWorkAt: new Date,
+  endWorkAt: new Date
 };
 
 // Animation variants
@@ -50,7 +54,7 @@ const buttonVariants = {
 
 const StaffProfile: React.FC = () => {
   const navigate = useNavigate();
-
+  const {logout}  = getAuthState()
   // Debug animation states
   useEffect(() => {
     console.log('StaffProfile animation triggered');
@@ -59,7 +63,7 @@ const StaffProfile: React.FC = () => {
 
   // Mock logout function (replace with actual auth logic)
   const handleLogout = () => {
-    console.log('Logging out staff user');
+    logout()
     localStorage.removeItem('authToken'); // Example placeholder
     navigate('/');
   };
@@ -97,9 +101,9 @@ const StaffProfile: React.FC = () => {
             animate="visible"
             onAnimationComplete={() => console.log('Left card animation complete')}
           >
-            <h2 className={styles.title}>Staff Information</h2>
+            <h2 className={styles.title}>Profile Information</h2>
             <div className={styles.avatarWrapper}>
-              <Avatar src={mockStaff.avatar} size={100} className={styles.avatar} />
+              <Avatar src={mockStaff.avatarUrl} size={100} className={styles.avatar} />
             </div>
             <Descriptions column={1} bordered className={styles.description}>
               <Descriptions.Item label="Username">{mockStaff.username}</Descriptions.Item>
@@ -122,7 +126,7 @@ const StaffProfile: React.FC = () => {
               animate="visible"
               onAnimationComplete={() => console.log('Right card animation complete')}
             >
-              <h2 className={styles.title}>Professional Details</h2>
+              <h2 className={styles.title}>Staff's Details</h2>
               <Descriptions column={1} bordered className={styles.description}>
                 <Descriptions.Item label="Department">{mockStaff.department}</Descriptions.Item>
                 <Descriptions.Item label="Position">{mockStaff.position}</Descriptions.Item>

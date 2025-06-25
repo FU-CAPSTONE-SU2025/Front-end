@@ -61,14 +61,15 @@ export const Logout = async () => {
 export const RefreshToken = async () => {
     const props = {
         data: null,
-        url: accountUrl+`/login`,
+        url: accountUrl+`/refresh-token`,
     }
     const newAccessToken = await axiosRead(props)
     if (newAccessToken.success) {
         const {setAccessToken,setRefreshToken} = getAuthState()
         //console.log(newAccessToken.data)
         const tokens:TokenProps = newAccessToken.data
-         setAccessToken(tokens.accessToken);
+        console.log("New token: ",newAccessToken.data)
+          setAccessToken(tokens.accessToken);
           setRefreshToken(tokens.refreshToken);
         return true
     }
@@ -99,11 +100,12 @@ export const SendEmail = async (data:any) => {
 export const ResetPassword = async (data:any) => {
       const props = {
         data: data,
-        url: accountUrl+`/send-reset-code`,
+        url: accountUrl+`/forget-password`,
         headers: null
     }
     const result = await axiosCreate(props)
     if (result.success) {
+        console.log("Code?",result.data)
         return result.data
     }
     else {

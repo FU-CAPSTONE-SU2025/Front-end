@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Progress, Button, InputNumber, Tag } from 'antd';
-import { useParams } from 'react-router-dom';
 import { CalculatorOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import CourseTimeline from '../../components/student/courseTimeline';
 import GradeCalculator from '../../components/student/gradeCalculator';

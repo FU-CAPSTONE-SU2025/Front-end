@@ -5,9 +5,10 @@ import { useState } from 'react'
 type DataProps = {
     columns: {
         title: string
-        dataIndex: string
+        dataIndex?: string
         key: string
         width: number
+        render?: (value: any, record: any, index: number) => React.ReactNode
     }[]
     data: any[]
     rowSelection: any

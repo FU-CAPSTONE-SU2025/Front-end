@@ -1,13 +1,14 @@
  import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { AccountProps, AccountPropsCreate, ActiveAccountProps, LoginProps } from "../../interfaces/IAccount";
+import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
+import { pagedStudentData, StudentBase } from "../../interfaces/IStudent";
 
-const userURL = baseUrl+"/User"
+const userURL = baseUrl+"/User/student"
 
-export const GetActiveUser = async ():Promise<ActiveAccountProps|null> => {
+export const GetAllStudent = async ():Promise<pagedStudentData|null> => {
     const props = {
         data: null,
-        url: userURL+`/active`,
+        url: userURL+`/paged`,
     }
     const header = GetHeader()
     console.log("Header: ",header) 
@@ -22,7 +23,7 @@ export const GetActiveUser = async ():Promise<ActiveAccountProps|null> => {
     }
 }
 
-export const RegisterUser = async (data: AccountPropsCreate):Promise<any> => {
+export const RegisterStudent = async (data: AccountPropsCreate):Promise<any> => {
     const props = {
         data: data,
         url: userURL,
@@ -35,10 +36,10 @@ export const RegisterUser = async (data: AccountPropsCreate):Promise<any> => {
     }
     else {
         console.log(result.error)
-        return null
+        return result.error
     }
 }
-export const RegisterMultipleUser = async (data: AccountPropsCreate[]):Promise<any> => {
+export const RegisterMultipleStudent = async (data: AccountPropsCreate[]):Promise<any> => {
     const props = {
         data: data,
         url: userURL,
@@ -55,7 +56,7 @@ export const RegisterMultipleUser = async (data: AccountPropsCreate[]):Promise<a
     }
 }
 
-export const FetchUserList = async ():Promise<AccountProps[]> => {
+export const FetchStudentList = async ():Promise<AccountProps[]> => {
     const props = {
         data: null,
         url: userURL,
@@ -71,7 +72,7 @@ export const FetchUserList = async ():Promise<AccountProps[]> => {
         return []
     }
 }
-export const FetchUserById = async (userId:number):Promise<AccountProps|null> => {
+export const FetchStudentById = async (userId:number):Promise<AccountProps|null> => {
     const props = {
         data: null,
         url: userURL+`/`+userId,
@@ -87,7 +88,7 @@ export const FetchUserById = async (userId:number):Promise<AccountProps|null> =>
         return null
     }
 }
-export const UpdateUser = async (userId:number,data:any):Promise<AccountProps|null> => {
+export const UpdateStudent = async (userId:number,data:any):Promise<AccountProps|null> => {
     const props = {
         data: data,
         url: userURL+`/`+userId,

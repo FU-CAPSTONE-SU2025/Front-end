@@ -7,12 +7,10 @@ import { DatePicker } from 'antd';
 import dayjs from 'dayjs';
 import { validateEmail, validatePhone } from '../../components/common/validation';
 import DataImport from '../../components/admin/dataImport';
-//Data imports for mock data
-import {advisors} from '../../../data/mockAdvisor';
-import {students} from '../../../data/mockStudent';
-import {staffs} from '../../../data/mockStaff';
-import {managers} from '../../../data/mockManager';
-import { GetActiveUser } from '../../api/Account/UserAPI';
+import { jwtDecode } from 'jwt-decode';
+import { getAuthState } from '../../hooks/useAuths';
+import { AccountProps, ActiveCategoriesProp } from '../../interfaces/IAccount';
+import useActiveUserData from '../../hooks/useActiveUserData';
 
 // Animation variants for the profile card and action panel
 const cardVariants = {
@@ -38,16 +36,24 @@ const Profile: React.FC = () => {
   const [password, setPassword] = useState<string>("password");
   const [address, setAddress] = useState<string>("Address");
   const [phone, setPhone] = useState<string>("Phone");
+  const [profile,setProfile]  = useState<AccountProps>()
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
+  const {accessToken} = getAuthState()
+  const { categorizedData, refetch } = useActiveUserData();
+// Call refetch() to fetch the data
+// categorizedData?.student, categorizedData?.staff, etc.
   useEffect(() => {
-    const getActiveUser= async() => {
-      console.log("Fetching active user data...");
-       await GetActiveUser()
-    }
-    getActiveUser()
+    refetch()
+    getAdminProfile()
   },[])
+     const getAdminProfile = () => {
+     const data:AccountProps = jwtDecode(accessToken??"N/A")
+     console.log("Admin account: ",data)
+       setProfile(data)
+    }
+  
 
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);
@@ -105,19 +111,19 @@ const Profile: React.FC = () => {
   const hasErrors = Object.values(errors).some((error) => error !== null);
 
   return (
-    <>
+    <>  {console.log(categorizedData)}
       <AccountCounter 
         label={["Student", "Academic Staff", "Advisor", "Manager"]}
-        student={students}
-        staff={staffs}
-        advisor={advisors}
-        manager={managers}
+        student={categorizedData?.student}
+        staff={categorizedData?.staff}
+        advisor={categorizedData?.advisor}
+        manager={categorizedData?.manager}
       />
       <div className={styles.container}>
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
           <div className={styles.userInfo}>
-            <img src="https://placehold.co/120x120" alt="User Avatar" className={styles.avatar} />
-            <div className={styles.name}>{lastName} + {firstName}</div>
+            <img src={profile?.avatarUrl??"https://placehold.co/120x120"} alt="User Avatar" className={styles.avatar} />
+            <div className={styles.name}>{profile?.lastName} + {profile?.firstName}</div>
             <div className={styles.role}>AISEA Administrator</div>
             <div className={styles.email}>{email}</div>
           </div>
@@ -126,7 +132,7 @@ const Profile: React.FC = () => {
               <div className={styles.field}>
                 <input
                   className={styles.fieldContent}
-                  value={firstName}
+                  value={profile?.firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   readOnly={!isEditing}
                 />
@@ -134,7 +140,7 @@ const Profile: React.FC = () => {
               <div className={styles.field}>
                 <input
                   className={styles.fieldContent}
-                  value={lastName}
+                  value={profile?.lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   readOnly={!isEditing}
                 />
@@ -144,17 +150,8 @@ const Profile: React.FC = () => {
               <div className={styles.field}>
                 <input
                   className={styles.fieldContent}
-                  value={email}
+                  value={profile?.email}
                   onChange={(e) => setEmail(e.target.value)}
-                  readOnly={!isEditing}
-                />
-              </div>
-              <div className={styles.field}>
-                <input
-                  className={styles.fieldContent}
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   readOnly={!isEditing}
                 />
               </div>
@@ -163,7 +160,7 @@ const Profile: React.FC = () => {
               <div className={styles.field}>
                 <input
                   className={styles.fieldContent}
-                  value={address}
+                  value={profile?.address||"N/A"}
                   onChange={(e) => setAddress(e.target.value)}
                   readOnly={!isEditing}
                 />
@@ -171,7 +168,7 @@ const Profile: React.FC = () => {
               <div className={styles.field}>
                 <input
                   className={styles.fieldContent}
-                  value={phone}
+                  value={profile?.phone}
                   onChange={(e) => setPhone(e.target.value)}
                   readOnly={!isEditing}
                 />
@@ -183,7 +180,7 @@ const Profile: React.FC = () => {
                 <DatePicker
                   className={styles.datePicker}
                   onChange={(date) => handleDateChange(date ? date.toDate() : null)}
-                  value={selectedDate ? dayjs(selectedDate) : null}
+                  value={profile && profile.dateOfBirth ? dayjs(profile.dateOfBirth) : null}
                   placeholder="Select Date"
                   format="YYYY-MM-DD"
                   allowClear
@@ -221,7 +218,7 @@ const Profile: React.FC = () => {
         </motion.div>
         <motion.div className={styles.actionPanel} variants={actionPanelVariants} initial="hidden" animate="visible">
           <div className={styles.actions}>
-            {['Edit Account', 'Import Data From xlsx', 'Delete Account', 'Logout'].map((action, index) => (
+            {['Edit Account', 'Import Data From xlsx','Logout'].map((action, index) => (
               <motion.div
                 key={index}
                 className={`${styles.actionButton} ${action === 'Edit Account' && isEditing ? styles.editActive : ''}`}
@@ -249,3 +246,7 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
+function useFetchTableData(): { categorizedData: any; isLoading: any; error: any; refetch: any; } {
+  throw new Error('Function not implemented.');
+}
+

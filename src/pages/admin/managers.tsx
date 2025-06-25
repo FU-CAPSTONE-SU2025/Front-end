@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
 import { useNavigate } from 'react-router';
@@ -7,6 +7,7 @@ import { managers } from '../../../data/mockManager';
 import DataImport from '../../components/admin/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
+import useActiveUserData from '../../hooks/useActiveUserData';
 
 const { Option } = Select;
 
@@ -27,9 +28,12 @@ const ManagerList: React.FC = () => {
   const [filterValue, setFilterValue] = useState<string>('');
   const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
   const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
+    const { categorizedData, refetch } = useActiveUserData();
   const managersPerPage = 10;
   const nav = useNavigate();
-
+  useEffect(()=>{
+    refetch()
+  },[])
   // Filtering logic - only applied to the displayed managers
   const filteredManagers = managers.filter(manager => {
     const matchesSearch = manager.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -162,7 +166,7 @@ const ManagerList: React.FC = () => {
       }}
     >
       <div className={styles.container}>
-        <AccountCounter label="Manager" manager={managers} />
+        <AccountCounter label="Manager" manager={categorizedData?.manager} />
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
           <div className={styles.userInfo}>
             <h2>{isDeleteMode ? 'Delete Manager Account' : 'List Of Managers On the System'}</h2>
