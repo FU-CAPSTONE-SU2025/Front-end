@@ -50,11 +50,11 @@ jobs:
             docker stop ai-sea || true
             docker rm ai-sea || true
             docker run -d --name ai-sea \
-              -p 80:80 -p 443:443 ${{secrets.DOCKER_USERNAME}}/ai-sea:latest
+              -p 8080:80 -p 443:443 ${{secrets.DOCKER_USERNAME}}/ai-sea:latest
         # 1. Connect to the droplet docker app, login with username and password
         # 2. pull the latest image
         # 3. check - stop - remove any currently running instance of the containers
         # 4. Update and re-run the container with the latest update/code with the config-ed port, check the nginx file for port number.
         # Noted: ${{secrets.SSH_KEY}} is the SSH PRIVATE KEY, aka the -----BEGIN OPENSSH PRIVATE KEY-----
         ## While the DigitalOcean Key you input is the PUBLIC KEY, don't mistake
-        # Extra Noted: port 5173(port on server):5173(port on docker, this instance is Nginx config as 5173), because Nginx is being config to run on port 5173, not the default 80. Adjust accordingly
+        # Extra Noted: port 8080(port on server):80(port on docker, this instance is Nginx config as 80), because Nginx is being config to run on port 80.
