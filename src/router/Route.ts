@@ -24,6 +24,7 @@ import StaffProfile from "../pages/staff/profile";
 import StaffLayout from "../components/staff/staffLayout";
 import ManagerLayout from "../components/manager/managerLayout";
 import HomePage from '../pages/manager/home';
+import ComboPage from "../pages/manager/comboPage";
 import StaffTranscript from "../pages/staff/transcript";
 import CurriculumPage from "../pages/staff/curriculum";
 import ProgramPage from "../pages/staff/program";
@@ -102,7 +103,7 @@ export const routes = createBrowserRouter([
         Component: SemesterPlanner,
       },
       {
-        path: "semesterPlanner/:id",
+        path: "semesterPlanner/:roadmap",
         Component: SemesterPlannerDetail,
       }
     ],
@@ -159,12 +160,13 @@ export const routes = createBrowserRouter([
     children:[
       {
         index: true,
-        Component: Dummy,
+        Component: HomePage,
       },
       {
-        path: "home",
-        Component: HomePage,
-      }
+        path: "combo",
+        Component: ComboPage,
+      },
+   
     ]
   },
   {
