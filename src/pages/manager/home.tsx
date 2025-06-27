@@ -6,6 +6,7 @@ import ManagerTable from '../../components/manager/managerTable';
 import StatusBadge from '../../components/manager/statusBadge';
 import { Pagination } from 'antd';
 import SearchBar from '../../components/common/searchBar';
+import { useNavigate } from 'react-router-dom';
 
 const { Option } = Select;
 
@@ -128,6 +129,7 @@ const HomePage: React.FC = () => {
   const [editing, setEditing] = useState<any>(null);
   const [form] = Form.useForm();
   const [search, setSearch] = useState('');
+  const navigate = useNavigate();
 
   // Filtered data
   const filtered = curriculums.filter(c =>
@@ -189,6 +191,18 @@ const HomePage: React.FC = () => {
       width: 110,
       render: (status: string) => <StatusBadge status={status as 'pending' | 'active' | 'in-active'} />,
       align: 'center' as const,
+    },
+    {
+      title: 'View',
+      key: 'view',
+      dataIndex: 'view',
+      width: 80,
+      align: 'center' as const,
+      render: (_: any, record: any) => (
+        <Button type="link" onClick={() => navigate(`/manager/curriculum/${record.id}`)}>
+          View
+        </Button>
+      ),
     },
   ];
 
@@ -258,7 +272,6 @@ const HomePage: React.FC = () => {
           currentPage={currentPage}
           total={filtered.length}
           onPageChange={setCurrentPage}
-          onEdit={onEdit}
           onDelete={(row) => onDelete(row.id)}
         />
       </div>
