@@ -30,6 +30,8 @@ import CurriculumPage from "../pages/staff/curriculum";
 import ProgramPage from "../pages/staff/program";
 import SubjectPage from "../pages/staff/subject";
 import EditData from "../pages/staff/editData";
+import CurriculumDetail from '../pages/manager/curriculumDetail';
+import ComboDetail from '../pages/manager/comboDetail';
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -166,7 +168,14 @@ export const routes = createBrowserRouter([
         path: "combo",
         Component: ComboPage,
       },
-   
+      {
+        path: "curriculum/:id",
+        Component: CurriculumDetail,
+      },
+      {
+        path: "combo/:id",
+        Component: ComboDetail,
+      },
     ]
   },
   {

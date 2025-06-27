@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ManagerTable from '../../components/manager/managerTable';
 import StatusBadge from '../../components/manager/statusBadge';
 import SearchBar from '../../components/common/searchBar';
+import { useNavigate } from 'react-router-dom';
 
 const { Option } = Select;
 
@@ -41,6 +42,7 @@ const ComboPage: React.FC = () => {
   const [editing, setEditing] = useState<any>(null);
   const [form] = Form.useForm();
   const [search, setSearch] = useState('');
+  const navigate = useNavigate();
 
   // Filtered data
   const filtered = combos.filter(c =>
@@ -73,6 +75,18 @@ const ComboPage: React.FC = () => {
       width: 120,
       render: (status: string) => <StatusBadge status={status as 'pending' | 'active' | 'in-active'} />,
       align: 'center' as const,
+    },
+    {
+      title: 'View',
+      key: 'view',
+      dataIndex: 'view',
+      width: 80,
+      align: 'center' as const,
+      render: (_: any, record: any) => (
+        <Button type="link" onClick={() => navigate(`/manager/combo/${record.id}`)}>
+          View
+        </Button>
+      ),
     },
   ];
 
@@ -142,7 +156,6 @@ const ComboPage: React.FC = () => {
           currentPage={currentPage}
           total={filtered.length}
           onPageChange={setCurrentPage}
-          onEdit={onEdit}
           onDelete={(row) => onDelete(row.id)}
         />
       </div>
