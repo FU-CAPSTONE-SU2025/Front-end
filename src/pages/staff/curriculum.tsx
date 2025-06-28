@@ -43,7 +43,7 @@ const CurriculumPage: React.FC = () => {
     <div className={styles.sttContainer}>
       {/* Sticky Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
-        <div style={{background: 'rgba(255,255,255,0.55)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', border: '1.5px solid rgba(255,255,255,0.18)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
+        <div style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', border: '1.5px solid rgba(255,255,255,0.18)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
           <Input
             placeholder="Search by Curriculum ID or Name"
             prefix={<SearchOutlined />}
@@ -64,7 +64,7 @@ const CurriculumPage: React.FC = () => {
         </div>
       </Affix>
       {/* Curriculum Cards */}
-      <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255,255,255,0.45)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
+      <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
         {filteredCurriculums.map(curriculum => (
           <Panel
             header={
@@ -91,7 +91,7 @@ const CurriculumPage: React.FC = () => {
               </div>
             }
             key={curriculum.id}
-            style={{background: 'rgba(255,255,255,0.85)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}}
+            style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}}
           >
             {/* Timeline for 9 Semesters */}
             <div style={{display: 'grid', gridTemplateColumns: `${nodeSize + lineWidth + 18}px 1fr`, gap: 0, position: 'relative', marginLeft: 8}}>
@@ -111,7 +111,7 @@ const CurriculumPage: React.FC = () => {
                       <div style={{width: nodeSize, height: nodeSize, borderRadius: '50%', background: nodeColor, border: nodeBorder, boxShadow: '0 2px 8px #1E40AF33', zIndex: 2}} />
                     </div>
                     {/* Semester content */}
-                    <div style={{marginBottom: 12, background: 'rgba(255,255,255,0.13)', borderRadius: 12, padding: 16, boxShadow: '0 1px 6px rgba(30,64,175,0.07)', minHeight: 64}}>
+                    <div style={{marginBottom: 12, background: 'rgba(255, 255, 255, 0.90)', borderRadius: 12, padding: 16, boxShadow: '0 1px 6px rgba(30,64,175,0.07)', minHeight: 64}}>
                       <Title level={5} style={{color: '#1E40AF', marginBottom: 8}}>Semester {semesterNumber}</Title>
                       {/* Normal Subjects */}
                       <div style={{marginBottom: 8}}>

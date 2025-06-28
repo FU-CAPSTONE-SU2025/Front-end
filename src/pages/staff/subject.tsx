@@ -69,7 +69,7 @@ const SubjectPage: React.FC = () => {
     <div className={styles.sttContainer}>
       {/* Sticky Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
-        <div style={{background: 'rgba(30,58,138,0.22)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
+        <div style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
           <Input
             placeholder="Search by Subject Name or ID"
             prefix={<SearchOutlined />}
@@ -134,18 +134,18 @@ const SubjectPage: React.FC = () => {
         style={{marginBottom: 48}}
       />
       {/* Combo List Below Table */}
-      <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(30,58,138,0.22)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
+      <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
         {combos.map(combo => (
           <Panel
-            header={<span style={{fontWeight: 700, fontSize: '1.1rem', color: '#fff'}}>Combo: {combo.comboName}</span>}
+            header={<span style={{fontWeight: 700, fontSize: '1.1rem', color: '#1E40AF'}}>Combo: {combo.comboName}</span>}
             key={combo.id}
-            style={{background: 'rgba(30,58,138,0.22)', borderRadius: 16, marginBottom: 12, color: '#fff'}}
+            style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF'}}
             extra={<Button icon={<EditOutlined />} size="small" style={{borderRadius: 999, background: '#f97316', color: '#fff', border: 'none'}} onClick={(e) => { e.stopPropagation(); handleEditCombo(combo.id); }}>{'Edit'}</Button>}
           >
             <ul style={{margin: 0, paddingLeft: 20}}>
               {comboSubjects.filter(cs => cs.comboId === combo.id).map(cs => {
                 const subj = subjects.find(s => s.id === cs.subjectId);
-                return subj ? <li key={subj.id} style={{color: '#fff'}}>{subj.subjectName} ({subj.subjectCode})</li> : null;
+                return subj ? <li key={subj.id} style={{color: '#1E40AF'}}>{subj.subjectName} ({subj.subjectCode})</li> : null;
               })}
             </ul>
           </Panel>

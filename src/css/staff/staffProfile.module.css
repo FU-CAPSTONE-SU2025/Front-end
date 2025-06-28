@@ -23,7 +23,7 @@
 .card, .actionCard {
   flex: 1;
   padding: 2.2rem 2.5rem 1.5rem 2.5rem;
-  background: rgba(213, 165, 165, 0.56);
+  background: rgba(255, 255, 255, 0.90);
   border-radius: 24px;
   box-shadow: 0 12px 40px rgba(30, 64, 175, 0.13);
   backdrop-filter: blur(36px) saturate(200%);
@@ -34,7 +34,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #fff;
+  color: #1E293B;
 }
 
 .rightColumn {
@@ -45,7 +45,7 @@
 }
 
 .title {
-  color: #fff;
+  color: #1E293B;
   font-family: 'Inter', 'Geist', 'Segoe UI', Arial, sans-serif;
   font-size: 2rem;
   font-weight: 900;
@@ -71,7 +71,7 @@
 
 .description :global(.ant-descriptions-item-label) {
 
-  color: #fff !important;
+  color: #1E293B !important;
   font-family: 'Inter', 'Geist', sans-serif;
   font-weight: 800;
   padding: 0.5rem 1.3rem;
@@ -80,8 +80,8 @@
 }
 
 .description :global(.ant-descriptions-item-content) {
-  background: rgba(255,255,255,0.13);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.90);
+  color: #1E293B;
   font-family: 'Geist', 'Inter', sans-serif;
   border-radius: 0 0 8px 8px;
   padding: 0.7rem 1.2rem;
@@ -96,9 +96,9 @@
 }
 
 .actionButton {
-  background: rgba(255,255,255,0.18);
+  background: rgba(255, 255, 255, 0.90);
   border: 1.5px solid rgba(255,255,255,0.25);
-  color: #fff;
+  color: #1E293B;
   border-radius: 999px;
   font-weight: 700;
   font-size: 1.1rem;

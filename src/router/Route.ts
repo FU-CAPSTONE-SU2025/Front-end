@@ -28,10 +28,11 @@ import ComboPage from "../pages/manager/comboPage";
 import StaffTranscript from "../pages/staff/transcript";
 import CurriculumPage from "../pages/staff/curriculum";
 import ProgramPage from "../pages/staff/program";
-import SubjectPage from "../pages/staff/subject";
 import EditData from "../pages/staff/editData";
 import CurriculumDetail from '../pages/manager/curriculumDetail';
 import ComboDetail from '../pages/manager/comboDetail';
+import EditStudentTranscript from "../pages/staff/editStudentTrnascript";
+import SubjectPage from "../pages/staff/subject";
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -122,6 +123,10 @@ export const routes = createBrowserRouter([
       {
         path: "transcript",
         Component: StaffTranscript,
+      },
+      {
+        path: "editStudentTranscript/:studentId",
+        Component: EditStudentTranscript,
       },
       {
         path: "syllabus",

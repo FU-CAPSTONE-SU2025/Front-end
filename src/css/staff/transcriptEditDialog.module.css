@@ -1,0 +1,218 @@
+/* Container */
+.container {
+  padding: 2rem;
+}
+
+/* Header Styles */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.subjectTitle {
+  margin: 0 !important;
+  color: #FF914D !important;
+}
+
+.subjectDetails {
+  font-size: 1.1rem !important;
+  color: #1E40AF !important;
+}
+
+.closeButton {
+  border-radius: 12px !important;
+  background: #FF914D !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 600 !important;
+  height: 48px !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  transition: background 0.3s ease !important;
+}
+
+.closeButton:hover {
+  background: #e8822e !important;
+}
+
+/* Subject Description Card */
+.descriptionCard {
+  margin-bottom: 2rem !important;
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: rgba(255, 255, 255, 0.90) !important;
+}
+
+.descriptionTitle {
+  color: #1E40AF !important;
+}
+
+.descriptionText {
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+  color: #64748b !important;
+}
+
+/* Grade Summary Row */
+.gradeSummaryRow {
+  margin-bottom: 2rem !important;
+}
+
+.gradeCard {
+  text-align: center !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.90) !important;
+}
+
+.gradeCardOrange {
+  background: #fff7ed !important;
+  border: 1px solid #fed7aa !important;
+}
+
+.gradeCardBlue {
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.gradeCardGreen {
+  background: #f0fdf4 !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.gradeValue {
+  margin: 0 !important;
+}
+
+.gradeValueOrange {
+  color: #FF914D !important;
+}
+
+.gradeValueBlue {
+  color: #1E40AF !important;
+}
+
+.gradeValueGreen {
+  color: #16a34a !important;
+}
+
+/* Assessments Table Card */
+.assessmentsCard {
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: rgba(255, 255, 255, 0.90) !important;
+}
+
+.assessmentsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.assessmentsTitle {
+  color: #1E40AF !important;
+  margin: 0 !important;
+}
+
+.assessmentsHint {
+  color: #64748b !important;
+  font-size: 0.9rem !important;
+}
+
+.assessmentsTable {
+  margin-bottom: 1rem !important;
+}
+
+/* Score Editing */
+.scoreContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scoreInput {
+  width: 80px !important;
+}
+
+.scoreText {
+  font-weight: bold !important;
+}
+
+.editButton {
+  color: #FF914D !important;
+  padding: 0 !important;
+}
+
+.saveButton {
+  color: #22c55e !important;
+  padding: 0 !important;
+}
+
+.cancelButton {
+  color: #ef4444 !important;
+  padding: 0 !important;
+}
+
+/* Final Grade Calculation */
+.finalGradeSection {
+  background: #f8fafc !important;
+  padding: 1.5rem !important;
+  border-radius: 12px !important;
+  margin-top: 1rem !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.finalGradeLabel {
+  font-size: 1.2rem !important;
+  color: #1E40AF !important;
+  font-weight: bold !important;
+}
+
+.finalGradeValue {
+  font-size: 1.4rem !important;
+  color: #FF914D !important;
+  font-weight: bold !important;
+}
+
+.letterGrade {
+  margin-left: 12px !important;
+  color: #16a34a !important;
+  font-size: 1.1rem !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .closeButton {
+    align-self: flex-end;
+  }
+  
+  .gradeSummaryRow .ant-col {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0.5rem;
+  }
+  
+  .subjectTitle {
+    font-size: 1.5rem !important;
+  }
+  
+  .subjectDetails {
+    font-size: 1rem !important;
+  }
+}
