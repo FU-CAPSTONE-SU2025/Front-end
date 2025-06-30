@@ -356,37 +356,97 @@ const SubjectSyllabus: React.FC = () => {
     },
   ];
 
+  // Learning Materials columns with inline editing
   const materialColumns = [
-    { title: 'Material Name', dataIndex: 'material_name', key: 'material_name' },
-    { title: 'Author', dataIndex: 'author_name', key: 'author_name' },
-    { title: 'Published Date', dataIndex: 'published_date', key: 'published_date', 
-      render: (date: Date) => date?.toLocaleDateString() },
-    { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true },
+    { title: 'Material Name', dataIndex: 'material_name', key: 'material_name',
+      render: (_: any, record: SyllabusLearningMaterial) =>
+        isEditing && editingMaterialId === record.id ? (
+          <Input
+            value={materialEdit.material_name}
+            onChange={e => setMaterialEdit(me => ({ ...me, material_name: e.target.value }))}
+          />
+        ) : record.material_name
+    },
+    { title: 'Author', dataIndex: 'author_name', key: 'author_name',
+      render: (_: any, record: SyllabusLearningMaterial) =>
+        isEditing && editingMaterialId === record.id ? (
+          <Input
+            value={materialEdit.author_name}
+            onChange={e => setMaterialEdit(me => ({ ...me, author_name: e.target.value }))}
+          />
+        ) : record.author_name
+    },
+    { title: 'Published Date', dataIndex: 'published_date', key: 'published_date',
+      render: (date: Date, record: SyllabusLearningMaterial) =>
+        isEditing && editingMaterialId === record.id ? (
+          <DatePicker
+            value={materialEdit.published_date ? (typeof materialEdit.published_date === 'string' ? undefined : materialEdit.published_date as any) : undefined}
+            onChange={d => setMaterialEdit(me => ({ ...me, published_date: d ? d.toDate() : new Date() }))}
+            format="YYYY-MM-DD"
+          />
+        ) : date?.toLocaleDateString()
+    },
+    { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true,
+      render: (_: any, record: SyllabusLearningMaterial) =>
+        isEditing && editingMaterialId === record.id ? (
+          <Input
+            value={materialEdit.description}
+            onChange={e => setMaterialEdit(me => ({ ...me, description: e.target.value }))}
+          />
+        ) : record.description
+    },
+    { title: 'File/URL', dataIndex: 'filepath_or_url', key: 'filepath_or_url', ellipsis: true,
+      render: (_: any, record: SyllabusLearningMaterial) =>
+        isEditing && editingMaterialId === record.id ? (
+          <Input
+            value={materialEdit.filepath_or_url}
+            onChange={e => setMaterialEdit(me => ({ ...me, filepath_or_url: e.target.value }))}
+          />
+        ) : record.filepath_or_url
+    },
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: SyllabusLearningMaterial) => (
-        <Button
-          type="link"
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => handleDeleteItem('material', record.id)}
-        />
-      ),
+      render: (_: any, record: SyllabusLearningMaterial) =>
+        isEditing && editingMaterialId === record.id ? (
+          <>
+            <Button type="link" icon={<SaveOutlined />} onClick={saveEditMaterial} />
+            <Button type="link" icon={<DeleteOutlined />} onClick={cancelEditMaterial} />
+          </>
+        ) : isEditing ? (
+          <Button type="link" icon={<EditOutlined />} onClick={() => startEditMaterial(record)} />
+        ) : null
     },
   ];
 
+  // Learning Outcomes columns with inline editing
   const outcomeColumns = [
-    { title: 'Outcome Code', dataIndex: 'outcome_code', key: 'outcome_code' },
-    { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true },
+    { title: 'Outcome Code', dataIndex: 'outcome_code', key: 'outcome_code',
+      render: (_: any, record: SyllabusLearningOutcome) =>
+        isEditing && editingOutcomeId === record.id ? (
+          <Input
+            value={outcomeEdit.outcome_code}
+            onChange={e => setOutcomeEdit(oe => ({ ...oe, outcome_code: e.target.value }))}
+          />
+        ) : record.outcome_code
+    },
+    { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true,
+      render: (_: any, record: SyllabusLearningOutcome) =>
+        isEditing && editingOutcomeId === record.id ? (
+          <Input
+            value={outcomeEdit.description}
+            onChange={e => setOutcomeEdit(oe => ({ ...oe, description: e.target.value }))}
+          />
+        ) : record.description
+    },
     {
       title: 'Actions',
       key: 'actions',
       render: (_: any, record: SyllabusLearningOutcome) =>
         isEditing && editingOutcomeId === record.id ? (
           <>
-            <Button type="link" icon={<SaveOutlined />} onClick={() => saveEditOutcome()} />
-            <Button type="link" icon={<DeleteOutlined />} onClick={() => cancelEditOutcome()} />
+            <Button type="link" icon={<SaveOutlined />} onClick={saveEditOutcome} />
+            <Button type="link" icon={<DeleteOutlined />} onClick={cancelEditOutcome} />
           </>
         ) : isEditing ? (
           <Button type="link" icon={<EditOutlined />} onClick={() => startEditOutcome(record)} />
@@ -394,18 +454,44 @@ const SubjectSyllabus: React.FC = () => {
     },
   ];
 
+  // Sessions columns with inline editing
   const sessionColumns = [
-    { title: 'Session #', dataIndex: 'session_number', key: 'session_number' },
-    { title: 'Topic', dataIndex: 'topic', key: 'topic', ellipsis: true },
-    { title: 'Mission', dataIndex: 'mission', key: 'mission', ellipsis: true },
+    { title: 'Session #', dataIndex: 'session_number', key: 'session_number',
+      render: (_: any, record: SyllabusSession) =>
+        isEditing && editingSessionId === record.id ? (
+          <InputNumber
+            value={sessionEdit.session_number}
+            min={1}
+            onChange={v => setSessionEdit(se => ({ ...se, session_number: v ?? se.session_number ?? 1 }))}
+          />
+        ) : record.session_number
+    },
+    { title: 'Topic', dataIndex: 'topic', key: 'topic', ellipsis: true,
+      render: (_: any, record: SyllabusSession) =>
+        isEditing && editingSessionId === record.id ? (
+          <Input
+            value={sessionEdit.topic}
+            onChange={e => setSessionEdit(se => ({ ...se, topic: e.target.value }))}
+          />
+        ) : record.topic
+    },
+    { title: 'Mission', dataIndex: 'mission', key: 'mission', ellipsis: true,
+      render: (_: any, record: SyllabusSession) =>
+        isEditing && editingSessionId === record.id ? (
+          <Input
+            value={sessionEdit.mission}
+            onChange={e => setSessionEdit(se => ({ ...se, mission: e.target.value }))}
+          />
+        ) : record.mission
+    },
     {
       title: 'Actions',
       key: 'actions',
       render: (_: any, record: SyllabusSession) =>
         isEditing && editingSessionId === record.id ? (
           <>
-            <Button type="link" icon={<SaveOutlined />} onClick={() => saveEditSession()} />
-            <Button type="link" icon={<DeleteOutlined />} onClick={() => cancelEditSession()} />
+            <Button type="link" icon={<SaveOutlined />} onClick={saveEditSession} />
+            <Button type="link" icon={<DeleteOutlined />} onClick={cancelEditSession} />
           </>
         ) : isEditing ? (
           <Button type="link" icon={<EditOutlined />} onClick={() => startEditSession(record)} />
