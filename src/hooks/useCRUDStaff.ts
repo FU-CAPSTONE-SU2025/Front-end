@@ -39,7 +39,8 @@ export default function useCRUDStaff() {
     ...getStaffMutation,
     getAllStaff: getStaffMutation.mutate,
     staffList,
-    pagination
+    pagination,
+    isLoading: getStaffMutation.isPending
   }
 }
 

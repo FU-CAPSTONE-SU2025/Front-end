@@ -40,7 +40,8 @@ export default function useCRUDStudent() {
     ...getStudentMutation,
     getAllStudent: getStudentMutation.mutate,
     studentList,
-    pagination
+    pagination,
+    isLoading: getStudentMutation.isPending
   }
 }
 

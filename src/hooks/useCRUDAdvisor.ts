@@ -42,5 +42,6 @@ export default function useCRUDAdvisor() {
     getAllAdvisor: getAdvisorMutation.mutate,
     advisorList,
     pagination,
+    isLoading: getAdvisorMutation.isPending
   };
 } 

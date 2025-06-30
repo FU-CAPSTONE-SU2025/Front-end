@@ -19,7 +19,7 @@ type DataProps = {
     }[]
     data: any[]
     rowSelection: any
-    pagination?: PaginationInfo
+    pagination?: PaginationInfo | null
     onPageChange?: (page: number, pageSize: number) => void
     onRow?: (record: any, rowIndex?: number) => React.HTMLAttributes<HTMLElement>
     loading?: boolean

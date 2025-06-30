@@ -43,6 +43,10 @@ const SubjectPage: React.FC = () => {
     navigate(`/staff/editData/combo/${comboId}`);
   };
 
+  const handleCreateSyllabus = (subjectId: number) => {
+    navigate(`/staff/subject/${subjectId}/syllabus`);
+  };
+
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', align: 'left' as 'left' },
     { title: 'Subject Name', dataIndex: 'subjectName', key: 'subjectName', align: 'left' as 'left' },
@@ -54,13 +58,25 @@ const SubjectPage: React.FC = () => {
       key: 'actions',
       align: 'center' as 'center',
       render: (_: any, record: any) => (
-        <Button
-          type="link"
-          icon={<EditOutlined style={{ color: '#f97316' }} />}
-          onClick={() => handleEditSubject(record.id)}
-          className={styles.sttFreshEditButton}
-          style={{ color: '#f97316' }}
-        />
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+          <Button
+            type="link"
+            icon={<EditOutlined style={{ color: '#f97316' }} />}
+            onClick={() => handleEditSubject(record.id)}
+            className={styles.sttFreshEditButton}
+            style={{ color: '#f97316' }}
+            title="Edit Subject"
+          />
+          <Button
+            type="link"
+            icon={<PlusOutlined style={{ color: '#1E40AF' }} />}
+            onClick={() => handleCreateSyllabus(record.id)}
+            style={{ color: '#1E40AF' }}
+            title="Create Syllabus"
+          >
+            Syllabus
+          </Button>
+        </div>
       ),
     },
   ];

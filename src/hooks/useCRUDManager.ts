@@ -42,5 +42,6 @@ export default function useCRUDManager() {
     getAllManager: getManagerMutation.mutate,
     managerList,
     pagination,
+    isLoading: getManagerMutation.isPending
   };
 } 

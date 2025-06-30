@@ -43,6 +43,35 @@ export const HEADER_CONFIGS = {
       'Start Work Date': 'startWorkAt'
     }
   },
+  ADVISOR: {
+    headers: ['First Name', 'Last Name', 'Email', 'Password', 'Address', 'Phone', 'Date of Birth', 'Specialization', 'Years of Experience'],
+    fieldMap: {
+      'First Name': 'firstName',
+      'Last Name': 'lastName',
+      'Email': 'email',
+      'Password': 'password',
+      'Address': 'address',
+      'Phone': 'phone',
+      'Date of Birth': 'dateOfBirth',
+      'Specialization': 'specialization',
+      'Years of Experience': 'yearsOfExperience'
+    }
+  },
+  MANAGER: {
+    headers: ['First Name', 'Last Name', 'Email', 'Password', 'Address', 'Phone', 'Date of Birth', 'Department', 'Position', 'Start Work Date'],
+    fieldMap: {
+      'First Name': 'firstName',
+      'Last Name': 'lastName',
+      'Email': 'email',
+      'Password': 'password',
+      'Address': 'address',
+      'Phone': 'phone',
+      'Date of Birth': 'dateOfBirth',
+      'Department': 'department',
+      'Position': 'position',
+      'Start Work Date': 'startWorkAt'
+    }
+  },
   CURRICULUM: {
     headers: ['Program Code', 'Curriculum Code', 'Curriculum Name', 'Effective Date'],
     fieldMap: {

@@ -31,8 +31,9 @@ import ProgramPage from "../pages/staff/program";
 import EditData from "../pages/staff/editData";
 import CurriculumDetail from '../pages/manager/curriculumDetail';
 import ComboDetail from '../pages/manager/comboDetail';
-import EditStudentTranscript from "../pages/staff/editStudentTrnascript";
+import EditStudentTranscript from "../pages/staff/editStudentTranscript";
 import SubjectPage from "../pages/staff/subject";
+import SubjectSyllabus from "../pages/staff/subjectSyllabus";
 
 export const routes = createBrowserRouter([
   // Usage: 
@@ -148,6 +149,10 @@ export const routes = createBrowserRouter([
         path: "editData/:type/:id?",
         Component: EditData, 
       },
+      {
+        path: "subject/:subjectId/syllabus/:syllabusId?",
+        Component: SubjectSyllabus,
+      }
       
     ]
 

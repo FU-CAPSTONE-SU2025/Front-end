@@ -227,7 +227,7 @@ const ManagerList: React.FC = () => {
                   >
                     <Option value="">Select Date</Option>
                     {[...new Set(managerList.map(m => m.startWorkAt))].sort().map(date => (
-                      <Option key={date} value={date}>{date}</Option>
+                      <Option key={String(date)} value={String(date)}>{String(date)}</Option>
                     ))}
                   </Select>
                 )}
@@ -302,7 +302,7 @@ const ManagerList: React.FC = () => {
             <DataImport 
               onClose={() => setIsImportOpen(false)} 
               onDataImported={handleDataImported}
-              headerConfig="STAFF"
+              headerConfig="MANAGER"
               allowMultipleRows={true}
               dataType="manager"
             />
