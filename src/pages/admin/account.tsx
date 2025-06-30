@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import styles from '../../css/admin/account.module.css';
@@ -6,7 +5,7 @@ import AccountCounter from '../../components/admin/accountCounter';
 import { DatePicker } from 'antd';
 import dayjs from 'dayjs';
 import { validateEmail, validatePhone } from '../../components/common/validation';
-import DataImport from '../../components/admin/dataImport';
+import DataImport from '../../components/common/dataImport';
 import { jwtDecode } from 'jwt-decode';
 import { getAuthState } from '../../hooks/useAuths';
 import { AccountProps, ActiveCategoriesProp } from '../../interfaces/IAccount';
@@ -96,15 +95,18 @@ const Profile: React.FC = () => {
     setIsEditing(true);
   };
 
-  const handleDataImported = (data: { [key: string]: string }) => {
-    setFirstName(data.firstName || firstName);
-    setLastName(data.lastName || lastName);
-    setEmail(data.email || email);
-    setPassword(data.password || password);
-    setAddress(data.address || address);
-    setPhone(data.phone || phone);
-    if (data.dateOfBirth) {
-      setSelectedDate(dayjs(data.dateOfBirth).toDate());
+  const handleDataImported = (data: { [key: string]: string }[]) => {
+    const firstRecord = data[0]; // Take the first record for profile editing
+    if (firstRecord) {
+      setFirstName(firstRecord.firstName || firstName);
+      setLastName(firstRecord.lastName || lastName);
+      setEmail(firstRecord.email || email);
+      setPassword(firstRecord.password || password);
+      setAddress(firstRecord.address || address);
+      setPhone(firstRecord.phone || phone);
+      if (firstRecord.dateOfBirth) {
+        setSelectedDate(dayjs(firstRecord.dateOfBirth).toDate());
+      }
     }
   };
 
@@ -237,7 +239,13 @@ const Profile: React.FC = () => {
         </motion.div>
           {isImportOpen && (
           <div className={styles.modalOverlay}>
-            <DataImport onClose={() => {setIsImportOpen(false);setIsEditing(true)}} onDataImported={handleDataImported} />
+            <DataImport 
+              onClose={() => {setIsImportOpen(false);setIsEditing(true)}} 
+              onDataImported={handleDataImported}
+              headerConfig="ADMIN_PROFILE"
+              allowMultipleRows={false}
+              dataType="admin profile"
+            />
           </div>
         )}
       </div>

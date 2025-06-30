@@ -4,7 +4,7 @@ import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
 import { managers } from '../../../data/mockManager';
-import DataImport from '../../components/admin/dataImport';
+import DataImport from '../../components/common/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
 import useActiveUserData from '../../hooks/useActiveUserData';
@@ -61,18 +61,12 @@ const ManagerList: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleDataImported = (data: { [key: string]: string }) => {
-    const newManager = {
-      Id: `${['SE', 'SS', 'CE'][Math.floor(Math.random() * 3)]}${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-      Email: data.email || '',
-      Name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
-      PhoneNumber: data.phone || '',
-      Address: data.address || '',
-      Campus: ['HCMC Campus', 'Ha Noi Campus', 'Da Nang Campus'][Math.floor(Math.random() * 3)],
-      AddDated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('/').join('/'),
-    };
-    managers.push(newManager);
+  const handleDataImported = (data: { [key: string]: string }[]) => {
+    console.log('Imported manager data:', data);
+    // Here you would typically send the data to your API
     setIsImportOpen(false);
+    // Optionally refresh the data
+    refetch();
   };
 
   const handleFilterChange = (value: string) => {
@@ -294,7 +288,13 @@ const ManagerList: React.FC = () => {
         </motion.div>
         {isImportOpen && (
           <div className={styles.modalOverlay}>
-            <DataImport onClose={() => setIsImportOpen(false)} onDataImported={handleDataImported} />
+            <DataImport 
+              onClose={() => setIsImportOpen(false)} 
+              onDataImported={handleDataImported}
+              headerConfig="STAFF"
+              allowMultipleRows={true}
+              dataType="manager"
+            />
           </div>
         )}
       </div>

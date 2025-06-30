@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
-import DataImport from '../../components/admin/dataImport';
+import DataImport from '../../components/common/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
 import useActiveUserData from '../../hooks/useActiveUserData';
@@ -59,10 +59,17 @@ const StaffList: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  // Remove or comment out mock staff creation logic
-  // const handleDataImported = (data: { [key: string]: string }) => {
-  //   // This is for mock data only. Remove or refactor if needed for real API.
-  // };
+  // Handle imported staff data
+  const handleDataImported = (data: { [key: string]: string }[]) => {
+    console.log('Imported staff data:', data);
+    // Here you would typically send the data to your API
+    // For now, we'll just close the import modal
+    setIsImportOpen(false);
+    
+    // Optionally refresh the staff list
+    refetch();
+    getAllStaff();
+  };
 
   const handleFilterChange = (value: string) => {
     setFilterType(value);
@@ -286,7 +293,13 @@ const StaffList: React.FC = () => {
         </motion.div>
         {isImportOpen && (
           <div className={styles.modalOverlay}>
-            <DataImport onClose={() => setIsImportOpen(false)} onDataImported={() => setIsImportOpen(false)} />
+            <DataImport 
+              onClose={() => setIsImportOpen(false)} 
+              onDataImported={handleDataImported}
+              headerConfig="STAFF"
+              allowMultipleRows={true}
+              dataType="staff"
+            />
           </div>
         )}
       </div>

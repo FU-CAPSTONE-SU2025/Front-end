@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
 import styles from '../../css/admin/students.module.css';
-import DataImport from '../../components/admin/dataImport';
+import DataImport from '../../components/common/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
 import { useNavigate } from 'react-router';
@@ -68,10 +68,15 @@ const StudentList: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleDataImported = (data: { [key: string]: string }) => {
-   // TBA
-    // studentList.push(newStudent);
-    // setIsImportOpen(false);
+  const handleDataImported = (data: { [key: string]: string }[]) => {
+    console.log('Imported student data:', data);
+    // Here you would typically send the data to your API
+    // For now, we'll just close the import modal
+    setIsImportOpen(false);
+    
+    // Optionally refresh the student list
+    refetch();
+    getAllStudent();
   };
 
   const handleFilterChange = (value: string) => {
@@ -294,7 +299,13 @@ const columns = [
         </motion.div>
         {isImportOpen && (
           <div className={styles.modalOverlay}>
-            <DataImport onClose={() => setIsImportOpen(false)} onDataImported={handleDataImported} />
+            <DataImport 
+              onClose={() => setIsImportOpen(false)} 
+              onDataImported={handleDataImported}
+              headerConfig="STUDENT"
+              allowMultipleRows={true}
+              dataType="student"
+            />
           </div>
         )}
       </div>

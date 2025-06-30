@@ -49,6 +49,21 @@
   word-wrap: break-word;
 }
 
+.expectedHeaders {
+  width: 80%;
+  text-align: center;
+  color: #4B5563;
+  font-size: 14px;
+  font-family: 'Geist', sans-serif;
+  font-weight: 400;
+  line-height: 18px;
+  word-wrap: break-word;
+  padding: 10px;
+  background: rgba(249, 250, 251, 0.8);
+  border-radius: 8px;
+  border: 1px solid #D1D5DB;
+}
+
 .dropIcon {
   width: 150px;
   height: 150px;

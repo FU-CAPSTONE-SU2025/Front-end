@@ -5,10 +5,11 @@
  */
 import React, { useState } from 'react';
 import { Input, Button, Collapse, Typography, Affix, Space } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined, EditOutlined, ImportOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { curriculums, subjects, combos, curriculumSubjects, comboSubjects } from '../../data/schoolData';
 import { useSearchParams, useNavigate } from 'react-router';
+import DataImport from '../../components/common/dataImport';
 
 const { Panel } = Collapse;
 const { Title } = Typography;
@@ -21,6 +22,7 @@ const lineColor = 'rgba(30,64,175,0.18)';
 
 const CurriculumPage: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   React.useEffect(() => {
@@ -37,6 +39,17 @@ const CurriculumPage: React.FC = () => {
 
   const handleEditCurriculum = (curriculumId: number) => {
     navigate(`/staff/editData/curriculum/${curriculumId}`);
+  };
+
+  const handleImportCurriculum = () => {
+    setIsImportOpen(true);
+  };
+
+  const handleDataImported = (data: { [key: string]: string }[]) => {
+    console.log('Imported curriculum data:', data);
+    // Here you would typically send the data to your API
+    setIsImportOpen(false);
+    // You could also update the local state or refresh data here
   };
 
   return (
@@ -60,6 +73,14 @@ const CurriculumPage: React.FC = () => {
             onClick={handleAddCurriculum}
           >
             Add Curriculum
+          </Button>
+          <Button 
+            icon={<ImportOutlined />} 
+            size="large" 
+            style={{borderRadius: 999}}
+            onClick={handleImportCurriculum}
+          >
+            Import Curricula
           </Button>
         </div>
       </Affix>
@@ -159,6 +180,17 @@ const CurriculumPage: React.FC = () => {
           </Panel>
         ))}
       </Collapse>
+      
+      {/* Data Import Modal */}
+      {isImportOpen && (
+        <DataImport 
+          onClose={() => setIsImportOpen(false)} 
+          onDataImported={handleDataImported}
+          headerConfig="CURRICULUM"
+          allowMultipleRows={true}
+          dataType="curriculum"
+        />
+      )}
     </div>
   );
 };
