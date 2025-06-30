@@ -5,7 +5,6 @@ import { FetchAdvisorList } from '../api/advisor/AdvisorAPI';
 interface PaginationParams {
   pageNumber: number;
   pageSize: number;
-  searchQuery?: string;
   filterType?: string;
   filterValue?: string;
 }
@@ -16,7 +15,7 @@ export default function useCRUDAdvisor() {
       const data = await FetchAdvisorList(
         params.pageNumber,
         params.pageSize,
-        params.searchQuery,
+        undefined, // searchQuery removed - will be handled client-side
         params.filterType,
         params.filterValue
       );

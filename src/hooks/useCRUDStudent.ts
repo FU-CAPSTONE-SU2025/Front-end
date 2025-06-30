@@ -6,7 +6,6 @@ import { pagedStudentData, StudentBase } from '../interfaces/IStudent';
 interface PaginationParams {
   pageNumber: number;
   pageSize: number;
-  searchQuery?: string;
   filterType?: string;
   filterValue?: string;
 }
@@ -17,7 +16,7 @@ export default function useCRUDStudent() {
       const data = await GetAllStudent(
         params.pageNumber, 
         params.pageSize, 
-        params.searchQuery, 
+        undefined, // searchQuery removed - will be handled client-side
         params.filterType, 
         params.filterValue
       );

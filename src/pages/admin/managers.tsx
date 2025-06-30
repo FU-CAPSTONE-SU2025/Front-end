@@ -3,23 +3,14 @@ import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
-import { managers } from '../../../data/mockManager';
 import DataImport from '../../components/common/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
 import useActiveUserData from '../../hooks/useActiveUserData';
+import useCRUDManager from '../../hooks/useCRUDManager';
+import { ManagerBase } from '../../interfaces/IManager';
 
 const { Option } = Select;
-
-interface Manager {
-  Id: string;
-  Email: string;
-  Name: string;
-  PhoneNumber: string;
-  Address: string;
-  Campus: string;
-  AddDated: string;
-}
 
 const ManagerList: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
@@ -28,28 +19,32 @@ const ManagerList: React.FC = () => {
   const [filterValue, setFilterValue] = useState<string>('');
   const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
   const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
-    const { categorizedData, refetch } = useActiveUserData();
-  const managersPerPage = 10;
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  
+  const { categorizedData, refetch } = useActiveUserData();
+  const { getAllManager, managerList, pagination, isLoading } = useCRUDManager();
   const nav = useNavigate();
-  useEffect(()=>{
-    refetch()
-  },[])
-  // Filtering logic - only applied to the displayed managers
-  const filteredManagers = managers.filter(manager => {
-    const matchesSearch = manager.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          manager.Id.toLowerCase().includes(searchQuery.toLowerCase());
-    let matchesFilter = true;
 
-    if (filterType === 'major') {
-      matchesFilter = manager.Id.startsWith(filterValue);
-    } else if (filterType === 'campus') {
-      matchesFilter = manager.Campus === filterValue;
-    } else if (filterType === 'date') {
-      matchesFilter = manager.AddDated === filterValue;
-    }
+  // Load initial data
+  useEffect(() => {
+    refetch();
+    loadManagerData();
+  }, []);
 
-    return matchesSearch && matchesFilter;
-  });
+  // Load data when pagination or filters change (search is now client-side)
+  useEffect(() => {
+    loadManagerData();
+  }, [currentPage, pageSize, filterType, filterValue]);
+
+  const loadManagerData = () => {
+    getAllManager({
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      filterType: filterType || undefined,
+      filterValue: filterValue || undefined
+    });
+  };
 
   // Animation variants
   const cardVariants = {
@@ -63,19 +58,33 @@ const ManagerList: React.FC = () => {
 
   const handleDataImported = (data: { [key: string]: string }[]) => {
     console.log('Imported manager data:', data);
-    // Here you would typically send the data to your API
     setIsImportOpen(false);
-    // Optionally refresh the data
+    
+    // Refresh the manager list
     refetch();
+    loadManagerData();
   };
 
   const handleFilterChange = (value: string) => {
     setFilterType(value);
     setFilterValue('');
+    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   const handleFilterValueChange = (value: string) => {
     setFilterValue(value);
+    setCurrentPage(1); // Reset to first page when filter value changes
+  };
+
+  // Handle search change (client-side, no need to reset page or reload data)
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page for client-side pagination
+  };
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
   };
 
   const handleDeleteModeToggle = () => {
@@ -91,10 +100,9 @@ const ManagerList: React.FC = () => {
       okType: 'danger',
       cancelText: 'Cancel',
       onOk: () => {
-        selectedManagers.forEach(id => {
-          const index = managers.findIndex(manager => manager.Id === id);
-          if (index !== -1) managers.splice(index, 1);
-        });
+        // Here you would typically call the API to delete the selected managers
+        // For now, we'll just refresh the data
+        loadManagerData();
         setSelectedManagers([]);
         setIsDeleteMode(false);
       },
@@ -111,9 +119,9 @@ const ManagerList: React.FC = () => {
   };
 
   // Redirect to edit page when a manager row is clicked
-  const handleRowClick = (data: Manager) => {
+  const handleRowClick = (data: ManagerBase) => {
     if (!isDeleteMode) {
-      nav(`/admin/edit/manager/${data.Id}`);
+      nav(`/admin/edit/manager/${data.id}`);
     }
   };
 
@@ -124,24 +132,25 @@ const ManagerList: React.FC = () => {
 
   // Table columns
   const columns = [
-    { title: 'Id', dataIndex: 'Id', key: 'Id', width: 100 },
-    { title: 'Email', dataIndex: 'Email', key: 'Email', width: 200 },
-    { title: 'Name', dataIndex: 'Name', key: 'Name', width: 150 },
-    { title: 'Phone Number', dataIndex: 'PhoneNumber', key: 'PhoneNumber', width: 120 },
-    { title: 'Address', dataIndex: 'Address', key: 'Address', width: 200 },
-    { title: 'Campus', dataIndex: 'Campus', key: 'Campus', width: 120 },
-    { title: 'Added', dataIndex: 'AddDated', key: 'AddDated', width: 100 },
+    { title: 'Id', dataIndex: 'id', key: 'id', width: 100 },
+    { title: 'Email', dataIndex: 'email', key: 'email', width: 200 },
+    { title: 'Name', key: 'name', width: 150, render: (_: any, record: ManagerBase) => `${record.firstName} ${record.lastName}` },
+    { title: 'Phone', dataIndex: 'phone', key: 'phone', width: 120 },
+    { title: 'Address', dataIndex: 'address', key: 'address', width: 200 },
+    { title: 'Department', dataIndex: 'department', key: 'department', width: 150 },
+    { title: 'Position', dataIndex: 'position', key: 'position', width: 120 },
+    { title: 'Start Date', key: 'startDate', width: 120, render: (_: any, record: ManagerBase) => record.startWorkAt ? new Date(record.startWorkAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '' },
   ];
 
   // Row selection for delete mode
   const rowSelection = isDeleteMode
     ? {
-        selectedRowKeys: selectedManagers,
+        selectedRowKeys: selectedManagers.map(Number),
         onChange: (selectedRowKeys: React.Key[]) => {
-          setSelectedManagers(selectedRowKeys as string[]);
+          setSelectedManagers(selectedRowKeys.map(String));
         },
-        getCheckboxProps: (record: Manager) => ({
-          name: record.Id,
+        getCheckboxProps: (record: ManagerBase) => ({
+          name: String(record.id),
         }),
       }
     : undefined;
@@ -169,9 +178,7 @@ const ManagerList: React.FC = () => {
                 <Input
                   placeholder="Search Name or Id..."
                   value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                  }}
+                  onChange={handleSearchChange}
                   style={{ width: 200 }}
                 />
                 <Select
@@ -219,7 +226,7 @@ const ManagerList: React.FC = () => {
                     placeholder="Select Date"
                   >
                     <Option value="">Select Date</Option>
-                    {[...new Set(managers.map(m => m.AddDated))].sort().map(date => (
+                    {[...new Set(managerList.map(m => m.startWorkAt))].sort().map(date => (
                       <Option key={date} value={date}>{date}</Option>
                     ))}
                   </Select>
@@ -250,15 +257,19 @@ const ManagerList: React.FC = () => {
                 ))}
               </div>
             </div>
-            {/* External Table display, pre-styling and ease-to-custom */}
+            {/* External Table display with server-side pagination and client-side search */}
             <DataTable
               columns={columns}
-              data={filteredManagers}
+              data={managerList}
               rowSelection={rowSelection}
-              dataPerPage={managersPerPage}
-              onRow={(record: Manager) => ({
+              pagination={pagination}
+              onPageChange={handlePageChange}
+              onRow={(record: ManagerBase) => ({
                 onClick: () => handleRowClick(record),
               })}
+              loading={isLoading}
+              searchQuery={searchQuery}
+              searchFields={['id', 'firstName', 'lastName', 'email', 'department', 'position']}
             />
             {isDeleteMode && (
               <motion.div

@@ -1,6 +1,6 @@
 import { Table } from 'antd'
 import styles from '../../css/dataTable.module.css'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 interface PaginationInfo {
   current: number;
@@ -23,10 +23,28 @@ type DataProps = {
     onPageChange?: (page: number, pageSize: number) => void
     onRow?: (record: any, rowIndex?: number) => React.HTMLAttributes<HTMLElement>
     loading?: boolean
+    searchQuery?: string
+    searchFields?: string[] // Fields to search in (e.g., ['firstName', 'lastName', 'id'])
 }
 
-export default function DataTable({columns, data, rowSelection, pagination, onPageChange, onRow, loading}: DataProps) {
+export default function DataTable({columns, data, rowSelection, pagination, onPageChange, onRow, loading, searchQuery, searchFields}: DataProps) {
   const [currentPage, setCurrentPage] = useState<number>(pagination?.current || 1);
+  
+  // Client-side search filtering
+  const filteredData = useMemo(() => {
+    if (!searchQuery || !searchFields || searchFields.length === 0) {
+      return data;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    return data.filter(item => {
+      return searchFields.some(field => {
+        const value = item[field];
+        if (value === null || value === undefined) return false;
+        return String(value).toLowerCase().includes(query);
+      });
+    });
+  }, [data, searchQuery, searchFields]);
   
   const handlePageChange = (page: number, pageSize: number) => {
     setCurrentPage(page);
@@ -35,24 +53,41 @@ export default function DataTable({columns, data, rowSelection, pagination, onPa
     }
   };
 
+  // If we have search active, use client-side pagination
+  const isClientSidePagination = searchQuery && searchQuery.trim() !== '';
+  
+  const paginationConfig = isClientSidePagination 
+    ? {
+        current: currentPage,
+        pageSize: pagination?.pageSize || 10,
+        total: filteredData.length,
+        onChange: handlePageChange,
+        showSizeChanger: false,
+        showQuickJumper: true,
+        showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} of ${total} items (filtered)`,
+      }
+    : pagination 
+    ? {
+        current: pagination.current,
+        pageSize: pagination.pageSize,
+        total: pagination.total,
+        onChange: handlePageChange,
+        showSizeChanger: false,
+        showQuickJumper: true,
+        showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} of ${total} items`,
+      }
+    : false;
+
   return (
     <>
           <Table
               className={styles.table}
               columns={columns}
-              dataSource={data}
+              dataSource={isClientSidePagination ? filteredData : data}
               rowSelection={rowSelection}
               onRow={onRow}
               loading={loading}
-              pagination={pagination ? {
-                current: pagination.current,
-                pageSize: pagination.pageSize,
-                total: pagination.total,
-                onChange: handlePageChange,
-                showSizeChanger: false,
-                showQuickJumper: true,
-                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-              } : false}
+              pagination={paginationConfig}
               rowKey="Id"
               bordered
               size="middle"

@@ -32,16 +32,15 @@ const StaffList: React.FC = () => {
     loadStaffData();
   }, []);
 
-  // Load data when pagination, search, or filters change
+  // Load data when pagination or filters change (search is now client-side)
   useEffect(() => {
     loadStaffData();
-  }, [currentPage, pageSize, searchQuery, filterType, filterValue]);
+  }, [currentPage, pageSize, filterType, filterValue]);
 
   const loadStaffData = () => {
     getAllStaff({
       pageNumber: currentPage,
       pageSize: pageSize,
-      searchQuery: searchQuery || undefined,
       filterType: filterType || undefined,
       filterValue: filterValue || undefined
     });
@@ -78,9 +77,10 @@ const StaffList: React.FC = () => {
     setCurrentPage(1); // Reset to first page when filter value changes
   };
 
+  // Handle search change (client-side, no need to reset page or reload data)
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page when search changes
+    setCurrentPage(1); // Reset to first page for client-side pagination
   };
 
   const handlePageChange = (page: number, size: number) => {
@@ -257,7 +257,7 @@ const StaffList: React.FC = () => {
                 ))}
               </div>
             </div>
-            {/* External Table display with server-side pagination */}
+            {/* External Table display with server-side pagination and client-side search */}
             <DataTable
               columns={columns}
               data={staffList}
@@ -268,6 +268,8 @@ const StaffList: React.FC = () => {
                 onClick: () => handleRowClick(record),
               })}
               loading={isLoading}
+              searchQuery={searchQuery}
+              searchFields={['id', 'firstName', 'lastName', 'email']}
             />
             {isDeleteMode && (
               <motion.div

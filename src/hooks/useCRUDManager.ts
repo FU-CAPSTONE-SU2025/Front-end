@@ -5,7 +5,6 @@ import { FetchManagerList } from '../api/manager/ManagerAPI';
 interface PaginationParams {
   pageNumber: number;
   pageSize: number;
-  searchQuery?: string;
   filterType?: string;
   filterValue?: string;
 }
@@ -16,7 +15,7 @@ export default function useCRUDManager() {
       const data = await FetchManagerList(
         params.pageNumber,
         params.pageSize,
-        params.searchQuery,
+        undefined, // searchQuery removed - will be handled client-side
         params.filterType,
         params.filterValue
       );

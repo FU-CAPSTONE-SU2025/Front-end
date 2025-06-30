@@ -5,18 +5,17 @@ import { FetchStaffList } from '../api/staff/StaffAPI';
 interface PaginationParams {
   pageNumber: number;
   pageSize: number;
-  searchQuery?: string;
   filterType?: string;
   filterValue?: string;
 }
 
 export default function useCRUDStaff() {
-   const getStaffMutation = useMutation<pagedStaffData|null, unknown, PaginationParams>({
+  const getStaffMutation = useMutation<pagedStaffData | null, unknown, PaginationParams>({
     mutationFn: async (params: PaginationParams) => {
       const data = await FetchStaffList(
         params.pageNumber, 
         params.pageSize, 
-        params.searchQuery, 
+        undefined, // searchQuery removed - will be handled client-side
         params.filterType, 
         params.filterValue
       );

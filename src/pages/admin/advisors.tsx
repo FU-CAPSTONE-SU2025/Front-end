@@ -32,16 +32,15 @@ const AdvisorList: React.FC = () => {
     loadAdvisorData();
   }, []);
 
-  // Load data when pagination, search, or filters change
+  // Load data when pagination or filters change (search is now client-side)
   useEffect(() => {
     loadAdvisorData();
-  }, [currentPage, pageSize, searchQuery, filterType, filterValue]);
+  }, [currentPage, pageSize, filterType, filterValue]);
 
   const loadAdvisorData = () => {
     getAllAdvisor({
       pageNumber: currentPage,
       pageSize: pageSize,
-      searchQuery: searchQuery || undefined,
       filterType: filterType || undefined,
       filterValue: filterValue || undefined
     });
@@ -77,9 +76,10 @@ const AdvisorList: React.FC = () => {
     setCurrentPage(1); // Reset to first page when filter value changes
   };
 
+  // Handle search change (client-side, no need to reset page or reload data)
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page when search changes
+    setCurrentPage(1); // Reset to first page for client-side pagination
   };
 
   const handlePageChange = (page: number, size: number) => {
@@ -253,6 +253,8 @@ const AdvisorList: React.FC = () => {
                 onClick: () => handleRowClick(record),
               })}
               loading={isLoading}
+              searchQuery={searchQuery}
+              searchFields={['id', 'firstName', 'lastName', 'email', 'specialization']}
             />
             {isDeleteMode && (
               <motion.div
