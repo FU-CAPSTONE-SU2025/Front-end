@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { Button, Modal, Form, Input, Select, message } from 'antd';
+import { Button, message } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import ManagerTable from '../../components/manager/managerTable';
 import StatusBadge from '../../components/manager/statusBadge';
 import SearchBar from '../../components/common/searchBar';
 import { useNavigate } from 'react-router-dom';
-
-const { Option } = Select;
 
 // Mock data for combos
 const initialCombos = [
@@ -27,20 +25,11 @@ const initialCombos = [
   status: ['pending', 'active', 'in-active'][idx % 3] as 'pending' | 'active' | 'in-active',
 }));
 
-const statusOptions = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'active', label: 'Active' },
-  { value: 'in-active', label: 'Inactive' },
-];
-
 const pageSize = 5;
 
 const ComboPage: React.FC = () => {
   const [combos, setCombos] = useState(initialCombos);
   const [currentPage, setCurrentPage] = useState(1);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
-  const [form] = Form.useForm();
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
@@ -92,41 +81,16 @@ const ComboPage: React.FC = () => {
 
   // CRUD handlers
   const onAdd = () => {
-    setEditing(null);
-    form.resetFields();
-    setModalOpen(true);
+    navigate('/manager/combo/add');
   };
 
   const onEdit = (record: any) => {
-    setEditing(record);
-    form.setFieldsValue(record);
-    setModalOpen(true);
+    navigate(`/manager/combo/edit/${record.id}`);
   };
 
   const onDelete = (id: number) => {
     setCombos(combos.filter((c) => c.id !== id));
     message.success('Deleted combo!');
-  };
-
-  const handleOk = () => {
-    form.validateFields().then((values) => {
-      if (editing) {
-        setCombos(combos.map((c) => (c.id === editing.id ? { ...editing, ...values } : c)));
-        message.success('Updated successfully!');
-      } else {
-        const newId = Math.max(...combos.map((c) => c.id)) + 1;
-        setCombos([
-          ...combos,
-          {
-            ...values,
-            id: newId,
-            status: values.status,
-          },
-        ]);
-        message.success('Added successfully!');
-      }
-      setModalOpen(false);
-    });
   };
 
   return (
@@ -156,70 +120,10 @@ const ComboPage: React.FC = () => {
           currentPage={currentPage}
           total={filtered.length}
           onPageChange={setCurrentPage}
+          onEdit={onEdit}
           onDelete={(row) => onDelete(row.id)}
         />
       </div>
-      <AnimatePresence>
-        {modalOpen && (
-          <Modal
-            open={modalOpen}
-            title={editing ? 'Update Combo' : 'Add Combo'}
-            onCancel={() => setModalOpen(false)}
-            onOk={handleOk}
-            okText={editing ? 'Update' : 'Add'}
-            cancelText="Cancel"
-            centered
-            footer={null}
-            width={520}
-            className="rounded-xl"
-            destroyOnClose
-            style={{ background: '#fff', borderRadius: 16 }}
-            bodyStyle={{ background: '#fff', borderRadius: 16 }}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 40 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Form
-                form={form}
-                layout="vertical"
-                initialValues={{ status: 'pending' }}
-                onFinish={handleOk}
-                className="space-y-2"
-              >
-                <Form.Item
-                  name="name"
-                  label="Combo Name"
-                  rules={[{ required: true, message: 'Please enter combo name!' }]}
-                >
-                  <Input className="!rounded-lg" placeholder="Enter combo name" />
-                </Form.Item>
-                <Form.Item
-                  name="status"
-                  label="Status"
-                  rules={[{ required: true, message: 'Please select status!' }]}
-                >
-                  <Select className="!rounded-lg">
-                    {statusOptions.map((opt) => (
-                      <Option key={opt.value} value={opt.value}>{opt.label}</Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button onClick={() => setModalOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="primary" htmlType="submit">
-                    {editing ? 'Update' : 'Add'}
-                  </Button>
-                </div>
-              </Form>
-            </motion.div>
-          </Modal>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

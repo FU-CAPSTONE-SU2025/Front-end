@@ -25,6 +25,8 @@ import StaffLayout from "../components/staff/staffLayout";
 import ManagerLayout from "../components/manager/managerLayout";
 import HomePage from '../pages/manager/home';
 import ComboPage from "../pages/manager/comboPage";
+import AddComboPage from "../pages/manager/addCombo";
+import EditComboPage from "../pages/manager/editCombo";
 import StaffTranscript from "../pages/staff/transcript";
 import CurriculumPage from "../pages/staff/curriculum";
 import ProgramPage from "../pages/staff/program";
@@ -34,11 +36,6 @@ import CurriculumDetail from '../pages/manager/curriculumDetail';
 import ComboDetail from '../pages/manager/comboDetail';
 
 export const routes = createBrowserRouter([
-  // Usage: 
-  // protectedLoader is used to protect routes based on user roles.
-  // The first argument is an array of allowed roles.
-  // If the user does not have the required role, they will be redirected to the login page or a 404 page.
-  // Example: protectedLoader(['1', '2']) means only users with roles '1' or '2' can access the route.
   {
     path: "/admin",
     Component: AdminLayout,
@@ -167,6 +164,14 @@ export const routes = createBrowserRouter([
       {
         path: "combo",
         Component: ComboPage,
+      },
+      {
+        path: "combo/add",
+        Component: AddComboPage,
+      },
+      {
+        path: "combo/edit/:id",
+        Component: EditComboPage,
       },
       {
         path: "curriculum/:id",
