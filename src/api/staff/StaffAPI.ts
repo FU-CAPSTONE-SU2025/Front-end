@@ -1,4 +1,4 @@
- import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
+import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
 import { TokenProps } from "../../interfaces/IAuthen";
@@ -57,10 +57,25 @@ export const RegisterMultipleStaff = async (data: AccountPropsCreate[]):Promise<
     }
 }
 
-export const FetchStaffList = async ():Promise<pagedStaffData|null> => {
+export const FetchStaffList = async (pageNumber: number = 1, pageSize: number = 10, searchQuery?: string, filterType?: string, filterValue?: string):Promise<pagedStaffData|null> => {
+    // Build query parameters
+    const params = new URLSearchParams({
+        pageNumber: pageNumber.toString(),
+        pageSize: pageSize.toString()
+    });
+    
+    if (searchQuery) {
+        params.append('searchQuery', searchQuery);
+    }
+    
+    if (filterType && filterValue) {
+        params.append('filterType', filterType);
+        params.append('filterValue', filterValue);
+    }
+    
     const props = {
         data: null,
-        url: userURL+"/paged",
+        url: userURL+"/paged?" + params.toString(),
         headers: GetHeader()
     }
     const result = await axiosRead(props)

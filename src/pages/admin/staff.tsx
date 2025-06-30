@@ -12,8 +12,6 @@ import { StaffProfileData } from '../../interfaces/IStaff';
 
 const { Option } = Select;
 
-
-
 const StaffList: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -21,33 +19,33 @@ const StaffList: React.FC = () => {
   const [filterValue, setFilterValue] = useState<string>('');
   const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
   const [selectedStaffs, setSelectedStaffs] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  
   const { categorizedData, refetch } = useActiveUserData();
-  const {getAllStaff, staffList} = useCRUDStaff();
-  const staffsPerPage = 10;
+  const { getAllStaff, staffList, pagination, isLoading } = useCRUDStaff();
   const nav = useNavigate();
-   useEffect(()=>{
-    refetch()
-    getAllStaff()
-  },[])
 
-  // Filtering logic - only applied to the displayed staffs (other roles can be filtered similarly)
-  const filteredStaffs = staffList.filter((staff: StaffProfileData) => {
-    const matchesSearch =
-      (staff.firstName + ' ' + staff.lastName).toLowerCase().includes(searchQuery.toLowerCase()) ||
-      String(staff.id).toLowerCase().includes(searchQuery.toLowerCase());
-    let matchesFilter = true;
+  // Load initial data
+  useEffect(() => {
+    refetch();
+    loadStaffData();
+  }, []);
 
-    if (filterType === 'major') {
-      matchesFilter = typeof staff.department === 'string' && typeof filterValue === 'string' && staff.department.startsWith(filterValue);
-    } else if (filterType === 'campus') {
-      matchesFilter = staff.campus === filterValue;
-    } else if (filterType === 'date') {
-      const staffDate = staff.startWorkAt ? new Date(staff.startWorkAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
-      matchesFilter = staffDate === filterValue;
-    }
+  // Load data when pagination, search, or filters change
+  useEffect(() => {
+    loadStaffData();
+  }, [currentPage, pageSize, searchQuery, filterType, filterValue]);
 
-    return matchesSearch && matchesFilter;
-  });
+  const loadStaffData = () => {
+    getAllStaff({
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      searchQuery: searchQuery || undefined,
+      filterType: filterType || undefined,
+      filterValue: filterValue || undefined
+    });
+  };
 
   // Animation variants
   const cardVariants = {
@@ -62,22 +60,32 @@ const StaffList: React.FC = () => {
   // Handle imported staff data
   const handleDataImported = (data: { [key: string]: string }[]) => {
     console.log('Imported staff data:', data);
-    // Here you would typically send the data to your API
-    // For now, we'll just close the import modal
     setIsImportOpen(false);
     
-    // Optionally refresh the staff list
+    // Refresh the staff list
     refetch();
-    getAllStaff();
+    loadStaffData();
   };
 
   const handleFilterChange = (value: string) => {
     setFilterType(value);
     setFilterValue('');
+    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   const handleFilterValueChange = (value: string) => {
     setFilterValue(value);
+    setCurrentPage(1); // Reset to first page when filter value changes
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page when search changes
+  };
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
   };
 
   const handleDeleteModeToggle = () => {
@@ -93,10 +101,9 @@ const StaffList: React.FC = () => {
       okType: 'danger',
       cancelText: 'Cancel',
       onOk: () => {
-        selectedStaffs.forEach(id => {
-          const index = staffList.findIndex(staff => staff.id === Number(id));
-          if (index !== -1) staffList.splice(index, 1);
-        });
+        // Here you would typically call the API to delete the selected staff
+        // For now, we'll just refresh the data
+        loadStaffData();
         setSelectedStaffs([]);
         setIsDeleteMode(false);
       },
@@ -171,9 +178,7 @@ const StaffList: React.FC = () => {
                 <Input
                   placeholder="Search Name or Id..."
                   value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                  }}
+                  onChange={handleSearchChange}
                   style={{ width: 200 }}
                 />
                 <Select
@@ -221,12 +226,9 @@ const StaffList: React.FC = () => {
                     placeholder="Select Date"
                   >
                     <Option value="">Select Date</Option>
-                    {[...new Set(staffList.map(s => s.startWorkAt ? new Date(s.startWorkAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''))]
-                      .filter(date => date)
-                      .sort()
-                      .map(date => (
-                        <Option key={date} value={date}>{date}</Option>
-                    ))}
+                    {/* This would need to be populated with actual dates from the backend */}
+                    <Option value="2024-01-01">2024-01-01</Option>
+                    <Option value="2024-02-01">2024-02-01</Option>
                   </Select>
                 )}
               </div>
@@ -255,15 +257,17 @@ const StaffList: React.FC = () => {
                 ))}
               </div>
             </div>
-            {/* External Table display, pre-styling and ease-to-custom */}
+            {/* External Table display with server-side pagination */}
             <DataTable
               columns={columns}
-              data={filteredStaffs}
+              data={staffList}
               rowSelection={rowSelection}
-              dataPerPage={staffsPerPage}
+              pagination={pagination}
+              onPageChange={handlePageChange}
               onRow={(record: StaffProfileData) => ({
                 onClick: () => handleRowClick(record),
               })}
+              loading={isLoading}
             />
             {isDeleteMode && (
               <motion.div

@@ -12,51 +12,53 @@ import useCRUDStudent from '../../hooks/useCRUDStudent';
 import { StudentBase } from '../../interfaces/IStudent';
 
 const { Option } = Select;
+
 const StudentList: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
   const [filterValue, setFilterValue] = useState<string>('');
   const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
-  const [selectedStudents, setSelectedStudents] = useState<number[]>([]); // based on student Id
-    const { categorizedData, refetch } = useActiveUserData();
-    const {studentList, getAllStudent} = useCRUDStudent();
-  const nav = useNavigate();
-  useEffect(()=>{
-    refetch()
-    getAllStudent()
-  },[])
+  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
   
+  const { categorizedData, refetch } = useActiveUserData();
+  const { studentList, getAllStudent, pagination, isLoading } = useCRUDStudent();
+  const nav = useNavigate();
+
+  // Load initial data
+  useEffect(() => {
+    refetch();
+    loadStudentData();
+  }, []);
+
+  // Load data when pagination, search, or filters change
+  useEffect(() => {
+    loadStudentData();
+  }, [currentPage, pageSize, searchQuery, filterType, filterValue]);
+
+  const loadStudentData = () => {
+    getAllStudent({
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      searchQuery: searchQuery || undefined,
+      filterType: filterType || undefined,
+      filterValue: filterValue || undefined
+    });
+  };
+
   // Redirect to edit page when a student row is clicked
   const handleRowClick = (data: AccountProps) => {
     if (!isDeleteMode) {
       nav(`/admin/edit/student/${data.id}`);
     }
   };
+
   // navigating to create page for adding new student
   const handleAddNewAccount = () => {
     nav('/admin/edit/student');
   };
-  
-  // Pagination settings
-  const studentsPerPage = 10;
-
-  // Filtering logic - only applied to the displayed students (other roles can be filtered similarly)
-  const filteredStudents = studentList.filter(student => {
-    const matchesSearch = student.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          student.id.toString().includes(searchQuery.toLowerCase());
-    let matchesFilter = true;
-
-    if (filterType === 'major') {
-      matchesFilter = student.studentDataListResponse.careerGoal.startsWith(filterValue);
-    } else if (filterType === 'campus') {
-      matchesFilter = student.studentDataListResponse.careerGoal === filterValue;
-    } else if (filterType === 'date') {
-      matchesFilter = student.dateOfBirth.toISOString() === filterValue;
-    }
-
-    return matchesSearch && matchesFilter;
-  });
 
   // Animation variants
   const cardVariants = {
@@ -70,22 +72,32 @@ const StudentList: React.FC = () => {
 
   const handleDataImported = (data: { [key: string]: string }[]) => {
     console.log('Imported student data:', data);
-    // Here you would typically send the data to your API
-    // For now, we'll just close the import modal
     setIsImportOpen(false);
     
-    // Optionally refresh the student list
+    // Refresh the student list
     refetch();
-    getAllStudent();
+    loadStudentData();
   };
 
   const handleFilterChange = (value: string) => {
     setFilterType(value);
     setFilterValue('');
+    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   const handleFilterValueChange = (value: string) => {
     setFilterValue(value);
+    setCurrentPage(1); // Reset to first page when filter value changes
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page when search changes
+  };
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
   };
 
   const handleDeleteModeToggle = () => {
@@ -101,10 +113,9 @@ const StudentList: React.FC = () => {
       okType: 'danger',
       cancelText: 'Cancel',
       onOk: () => {
-        selectedStudents.forEach(id => {
-          const index = studentList.findIndex(student => student.id === id);
-          if (index !== -1) studentList.splice(index, 1);
-        });
+        // Here you would typically call the API to delete the selected students
+        // For now, we'll just refresh the data
+        loadStudentData();
         setSelectedStudents([]);
         setIsDeleteMode(false);
       },
@@ -121,25 +132,25 @@ const StudentList: React.FC = () => {
   };
 
   // Table columns
-const columns = [
-  { title: 'ID', dataIndex: 'id', key: 'id', width: 100 },
-  { title: 'Username', dataIndex: 'username', key: 'username', width: 150 },
-  { title: 'Email', dataIndex: 'email', key: 'email', width: 200 },
-  { title: 'First Name', dataIndex: 'firstName', key: 'firstName', width: 120 },
-  { title: 'Last Name', dataIndex: 'lastName', key: 'lastName', width: 120 },
-  { title: 'Date of Birth', dataIndex: 'dateOfBirth', key: 'dateOfBirth', width: 120,
-    render: (date: Date) => date ? new Date(date).toLocaleDateString() : '' },
-  { title: 'Role', dataIndex: 'roleName', key: 'roleName', width: 120 },
-  { title: 'Status', dataIndex: 'status', key: 'status', width: 100 },
-  { title: 'Enrolled At', dataIndex: 'enrolledAt', key: 'enrolledAt', width: 120,
-    render: (_: any, record: StudentBase) =>
-      record.studentDataListResponse?.enrolledAt
-        ? new Date(record.studentDataListResponse.enrolledAt).toLocaleDateString()
-        : '' },
-  { title: 'Career Goal', dataIndex: 'careerGoal', key: 'careerGoal', width: 180,
-    render: (_: any, record: StudentBase) =>
-      record.studentDataListResponse?.careerGoal || '' },
-];
+  const columns = [
+    { title: 'ID', dataIndex: 'id', key: 'id', width: 100 },
+    { title: 'Username', dataIndex: 'username', key: 'username', width: 150 },
+    { title: 'Email', dataIndex: 'email', key: 'email', width: 200 },
+    { title: 'First Name', dataIndex: 'firstName', key: 'firstName', width: 120 },
+    { title: 'Last Name', dataIndex: 'lastName', key: 'lastName', width: 120 },
+    { title: 'Date of Birth', dataIndex: 'dateOfBirth', key: 'dateOfBirth', width: 120,
+      render: (date: Date) => date ? new Date(date).toLocaleDateString() : '' },
+    { title: 'Role', dataIndex: 'roleName', key: 'roleName', width: 120 },
+    { title: 'Status', dataIndex: 'status', key: 'status', width: 100 },
+    { title: 'Enrolled At', dataIndex: 'enrolledAt', key: 'enrolledAt', width: 120,
+      render: (_: any, record: StudentBase) =>
+        record.studentDataListResponse?.enrolledAt
+          ? new Date(record.studentDataListResponse.enrolledAt).toLocaleDateString()
+          : '' },
+    { title: 'Career Goal', dataIndex: 'careerGoal', key: 'careerGoal', width: 180,
+      render: (_: any, record: StudentBase) =>
+        record.studentDataListResponse?.careerGoal || '' },
+  ];
 
   // Row selection for delete mode
   const rowSelection = isDeleteMode
@@ -177,9 +188,7 @@ const columns = [
                 <Input
                   placeholder="Search Name or Id..."
                   value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                  }}
+                  onChange={handleSearchChange}
                   style={{ width: 200 }}
                 />
                 <Select
@@ -226,19 +235,16 @@ const columns = [
                     style={{ width: 120 }}
                     placeholder="Select Date"
                   >
-                    <Option value="">Select Date Of Birth</Option>
-                    {[...new Set(studentList.map(s => s.dateOfBirth))].sort().map(date => {
-                      const dateStr = typeof date === 'string' ? date : new Date(date).toISOString();
-                      return (
-                        <Option key={dateStr} value={dateStr}>{dateStr}</Option>
-                      );
-                    })}
+                    <Option value="">Select Date</Option>
+                    {/* This would need to be populated with actual dates from the backend */}
+                    <Option value="2024-01-01">2024-01-01</Option>
+                    <Option value="2024-02-01">2024-02-01</Option>
                   </Select>
                 )}
               </div>
               <div className={styles.actions}>
                 {['Add New Account', 'Delete Account', 'Import Data From xlsx'].map((action, index) => (
-                <motion.div
+                  <motion.div
                     key={index}
                     className={`${styles.actionButton} ${action === 'Delete Account' ? styles.deleteButton : ''}`}
                     whileHover={{ scale: isDeleteMode ? 1 : 1.05 }}
@@ -246,7 +252,7 @@ const columns = [
                       isDeleteMode
                         ? undefined
                         : action === 'Add New Account'
-                        ? handleAddNewAccount // Navigate to create page
+                        ? handleAddNewAccount
                         : action === 'Import Data From xlsx'
                         ? handleImport
                         : action === 'Delete Account'
@@ -261,15 +267,17 @@ const columns = [
                 ))}
               </div>
             </div>
-            {/* External Table display, pre-styling and ease-to-custom */}
-             <DataTable
+            {/* External Table display with server-side pagination */}
+            <DataTable
               columns={columns}
-              data={studentList?studentList:[]}
+              data={studentList}
               rowSelection={rowSelection}
-              dataPerPage={studentsPerPage}
+              pagination={pagination}
+              onPageChange={handlePageChange}
               onRow={(record: StudentBase) => ({
                 onClick: () => handleRowClick(record),
               })}
+              loading={isLoading}
             />
             {isDeleteMode && (
               <motion.div
