@@ -153,7 +153,7 @@ const ComboDetail: React.FC = () => {
           <div className="text-4xl mb-4">📚</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Combo Not Found</h2>
           <p className="text-gray-600 mb-4">The combo you're looking for doesn't exist.</p>
-          <Button type="primary" onClick={() => navigate('/manager/comboPage')}>
+          <Button type="primary" onClick={() => navigate('/manager/combo')}>
             Back to Combos
           </Button>
         </div>
@@ -178,7 +178,7 @@ const ComboDetail: React.FC = () => {
       cancelText: 'Cancel',
       onOk: () => {
         message.success('Combo deleted successfully!');
-        navigate('/manager/comboPage');
+        navigate('/manager/combo');
       },
     });
   };
