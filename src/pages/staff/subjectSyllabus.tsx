@@ -33,6 +33,7 @@ import {
   CreateSyllabus
 } from '../../interfaces/ISyllabus';
 import { subjects } from '../../data/schoolData';
+import { mockSyllabus } from '../../data/mockSyllabus';
 
 const { Panel } = Collapse;
 const { Option } = Select;
@@ -42,7 +43,7 @@ const SubjectSyllabus: React.FC = () => {
   const navigate = useNavigate();
   const searchParams = useParams();
   const {subjectId,syllabusId} = searchParams
-  console.log("Subject Id: ",subjectId,syllabusId)
+  //console.log("Subject Id: ",subjectId,syllabusId)
   
   // State for syllabus data
   const [syllabus, setSyllabus] = useState<CompleteSyllabus | null>(null);
@@ -61,36 +62,24 @@ const SubjectSyllabus: React.FC = () => {
   const [outcomeModalVisible, setOutcomeModalVisible] = useState(false);
   const [sessionModalVisible, setSessionModalVisible] = useState(false);
   
+  // Inline edit state for each section
+  const [editingAssessmentId, setEditingAssessmentId] = useState<number | null>(null);
+  const [editingMaterialId, setEditingMaterialId] = useState<number | null>(null);
+  const [editingOutcomeId, setEditingOutcomeId] = useState<number | null>(null);
+  const [editingSessionId, setEditingSessionId] = useState<number | null>(null);
+  // Temp state for editing
+  const [assessmentEdit, setAssessmentEdit] = useState<Partial<SyllabusAssessment>>({});
+  const [materialEdit, setMaterialEdit] = useState<Partial<SyllabusLearningMaterial>>({});
+  const [outcomeEdit, setOutcomeEdit] = useState<Partial<SyllabusLearningOutcome>>({});
+  const [sessionEdit, setSessionEdit] = useState<Partial<SyllabusSession>>({});
+
   // Get subject information
   const subject = subjects.find(s => s.id === Number(subjectId));
 
   useEffect(() => {
-    if (subjectId) {
-      loadSyllabus();
-    }
-  }, [subjectId]);
-
-  const loadSyllabus = async () => {
-    setLoading(true);
-    try {
-      // TODO: Replace with actual API call
-      // For now, create a mock syllabus
-      const mockSyllabus: CompleteSyllabus = {
-        id: 1,
-        subject_id: Number(subjectId),
-        content: 'This course provides an introduction to software engineering principles and practices.',
-        assessments: [],
-        learningMaterials: [],
-        learningOutcomes: [],
-        sessions: []
-      };
-      setSyllabus(mockSyllabus);
-    } catch (error) {
-      message.error('Failed to load syllabus');
-    } finally {
-      setLoading(false);
-    }
-  };
+    // For demo, use mockSyllabus directly
+    setSyllabus(mockSyllabus);
+  }, []);
 
   const handleSaveSyllabus = async () => {
     setLoading(true);
@@ -219,24 +208,151 @@ const SubjectSyllabus: React.FC = () => {
     });
   };
 
+  // Inline edit handlers
+  const startEditAssessment = (record: SyllabusAssessment) => {
+    setEditingAssessmentId(record.id);
+    setAssessmentEdit(record);
+  };
+  const saveEditAssessment = () => {
+    setSyllabus(prev => prev ? {
+      ...prev,
+      assessments: prev.assessments.map(a => a.id === editingAssessmentId ? { ...a, ...assessmentEdit } : a)
+    } : null);
+    setEditingAssessmentId(null);
+    setAssessmentEdit({});
+  };
+  const cancelEditAssessment = () => {
+    setEditingAssessmentId(null);
+    setAssessmentEdit({});
+  };
+
+  const startEditMaterial = (record: SyllabusLearningMaterial) => {
+    setEditingMaterialId(record.id);
+    setMaterialEdit(record);
+  };
+  const saveEditMaterial = () => {
+    setSyllabus(prev => prev ? {
+      ...prev,
+      learningMaterials: prev.learningMaterials.map(m => m.id === editingMaterialId ? { ...m, ...materialEdit } : m)
+    } : null);
+    setEditingMaterialId(null);
+    setMaterialEdit({});
+  };
+  const cancelEditMaterial = () => {
+    setEditingMaterialId(null);
+    setMaterialEdit({});
+  };
+
+  const startEditOutcome = (record: SyllabusLearningOutcome) => {
+    setEditingOutcomeId(record.id);
+    setOutcomeEdit(record);
+  };
+  const saveEditOutcome = () => {
+    setSyllabus(prev => prev ? {
+      ...prev,
+      learningOutcomes: prev.learningOutcomes.map(o => o.id === editingOutcomeId ? { ...o, ...outcomeEdit } : o)
+    } : null);
+    setEditingOutcomeId(null);
+    setOutcomeEdit({});
+  };
+  const cancelEditOutcome = () => {
+    setEditingOutcomeId(null);
+    setOutcomeEdit({});
+  };
+
+  const startEditSession = (record: SyllabusSession) => {
+    setEditingSessionId(record.id);
+    setSessionEdit(record);
+  };
+  const saveEditSession = () => {
+    setSyllabus(prev => prev ? {
+      ...prev,
+      sessions: prev.sessions.map(s => s.id === editingSessionId ? { ...s, ...sessionEdit } : s)
+    } : null);
+    setEditingSessionId(null);
+    setSessionEdit({});
+  };
+  const cancelEditSession = () => {
+    setEditingSessionId(null);
+    setSessionEdit({});
+  };
+
   // Table columns for each section
   const assessmentColumns = [
-    { title: 'Category', dataIndex: 'category', key: 'category' },
-    { title: 'Quantity', dataIndex: 'quantity', key: 'quantity' },
-    { title: 'Weight (%)', dataIndex: 'weight', key: 'weight' },
-    { title: 'Duration (min)', dataIndex: 'duration', key: 'duration' },
-    { title: 'Question Type', dataIndex: 'question_type', key: 'question_type' },
+    { title: 'Category', dataIndex: 'category', key: 'category',
+      render: (_: any, record: SyllabusAssessment) =>
+        isEditing && editingAssessmentId === record.id ? (
+          <Select
+            value={assessmentEdit.category}
+            onChange={v => setAssessmentEdit(e => ({ ...e, category: v }))}
+            style={{ width: 120 }}
+          >
+            <Option value="Assignment">Assignment</Option>
+            <Option value="Quiz">Quiz</Option>
+            <Option value="Final Exam">Final Exam</Option>
+          </Select>
+        ) : record.category
+    },
+    { title: 'Quantity', dataIndex: 'quantity', key: 'quantity',
+      render: (_: any, record: SyllabusAssessment) =>
+        isEditing && editingAssessmentId === record.id ? (
+          <InputNumber
+            value={assessmentEdit.quantity}
+            min={1}
+            onChange={v => setAssessmentEdit(e => ({ ...e, quantity: v ?? e.quantity ?? 1 }))}
+          />
+        ) : record.quantity
+    },
+    { title: 'Weight (%)', dataIndex: 'weight', key: 'weight',
+      render: (_: any, record: SyllabusAssessment) =>
+        isEditing && editingAssessmentId === record.id ? (
+          <InputNumber
+            value={assessmentEdit.weight}
+            min={0}
+            max={100}
+            onChange={v => setAssessmentEdit(e => ({ ...e, weight: v ?? e.weight ?? 0 }))}
+          />
+        ) : record.weight
+    },
+    { title: 'Duration (min)', dataIndex: 'duration', key: 'duration',
+      render: (_: any, record: SyllabusAssessment) =>
+        isEditing && editingAssessmentId === record.id ? (
+          <InputNumber
+            value={assessmentEdit.duration}
+            min={0}
+            onChange={v => setAssessmentEdit(e => ({ ...e, duration: v ?? e.duration ?? 0 }))}
+          />
+        ) : record.duration
+    },
+    { title: 'Question Type', dataIndex: 'question_type', key: 'question_type',
+      render: (_: any, record: SyllabusAssessment) =>
+        isEditing && editingAssessmentId === record.id ? (
+          <Select
+            value={assessmentEdit.question_type}
+            onChange={v => setAssessmentEdit(e => ({ ...e, question_type: v }))}
+            style={{ width: 140 }}
+          >
+            <Option value="essay">Essay</Option>
+            <Option value="multiple-choice">Multiple Choice</Option>
+            <Option value="practical exam">Practical Exam</Option>
+            <Option value="presentation">Presentation</Option>
+            <Option value="project">Project</Option>
+            <Option value="other">Other</Option>
+          </Select>
+        ) : record.question_type
+    },
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: SyllabusAssessment) => (
-        <Button
-          type="link"
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => handleDeleteItem('assessment', record.id)}
-        />
-      ),
+      render: (_: any, record: SyllabusAssessment) =>
+        isEditing && editingAssessmentId === record.id ? (
+          <>
+            <Button type="link" icon={<SaveOutlined />} onClick={saveEditAssessment} />
+            <Button type="link" icon={<DeleteOutlined />} onClick={cancelEditAssessment} />
+          </>
+        ) : isEditing ? (
+          <Button type="link" icon={<EditOutlined />} onClick={() => startEditAssessment(record)} />
+        ) : null
     },
   ];
 
@@ -266,14 +382,15 @@ const SubjectSyllabus: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: SyllabusLearningOutcome) => (
-        <Button
-          type="link"
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => handleDeleteItem('outcome', record.id)}
-        />
-      ),
+      render: (_: any, record: SyllabusLearningOutcome) =>
+        isEditing && editingOutcomeId === record.id ? (
+          <>
+            <Button type="link" icon={<SaveOutlined />} onClick={() => saveEditOutcome()} />
+            <Button type="link" icon={<DeleteOutlined />} onClick={() => cancelEditOutcome()} />
+          </>
+        ) : isEditing ? (
+          <Button type="link" icon={<EditOutlined />} onClick={() => startEditOutcome(record)} />
+        ) : null
     },
   ];
 
@@ -284,14 +401,15 @@ const SubjectSyllabus: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: SyllabusSession) => (
-        <Button
-          type="link"
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => handleDeleteItem('session', record.id)}
-        />
-      ),
+      render: (_: any, record: SyllabusSession) =>
+        isEditing && editingSessionId === record.id ? (
+          <>
+            <Button type="link" icon={<SaveOutlined />} onClick={() => saveEditSession()} />
+            <Button type="link" icon={<DeleteOutlined />} onClick={() => cancelEditSession()} />
+          </>
+        ) : isEditing ? (
+          <Button type="link" icon={<EditOutlined />} onClick={() => startEditSession(record)} />
+        ) : null
     },
   ];
 
@@ -323,7 +441,7 @@ const SubjectSyllabus: React.FC = () => {
           <div style={{ display: 'flex', gap: '1rem' }}>
             <Button 
               icon={<ArrowLeftOutlined />} 
-              onClick={() => navigate('/staff/subject')}
+              onClick={() => navigate('/staff/subjects')}
               className={`${styles.syllabusButton} ${styles.secondaryButton}`}
             >
               Back to Subjects
