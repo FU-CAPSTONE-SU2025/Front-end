@@ -34,6 +34,10 @@ import SubjectPage from "../pages/staff/subject";
 import EditData from "../pages/staff/editData";
 import CurriculumDetail from '../pages/manager/curriculumDetail';
 import ComboDetail from '../pages/manager/comboDetail';
+import ManagerSubjectPage from '../pages/manager/subject';
+import SubjectDetail from '../pages/manager/subjectDetail';
+import AddSubjectPage from '../pages/manager/addSubject';
+import EditSubjectPage from '../pages/manager/editSubject';
 
 export const routes = createBrowserRouter([
   {
@@ -180,6 +184,22 @@ export const routes = createBrowserRouter([
       {
         path: "combo/:id",
         Component: ComboDetail,
+      },
+      {
+        path: "subject",
+        Component: ManagerSubjectPage,
+      },
+      {
+        path: "subject/add",
+        Component: AddSubjectPage,
+      },
+      {
+        path: "subject/edit/:id",
+        Component: EditSubjectPage,
+      },
+      {
+        path: "subject/:id",
+        Component: SubjectDetail,
       },
     ]
   },
