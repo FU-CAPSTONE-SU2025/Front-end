@@ -4,11 +4,9 @@ import { Input, Button, Avatar, Badge, Tooltip } from 'antd';
 import { motion } from 'framer-motion';
 
 const navLinks = [
-  { name: 'Overview', path: '/manager/overview' },
-  { name: 'Combos', path: '/manager/combos' },
-  { name: 'Programs', path: '/manager/programs' },
-  { name: 'Curricula', path: '/manager/curricula' },
-  { name: 'Students', path: '/manager/students' },
+  { name: 'Home', path: '/manager' },
+  { name: 'Combos', path: '/manager/combo' },
+  { name: 'Subjects', path: '/manager/subject' },
 ];
 
 const ManagerHeader = () => {
