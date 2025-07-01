@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { InfoCircleOutlined, CheckCircleTwoTone, CloseCircleTwoTone, SyncOutlined, DragOutlined, EditOutlined, DeleteOutlined, PlusOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import ReactFlow, { Background, Controls, MiniMap, Handle, Position, useNodesState, useEdgesState, addEdge, Node, Edge, Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 
 const { Panel } = Collapse;
 

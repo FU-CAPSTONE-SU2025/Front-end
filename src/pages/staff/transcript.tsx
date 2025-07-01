@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Input, Select, Button, Row, Col, ConfigProvider } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
 
 // Interfaces
@@ -104,6 +105,7 @@ const StaffTranscript: React.FC = () => {
   const [students, setStudents] = useState<StudentBase[]>(mockStudents);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCampus, setSelectedCampus] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   // Simulate fetching students
   useEffect(() => {
@@ -124,9 +126,7 @@ const StaffTranscript: React.FC = () => {
 
   // Handle edit action
   const handleEdit = (studentId: number) => {
-    console.log(`Editing student ID: ${studentId}`);
-    // Placeholder for navigation:
-    // navigate(`/staff/edit-transcript/${studentId}`);
+    navigate(`/staff/editStudentTranscript/${studentId}`);
   };
 
   // Table columns

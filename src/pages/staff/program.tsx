@@ -26,7 +26,7 @@ const ProgramPage: React.FC = () => {
     <div className={styles.sttContainer}>
       {/* Sticky Toolbar */}
       <Affix style={{zIndex: 10}}>
-        <div style={{background: 'rgba(255,255,255,0.55)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', border: '1.5px solid rgba(255,255,255,0.18)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
+        <div style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', border: '1.5px solid rgba(255,255,255,0.18)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
           <Input
             placeholder="Search by Program ID or Name"
             prefix={<SearchOutlined />}
@@ -47,7 +47,7 @@ const ProgramPage: React.FC = () => {
         </div>
       </Affix>
       {/* Program Cards */}
-      <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255,255,255,0.45)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
+      <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
         {filteredPrograms.map(program => (
           <Panel
             header={
@@ -74,7 +74,7 @@ const ProgramPage: React.FC = () => {
               </div>
             }
             key={program.id}
-            style={{background: 'rgba(255,255,255,0.85)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}}
+            style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}}
           >
             {/* Mocked curriculum content for now */}
             <div style={{padding: 16, color: '#1E40AF', fontWeight: 500}}>

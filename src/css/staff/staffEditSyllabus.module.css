@@ -1,0 +1,324 @@
+.syllabusContainer {
+  width: 100vw;
+  min-height: calc(100vh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 80px;
+  box-sizing: border-box;
+  z-index: 2;
+  position: relative;
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  background: none;
+}
+
+.syllabusHeader {
+  width: 100%;
+  padding: 2.5rem 3rem 2rem 3rem;
+  background: rgba(255, 255, 255, 0.90);
+  border-radius: 24px;
+  box-shadow: 0 12px 40px rgba(30, 64, 175, 0.10);
+  backdrop-filter: blur(22px) saturate(180%);
+  position: relative;
+  overflow: visible;
+  margin-bottom: 2rem;
+  animation: fadeInDown 0.8s cubic-bezier(.4,1.4,.6,1) 0.1s both;
+}
+
+.syllabusHeader::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 32px;
+  right: 32px;
+  height: 7px;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(90deg, #1E40AF 0%, #f97316 100%);
+  z-index: 1;
+}
+
+@keyframes fadeInDown {
+  0% { opacity: 0; transform: translateY(-40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.syllabusTitle {
+  font-family: 'Inter', 'Geist', 'Segoe UI', Arial, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #1E293B;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 0 0 1rem 0;
+  text-shadow: 0 2px 12px rgba(30,64,175,0.08);
+}
+
+.syllabusSubtitle {
+  font-family: 'Inter', 'Geist', 'Segoe UI', Arial, sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #64748B;
+  margin: 0;
+}
+
+.syllabusContent {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.90);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(30, 64, 175, 0.13);
+  backdrop-filter: blur(28px) saturate(180%);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  animation: fadeInUp 1s cubic-bezier(.4,1.4,.6,1) 0.2s both;
+}
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.syllabusSection {
+  margin-bottom: 2rem;
+  border: 2px solid rgba(30, 64, 175, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(.4,1.4,.6,1);
+}
+
+.syllabusSection:hover {
+  border-color: rgba(30, 64, 175, 0.2);
+  box-shadow: 0 8px 32px rgba(30, 64, 175, 0.15);
+}
+
+.syllabusSectionHeader {
+  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(.4,1.4,.6,1);
+}
+
+.syllabusSectionHeader:hover {
+  background: linear-gradient(135deg, #1E40AF 0%, #f97316 100%);
+}
+
+.syllabusSectionTitle {
+  font-family: 'Inter', 'Geist', 'Segoe UI', Arial, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.syllabusSectionIcon {
+  font-size: 1.5rem;
+}
+
+.syllabusSectionContent {
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.syllabusForm {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formLabel {
+  font-family: 'Inter', 'Geist', 'Segoe UI', Arial, sans-serif;
+  font-weight: 600;
+  color: #1E293B;
+  font-size: 0.95rem;
+}
+
+.formInput,
+.formSelect,
+.formTextArea {
+  padding: 0.75rem 1rem;
+  border: 2px solid rgba(30, 64, 175, 0.1);
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s cubic-bezier(.4,1.4,.6,1);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.formInput:focus,
+.formSelect:focus,
+.formTextArea:focus {
+  outline: none;
+  border-color: #1E40AF;
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+.formTextArea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.syllabusActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid rgba(30, 64, 175, 0.1);
+}
+
+.syllabusButton {
+  padding: 0.75rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s cubic-bezier(.4,1.4,.6,1);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+  color: white;
+}
+
+.primaryButton:hover {
+  background: linear-gradient(135deg, #1E40AF 0%, #f97316 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
+}
+
+.secondaryButton {
+  background: rgba(249, 115, 22, 0.1);
+  color: #f97316;
+  border: 2px solid rgba(249, 115, 22, 0.3);
+}
+
+.secondaryButton:hover {
+  background: rgba(249, 115, 22, 0.2);
+  border-color: #f97316;
+  transform: translateY(-2px);
+}
+
+.cancelButton {
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748B;
+  border: 2px solid rgba(100, 116, 139, 0.3);
+}
+
+.cancelButton:hover {
+  background: rgba(100, 116, 139, 0.2);
+  border-color: #64748B;
+}
+
+.syllabusTable {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(30, 64, 175, 0.1);
+}
+
+.syllabusTable th {
+  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+  color: white;
+  font-weight: 600;
+  padding: 1rem;
+  text-align: left;
+}
+
+.syllabusTable td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(30, 64, 175, 0.1);
+}
+
+.syllabusTable tr:hover {
+  background: rgba(249, 115, 22, 0.05);
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem;
+  color: #64748B;
+}
+
+.emptyStateIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #1E40AF;
+}
+
+.emptyStateText {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.emptyStateSubtext {
+  font-size: 0.9rem;
+  color: #94A3B8;
+}
+
+@media (max-width: 1024px) {
+  .syllabusContainer {
+    padding: 2rem 1.5rem;
+  }
+  
+  .syllabusHeader {
+    padding: 2rem;
+  }
+  
+  .syllabusTitle {
+    font-size: 2rem;
+  }
+  
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .syllabusContainer {
+    padding: 1.5rem 1rem;
+  }
+  
+  .syllabusHeader {
+    padding: 1.5rem;
+  }
+  
+  .syllabusTitle {
+    font-size: 1.8rem;
+  }
+  
+  .syllabusSectionContent {
+    padding: 1.5rem;
+  }
+  
+  .syllabusActions {
+    flex-direction: column;
+  }
+  
+  .syllabusButton {
+    width: 100%;
+    justify-content: center;
+  }
+} 

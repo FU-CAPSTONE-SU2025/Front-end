@@ -2,7 +2,7 @@
   position: fixed;
   right: 0;
   top: 0;
-  width: calc(100% - 250px); /* Account for 250px sidebar on desktop */
+  width: calc(100% - 250px);
   height: auto;
   border-radius: 12px;
   border: 1px solid black;
@@ -10,8 +10,8 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  z-index: 500; /* Below sidebar (z-index: 1000) */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Added for depth */
+  z-index: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   background: rgba(255, 255, 255, 0.8) !important;
   border: 1px solid rgba(255,255,255,0.3) !important;
 }
@@ -178,73 +178,74 @@
 /* Responsive adjustments */
 @media (max-width: 1023px) {
   .container {
-    width: 100%; /* Full width on mobile (sidebar hidden by default) */
-    position: relative; /* Remove fixed positioning on mobile */
-    margin: 0; /* Remove any margins */
+    width: 100%;
+    position: relative;
+    margin: 0;
   }
 
   .header {
-    padding: 20px; /* Slightly increased padding for better spacing */
-    flex-direction: column; /* Stack title and counters vertically */
+    padding: 20px;
+    flex-direction: column;
     align-items: flex-start;
-    height: auto; /* Allow height to grow */
+    height: auto;
   }
 
   .counters {
-    flex-direction: column; /* Stack counters vertically */
-    width: 100%; /* Full width */
+    flex-direction: column;
+    width: 100%;
   }
 
   .counter,
   .counterAcademic {
-    width: 100%; /* Full width for each counter */
-    padding: 16px 0; /* Reduced horizontal padding, keep vertical */
-    border-left: none; /* Remove vertical borders */
-    border-top: 1px solid var(--Zinc-800, #27272A); /* Add horizontal separator */
+    width: 100%;
+    padding: 16px 0;
+    border-left: none;
+    border-top: 1px solid var(--Zinc-800, #27272A);
   }
 
   .counter:first-child {
-    border-top: none; /* Remove border from first counter */
+    border-top: none;
   }
 
   .counterAcademic {
-    border-top: 1px solid black; /* Maintain black border for Academic Staff */
+    border-top: 1px solid black;
   }
 
   .counterValue {
-    font-size: 24px; /* Smaller font size on mobile */
+    font-size: 24px;
     line-height: 28px;
   }
 
   .title {
-    font-size: 14px; /* Smaller title */
+    font-size: 14px;
     line-height: 20px;
   }
 
   .subtitle {
-    font-size: 12px; /* Smaller subtitle */
+    font-size: 12px;
     line-height: 16px;
   }
 }
 
 @media (max-width: 767px) {
-    .container{
-    width: 100%; /* Full width on very small screens */
-    position: relative; /* Remove fixed positioning on very small screens */
+  .container {
+    width: 100%;
+    position: relative;
     display: flex;
     flex-direction: column;
-}
+  }
+  
   .header {
-    padding: 16px; /* Slightly reduced padding */
+    padding: 16px;
   }
 
   .counter,
   .counterAcademic {
-    padding: 12px 0; /* Adjusted padding */
+    padding: 12px 0;
   }
 
   .counterValue {
-    font-size: 20px; /* Even smaller font */
+    font-size: 20px;
     line-height: 24px;
   }
 }

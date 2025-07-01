@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { Button, Modal, Form, Input, InputNumber, Select, message } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 

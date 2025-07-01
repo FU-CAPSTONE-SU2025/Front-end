@@ -6,7 +6,7 @@ import ManagerTable from '../../components/manager/managerTable';
 import StatusBadge from '../../components/manager/statusBadge';
 import { Pagination } from 'antd';
 import SearchBar from '../../components/common/searchBar';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 const { Option } = Select;
 

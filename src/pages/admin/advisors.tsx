@@ -3,23 +3,14 @@ import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
-import { advisors } from '../../../data/mockAdvisor';
-import DataImport from '../../components/admin/dataImport';
+import DataImport from '../../components/common/dataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
 import useActiveUserData from '../../hooks/useActiveUserData';
+import useCRUDAdvisor from '../../hooks/useCRUDAdvisor';
+import { AdvisorBase } from '../../interfaces/IAdvisor';
 
 const { Option } = Select;
-
-interface Advisor {
-  Id: string;
-  Email: string;
-  Name: string;
-  PhoneNumber: string;
-  Address: string;
-  Campus: string;
-  AddDated: string;
-}
 
 const AdvisorList: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
@@ -28,29 +19,32 @@ const AdvisorList: React.FC = () => {
   const [filterValue, setFilterValue] = useState<string>('');
   const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
   const [selectedAdvisors, setSelectedAdvisors] = useState<string[]>([]);
-    const { categorizedData, refetch } = useActiveUserData();
-  const advisorsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  
+  const { categorizedData, refetch } = useActiveUserData();
+  const { getAllAdvisor, advisorList, pagination, isLoading } = useCRUDAdvisor();
   const nav = useNavigate();
-  useEffect(()=>{
-    refetch()
-  },[])
 
-  // Filtering logic - only applied to the displayed advisors
-  const filteredAdvisors = advisors.filter(advisor => {
-    const matchesSearch = advisor.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          advisor.Id.toLowerCase().includes(searchQuery.toLowerCase());
-    let matchesFilter = true;
+  // Load initial data
+  useEffect(() => {
+    refetch();
+    loadAdvisorData();
+  }, []);
 
-    if (filterType === 'major') {
-      matchesFilter = advisor.Id.startsWith(filterValue);
-    } else if (filterType === 'campus') {
-      matchesFilter = advisor.Campus === filterValue;
-    } else if (filterType === 'date') {
-      matchesFilter = advisor.AddDated === filterValue;
-    }
+  // Load data when pagination or filters change (search is now client-side)
+  useEffect(() => {
+    loadAdvisorData();
+  }, [currentPage, pageSize, filterType, filterValue]);
 
-    return matchesSearch && matchesFilter;
-  });
+  const loadAdvisorData = () => {
+    getAllAdvisor({
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      filterType: filterType || undefined,
+      filterValue: filterValue || undefined
+    });
+  };
 
   // Animation variants
   const cardVariants = {
@@ -62,27 +56,35 @@ const AdvisorList: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleDataImported = (data: { [key: string]: string }) => {
-    const newAdvisor = {
-      Id: `${['SE', 'SS', 'CE'][Math.floor(Math.random() * 3)]}${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-      Email: data.email || '',
-      Name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
-      PhoneNumber: data.phone || '',
-      Address: data.address || '',
-      Campus: ['HCMC Campus', 'Ha Noi Campus', 'Da Nang Campus'][Math.floor(Math.random() * 3)],
-      AddDated: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('/').join('/'),
-    };
-    advisors.push(newAdvisor);
+  const handleDataImported = (data: { [key: string]: string }[]) => {
+    console.log('Imported advisor data:', data);
     setIsImportOpen(false);
+    
+    // Refresh the advisor list
+    refetch();
+    loadAdvisorData();
   };
 
   const handleFilterChange = (value: string) => {
     setFilterType(value);
     setFilterValue('');
+    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   const handleFilterValueChange = (value: string) => {
     setFilterValue(value);
+    setCurrentPage(1); // Reset to first page when filter value changes
+  };
+
+  // Handle search change (client-side, no need to reset page or reload data)
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page for client-side pagination
+  };
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
   };
 
   const handleDeleteModeToggle = () => {
@@ -98,10 +100,9 @@ const AdvisorList: React.FC = () => {
       okType: 'danger',
       cancelText: 'Cancel',
       onOk: () => {
-        selectedAdvisors.forEach(id => {
-          const index = advisors.findIndex(advisor => advisor.Id === id);
-          if (index !== -1) advisors.splice(index, 1);
-        });
+        // Here you would typically call the API to delete the selected advisors
+        // For now, we'll just refresh the data
+        loadAdvisorData();
         setSelectedAdvisors([]);
         setIsDeleteMode(false);
       },
@@ -118,9 +119,9 @@ const AdvisorList: React.FC = () => {
   };
 
   // Redirect to edit page when an advisor row is clicked
-  const handleRowClick = (data: Advisor) => {
+  const handleRowClick = (data: AdvisorBase) => {
     if (!isDeleteMode) {
-      nav(`/admin/edit/advisor/${data.Id}`);
+      nav(`/admin/edit/advisor/${data.id}`);
     }
   };
 
@@ -131,24 +132,24 @@ const AdvisorList: React.FC = () => {
 
   // Table columns
   const columns = [
-    { title: 'Id', dataIndex: 'Id', key: 'Id', width: 100 },
-    { title: 'Email', dataIndex: 'Email', key: 'Email', width: 200 },
-    { title: 'Name', dataIndex: 'Name', key: 'Name', width: 150 },
-    { title: 'Phone Number', dataIndex: 'PhoneNumber', key: 'PhoneNumber', width: 120 },
-    { title: 'Address', dataIndex: 'Address', key: 'Address', width: 200 },
-    { title: 'Campus', dataIndex: 'Campus', key: 'Campus', width: 120 },
-    { title: 'Added', dataIndex: 'AddDated', key: 'AddDated', width: 100 },
+    { title: 'Id', dataIndex: 'id', key: 'id', width: 100 },
+    { title: 'Email', dataIndex: 'email', key: 'email', width: 200 },
+    { title: 'Name', key: 'name', width: 150, render: (_: any, record: AdvisorBase) => `${record.firstName} ${record.lastName}` },
+    { title: 'Phone', dataIndex: 'phone', key: 'phone', width: 120 },
+    { title: 'Address', dataIndex: 'address', key: 'address', width: 200 },
+    { title: 'Specialization', dataIndex: 'specialization', key: 'specialization', width: 150 },
+    { title: 'Experience', dataIndex: 'yearsOfExperience', key: 'yearsOfExperience', width: 100 },
   ];
 
   // Row selection for delete mode
   const rowSelection = isDeleteMode
     ? {
-        selectedRowKeys: selectedAdvisors,
+        selectedRowKeys: selectedAdvisors.map(Number),
         onChange: (selectedRowKeys: React.Key[]) => {
-          setSelectedAdvisors(selectedRowKeys as string[]);
+          setSelectedAdvisors(selectedRowKeys.map(String));
         },
-        getCheckboxProps: (record: Advisor) => ({
-          name: record.Id,
+        getCheckboxProps: (record: AdvisorBase) => ({
+          name: String(record.id),
         }),
       }
     : undefined;
@@ -176,9 +177,7 @@ const AdvisorList: React.FC = () => {
                 <Input
                   placeholder="Search Name or Id..."
                   value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                  }}
+                  onChange={handleSearchChange}
                   style={{ width: 200 }}
                 />
                 <Select
@@ -188,47 +187,33 @@ const AdvisorList: React.FC = () => {
                   placeholder="Filter"
                 >
                   <Option value="">Filter</Option>
-                  <Option value="major">By Major</Option>
-                  <Option value="campus">By Campus</Option>
-                  <Option value="date">By Date</Option>
+                  <Option value="specialization">By Specialization</Option>
+                  <Option value="experience">By Experience</Option>
                 </Select>
-                {filterType === 'major' && (
+                {filterType === 'specialization' && (
                   <Select
                     value={filterValue}
                     onChange={handleFilterValueChange}
                     style={{ width: 120 }}
-                    placeholder="Select Major"
+                    placeholder="Select Specialization"
                   >
-                    <Option value="">Select Major</Option>
-                    <Option value="SE">SE</Option>
-                    <Option value="SS">SS</Option>
-                    <Option value="CE">CE</Option>
+                    <Option value="">Select Specialization</Option>
+                    <Option value="Computer Science">Computer Science</Option>
+                    <Option value="Software Engineering">Software Engineering</Option>
+                    <Option value="Information Technology">Information Technology</Option>
                   </Select>
                 )}
-                {filterType === 'campus' && (
+                {filterType === 'experience' && (
                   <Select
                     value={filterValue}
                     onChange={handleFilterValueChange}
                     style={{ width: 120 }}
-                    placeholder="Select Campus"
+                    placeholder="Select Experience"
                   >
-                    <Option value="">Select Campus</Option>
-                    <Option value="HCMC Campus">HCMC Campus</Option>
-                    <Option value="Ha Noi Campus">Ha Noi Campus</Option>
-                    <Option value="Da Nang Campus">Da Nang Campus</Option>
-                  </Select>
-                )}
-                {filterType === 'date' && (
-                  <Select
-                    value={filterValue}
-                    onChange={handleFilterValueChange}
-                    style={{ width: 120 }}
-                    placeholder="Select Date"
-                  >
-                    <Option value="">Select Date</Option>
-                    {[...new Set(advisors.map(a => a.AddDated))].sort().map(date => (
-                      <Option key={date} value={date}>{date}</Option>
-                    ))}
+                    <Option value="">Select Experience</Option>
+                    <Option value="1-3">1-3 years</Option>
+                    <Option value="4-7">4-7 years</Option>
+                    <Option value="8+">8+ years</Option>
                   </Select>
                 )}
               </div>
@@ -257,15 +242,19 @@ const AdvisorList: React.FC = () => {
                 ))}
               </div>
             </div>
-            {/* External Table display, pre-styling and ease-to-custom */}
+            {/* External Table display with server-side pagination */}
             <DataTable
               columns={columns}
-              data={filteredAdvisors}
+              data={advisorList}
               rowSelection={rowSelection}
-              dataPerPage={advisorsPerPage}
-              onRow={(record: Advisor) => ({
+              pagination={pagination}
+              onPageChange={handlePageChange}
+              onRow={(record: AdvisorBase) => ({
                 onClick: () => handleRowClick(record),
               })}
+              loading={isLoading}
+              searchQuery={searchQuery}
+              searchFields={['id', 'firstName', 'lastName', 'email', 'specialization']}
             />
             {isDeleteMode && (
               <motion.div
@@ -295,7 +284,13 @@ const AdvisorList: React.FC = () => {
         </motion.div>
         {isImportOpen && (
           <div className={styles.modalOverlay}>
-            <DataImport onClose={() => setIsImportOpen(false)} onDataImported={handleDataImported} />
+            <DataImport 
+              onClose={() => setIsImportOpen(false)} 
+              onDataImported={handleDataImported}
+              headerConfig="ADVISOR"
+              allowMultipleRows={true}
+              dataType="advisor"
+            />
           </div>
         )}
       </div>

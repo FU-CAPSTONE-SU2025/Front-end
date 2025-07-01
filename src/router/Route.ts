@@ -30,7 +30,6 @@ import EditComboPage from "../pages/manager/editCombo";
 import StaffTranscript from "../pages/staff/transcript";
 import CurriculumPage from "../pages/staff/curriculum";
 import ProgramPage from "../pages/staff/program";
-import SubjectPage from "../pages/staff/subject";
 import EditData from "../pages/staff/editData";
 import CurriculumDetail from '../pages/manager/curriculumDetail';
 import ComboDetail from '../pages/manager/comboDetail';
@@ -38,7 +37,9 @@ import ManagerSubjectPage from '../pages/manager/subject';
 import SubjectDetail from '../pages/manager/subjectDetail';
 import AddSubjectPage from '../pages/manager/addSubject';
 import EditSubjectPage from '../pages/manager/editSubject';
-
+import EditStudentTranscript from "../pages/staff/editStudentTranscript";
+import SubjectPage from "../pages/staff/subject";
+import SubjectSyllabus from "../pages/staff/subjectSyllabus";
 export const routes = createBrowserRouter([
   {
     path: "/admin",
@@ -125,6 +126,10 @@ export const routes = createBrowserRouter([
         Component: StaffTranscript,
       },
       {
+        path: "editStudentTranscript/:studentId",
+        Component: EditStudentTranscript,
+      },
+      {
         path: "syllabus",
         Component: Dummy, 
       },
@@ -144,6 +149,10 @@ export const routes = createBrowserRouter([
         path: "editData/:type/:id?",
         Component: EditData, 
       },
+      {
+        path: "subject/:subjectId/syllabus/:syllabusId?",
+        Component: SubjectSyllabus,
+      }
       
     ]
 

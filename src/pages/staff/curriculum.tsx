@@ -5,10 +5,11 @@
  */
 import React, { useState } from 'react';
 import { Input, Button, Collapse, Typography, Affix, Space } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined, EditOutlined, ImportOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { curriculums, subjects, combos, curriculumSubjects, comboSubjects } from '../../data/schoolData';
 import { useSearchParams, useNavigate } from 'react-router';
+import DataImport from '../../components/common/dataImport';
 
 const { Panel } = Collapse;
 const { Title } = Typography;
@@ -21,6 +22,7 @@ const lineColor = 'rgba(30,64,175,0.18)';
 
 const CurriculumPage: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   React.useEffect(() => {
@@ -39,11 +41,22 @@ const CurriculumPage: React.FC = () => {
     navigate(`/staff/editData/curriculum/${curriculumId}`);
   };
 
+  const handleImportCurriculum = () => {
+    setIsImportOpen(true);
+  };
+
+  const handleDataImported = (data: { [key: string]: string }[]) => {
+    console.log('Imported curriculum data:', data);
+    // Here you would typically send the data to your API
+    setIsImportOpen(false);
+    // You could also update the local state or refresh data here
+  };
+
   return (
     <div className={styles.sttContainer}>
       {/* Sticky Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
-        <div style={{background: 'rgba(255,255,255,0.55)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', border: '1.5px solid rgba(255,255,255,0.18)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
+        <div style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', border: '1.5px solid rgba(255,255,255,0.18)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
           <Input
             placeholder="Search by Curriculum ID or Name"
             prefix={<SearchOutlined />}
@@ -61,10 +74,18 @@ const CurriculumPage: React.FC = () => {
           >
             Add Curriculum
           </Button>
+          <Button 
+            icon={<ImportOutlined />} 
+            size="large" 
+            style={{borderRadius: 999}}
+            onClick={handleImportCurriculum}
+          >
+            Import Curricula
+          </Button>
         </div>
       </Affix>
       {/* Curriculum Cards */}
-      <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255,255,255,0.45)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
+      <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
         {filteredCurriculums.map(curriculum => (
           <Panel
             header={
@@ -91,7 +112,7 @@ const CurriculumPage: React.FC = () => {
               </div>
             }
             key={curriculum.id}
-            style={{background: 'rgba(255,255,255,0.85)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}}
+            style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}}
           >
             {/* Timeline for 9 Semesters */}
             <div style={{display: 'grid', gridTemplateColumns: `${nodeSize + lineWidth + 18}px 1fr`, gap: 0, position: 'relative', marginLeft: 8}}>
@@ -111,7 +132,7 @@ const CurriculumPage: React.FC = () => {
                       <div style={{width: nodeSize, height: nodeSize, borderRadius: '50%', background: nodeColor, border: nodeBorder, boxShadow: '0 2px 8px #1E40AF33', zIndex: 2}} />
                     </div>
                     {/* Semester content */}
-                    <div style={{marginBottom: 12, background: 'rgba(255,255,255,0.13)', borderRadius: 12, padding: 16, boxShadow: '0 1px 6px rgba(30,64,175,0.07)', minHeight: 64}}>
+                    <div style={{marginBottom: 12, background: 'rgba(255, 255, 255, 0.90)', borderRadius: 12, padding: 16, boxShadow: '0 1px 6px rgba(30,64,175,0.07)', minHeight: 64}}>
                       <Title level={5} style={{color: '#1E40AF', marginBottom: 8}}>Semester {semesterNumber}</Title>
                       {/* Normal Subjects */}
                       <div style={{marginBottom: 8}}>
@@ -159,6 +180,17 @@ const CurriculumPage: React.FC = () => {
           </Panel>
         ))}
       </Collapse>
+      
+      {/* Data Import Modal */}
+      {isImportOpen && (
+        <DataImport 
+          onClose={() => setIsImportOpen(false)} 
+          onDataImported={handleDataImported}
+          headerConfig="CURRICULUM"
+          allowMultipleRows={true}
+          dataType="curriculum"
+        />
+      )}
     </div>
   );
 };

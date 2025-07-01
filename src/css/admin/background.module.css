@@ -1,0 +1,25 @@
+.body {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.content {
+  padding-top: 80px; /* Space for top navigation */
+  min-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1023px) {
+  .content {
+    padding-top: 120px; /* More space for mobile navigation */
+  }
+}
+
+@media (max-width: 767px) {
+  .content {
+    padding-top: 140px; /* Even more space for smaller mobile */
+  }
+}

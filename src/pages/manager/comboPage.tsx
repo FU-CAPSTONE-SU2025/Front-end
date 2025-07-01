@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import ManagerTable from '../../components/manager/managerTable';
 import StatusBadge from '../../components/manager/statusBadge';
 import SearchBar from '../../components/common/searchBar';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 // Mock data for combos
 const initialCombos = [
