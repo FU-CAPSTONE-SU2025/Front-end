@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Form, Input, Select, Upload, Table, message, Card, Steps, Divider } from 'antd';
 import { UploadOutlined, FileExcelOutlined, CheckCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import * as XLSX from 'xlsx';
 
 const { Option } = Select;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { Button, Card, Descriptions, Tag, Space, Table, Divider } from 'antd';
 import { ArrowLeftOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined, BookOutlined, FileTextOutlined, TagOutlined, CalendarOutlined, FormOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';

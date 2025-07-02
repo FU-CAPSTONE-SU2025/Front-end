@@ -1,7 +1,8 @@
-import { NavLink } from 'react-router';
-import { SearchOutlined, BellOutlined } from '@ant-design/icons';
+import { NavLink, useNavigate } from 'react-router';
+import { SearchOutlined, BellOutlined, LogoutOutlined } from '@ant-design/icons';
 import { Input, Button, Avatar, Badge, Tooltip } from 'antd';
 import { motion } from 'framer-motion';
+import { getAuthState } from '../../hooks/useAuths';
 
 const navLinks = [
   { name: 'Home', path: '/manager' },
@@ -10,14 +11,22 @@ const navLinks = [
 ];
 
 const ManagerHeader = () => {
+  const navigate = useNavigate();
+  const { logout } = getAuthState();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   return (
     <motion.header
-      className="bg-blue-800 text-white shadow-md"
+      className="fixed w-full bg-blue-800 text-white shadow-md z-50"
       initial={{ y: -60, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, type: 'spring' }}
     >
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 z-50">
         <div className="flex items-center justify-between h-20">
           {/* Logo and Nav Links */}
           <div className="flex items-center space-x-8">
@@ -55,32 +64,18 @@ const ManagerHeader = () => {
 
           {/* Search, User Info */}
           <div className="flex items-center space-x-4">
-            <motion.div
-              className="hidden sm:block"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Input
-                placeholder="Search..."
-                prefix={<SearchOutlined className="text-blue-400" />}
-                className="rounded-full w-48 focus:w-64 transition-all duration-300"
-                style={{ background: '#3056d3', color: 'white' }}
-              />
-            </motion.div>
             <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.97 }}>
-              <Button type="primary" style={{ background: '#f59e42', border: 'none' }} size="middle">
-                FPTU - Ho Chi Minh
+              <Button 
+                type="primary" 
+                icon={<LogoutOutlined />}
+                onClick={handleLogout}
+                style={{ background: '#f59e42', border: 'none' }} 
+                size="middle"
+              >
+                Logout
               </Button>
             </motion.div>
             <div className="flex items-center space-x-4">
-              <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.95 }}>
-                <Tooltip title="Notifications">
-                  <Badge count={3} size="small" offset={[-2, 2]}>
-                    <Button shape="circle" icon={<BellOutlined />} size="large" />
-                  </Badge>
-                </Tooltip>
-              </motion.div>
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.97 }}>
                 <Tooltip title="Profile">
                   <Badge dot color="#52c41a" offset={[-2, 2]}>

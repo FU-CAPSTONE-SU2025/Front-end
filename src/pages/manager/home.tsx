@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { Button, Modal, Form, Input, InputNumber, Select, message } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Modal, Form, Input, InputNumber, Select, message, Affix, Table, Flex } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
-import ManagerTable from '../../components/manager/managerTable';
 import StatusBadge from '../../components/manager/statusBadge';
-import { Pagination } from 'antd';
-import SearchBar from '../../components/common/searchBar';
 import { useNavigate } from 'react-router';
+import styles from '../../css/staff/staffTranscript.module.css';
 
 const { Option } = Select;
 
@@ -193,15 +191,27 @@ const HomePage: React.FC = () => {
       align: 'center' as const,
     },
     {
-      title: 'View',
-      key: 'view',
-      dataIndex: 'view',
-      width: 80,
+      title: 'Actions',
+      key: 'actions',
       align: 'center' as const,
+      width: 120,
       render: (_: any, record: any) => (
-        <Button type="link" onClick={() => navigate(`/manager/curriculum/${record.id}`)}>
-          View
-        </Button>
+        <div className={styles.sttActionButtons}>
+          <Button
+            type="link"
+            icon={<EditOutlined style={{ color: '#f97316' }} />}
+            onClick={() => onEdit(record)}
+            style={{ color: '#f97316' }}
+            title="Edit Curriculum"
+          />
+          <Button
+            type="link"
+            icon={<DeleteOutlined style={{ color: '#e53e3e' }} />}
+            onClick={() => onDelete(record.id)}
+            style={{ color: '#e53e3e' }}
+            title="Delete Curriculum"
+          />
+        </div>
       ),
     },
   ];
@@ -246,33 +256,45 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 mx-auto">
-      <div className="bg-white rounded-t-xl border border-b-0 border-gray-200 shadow-md p-4 pb-2">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex-1">
-            <SearchBar
-              value={search}
-              onChange={v => { setSearch(v); setCurrentPage(1); }}
-              placeholder="Search by code, name, or description..."
-              className="w-full"
-            />
-          </div>
-          <motion.div whileHover={{ scale: 1.05 }} className="sm:ml-4">
-            <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>
-              Add Curriculum
-            </Button>
-          </motion.div>
+    <div className={styles.sttContainer}>
+      {/* Sticky Toolbar */}
+      <Affix offsetTop={80} style={{zIndex: 10}}>
+        <div className={styles.sttToolbar}>
+          <Input
+            placeholder="Search by code, name, or description..."
+            prefix={<SearchOutlined />}
+            value={search}
+            onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+            style={{maxWidth: 240, borderRadius: 999}}
+            size="large"
+          />
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />} 
+            size="large" 
+            style={{borderRadius: 999}}
+            onClick={onAdd}
+          >
+            Add Curriculum
+          </Button>
         </div>
-      </div>
-      <div className="bg-white rounded-b-xl border border-t-0 border-gray-200 shadow-md p-4">
-        <ManagerTable
+      </Affix>
+      {/* Curriculum Table */}
+      <div>
+        <Table
           columns={columns}
-          data={pagedData}
-          pageSize={pageSize}
-          currentPage={currentPage}
-          total={filtered.length}
-          onPageChange={setCurrentPage}
-          onDelete={(row) => onDelete(row.id)}
+          dataSource={pagedData}
+          rowKey="id"
+          className={styles.sttFreshTable}
+          locale={{ emptyText: 'No records available.' }}
+          pagination={{ 
+            current: currentPage,
+            pageSize: pageSize,
+            total: filtered.length,
+            onChange: setCurrentPage,
+            showSizeChanger: false
+          }}
+          style={{marginBottom: 0}}
         />
       </div>
       <AnimatePresence>
@@ -287,10 +309,7 @@ const HomePage: React.FC = () => {
             centered
             footer={null}
             width={480}
-            className="rounded-xl"
             destroyOnClose
-            style={{ background: '#fff', borderRadius: 16 }}
-            bodyStyle={{ background: '#fff', borderRadius: 16 }}
           >
             <motion.div
               initial={{ opacity: 0, y: 40 }}
@@ -303,62 +322,61 @@ const HomePage: React.FC = () => {
                 layout="vertical"
                 initialValues={{ status: 'pending', totalCredit: 120 }}
                 onFinish={handleOk}
-                className="space-y-2"
               >
                 <Form.Item
                   name="curriculumCode"
                   label="Curriculum Code"
                   rules={[{ required: true, message: 'Please enter curriculum code!' }]}
                 >
-                  <Input className="!rounded-lg" placeholder="Enter curriculum code" />
+                  <Input placeholder="Enter curriculum code" />
                 </Form.Item>
                 <Form.Item
                   name="name"
                   label="Name"
                   rules={[{ required: true, message: 'Please enter name!' }]}
                 >
-                  <Input className="!rounded-lg" placeholder="Enter curriculum name" />
+                  <Input placeholder="Enter curriculum name" />
                 </Form.Item>
                 <Form.Item
                   name="description"
                   label="Description"
                   rules={[{ required: true, message: 'Please enter description!' }]}
                 >
-                  <Input.TextArea className="!rounded-lg" placeholder="Enter description" rows={2} />
+                  <Input.TextArea placeholder="Enter description" rows={2} />
                 </Form.Item>
                 <Form.Item
                   name="decisionNo"
                   label="Decision No"
                   rules={[{ required: true, message: 'Please enter decision number!' }]}
                 >
-                  <Input className="!rounded-lg" placeholder="Enter decision number" />
+                  <Input placeholder="Enter decision number" />
                 </Form.Item>
                 <Form.Item
                   name="decisionDate"
                   label="Decision Date (MM/dd/yyyy)"
                   rules={[{ required: true, message: 'Please enter decision date!' }]}
                 >
-                  <Input className="!rounded-lg" placeholder="MM/dd/yyyy" />
+                  <Input placeholder="MM/dd/yyyy" />
                 </Form.Item>
                 <Form.Item
                   name="totalCredit"
                   label="Total Credit"
                   rules={[{ required: true, message: 'Please enter total credit!' }]}
                 >
-                  <InputNumber className="!rounded-lg w-full" min={1} max={300} placeholder="Enter total credit" />
+                  <InputNumber min={1} max={300} placeholder="Enter total credit" style={{width: '100%'}} />
                 </Form.Item>
                 <Form.Item
                   name="status"
                   label="Status"
                   rules={[{ required: true, message: 'Please select status!' }]}
                 >
-                  <Select className="!rounded-lg">
+                  <Select>
                     {statusOptions.map((opt) => (
                       <Option key={opt.value} value={opt.value}>{opt.label}</Option>
                     ))}
                   </Select>
                 </Form.Item>
-                <div className="flex justify-end gap-2 mt-4">
+                <div style={{display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16}}>
                   <Button onClick={() => setModalOpen(false)}>
                     Cancel
                   </Button>

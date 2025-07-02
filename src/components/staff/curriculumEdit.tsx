@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Select, DatePicker, Button, message, Space, Typography } from 'antd';
+import { Form, Input, Select, DatePicker, Button, message, Space, Typography, Spin } from 'antd';
 import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Curriculum, Program } from '../../interfaces/ISchoolProgram';
-import { programs, curriculums } from '../../data/schoolData';
+import { programs } from '../../data/schoolData';
 import dayjs from 'dayjs';
+import {useCRUDCurriculum} from '../../hooks/useCRUDSchoolMaterial';
 
 const { Title } = Typography;
 const { Option } = Select;
+const { TextArea } = Input;
 
 interface CurriculumEditProps {
   id?: number;
@@ -14,24 +16,35 @@ interface CurriculumEditProps {
 
 const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
-  const [initialData, setInitialData] = useState<Curriculum | null>(null);
   const isCreateMode = !id;
   const isEditMode = !!id;
 
-  // Load existing data if in edit mode
+  // API hooks
+  const {
+    addCurriculumMutation,
+    updateCurriculumMutation,
+    getCurriculumById
+  } = useCRUDCurriculum();
+
+  const [loading, setLoading] = useState(false);
+
+  // Fetch curriculum by ID on mount (edit mode)
   useEffect(() => {
     if (isEditMode && id) {
-      const curriculum = curriculums.find(c => c.id === id);
-      if (curriculum) {
-        setInitialData(curriculum);
-        form.setFieldsValue({
-          ...curriculum,
-          effectiveDate: dayjs(curriculum.effectiveDate)
-        });
-      }
+      getCurriculumById.mutate(id);
     }
-  }, [id, isEditMode, form]);
+  }, [id, isEditMode]);
+
+  // Set form fields when data is loaded
+  useEffect(() => {
+    if (isEditMode && getCurriculumById.data) {
+      const c = getCurriculumById.data;
+      form.setFieldsValue({
+        ...c,
+        effectiveDate: dayjs(c.effectiveDate)
+      });
+    }
+  }, [getCurriculumById.data, isEditMode, form]);
 
   const onFinish = async (values: any) => {
     setLoading(true);
@@ -39,22 +52,24 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
       const curriculumData: Partial<Curriculum> = {
         ...values,
         effectiveDate: values.effectiveDate.toDate(),
-        programId: parseInt(values.programId)
+        programId: 2 // FOR NOW
       };
 
       if (isCreateMode) {
-        // Simulate API call for create
-        console.log('Creating curriculum:', curriculumData);
+        await addCurriculumMutation.mutateAsync(curriculumData as Curriculum);
         message.success('Curriculum created successfully!');
-      } else {
-        // Simulate API call for update
-        console.log('Updating curriculum:', { id, ...curriculumData });
-        message.success('Curriculum updated successfully!');
-      }
-      
-      // Reset form after successful submission
-      if (isCreateMode) {
         form.resetFields();
+      } else if (id) {
+        // Ensure all required fields are non-undefined for update
+        const updateData = {
+          ...curriculumData,
+          programId: Number(curriculumData.programId),
+          curriculumCode: curriculumData.curriculumCode ?? '',
+          curriculumName: curriculumData.curriculumName ?? '',
+          effectiveDate: curriculumData.effectiveDate as Date // ensure effectiveDate is always Date, not undefined
+        };
+        await updateCurriculumMutation.mutateAsync({ id, data: updateData });
+        message.success('Curriculum updated successfully!');
       }
     } catch (error) {
       message.error('An error occurred. Please try again.');
@@ -63,28 +78,16 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
     }
   };
 
-  const handleDelete = async () => {
-    if (!id) return;
-    
-    setLoading(true);
-    try {
-      // Simulate API call for delete
-      console.log('Deleting curriculum:', id);
-      message.success('Curriculum deleted successfully!');
-      // Navigate back or reset form
-    } catch (error) {
-      message.error('An error occurred while deleting.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Show loading spinner if fetching data
+  if (isEditMode && getCurriculumById.isPending) {
+    return <Spin tip="Loading curriculum..." style={{ width: '100%', margin: '2rem 0' }} />;
+  }
 
   return (
     <div style={{ padding: '1rem' }}>
       <Title level={4} style={{ color: '#1E40AF', marginBottom: '2rem', textAlign: 'center' }}>
         {isCreateMode ? 'Create New Curriculum' : 'Edit Curriculum'}
       </Title>
-      
       <Form
         form={form}
         layout="vertical"
@@ -120,7 +123,6 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
           <Input 
             placeholder="e.g., CS2023" 
             style={{ borderRadius: 8 }}
-            disabled={isEditMode} // Code shouldn't be changed after creation
           />
         </Form.Item>
 
@@ -168,24 +170,6 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
             >
               {isCreateMode ? 'Create Curriculum' : 'Update Curriculum'}
             </Button>
-            
-            {isEditMode && (
-              <Button
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleDelete}
-                loading={loading}
-                style={{
-                  borderRadius: 999,
-                  height: 48,
-                  paddingLeft: 32,
-                  paddingRight: 32,
-                  fontWeight: 600
-                }}
-              >
-                Delete Curriculum
-              </Button>
-            )}
           </Space>
         </Form.Item>
       </Form>

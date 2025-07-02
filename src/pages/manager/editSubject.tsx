@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Button, Form, Input, Select, message, Card, Steps, Divider } from 'antd';
 import { CheckCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ISubject, ISubjectForm } from '../../interfaces/ISubject';
+import { useNavigate, useParams } from 'react-router';
+import { GetPrerequisitesSubject } from '../../api/SchoolAPI/subjectAPI';
+import { Subject } from '../../interfaces/ISchoolProgram';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -91,6 +92,7 @@ const EditSubjectPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [prerequisites, setPrerequisites] = useState<Subject[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -99,6 +101,10 @@ const EditSubjectPage: React.FC = () => {
         form.setFieldsValue(subject);
         setPreviewData([subject]);
         setLoading(false);
+        // Fetch prerequisites from API
+        GetPrerequisitesSubject(parseInt(id)).then((data) => {
+          if (data) setPrerequisites(data);
+        });
       } else {
         message.error('Subject not found');
         navigate('/manager/subject');
@@ -264,6 +270,17 @@ const EditSubjectPage: React.FC = () => {
                 </Form.Item>
               </div>
 
+              {prerequisites.length > 0 && (
+                <div className="mb-4">
+                  <strong>Current Prerequisite Subjects:</strong>
+                  <ul className="list-disc ml-6 mt-2">
+                    {prerequisites.map((subj) => (
+                      <li key={subj.id}>{subj.subjectName} ({subj.subjectCode})</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <Form.Item>
                 <Button 
                   type="primary" 
@@ -331,6 +348,17 @@ const EditSubjectPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {prerequisites.length > 0 && (
+                <div className="mb-4">
+                  <strong>Current Prerequisite Subjects:</strong>
+                  <ul className="list-disc ml-6 mt-2">
+                    {prerequisites.map((subj) => (
+                      <li key={subj.id}>{subj.subjectName} ({subj.subjectCode})</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <Divider />
 
