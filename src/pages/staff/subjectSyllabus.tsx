@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Collapse, 
   Input, 
   Select, 
   Button, 
@@ -20,33 +19,41 @@ import {
   EditOutlined,
   DeleteOutlined,
   SaveOutlined,
-  ArrowLeftOutlined
+  ArrowLeftOutlined,
+  FileExcelOutlined
 } from '@ant-design/icons';
-import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
-import { 
-  CompleteSyllabus,
-  SyllabusAssessment,
-  SyllabusLearningMaterial,
-  SyllabusLearningOutcome,
-  SyllabusSession,
-  CreateSyllabus
-} from '../../interfaces/ISyllabus';
-import { subjects } from '../../data/schoolData';
-import { mockSyllabus } from '../../data/mockSyllabus';
+import dayjs from 'dayjs';
 
-const { Panel } = Collapse;
+import { subjects } from '../../data/schoolData';
+import { useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
+import { SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from '../../interfaces/ISchoolProgram';
+import DataImport from '../../components/common/dataImport';
+import { getHeaderConfig } from '../../data/importConfigurations';
+
 const { Option } = Select;
 const { TextArea } = Input;
 
 const SubjectSyllabus: React.FC = () => {
   const navigate = useNavigate();
   const searchParams = useParams();
-  const {subjectId,syllabusId} = searchParams
-  //console.log("Subject Id: ",subjectId,syllabusId)
-  
+  const { subjectId } = searchParams;
+
+  // Syllabus API hooks
+  const {
+    fetchSyllabusBySubjectMutation,
+    addSyllabusMutation,
+    addSyllabusAssessmentMutation,
+    addSyllabusMaterialMutation,
+    addSyllabusOutcomeMutation,
+    addSyllabusSessionMutation,
+    addSyllabusOutcomesToSessionMutation,
+    // Other mutations will be used in further steps
+  } = useCRUDSyllabus();
+
   // State for syllabus data
-  const [syllabus, setSyllabus] = useState<CompleteSyllabus | null>(null);
+  const [syllabus, setSyllabus] = useState<any | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   
@@ -69,17 +76,51 @@ const SubjectSyllabus: React.FC = () => {
   const [editingSessionId, setEditingSessionId] = useState<number | null>(null);
   // Temp state for editing
   const [assessmentEdit, setAssessmentEdit] = useState<Partial<SyllabusAssessment>>({});
-  const [materialEdit, setMaterialEdit] = useState<Partial<SyllabusLearningMaterial>>({});
-  const [outcomeEdit, setOutcomeEdit] = useState<Partial<SyllabusLearningOutcome>>({});
+  const [materialEdit, setMaterialEdit] = useState<Partial<SyllabusMaterial>>({});
+  const [outcomeEdit, setOutcomeEdit] = useState<Partial<SyllabusOutcome>>({});
   const [sessionEdit, setSessionEdit] = useState<Partial<SyllabusSession>>({});
+
+  // State for Add Outcomes to Session modal
+  const [addOutcomeModalVisible, setAddOutcomeModalVisible] = useState(false);
+  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
+  const [selectedOutcomeId, setSelectedOutcomeId] = useState<number | null>(null);
+
+  // State for Excel import modals
+  const [assessmentImportVisible, setAssessmentImportVisible] = useState(false);
+  const [materialImportVisible, setMaterialImportVisible] = useState(false);
+  const [outcomeImportVisible, setOutcomeImportVisible] = useState(false);
+  const [sessionImportVisible, setSessionImportVisible] = useState(false);
 
   // Get subject information
   const subject = subjects.find(s => s.id === Number(subjectId));
 
   useEffect(() => {
-    // For demo, use mockSyllabus directly
-    setSyllabus(mockSyllabus);
-  }, []);
+    if (!subjectId || !subject) return;
+    const fetchOrCreateSyllabus = async () => {
+      setLoading(true);
+      try {
+        // Try to fetch syllabus for this subject
+        const result = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+        if (!result || (Array.isArray(result) && result.length === 0)) {
+          // No syllabus found, create one
+          const content = `${subject.subjectCode} - ${subject.subjectName}'s syllabus`;
+          const newSyllabus = await addSyllabusMutation.mutateAsync({
+            subjectId: subject.id,
+            content,
+          });
+          setSyllabus(newSyllabus);
+        } else {
+          // Syllabus found
+          setSyllabus(Array.isArray(result) ? result[0] : result);
+        }
+      } catch (error) {
+        message.error('Failed to load or create syllabus');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrCreateSyllabus();
+  }, [subjectId, subject]);
 
   const handleSaveSyllabus = async () => {
     setLoading(true);
@@ -95,18 +136,15 @@ const SubjectSyllabus: React.FC = () => {
   };
 
   const handleAddAssessment = async (values: any) => {
+    if (!syllabus) return;
     try {
-      const newAssessment: SyllabusAssessment = {
-        id: Date.now(), // Temporary ID
-        syllabus_id: syllabus!.id,
+      await addSyllabusAssessmentMutation.mutateAsync({
+        syllabusId: syllabus.id,
         ...values
-      };
-      
-      setSyllabus(prev => prev ? {
-        ...prev,
-        assessments: [...prev.assessments, newAssessment]
-      } : null);
-      
+      });
+      // Refetch syllabus to update UI
+      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      setSyllabus(Array.isArray(updated) ? updated[0] : updated);
       setAssessmentModalVisible(false);
       assessmentForm.resetFields();
       message.success('Assessment added successfully');
@@ -116,19 +154,14 @@ const SubjectSyllabus: React.FC = () => {
   };
 
   const handleAddMaterial = async (values: any) => {
+    if (!syllabus) return;
     try {
-      const newMaterial: SyllabusLearningMaterial = {
-        id: Date.now(),
-        syllabus_id: syllabus!.id,
-        ...values,
-        published_date: values.published_date?.toDate() || new Date()
-      };
-      
-      setSyllabus(prev => prev ? {
-        ...prev,
-        learningMaterials: [...prev.learningMaterials, newMaterial]
-      } : null);
-      
+      await addSyllabusMaterialMutation.mutateAsync({
+        syllabusId: syllabus.id,
+        ...values
+      });
+      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      setSyllabus(Array.isArray(updated) ? updated[0] : updated);
       setMaterialModalVisible(false);
       materialForm.resetFields();
       message.success('Learning material added successfully');
@@ -138,18 +171,14 @@ const SubjectSyllabus: React.FC = () => {
   };
 
   const handleAddOutcome = async (values: any) => {
+    if (!syllabus) return;
     try {
-      const newOutcome: SyllabusLearningOutcome = {
-        id: Date.now(),
-        syllabus_id: syllabus!.id,
+      await addSyllabusOutcomeMutation.mutateAsync({
+        syllabusId: syllabus.id,
         ...values
-      };
-      
-      setSyllabus(prev => prev ? {
-        ...prev,
-        learningOutcomes: [...prev.learningOutcomes, newOutcome]
-      } : null);
-      
+      });
+      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      setSyllabus(Array.isArray(updated) ? updated[0] : updated);
       setOutcomeModalVisible(false);
       outcomeForm.resetFields();
       message.success('Learning outcome added successfully');
@@ -159,18 +188,14 @@ const SubjectSyllabus: React.FC = () => {
   };
 
   const handleAddSession = async (values: any) => {
+    if (!syllabus) return;
     try {
-      const newSession: SyllabusSession = {
-        id: Date.now(),
-        syllabus_id: syllabus!.id,
+      await addSyllabusSessionMutation.mutateAsync({
+        syllabusId: syllabus.id,
         ...values
-      };
-      
-      setSyllabus(prev => prev ? {
-        ...prev,
-        sessions: [...prev.sessions, newSession]
-      } : null);
-      
+      });
+      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      setSyllabus(Array.isArray(updated) ? updated[0] : updated);
       setSessionModalVisible(false);
       sessionForm.resetFields();
       message.success('Session added successfully');
@@ -187,18 +212,18 @@ const SubjectSyllabus: React.FC = () => {
       okType: 'danger',
       cancelText: 'Cancel',
       onOk: () => {
-        setSyllabus(prev => {
+        setSyllabus((prev: any) => {
           if (!prev) return null;
           
           switch (type) {
             case 'assessment':
-              return { ...prev, assessments: prev.assessments.filter(a => a.id !== id) };
+              return { ...prev, assessments: prev.assessments.filter((a: any) => a.id !== id) };
             case 'material':
-              return { ...prev, learningMaterials: prev.learningMaterials.filter(m => m.id !== id) };
+              return { ...prev, learningMaterials: prev.learningMaterials.filter((m: any) => m.id !== id) };
             case 'outcome':
-              return { ...prev, learningOutcomes: prev.learningOutcomes.filter(o => o.id !== id) };
+              return { ...prev, learningOutcomes: prev.learningOutcomes.filter((o: any) => o.id !== id) };
             case 'session':
-              return { ...prev, sessions: prev.sessions.filter(s => s.id !== id) };
+              return { ...prev, sessions: prev.sessions.filter((s: any) => s.id !== id) };
             default:
               return prev;
           }
@@ -214,9 +239,9 @@ const SubjectSyllabus: React.FC = () => {
     setAssessmentEdit(record);
   };
   const saveEditAssessment = () => {
-    setSyllabus(prev => prev ? {
+    setSyllabus((prev: any) => prev ? {
       ...prev,
-      assessments: prev.assessments.map(a => a.id === editingAssessmentId ? { ...a, ...assessmentEdit } : a)
+      assessments: prev.assessments.map((a: SyllabusAssessment) => a.id === editingAssessmentId ? { ...a, ...assessmentEdit } : a)
     } : null);
     setEditingAssessmentId(null);
     setAssessmentEdit({});
@@ -226,14 +251,14 @@ const SubjectSyllabus: React.FC = () => {
     setAssessmentEdit({});
   };
 
-  const startEditMaterial = (record: SyllabusLearningMaterial) => {
+  const startEditMaterial = (record: SyllabusMaterial) => {
     setEditingMaterialId(record.id);
     setMaterialEdit(record);
   };
   const saveEditMaterial = () => {
-    setSyllabus(prev => prev ? {
+    setSyllabus((prev:any) => prev ? {
       ...prev,
-      learningMaterials: prev.learningMaterials.map(m => m.id === editingMaterialId ? { ...m, ...materialEdit } : m)
+      learningMaterials: prev.learningMaterials.map((m: SyllabusMaterial) => m.id === editingMaterialId ? { ...m, ...materialEdit } : m)
     } : null);
     setEditingMaterialId(null);
     setMaterialEdit({});
@@ -243,14 +268,14 @@ const SubjectSyllabus: React.FC = () => {
     setMaterialEdit({});
   };
 
-  const startEditOutcome = (record: SyllabusLearningOutcome) => {
+  const startEditOutcome = (record: SyllabusOutcome) => {
     setEditingOutcomeId(record.id);
     setOutcomeEdit(record);
   };
   const saveEditOutcome = () => {
-    setSyllabus(prev => prev ? {
+    setSyllabus((prev: any) => prev ? {
       ...prev,
-      learningOutcomes: prev.learningOutcomes.map(o => o.id === editingOutcomeId ? { ...o, ...outcomeEdit } : o)
+      learningOutcomes: prev.learningOutcomes.map((o: SyllabusOutcome) => o.id === editingOutcomeId ? { ...o, ...outcomeEdit } : o)
     } : null);
     setEditingOutcomeId(null);
     setOutcomeEdit({});
@@ -265,9 +290,9 @@ const SubjectSyllabus: React.FC = () => {
     setSessionEdit(record);
   };
   const saveEditSession = () => {
-    setSyllabus(prev => prev ? {
+    setSyllabus((prev: any) => prev ? {
       ...prev,
-      sessions: prev.sessions.map(s => s.id === editingSessionId ? { ...s, ...sessionEdit } : s)
+      sessions: prev.sessions.map((s: SyllabusSession) => s.id === editingSessionId ? { ...s, ...sessionEdit } : s)
     } : null);
     setEditingSessionId(null);
     setSessionEdit({});
@@ -275,6 +300,126 @@ const SubjectSyllabus: React.FC = () => {
   const cancelEditSession = () => {
     setEditingSessionId(null);
     setSessionEdit({});
+  };
+
+  // Handler to open Add Outcomes modal
+  const openAddOutcomeModal = (sessionId: number) => {
+    setSelectedSessionId(sessionId);
+    setSelectedOutcomeId(null);
+    setAddOutcomeModalVisible(true);
+  };
+
+  // Handler to add outcome to session
+  const handleAddOutcomeToSession = async () => {
+    if (!selectedSessionId || !selectedOutcomeId) return;
+    try {
+      await addSyllabusOutcomesToSessionMutation.mutateAsync({
+        sessionId: selectedSessionId,
+        outcomeId: selectedOutcomeId
+      });
+      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      setSyllabus(Array.isArray(updated) ? updated[0] : updated);
+      setAddOutcomeModalVisible(false);
+      setSelectedSessionId(null);
+      setSelectedOutcomeId(null);
+      message.success('Outcome added to session successfully');
+    } catch (error) {
+      message.error('Failed to add outcome to session');
+    }
+  };
+
+  // Handler for imported assessment data
+  const handleAssessmentDataImported = async (data: { [key: string]: string }[]) => {
+    if (!syllabus) return;
+    try {
+      for (const row of data) {
+        const payload: CreateSyllabusAssessment = {
+          syllabusId: syllabus.id,
+          category: row.category,
+          quantity: Number(row.quantity),
+          weight: Number(row.weight),
+          completionCriteria: row.completionCriteria,
+          duration: Number(row.duration),
+          questionType: row.questionType
+        };
+        await addSyllabusAssessmentMutation.mutateAsync(payload);
+      }
+      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      setSyllabus(Array.isArray(updated) ? updated[0] : updated);
+      message.success(`Imported ${data.length} assessments successfully`);
+    } catch (error) {
+      message.error('Failed to import some or all assessments');
+    } finally {
+      setAssessmentImportVisible(false);
+    }
+  };
+
+  // Handler for imported material data
+  const handleMaterialDataImported = async (data: { [key: string]: string }[]) => {
+    if (!syllabus) return;
+    try {
+      for (const row of data) {
+        const payload: CreateSyllabusMaterial = {
+          syllabusId: syllabus.id,
+          materialName: row.materialName,
+          authorName: row.authorName,
+          publishedDate: row.publishedDate ? new Date(row.publishedDate) : new Date(),
+          description: row.description,
+          filepathOrUrl: row.filepathOrUrl
+        };
+        await addSyllabusMaterialMutation.mutateAsync(payload);
+      }
+      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      setSyllabus(Array.isArray(updated) ? updated[0] : updated);
+      message.success(`Imported ${data.length} materials successfully`);
+    } catch (error) {
+      message.error('Failed to import some or all materials');
+    } finally {
+      setMaterialImportVisible(false);
+    }
+  };
+  // Handler for imported outcome data
+  const handleOutcomeDataImported = async (data: { [key: string]: string }[]) => {
+    if (!syllabus) return;
+    try {
+      for (const row of data) {
+        const payload: CreateSyllabusOutcome = {
+          syllabusId: syllabus.id,
+          outcomeCode: row.outcomeCode,
+          description: row.description
+        };
+        await addSyllabusOutcomeMutation.mutateAsync(payload);
+      }
+      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      setSyllabus(Array.isArray(updated) ? updated[0] : updated);
+      message.success(`Imported ${data.length} outcomes successfully`);
+    } catch (error) {
+      message.error('Failed to import some or all outcomes');
+    } finally {
+      setOutcomeImportVisible(false);
+    }
+  };
+  // Handler for imported session data
+  const handleSessionDataImported = async (data: { [key: string]: string }[]) => {
+    if (!syllabus) return;
+    try {
+      for (const row of data) {
+        const payload: CreateSyllabusSession = {
+          syllabusId: syllabus.id,
+          sessionNumber: Number(row.sessionNumber),
+          topic: row.topic,
+          mission: row.mission
+        };
+        await addSyllabusSessionMutation.mutateAsync(payload);
+      }
+      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      setSyllabus(Array.isArray(updated) ? updated[0] : updated);
+      message.success(`Imported ${data.length} sessions successfully`);
+    } catch (error) {
+      message.error('Failed to import some or all sessions');
+    } finally {
+      setSessionImportVisible(false);
+    }
   };
 
   // Table columns for each section
@@ -324,12 +469,12 @@ const SubjectSyllabus: React.FC = () => {
           />
         ) : record.duration
     },
-    { title: 'Question Type', dataIndex: 'question_type', key: 'question_type',
+    { title: 'Question Type', dataIndex: 'questionType', key: 'questionType',
       render: (_: any, record: SyllabusAssessment) =>
         isEditing && editingAssessmentId === record.id ? (
           <Select
-            value={assessmentEdit.question_type}
-            onChange={v => setAssessmentEdit(e => ({ ...e, question_type: v }))}
+            value={assessmentEdit.questionType}
+            onChange={v => setAssessmentEdit(e => ({ ...e, questionType: v }))}
             style={{ width: 140 }}
           >
             <Option value="essay">Essay</Option>
@@ -339,7 +484,7 @@ const SubjectSyllabus: React.FC = () => {
             <Option value="project">Project</Option>
             <Option value="other">Other</Option>
           </Select>
-        ) : record.question_type
+        ) : record.questionType
     },
     {
       title: 'Actions',
@@ -358,113 +503,132 @@ const SubjectSyllabus: React.FC = () => {
 
   // Learning Materials columns with inline editing
   const materialColumns = [
-    { title: 'Material Name', dataIndex: 'material_name', key: 'material_name',
-      render: (_: any, record: SyllabusLearningMaterial) =>
+    { title: 'Material Name', dataIndex: 'materialName', key: 'materialName',
+      render: (_: any, record: SyllabusMaterial) =>
         isEditing && editingMaterialId === record.id ? (
           <Input
-            value={materialEdit.material_name}
-            onChange={e => setMaterialEdit(me => ({ ...me, material_name: e.target.value }))}
+            value={materialEdit.materialName}
+            onChange={e => setMaterialEdit({ ...materialEdit, materialName: e.target.value })}
           />
-        ) : record.material_name
+        ) : (
+          record.materialName
+        )
     },
-    { title: 'Author', dataIndex: 'author_name', key: 'author_name',
-      render: (_: any, record: SyllabusLearningMaterial) =>
+    { title: 'Author', dataIndex: 'authorName', key: 'authorName',
+      render: (_: any, record: SyllabusMaterial) =>
         isEditing && editingMaterialId === record.id ? (
           <Input
-            value={materialEdit.author_name}
-            onChange={e => setMaterialEdit(me => ({ ...me, author_name: e.target.value }))}
+            value={materialEdit.authorName}
+            onChange={e => setMaterialEdit({ ...materialEdit, authorName: e.target.value })}
           />
-        ) : record.author_name
+        ) : (
+          record.authorName
+        )
     },
-    { title: 'Published Date', dataIndex: 'published_date', key: 'published_date',
-      render: (date: Date, record: SyllabusLearningMaterial) =>
+    { title: 'Published Date', dataIndex: 'publishedDate', key: 'publishedDate',
+      render: (date: Date, record: SyllabusMaterial) =>
         isEditing && editingMaterialId === record.id ? (
           <DatePicker
-            value={materialEdit.published_date ? (typeof materialEdit.published_date === 'string' ? undefined : materialEdit.published_date as any) : undefined}
-            onChange={d => setMaterialEdit(me => ({ ...me, published_date: d ? d.toDate() : new Date() }))}
-            format="YYYY-MM-DD"
+            value={materialEdit.publishedDate ? dayjs(materialEdit.publishedDate) : undefined}
+            onChange={date => setMaterialEdit({ ...materialEdit, publishedDate: date ? date.toDate() : undefined })}
           />
-        ) : date?.toLocaleDateString()
+        ) : (
+          record.publishedDate ? new Date(record.publishedDate).toLocaleDateString() : ''
+        )
     },
     { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true,
-      render: (_: any, record: SyllabusLearningMaterial) =>
+      render: (_: any, record: SyllabusMaterial) =>
         isEditing && editingMaterialId === record.id ? (
           <Input
             value={materialEdit.description}
-            onChange={e => setMaterialEdit(me => ({ ...me, description: e.target.value }))}
+            onChange={e => setMaterialEdit({ ...materialEdit, description: e.target.value })}
           />
-        ) : record.description
+        ) : (
+          record.description
+        )
     },
-    { title: 'File/URL', dataIndex: 'filepath_or_url', key: 'filepath_or_url', ellipsis: true,
-      render: (_: any, record: SyllabusLearningMaterial) =>
+    { title: 'File/URL', dataIndex: 'filepathOrUrl', key: 'filepathOrUrl', ellipsis: true,
+      render: (_: any, record: SyllabusMaterial) =>
         isEditing && editingMaterialId === record.id ? (
           <Input
-            value={materialEdit.filepath_or_url}
-            onChange={e => setMaterialEdit(me => ({ ...me, filepath_or_url: e.target.value }))}
+            value={materialEdit.filepathOrUrl}
+            onChange={e => setMaterialEdit({ ...materialEdit, filepathOrUrl: e.target.value })}
           />
-        ) : record.filepath_or_url
+        ) : (
+          record.filepathOrUrl
+        )
     },
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: SyllabusLearningMaterial) =>
+      render: (_: any, record: SyllabusMaterial) =>
         isEditing && editingMaterialId === record.id ? (
           <>
-            <Button type="link" icon={<SaveOutlined />} onClick={saveEditMaterial} />
-            <Button type="link" icon={<DeleteOutlined />} onClick={cancelEditMaterial} />
+            <Button icon={<SaveOutlined />} onClick={saveEditMaterial} />
+            <Button icon={<DeleteOutlined />} onClick={cancelEditMaterial} />
           </>
-        ) : isEditing ? (
-          <Button type="link" icon={<EditOutlined />} onClick={() => startEditMaterial(record)} />
-        ) : null
+        ) : (
+          <>
+            <Button icon={<EditOutlined />} onClick={() => startEditMaterial(record)} />
+            <Button icon={<DeleteOutlined />} onClick={() => handleDeleteItem('material', record.id)} />
+          </>
+        )
     },
   ];
 
   // Learning Outcomes columns with inline editing
   const outcomeColumns = [
-    { title: 'Outcome Code', dataIndex: 'outcome_code', key: 'outcome_code',
-      render: (_: any, record: SyllabusLearningOutcome) =>
+    { title: 'Outcome Code', dataIndex: 'outcomeCode', key: 'outcomeCode',
+      render: (_: any, record: SyllabusOutcome) =>
         isEditing && editingOutcomeId === record.id ? (
           <Input
-            value={outcomeEdit.outcome_code}
-            onChange={e => setOutcomeEdit(oe => ({ ...oe, outcome_code: e.target.value }))}
+            value={outcomeEdit.outcomeCode}
+            onChange={e => setOutcomeEdit({ ...outcomeEdit, outcomeCode: e.target.value })}
           />
-        ) : record.outcome_code
+        ) : (
+          record.outcomeCode
+        )
     },
     { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true,
-      render: (_: any, record: SyllabusLearningOutcome) =>
+      render: (_: any, record: SyllabusOutcome) =>
         isEditing && editingOutcomeId === record.id ? (
           <Input
             value={outcomeEdit.description}
-            onChange={e => setOutcomeEdit(oe => ({ ...oe, description: e.target.value }))}
+            onChange={e => setOutcomeEdit({ ...outcomeEdit, description: e.target.value })}
           />
-        ) : record.description
+        ) : (
+          record.description
+        )
     },
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: SyllabusLearningOutcome) =>
+      render: (_: any, record: SyllabusOutcome) =>
         isEditing && editingOutcomeId === record.id ? (
           <>
-            <Button type="link" icon={<SaveOutlined />} onClick={saveEditOutcome} />
-            <Button type="link" icon={<DeleteOutlined />} onClick={cancelEditOutcome} />
+            <Button icon={<SaveOutlined />} onClick={saveEditOutcome} />
+            <Button icon={<DeleteOutlined />} onClick={cancelEditOutcome} />
           </>
-        ) : isEditing ? (
-          <Button type="link" icon={<EditOutlined />} onClick={() => startEditOutcome(record)} />
-        ) : null
+        ) : (
+          <>
+            <Button icon={<EditOutlined />} onClick={() => startEditOutcome(record)} />
+            <Button icon={<DeleteOutlined />} onClick={() => handleDeleteItem('outcome', record.id)} />
+          </>
+        )
     },
   ];
 
   // Sessions columns with inline editing
   const sessionColumns = [
-    { title: 'Session #', dataIndex: 'session_number', key: 'session_number',
+    { title: 'Session #', dataIndex: 'sessionNumber', key: 'sessionNumber',
       render: (_: any, record: SyllabusSession) =>
         isEditing && editingSessionId === record.id ? (
           <InputNumber
-            value={sessionEdit.session_number}
+            value={sessionEdit.sessionNumber}
             min={1}
-            onChange={v => setSessionEdit(se => ({ ...se, session_number: v ?? se.session_number ?? 1 }))}
+            onChange={v => setSessionEdit(se => ({ ...se, sessionNumber: v ?? se.sessionNumber ?? 1 }))}
           />
-        ) : record.session_number
+        ) : record.sessionNumber
     },
     { title: 'Topic', dataIndex: 'topic', key: 'topic', ellipsis: true,
       render: (_: any, record: SyllabusSession) =>
@@ -485,17 +649,39 @@ const SubjectSyllabus: React.FC = () => {
         ) : record.mission
     },
     {
+      title: 'Outcomes',
+      dataIndex: 'outcomes',
+      key: 'outcomes',
+      render: (_: any, record: SyllabusSession) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {/* TODO: Replace with real outcomes when backend supports session-outcome mapping */}
+          {(/* record.outcomes || */ []).length > 0 ? (
+            /* record.outcomes */ [].map((outcome: any) => (
+              <div key={outcome.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>{outcome.outcomeCode || outcome.description || 'Outcome'}</span>
+                {/* Remove button (mocked, disabled) */}
+                <Button size="small" disabled title="Remove not implemented">Remove</Button>
+              </div>
+            ))
+          ) : (
+            <span style={{ color: '#888' }}>No outcomes</span>
+          )}
+        </div>
+      )
+    },
+    {
       title: 'Actions',
       key: 'actions',
       render: (_: any, record: SyllabusSession) =>
-        isEditing && editingSessionId === record.id ? (
+        isEditing && editingSessionId !== record.id ? (
           <>
-            <Button type="link" icon={<SaveOutlined />} onClick={saveEditSession} />
-            <Button type="link" icon={<DeleteOutlined />} onClick={cancelEditSession} />
+            <Button icon={<EditOutlined />} onClick={() => startEditSession(record)} />
+            <Button icon={<DeleteOutlined />} onClick={() => handleDeleteItem('session', record.id)} />
+            <Button icon={<PlusOutlined />} onClick={() => openAddOutcomeModal(record.id)} style={{ marginLeft: 8 }}>
+              Add Outcomes
+            </Button>
           </>
-        ) : isEditing ? (
-          <Button type="link" icon={<EditOutlined />} onClick={() => startEditSession(record)} />
-        ) : null
+        ) : isEditing ? null : null
     },
   ];
 
@@ -568,7 +754,7 @@ const SubjectSyllabus: React.FC = () => {
             {isEditing ? (
               <TextArea
                 value={syllabus?.content || ''}
-                onChange={(e) => setSyllabus(prev => prev ? { ...prev, content: e.target.value } : null)}
+                onChange={(e) => setSyllabus((prev:any) => prev ? { ...prev, content: e.target.value } : null)}
                 placeholder="Enter course description..."
                 className={styles.formTextArea}
                 rows={6}
@@ -589,14 +775,23 @@ const SubjectSyllabus: React.FC = () => {
               Assessments
             </h3>
             {isEditing && (
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setAssessmentModalVisible(true)}
-                style={{ background: '#f97316', borderColor: '#f97316' }}
-              >
-                Add Assessment
-              </Button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setAssessmentModalVisible(true)}
+                  style={{ background: '#f97316', borderColor: '#f97316' }}
+                >
+                  Add Assessment
+                </Button>
+                <Button
+                  icon={<FileExcelOutlined />}
+                  onClick={() => setAssessmentImportVisible(true)}
+                  style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
+                >
+                  Import from Excel
+                </Button>
+              </div>
             )}
           </div>
           <div className={styles.syllabusSectionContent}>
@@ -613,7 +808,7 @@ const SubjectSyllabus: React.FC = () => {
                 <div className={styles.emptyStateIcon}>📊</div>
                 <div className={styles.emptyStateText}>No assessments defined</div>
                 <div className={styles.emptyStateSubtext}>
-                  {isEditing ? 'Click "Add Assessment" to get started' : 'Contact your instructor to add assessments'}
+                  {isEditing ? 'Click "Add Assessment" or "Import from Excel" to get started' : 'Contact your instructor to add assessments'}
                 </div>
               </div>
             )}
@@ -628,14 +823,23 @@ const SubjectSyllabus: React.FC = () => {
               Learning Materials
             </h3>
             {isEditing && (
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setMaterialModalVisible(true)}
-                style={{ background: '#f97316', borderColor: '#f97316' }}
-              >
-                Add Material
-              </Button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setMaterialModalVisible(true)}
+                  style={{ background: '#f97316', borderColor: '#f97316' }}
+                >
+                  Add Material
+                </Button>
+                <Button
+                  icon={<FileExcelOutlined />}
+                  onClick={() => setMaterialImportVisible(true)}
+                  style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
+                >
+                  Import from Excel
+                </Button>
+              </div>
             )}
           </div>
           <div className={styles.syllabusSectionContent}>
@@ -652,12 +856,28 @@ const SubjectSyllabus: React.FC = () => {
                 <div className={styles.emptyStateIcon}>📚</div>
                 <div className={styles.emptyStateText}>No learning materials</div>
                 <div className={styles.emptyStateSubtext}>
-                  {isEditing ? 'Click "Add Material" to get started' : 'Contact your instructor to add materials'}
+                  {isEditing ? 'Click "Add Material" or "Import from Excel" to get started' : 'Contact your instructor to add materials'}
                 </div>
               </div>
             )}
           </div>
         </div>
+        {/* Material Excel Import Modal */}
+        <Modal
+          title="Import Materials from Excel"
+          open={materialImportVisible}
+          onCancel={() => setMaterialImportVisible(false)}
+          footer={null}
+          width={700}
+        >
+          <DataImport
+            onClose={() => setMaterialImportVisible(false)}
+            onDataImported={handleMaterialDataImported}
+            headerConfig={{...getHeaderConfig('MATERIAL'), headers: [...getHeaderConfig('MATERIAL').headers] }}
+            allowMultipleRows={true}
+            dataType="material"
+          />
+        </Modal>
 
         {/* Learning Outcomes Section */}
         <div className={styles.syllabusSection}>
@@ -667,14 +887,23 @@ const SubjectSyllabus: React.FC = () => {
               Learning Outcomes
             </h3>
             {isEditing && (
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setOutcomeModalVisible(true)}
-                style={{ background: '#f97316', borderColor: '#f97316' }}
-              >
-                Add Outcome
-              </Button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setOutcomeModalVisible(true)}
+                  style={{ background: '#f97316', borderColor: '#f97316' }}
+                >
+                  Add Outcome
+                </Button>
+                <Button
+                  icon={<FileExcelOutlined />}
+                  onClick={() => setOutcomeImportVisible(true)}
+                  style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
+                >
+                  Import from Excel
+                </Button>
+              </div>
             )}
           </div>
           <div className={styles.syllabusSectionContent}>
@@ -691,12 +920,28 @@ const SubjectSyllabus: React.FC = () => {
                 <div className={styles.emptyStateIcon}>🎯</div>
                 <div className={styles.emptyStateText}>No learning outcomes defined</div>
                 <div className={styles.emptyStateSubtext}>
-                  {isEditing ? 'Click "Add Outcome" to get started' : 'Contact your instructor to add outcomes'}
+                  {isEditing ? 'Click "Add Outcome" or "Import from Excel" to get started' : 'Contact your instructor to add outcomes'}
                 </div>
               </div>
             )}
           </div>
         </div>
+        {/* Outcome Excel Import Modal */}
+        <Modal
+          title="Import Outcomes from Excel"
+          open={outcomeImportVisible}
+          onCancel={() => setOutcomeImportVisible(false)}
+          footer={null}
+          width={700}
+        >
+          <DataImport
+            onClose={() => setOutcomeImportVisible(false)}
+            onDataImported={handleOutcomeDataImported}
+            headerConfig={{...getHeaderConfig('OUTCOME'), headers: [...getHeaderConfig('OUTCOME').headers] }}
+            allowMultipleRows={true}
+            dataType="outcome"
+          />
+        </Modal>
 
         {/* Sessions Section */}
         <div className={styles.syllabusSection}>
@@ -706,14 +951,23 @@ const SubjectSyllabus: React.FC = () => {
               Course Sessions
             </h3>
             {isEditing && (
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setSessionModalVisible(true)}
-                style={{ background: '#f97316', borderColor: '#f97316' }}
-              >
-                Add Session
-              </Button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setSessionModalVisible(true)}
+                  style={{ background: '#f97316', borderColor: '#f97316' }}
+                >
+                  Add Session
+                </Button>
+                <Button
+                  icon={<FileExcelOutlined />}
+                  onClick={() => setSessionImportVisible(true)}
+                  style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
+                >
+                  Import from Excel
+                </Button>
+              </div>
             )}
           </div>
           <div className={styles.syllabusSectionContent}>
@@ -730,12 +984,28 @@ const SubjectSyllabus: React.FC = () => {
                 <div className={styles.emptyStateIcon}>📅</div>
                 <div className={styles.emptyStateText}>No sessions planned</div>
                 <div className={styles.emptyStateSubtext}>
-                  {isEditing ? 'Click "Add Session" to get started' : 'Contact your instructor to add sessions'}
+                  {isEditing ? 'Click "Add Session" or "Import from Excel" to get started' : 'Contact your instructor to add sessions'}
                 </div>
               </div>
             )}
           </div>
         </div>
+        {/* Session Excel Import Modal */}
+        <Modal
+          title="Import Sessions from Excel"
+          open={sessionImportVisible}
+          onCancel={() => setSessionImportVisible(false)}
+          footer={null}
+          width={700}
+        >
+          <DataImport
+            onClose={() => setSessionImportVisible(false)}
+            onDataImported={handleSessionDataImported}
+            headerConfig={{...getHeaderConfig('SESSION'), headers: [...getHeaderConfig('SESSION').headers] }}
+            allowMultipleRows={true}
+            dataType="session"
+          />
+        </Modal>
       </div>
 
       {/* Assessment Modal */}
@@ -767,7 +1037,7 @@ const SubjectSyllabus: React.FC = () => {
               <InputNumber min={1} placeholder="Duration" style={{ width: '100%' }} />
             </Form.Item>
           </div>
-          <Form.Item name="question_type" label="Question Type" rules={[{ required: true }]}>
+          <Form.Item name="questionType" label="Question Type" rules={[{ required: true }]}>
             <Select placeholder="Select question type">
               <Option value="essay">Essay</Option>
               <Option value="multiple-choice">Multiple Choice</Option>
@@ -777,7 +1047,7 @@ const SubjectSyllabus: React.FC = () => {
               <Option value="other">Other</Option>
             </Select>
           </Form.Item>
-          <Form.Item name="completion_criteria" label="Completion Criteria">
+          <Form.Item name="completionCriteria" label="Completion Criteria">
             <TextArea rows={3} placeholder="Describe completion criteria..." />
           </Form.Item>
           <div className={styles.syllabusActions}>
@@ -800,18 +1070,18 @@ const SubjectSyllabus: React.FC = () => {
         width={600}
       >
         <Form form={materialForm} onFinish={handleAddMaterial} layout="vertical">
-          <Form.Item name="material_name" label="Material Name" rules={[{ required: true }]}>
+          <Form.Item name="materialName" label="Material Name" rules={[{ required: true }]}>
             <Input placeholder="Enter material name" />
           </Form.Item>
           <div className={styles.formRow}>
-            <Form.Item name="author_name" label="Author" rules={[{ required: true }]}>
+            <Form.Item name="authorName" label="Author" rules={[{ required: true }]}>
               <Input placeholder="Enter author name" />
             </Form.Item>
-            <Form.Item name="published_date" label="Published Date">
+            <Form.Item name="publishedDate" label="Published Date">
               <DatePicker style={{ width: '100%' }} />
             </Form.Item>
           </div>
-          <Form.Item name="filepath_or_url" label="File Path or URL">
+          <Form.Item name="filepathOrUrl" label="File Path or URL">
             <Input placeholder="Enter file path or URL" />
           </Form.Item>
           <Form.Item name="description" label="Description">
@@ -837,7 +1107,7 @@ const SubjectSyllabus: React.FC = () => {
         width={600}
       >
         <Form form={outcomeForm} onFinish={handleAddOutcome} layout="vertical">
-          <Form.Item name="outcome_code" label="Outcome Code" rules={[{ required: true }]}>
+          <Form.Item name="outcomeCode" label="Outcome Code" rules={[{ required: true }]}>
             <Input placeholder="e.g., LO1, LO2" />
           </Form.Item>
           <Form.Item name="description" label="Description" rules={[{ required: true }]}>
@@ -863,7 +1133,7 @@ const SubjectSyllabus: React.FC = () => {
         width={600}
       >
         <Form form={sessionForm} onFinish={handleAddSession} layout="vertical">
-          <Form.Item name="session_number" label="Session Number" rules={[{ required: true }]}>
+          <Form.Item name="sessionNumber" label="Session Number" rules={[{ required: true }]}>
             <InputNumber min={1} placeholder="Session number" style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item name="topic" label="Topic" rules={[{ required: true }]}>
@@ -881,6 +1151,49 @@ const SubjectSyllabus: React.FC = () => {
             </Button>
           </div>
         </Form>
+      </Modal>
+
+      {/* Add Outcome to Session Modal */}
+      <Modal
+        title="Add Outcome to Session"
+        open={addOutcomeModalVisible}
+        onCancel={() => setAddOutcomeModalVisible(false)}
+        onOk={handleAddOutcomeToSession}
+        okButtonProps={{ disabled: !selectedOutcomeId }}
+        okText="Add Outcome"
+        cancelText="Cancel"
+      >
+        <Select
+          style={{ width: '100%' }}
+          placeholder="Select an outcome to add"
+          value={selectedOutcomeId || undefined}
+          onChange={setSelectedOutcomeId}
+          showSearch
+          optionFilterProp="children"
+        >
+          {(syllabus?.learningOutcomes || []).map((outcome: SyllabusOutcome) => (
+            <Option key={outcome.id} value={outcome.id}>
+              {outcome.outcomeCode} - {outcome.description}
+            </Option>
+          ))}
+        </Select>
+      </Modal>
+
+      {/* Assessment Excel Import Modal */}
+      <Modal
+        title="Import Assessments from Excel"
+        open={assessmentImportVisible}
+        onCancel={() => setAssessmentImportVisible(false)}
+        footer={null}
+        width={700}
+      >
+        <DataImport
+          onClose={() => setAssessmentImportVisible(false)}
+          onDataImported={handleAssessmentDataImported}
+          headerConfig={{...getHeaderConfig('ASSESSMENT'), headers: [...getHeaderConfig('ASSESSMENT').headers] }}
+          allowMultipleRows={true}
+          dataType="assessment"
+        />
       </Modal>
     </div>
   );

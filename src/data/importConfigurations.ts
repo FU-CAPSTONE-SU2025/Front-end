@@ -104,6 +104,42 @@ export const HEADER_CONFIGS = {
       'Combo Description': 'comboDescription'
     }
   },
+  ASSESSMENT: {
+    headers: ['Category', 'Quantity', 'Weight', 'Completion Criteria', 'Duration', 'Question Type'],
+    fieldMap: {
+      'Category': 'category',
+      'Quantity': 'quantity',
+      'Weight': 'weight',
+      'Completion Criteria': 'completionCriteria',
+      'Duration': 'duration',
+      'Question Type': 'questionType'
+    }
+  },
+  MATERIAL: {
+    headers: ['Material Name', 'Author Name', 'Published Date', 'Description', 'File Path or URL'],
+    fieldMap: {
+      'Material Name': 'materialName',
+      'Author Name': 'authorName',
+      'Published Date': 'publishedDate',
+      'Description': 'description',
+      'File Path or URL': 'filepathOrUrl'
+    }
+  },
+  OUTCOME: {
+    headers: ['Outcome Code', 'Description'],
+    fieldMap: {
+      'Outcome Code': 'outcomeCode',
+      'Description': 'description'
+    }
+  },
+  SESSION: {
+    headers: ['Session Number', 'Topic', 'Mission'],
+    fieldMap: {
+      'Session Number': 'sessionNumber',
+      'Topic': 'topic',
+      'Mission': 'mission'
+    }
+  },
   // Admin profile configuration (commonly used)
   ADMIN_PROFILE: {
     headers: ['First Name', 'Last Name', 'Email', 'Password', 'Address', 'Phone', 'Date of Birth'],

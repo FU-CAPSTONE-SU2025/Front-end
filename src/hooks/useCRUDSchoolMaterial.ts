@@ -6,6 +6,18 @@ import { AddSubject, FetchSubjectById, FetchSubjectList, UpdateSubjectById, AddP
 import { Combo, CreateCombo, UpdateCombo } from '../interfaces/ISchoolProgram';
 import { AddCombo, FetchComboList, FetchComboById, UpdateComboById, AddSubjectToCombo, RemoveSubjectToCombo } from '../api/SchoolAPI/comboAPI';
 import { useState } from 'react';
+import { 
+  AddSyllabus, 
+  AddSyllabusAssessments, 
+  AddSyllabusMaterial, 
+  AddSyllabusOutcomes, 
+  AddSyllabusSessions, 
+  AddSyllabusOutcomesToSession, 
+  FetchSyllabusBySubject, 
+  UpdateSyllabusById, 
+  DisableSyllabus 
+} from '../api/SchoolAPI/syllabusAPI';
+import { CreateSyllabus, Syllabus, UpdateSyllabus, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from '../interfaces/ISchoolProgram';
 
 interface PaginationParams {
   pageNumber: number;
@@ -264,4 +276,117 @@ export function useCRUDCombo() {
     setComboSearch,
     isComboLoading
   }
+}
+
+export function useCRUDSyllabus() {
+  // Fetch syllabus by subject
+  const fetchSyllabusBySubjectMutation = useMutation<Syllabus | null, unknown, number>({
+    mutationFn: async (subjectId: number) => {
+      const result = await FetchSyllabusBySubject(subjectId);
+      return result as Syllabus | null;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Add syllabus
+  const addSyllabusMutation = useMutation<Syllabus | null, unknown, CreateSyllabus>({
+    mutationFn: async (data: CreateSyllabus) => {
+      const result = await AddSyllabus(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Update syllabus
+  const updateSyllabusMutation = useMutation<any | null, unknown, { id: number; data: UpdateSyllabus }>({
+    mutationFn: async ({ id, data }) => {
+      const result = await UpdateSyllabusById(id, data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Disable syllabus
+  const disableSyllabusMutation = useMutation<any | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await DisableSyllabus(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Add syllabus assessments
+  const addSyllabusAssessmentMutation = useMutation<any | null, unknown, CreateSyllabusAssessment>({
+    mutationFn: async (data: CreateSyllabusAssessment) => {
+      const result = await AddSyllabusAssessments(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Add syllabus material
+  const addSyllabusMaterialMutation = useMutation<any | null, unknown, CreateSyllabusMaterial>({
+    mutationFn: async (data: CreateSyllabusMaterial) => {
+      const result = await AddSyllabusMaterial(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Add syllabus outcomes
+  const addSyllabusOutcomeMutation = useMutation<any | null, unknown, CreateSyllabusOutcome>({
+    mutationFn: async (data: CreateSyllabusOutcome) => {
+      const result = await AddSyllabusOutcomes(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Add syllabus sessions
+  const addSyllabusSessionMutation = useMutation<any | null, unknown, CreateSyllabusSession>({
+    mutationFn: async (data: CreateSyllabusSession) => {
+      const result = await AddSyllabusSessions(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Add outcomes to session
+  const addSyllabusOutcomesToSessionMutation = useMutation<any | null, unknown, { sessionId: number; outcomeId: number }>({
+    mutationFn: async ({ sessionId, outcomeId }) => {
+      const result = await AddSyllabusOutcomesToSession(sessionId, outcomeId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  return {
+    fetchSyllabusBySubjectMutation,
+    addSyllabusMutation,
+    updateSyllabusMutation,
+    disableSyllabusMutation,
+    addSyllabusAssessmentMutation,
+    addSyllabusMaterialMutation,
+    addSyllabusOutcomeMutation,
+    addSyllabusSessionMutation,
+    addSyllabusOutcomesToSessionMutation
+  };
 }

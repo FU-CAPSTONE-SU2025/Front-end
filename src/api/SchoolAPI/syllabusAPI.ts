@@ -1,10 +1,10 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { CreateCurriculum, Curriculum, Subject, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, UpdateSyllabus } from "../../interfaces/ISchoolProgram";
+import { CreateCurriculum, CreateSyllabus, Curriculum, Subject, Syllabus, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, UpdateSyllabus, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from "../../interfaces/ISchoolProgram";
 
 const syllabusURL = baseUrl + "/Syllabus";
 
-export const AddSyllabus = async (data: CreateCurriculum): Promise<Curriculum | null> => {
+export const AddSyllabus = async (data: CreateSyllabus): Promise<Syllabus | null> => {
   const props = {
     data: data,
     url: syllabusURL,
@@ -17,7 +17,7 @@ export const AddSyllabus = async (data: CreateCurriculum): Promise<Curriculum | 
     throw new Error(result.error || 'Failed to add syllabus');
   }
 };
-export const AddSyllabusAssessments = async ( data: SyllabusAssessment): Promise<Curriculum | null> => {
+export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): Promise<Curriculum | null> => {
     const props = {
       data: data,
       url: syllabusURL+"/assessments",
@@ -30,7 +30,7 @@ export const AddSyllabusAssessments = async ( data: SyllabusAssessment): Promise
       throw new Error(result.error || 'Failed to add syllabus assessments');
     }
   };
-  export const AddSyllabusMaterial = async ( data: SyllabusMaterial): Promise<any | null> => {
+  export const AddSyllabusMaterial = async ( data: CreateSyllabusMaterial): Promise<any | null> => {
     const props = {
       data: data,
       url: syllabusURL+"/materials",
@@ -43,7 +43,7 @@ export const AddSyllabusAssessments = async ( data: SyllabusAssessment): Promise
       throw new Error(result.error || 'Failed to add syllabus material');
     }
   };
-  export const AddSyllabusOutcomes = async ( data: SyllabusOutcome): Promise<any | null> => {
+  export const AddSyllabusOutcomes = async ( data: CreateSyllabusOutcome): Promise<any | null> => {
     const props = {
       data: data,
       url: syllabusURL+"/outcomes",
@@ -56,7 +56,7 @@ export const AddSyllabusAssessments = async ( data: SyllabusAssessment): Promise
       throw new Error(result.error || 'Failed to add syllabus outcomes');
     }
   };
-  export const AddSyllabusSessions = async ( data: SyllabusSession): Promise<any | null> => {
+  export const AddSyllabusSessions = async ( data: CreateSyllabusSession): Promise<any | null> => {
     const props = {
       data: data,
       url: syllabusURL+"/sessions",
