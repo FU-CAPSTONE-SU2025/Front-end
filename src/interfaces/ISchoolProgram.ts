@@ -89,6 +89,9 @@ export interface CreateSyllabus {
   subjectId: number,
   content: string
 }
+export interface UpdateSyllabus {
+  content: string
+}
 
 export interface CreateSyllabusAssessments {
   syllabusId: number,
@@ -211,6 +214,39 @@ export interface SyllabusOutcome {
 
 export interface SyllabusSession {
   id: number;
+  syllabusId: number;
+  sessionNumber: number;
+  topic: string;
+  mission: string;
+}
+
+// Creation interfaces for syllabus-related objects
+export interface CreateSyllabusAssessment {
+  syllabusId: number;
+  category: string;
+  quantity: number;
+  weight: number;
+  completionCriteria: string;
+  duration: number;
+  questionType: string;
+}
+
+export interface CreateSyllabusMaterial {
+  syllabusId: number;
+  materialName: string;
+  authorName: string;
+  publishedDate: Date;
+  description: string;
+  filepathOrUrl: string;
+}
+
+export interface CreateSyllabusOutcome {
+  syllabusId: number;
+  outcomeCode: string;
+  description: string;
+}
+
+export interface CreateSyllabusSession {
   syllabusId: number;
   sessionNumber: number;
   topic: string;
