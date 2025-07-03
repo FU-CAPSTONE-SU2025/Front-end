@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Affix, Tag, message, Pagination, Spin, Empty } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
+import DataImport from '../../components/common/dataImport';
 
 const ComboManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [approvalStatus, setApprovalStatus] = useState<{ [id: number]: 'pending' | 'approved' }>({});
+  const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const navigate = useNavigate();
 
   // CRUD hook
@@ -17,7 +19,8 @@ const ComboManagerPage: React.FC = () => {
     getAllCombos,
     comboList,
     paginationCombo,
-    getComboMutation
+    getComboMutation,
+    createCombo
   } = useCRUDCombo();
 
   useEffect(() => {
@@ -41,6 +44,24 @@ const ComboManagerPage: React.FC = () => {
   const handleApprove = (id: number) => {
     setApprovalStatus(prev => ({ ...prev, [id]: 'approved' }));
     message.success('Combo approved!');
+  };
+
+  const handleDataImported = async (data: { [key: string]: string }[]) => {
+    try {
+      // Process each imported combo
+      for (const comboData of data) {
+        await createCombo({
+          comboName: comboData.comboName,
+          comboDescription: comboData.comboDescription || ''
+        });
+      }
+      
+      message.success(`Successfully imported ${data.length} combos`);
+      // Refresh the combo list
+      getAllCombos({ pageNumber: page, pageSize, filterValue: search });
+    } catch (error) {
+      message.error('Error importing combos. Please check your data format.');
+    }
   };
 
   const columns = [
@@ -127,6 +148,15 @@ const ComboManagerPage: React.FC = () => {
           >
             Add Combo
           </Button>
+          <Button 
+            type="default" 
+            icon={<UploadOutlined />} 
+            size="large" 
+            style={{borderRadius: 999, borderColor: '#10B981', color: '#10B981'}} 
+            onClick={() => setIsImportOpen(true)}
+          >
+            Import Combos
+          </Button>
         </div>
       </Affix>
       {/* Combo Table */}
@@ -156,6 +186,17 @@ const ComboManagerPage: React.FC = () => {
           </div>
         )}
       </Spin>
+      
+      {/* Data Import Modal */}
+      {isImportOpen && (
+        <DataImport 
+          onClose={() => setIsImportOpen(false)} 
+          onDataImported={handleDataImported}
+          headerConfig="COMBO"
+          allowMultipleRows={true}
+          dataType="combo"
+        />
+      )}
     </div>
   );
 };

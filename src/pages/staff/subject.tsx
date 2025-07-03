@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Select, Affix, Collapse, Pagination, Spin, Empty } from 'antd';
-import { PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
+import { Table, Input, Button, Select, Affix, Collapse, Pagination, Spin, Empty, message } from 'antd';
+import { PlusOutlined, EditOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { curriculums, combos, comboSubjects } from '../../data/schoolData';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCRUDSubject, useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
+import DataImport from '../../components/common/dataImport';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -15,6 +16,7 @@ const SubjectPage: React.FC = () => {
   const [comboFilter, setComboFilter] = useState<number | undefined>();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -23,7 +25,8 @@ const SubjectPage: React.FC = () => {
     getAllSubjects,
     subjectList,
     paginationSubject,
-    isLoading
+    isLoading,
+    createSubject
   } = useCRUDSubject();
 
   // CRUD hook for combos
@@ -68,6 +71,26 @@ const SubjectPage: React.FC = () => {
 
   const handleCreateSyllabus = (subjectId: number) => {
     navigate(`/staff/subject/${subjectId}/syllabus`);
+  };
+
+  const handleDataImported = async (data: { [key: string]: string }[]) => {
+    try {
+      // Process each imported subject
+      for (const subjectData of data) {
+        await createSubject({
+          subjectCode: subjectData.subjectCode,
+          subjectName: subjectData.subjectName,
+          credits: parseInt(subjectData.credits) || 0,
+          description: subjectData.description || ''
+        });
+      }
+      
+      message.success(`Successfully imported ${data.length} subjects`);
+      // Refresh the subject list
+      getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+    } catch (error) {
+      message.error('Error importing subjects. Please check your data format.');
+    }
   };
 
   const columns = [
@@ -186,6 +209,15 @@ const SubjectPage: React.FC = () => {
           >
             Add Combo
           </Button>
+          <Button 
+            type="default" 
+            icon={<UploadOutlined />} 
+            size="large" 
+            style={{borderRadius: 999, borderColor: '#10B981', color: '#10B981'}} 
+            onClick={() => setIsImportOpen(true)}
+          >
+            Import Subjects
+          </Button>
         </div>
       </Affix>
       {/* Subject Table */}
@@ -238,6 +270,17 @@ const SubjectPage: React.FC = () => {
           ))}
         </Collapse>
       </div>
+      
+      {/* Data Import Modal */}
+      {isImportOpen && (
+        <DataImport 
+          onClose={() => setIsImportOpen(false)} 
+          onDataImported={handleDataImported}
+          headerConfig="SUBJECT"
+          allowMultipleRows={true}
+          dataType="subject"
+        />
+      )}
    
     </div>
   );

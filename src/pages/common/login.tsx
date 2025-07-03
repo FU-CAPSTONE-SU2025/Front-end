@@ -144,9 +144,9 @@ const Login: React.FC = () => {
               </Typography>
           </Form.Item>
           <Form.Item>
-              <Typography.Link className={styles.registerLink}>
+              <Typography className={styles.registerLink}>
                 <Link to="/forgetpassword">Forgot your password? Go here</Link>
-              </Typography.Link>
+              </Typography>
             </Form.Item>
         </Form>
       </Card>

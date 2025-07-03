@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Select, Affix, Tag, message, Pagination, Spin, Empty } from 'antd';
-import { PlusOutlined, EditOutlined, SearchOutlined, CheckOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, SearchOutlined, CheckOutlined, UploadOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { curriculums, combos, comboSubjects } from '../../data/schoolData';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import DataImport from '../../components/common/dataImport';
 
 const { Option } = Select;
 
@@ -15,6 +16,7 @@ const SubjectManagerPage: React.FC = () => {
   const [approvalStatus, setApprovalStatus] = useState<{ [id: number]: 'pending' | 'approved' }>({});
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -23,7 +25,8 @@ const SubjectManagerPage: React.FC = () => {
     getAllSubjects,
     subjectList,
     paginationSubject,
-    isLoading
+    isLoading,
+    createSubject
   } = useCRUDSubject();
 
   useEffect(() => {
@@ -54,6 +57,26 @@ const SubjectManagerPage: React.FC = () => {
   const handleApprove = (id: number) => {
     setApprovalStatus(prev => ({ ...prev, [id]: 'approved' }));
     message.success('Subject approved!');
+  };
+
+  const handleDataImported = async (data: { [key: string]: string }[]) => {
+    try {
+      // Process each imported subject
+      for (const subjectData of data) {
+        await createSubject({
+          subjectCode: subjectData.subjectCode,
+          subjectName: subjectData.subjectName,
+          credits: parseInt(subjectData.credits) || 0,
+          description: subjectData.description || ''
+        });
+      }
+      
+      message.success(`Successfully imported ${data.length} subjects`);
+      // Refresh the subject list
+      getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+    } catch (error) {
+      message.error('Error importing subjects. Please check your data format.');
+    }
   };
 
   const columns = [
@@ -168,6 +191,15 @@ const SubjectManagerPage: React.FC = () => {
             >
               Add Combo
             </Button>
+            <Button 
+              type="default" 
+              icon={<UploadOutlined />} 
+              size="large" 
+              style={{borderRadius: 999, borderColor: '#10B981', color: '#10B981'}} 
+              onClick={() => setIsImportOpen(true)}
+            >
+              Import Subjects
+            </Button>
           </div>
         </Affix>
         {/* Subject Table */}
@@ -197,6 +229,17 @@ const SubjectManagerPage: React.FC = () => {
             </div>
           )}
         </Spin>
+        
+        {/* Data Import Modal */}
+        {isImportOpen && (
+          <DataImport 
+            onClose={() => setIsImportOpen(false)} 
+            onDataImported={handleDataImported}
+            headerConfig="SUBJECT"
+            allowMultipleRows={true}
+            dataType="subject"
+          />
+        )}
       </div>
     </div>
   );

@@ -1,15 +1,16 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps } from "../../interfaces/IAccount";
-import { CreateCurriculum, CreateSubjectToCurriculum, Curriculum, Subject, UpdateCurriculum } from "../../interfaces/ISchoolProgram";
+import { CreateCurriculum, CreateSubjectToCurriculum, Curriculum, Subject, SyllabusOutcome, UpdateCurriculum } from "../../interfaces/ISchoolProgram";
 import { PagedData } from "../../interfaces/ISchoolProgram";
+import { SyllabusLearningMaterial, SyllabusLearningOutcome } from "../../interfaces/ISyllabus";
 
-const curriculumURL = baseUrl + "/Curriculum";
+const syllabusURL = baseUrl + "/Syllabus";
 
-export const AddCurriculum = async (data: CreateCurriculum): Promise<Curriculum | null> => {
+export const AddSyllabus = async (data: CreateCurriculum): Promise<Curriculum | null> => {
   const props = {
     data: data,
-    url: curriculumURL,
+    url: syllabusURL,
     headers: GetHeader(),
   };
   const result = await axiosCreate(props);
@@ -20,11 +21,82 @@ export const AddCurriculum = async (data: CreateCurriculum): Promise<Curriculum 
     return null;
   }
 };
+export const AddSyllabusAssessments = async (id: number, data: CreateCurriculum): Promise<Curriculum | null> => {
+    const props = {
+      data: data,
+      url: syllabusURL+"/assessments",
+      headers: GetHeader(),
+    };
+    const result = await axiosCreate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      console.log(result.error);
+      return null;
+    }
+  };
+  export const AddSyllabusMaterial = async (id: number, data: SyllabusLearningMaterial): Promise<Curriculum | null> => {
+    const props = {
+      data: data,
+      url: syllabusURL+"/materials",
+      headers: GetHeader(),
+    };
+    const result = await axiosCreate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      console.log(result.error);
+      return null;
+    }
+  };
+  export const AddSyllabusOutcomes = async (id: number, data: SyllabusLearningOutcome): Promise<Curriculum | null> => {
+    const props = {
+      data: data,
+      url: syllabusURL+"/outcomes",
+      headers: GetHeader(),
+    };
+    const result = await axiosCreate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      console.log(result.error);
+      return null;
+    }
+  };
+  export const AddSyllabusSessions = async (id: number, data: SyllabusOutcome): Promise<Curriculum | null> => {
+    const props = {
+      data: data,
+      url: syllabusURL+"/sessions",
+      headers: GetHeader(),
+    };
+    const result = await axiosCreate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      console.log(result.error);
+      return null;
+    }
+  };
+  export const AddSyllabusOutcomesToSession = async (sessionId: number, outcomeId: number): Promise<Curriculum | null> => {
+    const props = {
+      data: null,
+      url: syllabusURL+"/sessions/"+sessionId+"/outcomes/"+outcomeId,
+      headers: GetHeader(),
+    };
+    const result = await axiosCreate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      console.log(result.error);
+      return null;
+    }
+  };
+  
 
-export const FetchSubjectToCurriculum = async (id: number): Promise<Subject[] | null> => {
+export const FetchSyllabusBySubject = async (subjectId: number): Promise<Subject[] | null> => {
   const props = {
     data: null,
-    url: curriculumURL+"/"+id+"/subjects",
+    url: syllabusURL+"/by-subject/"+subjectId,
     headers: GetHeader(),
   };
   const result = await axiosCreate(props);
