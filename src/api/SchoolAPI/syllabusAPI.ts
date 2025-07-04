@@ -1,6 +1,6 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { CreateCurriculum, CreateSyllabus, Curriculum, Subject, Syllabus, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, UpdateSyllabus, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from "../../interfaces/ISchoolProgram";
+import { CreateSyllabus, Curriculum, Subject, Syllabus, UpdateSyllabus, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from "../../interfaces/ISchoolProgram";
 
 const syllabusURL = baseUrl + "/Syllabus";
 
@@ -94,7 +94,8 @@ export const FetchSyllabusBySubject = async (subjectId: number): Promise<Subject
   if (result.success) {
     return result.data;
   } else {
-    throw new Error(result.error || 'Failed to fetch syllabus by subject');
+    //throw new Error(result.error || 'Failed to fetch syllabus by subject');
+    return null;
   }
 };
 

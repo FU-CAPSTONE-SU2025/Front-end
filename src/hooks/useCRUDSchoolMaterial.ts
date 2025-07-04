@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
-import { CreateCurriculum, CreateSubject, Curriculum, Subject, UpdateCurriculum } from '../interfaces/ISchoolProgram';
-import { AddCurriculum, FetchCurriculumById, FetchCurriculumList, UpdateCurriculumById } from '../api/SchoolAPI/curriculumAPI';
+import { CreateCurriculum, CreateSubject, Curriculum, Subject, UpdateCurriculum, CurriculumSubject, SubjectWithCurriculumInfo } from '../interfaces/ISchoolProgram';
+import { AddCurriculum, FetchCurriculumById, FetchCurriculumList, UpdateCurriculumById, FetchSubjectToCurriculum } from '../api/SchoolAPI/curriculumAPI';
 import { PagedData } from '../interfaces/ISchoolProgram';
 import { AddSubject, FetchSubjectById, FetchSubjectList, UpdateSubjectById, AddPrerequisitesSubject } from '../api/SchoolAPI/subjectAPI';
 import { Combo, CreateCombo, UpdateCombo } from '../interfaces/ISchoolProgram';
@@ -68,6 +68,26 @@ export function useCRUDCurriculum() {
       return result;
     },
   });
+
+  const fetchCurriculumSubjectsMutation = useMutation<SubjectWithCurriculumInfo[] | null, unknown, number>({
+    mutationFn: async (curriculumId: number) => {
+      const result = await FetchSubjectToCurriculum(curriculumId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  const fetchSubjectsMutation = useMutation<PagedData<Subject> | null, unknown, void>({
+    mutationFn: async () => {
+      const result = await FetchSubjectList(1, 100);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
   
   const isSuccessCreateCurriculum = addCurriculumMutation.isSuccess;
   const isSuccessUpdateCurriculum = updateCurriculumMutation.isSuccess;
@@ -86,6 +106,8 @@ export function useCRUDCurriculum() {
     updateCurriculumMutation,
     addCurriculumMutation,
     getCurriculumMutation,
+    fetchCurriculumSubjectsMutation,
+    fetchSubjectsMutation,
     getAllStaff: getCurriculumMutation.mutate,
     curriculumList,
     paginationCurriculum,
@@ -287,6 +309,7 @@ export function useCRUDSyllabus() {
     },
     onError: (error) => {
       console.error(error);
+       return null;
     },
   });
 

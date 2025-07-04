@@ -26,7 +26,7 @@ const SubjectManagerPage: React.FC = () => {
     subjectList,
     paginationSubject,
     isLoading,
-    createSubject
+    addSubjectMutation
   } = useCRUDSubject();
 
   useEffect(() => {

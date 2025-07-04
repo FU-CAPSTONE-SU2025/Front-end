@@ -79,6 +79,7 @@ const OutcomeTable: React.FC<OutcomeTableProps> = ({
     try {
       for (const row of data) {
         const outcomeData: CreateSyllabusOutcome = {
+          syllabusId: parseInt(row.syllabusId),
           outcomeCode: row.outcomeCode || '',
           description: row.description || ''
         };
@@ -119,17 +120,55 @@ const OutcomeTable: React.FC<OutcomeTableProps> = ({
       title: 'Actions',
       key: 'actions',
       render: (_: any, record: SyllabusOutcome) =>
-        isEditing && editingOutcomeId === record.id ? (
-          <>
-            <Button icon={<SaveOutlined />} onClick={saveEditOutcome} />
-            <Button icon={<DeleteOutlined />} onClick={cancelEditOutcome} />
-          </>
-        ) : (
-          <>
-            <Button icon={<EditOutlined />} onClick={() => startEditOutcome(record)} />
-            <Button icon={<DeleteOutlined />} onClick={() => handleDeleteItem(record.id)} />
-          </>
-        )
+        isEditing ? (
+          editingOutcomeId === record.id ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Button 
+                icon={<SaveOutlined />} 
+                onClick={saveEditOutcome}
+                style={{ 
+                  background: '#10b981', 
+                  borderColor: '#10b981', 
+                  color: 'white',
+                  fontWeight: '600'
+                }}
+              />
+              <Button 
+                icon={<DeleteOutlined />} 
+                onClick={cancelEditOutcome}
+                style={{ 
+                  background: '#ef4444', 
+                  borderColor: '#ef4444', 
+                  color: 'white',
+                  fontWeight: '600'
+                }}
+              />
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Button 
+                icon={<EditOutlined />} 
+                onClick={() => startEditOutcome(record)}
+                style={{ 
+                  background: '#3b82f6', 
+                  borderColor: '#3b82f6', 
+                  color: 'white',
+                  fontWeight: '600'
+                }}
+              />
+              <Button 
+                icon={<DeleteOutlined />} 
+                onClick={() => handleDeleteItem(record.id)}
+                style={{ 
+                  background: '#ef4444', 
+                  borderColor: '#ef4444', 
+                  color: 'white',
+                  fontWeight: '600'
+                }}
+              />
+            </div>
+          )
+        ) : null
     },
   ];
 

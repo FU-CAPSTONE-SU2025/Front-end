@@ -45,15 +45,23 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
+.syllabusTitleCard {
+  padding: 12px 20px;
+  margin-bottom: 16px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .syllabusTitle {
-  font-family: 'Inter', 'Geist', 'Segoe UI', Arial, sans-serif;
-  font-size: 2.5rem;
-  font-weight: 900;
-  color: #1E293B;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin: 0 0 1rem 0;
-  text-shadow: 0 2px 12px rgba(30,64,175,0.08);
+  margin-top: 1%;
+  font-size: 2.3rem;
+  font-weight: 00;
+  margin: 0;
 }
 
 .syllabusSubtitle {
@@ -276,6 +284,43 @@
 .emptyStateSubtext {
   font-size: 0.9rem;
   color: #94A3B8;
+}
+
+.stickyEditButton {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fff;
+  padding: 8px 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.backButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.backButton:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.backButton:active {
+  transform: translateY(0);
 }
 
 @media (max-width: 1024px) {

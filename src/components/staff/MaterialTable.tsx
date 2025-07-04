@@ -81,9 +81,10 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
     try {
       for (const row of data) {
         const materialData: CreateSyllabusMaterial = {
+          syllabusId: parseInt(row.syllabusId),
           materialName: row.materialName || '',
           authorName: row.authorName || '',
-          publishedDate: row.publishedDate ? new Date(row.publishedDate) : undefined,
+          publishedDate: row.publishedDate ? new Date(row.publishedDate) : new Date(),
           description: row.description || '',
           filepathOrUrl: row.filepathOrUrl || ''
         };
@@ -158,16 +159,52 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
       key: 'actions',
       render: (_: any, record: SyllabusMaterial) =>
         isEditing && editingMaterialId === record.id ? (
-          <>
-            <Button icon={<SaveOutlined />} onClick={saveEditMaterial} />
-            <Button icon={<DeleteOutlined />} onClick={cancelEditMaterial} />
-          </>
-        ) : (
-          <>
-            <Button icon={<EditOutlined />} onClick={() => startEditMaterial(record)} />
-            <Button icon={<DeleteOutlined />} onClick={() => handleDeleteItem(record.id)} />
-          </>
-        )
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Button 
+              icon={<SaveOutlined />} 
+              onClick={saveEditMaterial}
+              style={{ 
+                background: '#10b981', 
+                borderColor: '#10b981', 
+                color: 'white',
+                fontWeight: '600'
+              }}
+            />
+            <Button 
+              icon={<DeleteOutlined />} 
+              onClick={cancelEditMaterial}
+              style={{ 
+                background: '#ef4444', 
+                borderColor: '#ef4444', 
+                color: 'white',
+                fontWeight: '600'
+              }}
+            />
+          </div>
+        ) : isEditing ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Button 
+              icon={<EditOutlined />} 
+              onClick={() => startEditMaterial(record)}
+              style={{ 
+                background: '#3b82f6', 
+                borderColor: '#3b82f6', 
+                color: 'white',
+                fontWeight: '600'
+              }}
+            />
+            <Button 
+              icon={<DeleteOutlined />} 
+              onClick={() => handleDeleteItem(record.id)}
+              style={{ 
+                background: '#ef4444', 
+                borderColor: '#ef4444', 
+                color: 'white',
+                fontWeight: '600'
+              }}
+            />
+          </div>
+        ) : null
     },
   ];
 

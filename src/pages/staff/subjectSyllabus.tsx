@@ -11,9 +11,8 @@ import {
 import { useNavigate, useParams } from 'react-router';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 
-import { subjects } from '../../data/schoolData';
-import { useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
-import { SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from '../../interfaces/ISchoolProgram';
+import { useCRUDSyllabus, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import { Syllabus,SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from '../../interfaces/ISchoolProgram';
 import AssessmentTable from '../../components/staff/AssessmentTable';
 import MaterialTable from '../../components/staff/MaterialTable';
 import OutcomeTable from '../../components/staff/OutcomeTable';
@@ -21,8 +20,9 @@ import SessionTable from '../../components/staff/SessionTable';
 
 const SubjectSyllabus: React.FC = () => {
   const navigate = useNavigate();
-  const searchParams = useParams();
-  const { subjectId } = searchParams;
+  const idParams = useParams();
+  const { subjectId,syllabusId } = idParams;
+  // There are two ID actually, if syllabusId is null. We have to create a new 
 
   // Syllabus API hooks
   const {
@@ -36,41 +36,57 @@ const SubjectSyllabus: React.FC = () => {
     // Other mutations will be used in further steps
   } = useCRUDSyllabus();
 
+  const { getSubjectById } = useCRUDSubject();
+  const [subject, setSubject] = useState<any | null>(null);
+
   // State for syllabus data
-  const [syllabus, setSyllabus] = useState<any | null>(null);
+  const [syllabus, setSyllabus] = useState<Syllabus | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Get subject information
-  const subject = subjects.find(s => s.id === Number(subjectId));
+  useEffect(() => {
+    if (!subjectId) return;
+    // Fetch subject data
+    const fetchSubject = async () => {
+      try {
+        const subjectData = await getSubjectById.mutateAsync(Number(subjectId));
+        setSubject(subjectData);
+      } catch (error) {
+        setSubject(null);
+      }
+    };
+    fetchSubject();
+  }, [subjectId]);
 
   useEffect(() => {
-    if (!subjectId || !subject) return;
+    if (!subjectId || syllabusId || subject === undefined) return;
+    if (subject === null) return; // Wait for subject fetch
     const fetchOrCreateSyllabus = async () => {
       setLoading(true);
       try {
         // Try to fetch syllabus for this subject
         const result = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
-        if (!result || (Array.isArray(result) && result.length === 0)) {
-          // No syllabus found, create one
-          const content = `${subject.subjectCode} - ${subject.subjectName}'s syllabus`;
-          const newSyllabus = await addSyllabusMutation.mutateAsync({
-            subjectId: subject.id,
-            content,
-          });
-          setSyllabus(newSyllabus);
-        } else {
-          // Syllabus found
+        console.log(result);
+        if(result === null){
+            // Check for 404 error (syllabus not found)
+            console.log("create a syllabus");
+          const content = subject ? `${subject.subjectCode} - ${subject.subjectName}'s syllabus` : `Syllabus for subject ${subjectId}`;
+            await addSyllabusMutation.mutateAsync({ subjectId: Number(subjectId), content });
+            // Refetch syllabus after creation
+            const newResult = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+            setSyllabus(Array.isArray(newResult) ? newResult[0] : newResult);
+        }else{
           setSyllabus(Array.isArray(result) ? result[0] : result);
         }
-      } catch (error) {
-        message.error('Failed to load or create syllabus');
+      } catch (error: any) {
+        console.log(error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchOrCreateSyllabus();
-  }, [subjectId, subject]);
+  }, [subjectId, syllabusId, subject]);
 
   const handleSaveSyllabus = async () => {
     setLoading(true);
@@ -88,14 +104,17 @@ const SubjectSyllabus: React.FC = () => {
   const handleAddAssessment = async (assessment: CreateSyllabusAssessment) => {
     if (!syllabus) return;
     try {
+      console.log('Adding assessment:', assessment);
       await addSyllabusAssessmentMutation.mutateAsync({
         ...assessment,
         syllabusId: syllabus.id
       });
+      console.log('Assessment added successfully');
       // Refetch syllabus to update UI
       const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
+      console.error('Error adding assessment:', error);
       throw error;
     }
   };
@@ -103,13 +122,16 @@ const SubjectSyllabus: React.FC = () => {
   const handleAddMaterial = async (material: CreateSyllabusMaterial) => {
     if (!syllabus) return;
     try {
+      console.log('Adding material:', material);
       await addSyllabusMaterialMutation.mutateAsync({
         ...material,
         syllabusId: syllabus.id
       });
+      console.log('Material added successfully');
       const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
+      console.error('Error adding material:', error);
       throw error;
     }
   };
@@ -117,13 +139,16 @@ const SubjectSyllabus: React.FC = () => {
   const handleAddOutcome = async (outcome: CreateSyllabusOutcome) => {
     if (!syllabus) return;
     try {
+      console.log('Adding outcome:', outcome);
       await addSyllabusOutcomeMutation.mutateAsync({
         ...outcome,
         syllabusId: syllabus.id
       });
+      console.log('Outcome added successfully');
       const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
+      console.error('Error adding outcome:', error);
       throw error;
     }
   };
@@ -131,13 +156,16 @@ const SubjectSyllabus: React.FC = () => {
   const handleAddSession = async (session: CreateSyllabusSession) => {
     if (!syllabus) return;
     try {
+      console.log('Adding session:', session);
       await addSyllabusSessionMutation.mutateAsync({
         ...session,
         syllabusId: syllabus.id
       });
+      console.log('Session added successfully');
       const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
+      console.error('Error adding session:', error);
       throw error;
     }
   };
@@ -225,16 +253,13 @@ const SubjectSyllabus: React.FC = () => {
       {/* Header */}
       <div className={styles.syllabusHeader}>
         <div className={styles.syllabusHeaderLeft}>
-          <Button 
-            icon={<ArrowLeftOutlined />} 
-            onClick={() => navigate(-1)}
-            className={styles.backButton}
-          >
-            Back
-          </Button>
-          <div className={styles.syllabusTitle}>
-            <h1>{subject.subjectCode} - {subject.subjectName}</h1>
-            <p>Syllabus Management</p>
+          <button className={styles.backButton} onClick={() => navigate(-1)}>
+            <ArrowLeftOutlined /> Back
+          </button>
+          <div className={styles.syllabusTitleCard}>
+            <h2 className={styles.syllabusTitle}>
+              {subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Syllabus'}
+            </h2>
           </div>
         </div>
         <div className={styles.syllabusHeaderRight}>
