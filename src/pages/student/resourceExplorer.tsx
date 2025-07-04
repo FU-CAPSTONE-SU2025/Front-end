@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SearchBar from '../../components/student/searchBar';
 import ResourceTable from '../../components/student/resourceTable';
 import SubjectDetailModal from '../../components/student/subjectDetailModal';
+import { useStudentFeature } from '../../hooks/useStudentFeature';
 
 // Mock data for current semester subjects
 const currentSemesterSubjects = [
@@ -36,6 +37,15 @@ const currentSemesterSubjects = [
 const ResourceExplorer: React.FC = () => {
   const [search, setSearch] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<any>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  const { data, isLoading, error } = useStudentFeature({ search: showAll ? '' : search, page, pageSize });
 
   const handleOpenModal = (subject: any) => {
     setSelectedSubject(subject);
@@ -43,6 +53,12 @@ const ResourceExplorer: React.FC = () => {
 
   const handleCloseModal = () => {
     setSelectedSubject(null);
+  };
+
+  const handleSearchEnter = () => {
+    if (search.trim() === '') {
+      setShowAll(true);
+    }
   };
 
   return (
@@ -96,14 +112,30 @@ const ResourceExplorer: React.FC = () => {
       <div className="mb-6 w-full max-w-7xl mx-auto">
         <SearchBar
           value={search}
-          onChange={setSearch}
+          onChange={(val) => {
+            setSearch(val);
+            if (val.trim() !== '') setShowAll(false);
+          }}
+          onEnter={handleSearchEnter}
           placeholder="Search by subject code or name..."
           className="mb-0"
         />
       </div>
 
-      {/* Table - Only shows when search is performed */}
-      <ResourceTable searchTerm={search} onSubjectSelect={handleOpenModal} />
+      {/* Table - Hiện khi có search hoặc showAll */}
+      {(search.trim() !== '' || showAll) && (
+        <ResourceTable
+          data={data?.items || []}
+          isLoading={isLoading}
+          page={page}
+          pageSize={pageSize}
+          total={data?.totalCount || 0}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          searchTerm={search}
+          onSubjectSelect={handleOpenModal}
+        />
+      )}
 
       <SubjectDetailModal
         visible={!!selectedSubject}

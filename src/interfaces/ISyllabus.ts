@@ -1,7 +1,17 @@
-export interface Syllabus {
+export interface SyllabusItem {
   id: number;
-  subject_id: number;
+  subjectId: number;
+  subjectName: string;
+  subjectCode: string;
   content: string;
+  createdAt: string;
+  updatedAt: string | null; 
+}
+export interface Syllabus {
+  items: SyllabusItem[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
 }
 
 export interface SyllabusAssessment {
@@ -88,4 +98,12 @@ export interface CreateSyllabusSession {
   session_number: number;
   topic: string;
   mission: string;
+}
+
+// Interface for paged syllabus data (chuẩn hóa trả về API phân trang)
+export interface pagedSyllabusData {
+  items: SyllabusItem[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
 } 
