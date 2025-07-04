@@ -76,9 +76,18 @@ const SubjectSyllabus: React.FC = () => {
       // TODO: Replace with actual API call
       // For now, create a mock syllabus
       const mockSyllabus: CompleteSyllabus = {
-        id: 1,
-        subject_id: Number(subjectId),
-        content: 'This course provides an introduction to software engineering principles and practices.',
+        items: [{
+          id: 1,
+          subjectId: Number(subjectId),
+          subjectName: subject?.subjectName || '',
+          subjectCode: subject?.subjectCode || '',
+          content: 'This course provides an introduction to software engineering principles and practices.',
+          createdAt: new Date().toISOString(),
+          updatedAt: null
+        }],
+        totalCount: 1,
+        pageNumber: 1,
+        pageSize: 1,
         assessments: [],
         learningMaterials: [],
         learningOutcomes: [],
@@ -109,7 +118,7 @@ const SubjectSyllabus: React.FC = () => {
     try {
       const newAssessment: SyllabusAssessment = {
         id: Date.now(), // Temporary ID
-        syllabus_id: syllabus!.id,
+        syllabus_id: syllabus!.items[0]?.id ?? 0,
         ...values
       };
       
@@ -130,7 +139,7 @@ const SubjectSyllabus: React.FC = () => {
     try {
       const newMaterial: SyllabusLearningMaterial = {
         id: Date.now(),
-        syllabus_id: syllabus!.id,
+        syllabus_id: syllabus!.items[0]?.id ?? 0,
         ...values,
         published_date: values.published_date?.toDate() || new Date()
       };
@@ -152,7 +161,7 @@ const SubjectSyllabus: React.FC = () => {
     try {
       const newOutcome: SyllabusLearningOutcome = {
         id: Date.now(),
-        syllabus_id: syllabus!.id,
+        syllabus_id: syllabus!.items[0]?.id ?? 0,
         ...values
       };
       
@@ -173,7 +182,7 @@ const SubjectSyllabus: React.FC = () => {
     try {
       const newSession: SyllabusSession = {
         id: Date.now(),
-        syllabus_id: syllabus!.id,
+        syllabus_id: syllabus!.items[0]?.id ?? 0,
         ...values
       };
       
@@ -363,15 +372,15 @@ const SubjectSyllabus: React.FC = () => {
           <div className={styles.syllabusSectionContent}>
             {isEditing ? (
               <TextArea
-                value={syllabus?.content || ''}
-                onChange={(e) => setSyllabus(prev => prev ? { ...prev, content: e.target.value } : null)}
+                value={syllabus?.items[0]?.content || ''}
+                onChange={(e) => setSyllabus(prev => prev ? { ...prev, items: prev.items.map((item, idx) => idx === 0 ? { ...item, content: e.target.value } : item) } : null)}
                 placeholder="Enter course description..."
                 className={styles.formTextArea}
                 rows={6}
               />
             ) : (
               <p style={{ fontSize: '1.1rem', lineHeight: '1.6', color: '#374151' }}>
-                {syllabus?.content || 'No course description available.'}
+                {syllabus?.items[0]?.content || 'No course description available.'}
               </p>
             )}
           </div>
