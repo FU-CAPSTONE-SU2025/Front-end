@@ -1,116 +1,13 @@
 import React, { useState } from 'react';
-import { Button, Modal, Form, Input, InputNumber, Select, message, Affix, Table, Flex } from 'antd';
+import { Button, Modal, Form, Input, InputNumber, Select, message, Affix, Table, Flex, Pagination } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import StatusBadge from '../../components/manager/statusBadge';
 import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
+import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 
 const { Option } = Select;
-
-// Mock data (English fields, more rows)
-const initialCurriculums = [
-  {
-    id: 1,
-    curriculumCode: 'IT2025',
-    name: 'Information Technology',
-    description: 'Bachelor of IT program',
-    decisionNo: '123/QD-IT',
-    decisionDate: '01/15/2023',
-    totalCredit: 150,
-    status: 'active',
-  },
-  {
-    id: 2,
-    curriculumCode: 'BA2025',
-    name: 'Business Administration',
-    description: 'BA program for managers',
-    decisionNo: '456/QD-BA',
-    decisionDate: '03/10/2023',
-    totalCredit: 140,
-    status: 'pending',
-  },
-  {
-    id: 3,
-    curriculumCode: 'TOUR2025',
-    name: 'Tourism Management',
-    description: 'Tourism and hospitality',
-    decisionNo: '789/QD-TOUR',
-    decisionDate: '12/20/2022',
-    totalCredit: 135,
-    status: 'in-active',
-  },
-  {
-    id: 4,
-    curriculumCode: 'ENG2025',
-    name: 'English Language',
-    description: 'English for international communication',
-    decisionNo: '234/QD-ENG',
-    decisionDate: '05/05/2023',
-    totalCredit: 120,
-    status: 'active',
-  },
-  {
-    id: 5,
-    curriculumCode: 'LAW2025',
-    name: 'Law',
-    description: 'Bachelor of Law',
-    decisionNo: '567/QD-LAW',
-    decisionDate: '07/18/2023',
-    totalCredit: 130,
-    status: 'pending',
-  },
-  {
-    id: 6,
-    curriculumCode: 'MED2025',
-    name: 'Medicine',
-    description: 'General Medicine program',
-    decisionNo: '890/QD-MED',
-    decisionDate: '09/30/2022',
-    totalCredit: 180,
-    status: 'active',
-  },
-  {
-    id: 7,
-    curriculumCode: 'CS2025',
-    name: 'Computer Science',
-    description: 'CS for software engineers',
-    decisionNo: '321/QD-CS',
-    decisionDate: '11/11/2022',
-    totalCredit: 155,
-    status: 'in-active',
-  },
-  {
-    id: 8,
-    curriculumCode: 'FIN2025',
-    name: 'Finance',
-    description: 'Finance and banking',
-    decisionNo: '654/QD-FIN',
-    decisionDate: '02/22/2023',
-    totalCredit: 125,
-    status: 'active',
-  },
-  {
-    id: 9,
-    curriculumCode: 'ARCH2025',
-    name: 'Architecture',
-    description: 'Architecture and design',
-    decisionNo: '987/QD-ARCH',
-    decisionDate: '04/14/2023',
-    totalCredit: 160,
-    status: 'pending',
-  },
-  {
-    id: 10,
-    curriculumCode: 'EDU2025',
-    name: 'Education',
-    description: 'Teacher education program',
-    decisionNo: '111/QD-EDU',
-    decisionDate: '06/01/2023',
-    totalCredit: 110,
-    status: 'active',
-  },
-];
 
 const statusOptions = [
   { value: 'pending', label: 'Pending' },
@@ -118,25 +15,33 @@ const statusOptions = [
   { value: 'in-active', label: 'Inactive' },
 ];
 
-const pageSize = 5;
-
 const HomePage: React.FC = () => {
-  const [curriculums, setCurriculums] = useState(initialCurriculums);
-  const [currentPage, setCurrentPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form] = Form.useForm();
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const navigate = useNavigate();
 
-  // Filtered data
-  const filtered = curriculums.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.curriculumCode.toLowerCase().includes(search.toLowerCase()) ||
-    c.description.toLowerCase().includes(search.toLowerCase())
-  );
-  // Pagination
-  const pagedData = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  // API integration
+  const {
+    getCurriculumMutation,
+    addCurriculumMutation,
+    updateCurriculumMutation,
+    curriculumList,
+    paginationCurriculum,
+    isLoading
+  } = useCRUDCurriculum();
+
+  // Fetch curriculums on mount and when search/page changes
+  React.useEffect(() => {
+    getCurriculumMutation.mutate({
+      pageNumber: currentPage,
+      pageSize,
+      filterValue: search
+    });
+  }, [currentPage, pageSize, search]);
 
   // Table columns
   const columns = [
@@ -216,7 +121,7 @@ const HomePage: React.FC = () => {
     },
   ];
 
-  // CRUD handlers
+  // Handlers
   const onAdd = () => {
     setEditing(null);
     form.resetFields();
@@ -230,30 +135,43 @@ const HomePage: React.FC = () => {
   };
 
   const onDelete = (id: number) => {
-    setCurriculums(curriculums.filter((c) => c.id !== id));
-    message.success('Deleted curriculum!');
+    // TODO: Implement delete API call
+    message.info('Delete API not implemented yet.');
   };
 
   const handleOk = () => {
     form.validateFields().then((values) => {
       if (editing) {
-        setCurriculums(curriculums.map((c) => (c.id === editing.id ? { ...editing, ...values } : c)));
-        message.success('Updated successfully!');
-      } else {
-        const newId = Math.max(...curriculums.map((c) => c.id)) + 1;
-        setCurriculums([
-          ...curriculums,
-          {
-            ...values,
-            id: newId,
-            status: values.status,
+        updateCurriculumMutation.mutate({
+          id: editing.id,
+          data: values
+        }, {
+          onSuccess: () => {
+            message.success('Updated successfully!');
+            setModalOpen(false);
+            getCurriculumMutation.mutate({ pageNumber: currentPage, pageSize, filterValue: search });
           },
-        ]);
-        message.success('Added successfully!');
+          onError: () => {
+            message.error('Failed to update curriculum!');
+          }
+        });
+      } else {
+        addCurriculumMutation.mutate(values, {
+          onSuccess: () => {
+            message.success('Added successfully!');
+            setModalOpen(false);
+            getCurriculumMutation.mutate({ pageNumber: currentPage, pageSize, filterValue: search });
+          },
+          onError: () => {
+            message.error('Failed to add curriculum!');
+          }
+        });
       }
-      setModalOpen(false);
     });
   };
+
+  // Use API-driven data
+  const pagedData = curriculumList;
 
   return (
     <div className={styles.sttContainer}>
@@ -285,18 +203,24 @@ const HomePage: React.FC = () => {
           columns={columns}
           dataSource={pagedData}
           rowKey="id"
-          className={styles.sttFreshTable}
-          locale={{ emptyText: 'No records available.' }}
-          pagination={{ 
-            current: currentPage,
-            pageSize: pageSize,
-            total: filtered.length,
-            onChange: setCurrentPage,
-            showSizeChanger: false
-          }}
-          style={{marginBottom: 0}}
+          loading={isLoading}
+          pagination={false}
         />
       </div>
+      {/* Pagination */}
+      {paginationCurriculum && paginationCurriculum.total > 0 && (
+        <div style={{marginTop: 32, display: 'flex', justifyContent: 'center'}}>
+          <Pagination
+            current={paginationCurriculum.current}
+            pageSize={paginationCurriculum.pageSize}
+            total={paginationCurriculum.total}
+            showSizeChanger
+            pageSizeOptions={[5, 10, 20, 50]}
+            onChange={(p, ps) => { setCurrentPage(p); setPageSize(ps); }}
+            style={{borderRadius: 8}}
+          />
+        </div>
+      )}
       <AnimatePresence>
         {modalOpen && (
           <Modal

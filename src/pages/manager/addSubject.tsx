@@ -3,7 +3,6 @@ import { Button, message, Steps } from 'antd';
 import { CheckCircleOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router';
-import * as XLSX from 'xlsx';
 import ExcelUpload from '../../components/manager/excel-upload';
 import DataPreview from '../../components/manager/data-preview';
 import ManualInput from '../../components/manager/manual-input';

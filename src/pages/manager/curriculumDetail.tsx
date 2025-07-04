@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Input, Button, Collapse, Typography, Affix, Space, Progress, message } from 'antd';
+import { Input, Button, Collapse, Typography, Affix, Progress, message, Select, Modal } from 'antd';
 import { PlusOutlined, SearchOutlined, EditOutlined, ImportOutlined, CheckOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { useNavigate } from 'react-router';
 import DataImport from '../../components/common/dataImport';
 // Mock unified API/data (replace with real API later)
 import { curriculums, subjects, combos, curriculumSubjects, comboSubjects } from '../../data/schoolData';
+import { AddSubjectToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
 
 const { Panel } = Collapse;
 const { Title } = Typography;
@@ -21,6 +22,8 @@ const CurriculumManagerPage: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<{ [id: number]: 'pending' | 'approved' }>({});
   const navigate = useNavigate();
+  const [addSubjectModal, setAddSubjectModal] = useState<{ open: boolean, curriculumId: number | null, semester: number | null }>({ open: false, curriculumId: null, semester: null });
+  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
 
   const filteredCurriculums = curriculums.filter(
     c => c.curriculumName.toLowerCase().includes(search.toLowerCase()) || c.id.toString().includes(search)
@@ -46,6 +49,27 @@ const CurriculumManagerPage: React.FC = () => {
   const handleApprove = (id: number) => {
     setApprovalStatus(prev => ({ ...prev, [id]: 'approved' }));
     message.success('Curriculum approved!');
+  };
+
+  const handleAddSubjectToSemester = (curriculumId: number, semester: number) => {
+    setAddSubjectModal({ open: true, curriculumId, semester });
+  };
+
+  const handleAddSubjectConfirm = async () => {
+    if (!addSubjectModal.curriculumId || !addSubjectModal.semester || !selectedSubjectId) return;
+    try {
+      await AddSubjectToCurriculum(addSubjectModal.curriculumId, {
+        subjectId: selectedSubjectId,
+        semesterNumber: addSubjectModal.semester,
+        isMandatory: true
+      });
+      message.success('Subject added to curriculum!');
+      // TODO: Refresh curriculumSubjects from API when available
+      setAddSubjectModal({ open: false, curriculumId: null, semester: null });
+      setSelectedSubjectId(null);
+    } catch (err) {
+      message.error('Failed to add subject to curriculum');
+    }
   };
 
   return (
@@ -186,6 +210,7 @@ const CurriculumManagerPage: React.FC = () => {
                             })}
                           </div>
                         )}
+                        <Button type="dashed" icon={<PlusOutlined />} onClick={() => handleAddSubjectToSemester(curriculum.id, semesterNumber)} style={{ marginTop: 8 }}>Add Subject</Button>
                       </div>
                     </React.Fragment>
                   );
@@ -204,6 +229,30 @@ const CurriculumManagerPage: React.FC = () => {
             dataType="curriculum"
           />
         )}
+        {/* Add Subject Modal */}
+        <Modal
+          title="Add Subject to Semester"
+          open={addSubjectModal.open}
+          onOk={handleAddSubjectConfirm}
+          onCancel={() => setAddSubjectModal({ open: false, curriculumId: null, semester: null })}
+          okButtonProps={{ disabled: !selectedSubjectId }}
+        >
+          <Select
+            showSearch
+            placeholder="Select a subject"
+            style={{ width: '100%' }}
+            value={selectedSubjectId}
+            onChange={setSelectedSubjectId}
+            optionFilterProp="label"
+            filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+          >
+            {subjects.map(subj => (
+              <Select.Option key={subj.id} value={subj.id} label={`${subj.subjectName} (${subj.subjectCode})`}>
+                {subj.subjectName} ({subj.subjectCode})
+              </Select.Option>
+            ))}
+          </Select>
+        </Modal>
       </div>
     </div>
   );
