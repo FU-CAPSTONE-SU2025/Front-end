@@ -65,10 +65,8 @@ const EditComboPage: React.FC = () => {
           if (combo) {
             form.setFieldsValue({
               comboName: combo.comboName,
-              comboDescription: combo.description || '',
-              subjectIds: combo.subjectIds || [],
+              comboDescription: combo.comboDescription || '',
             });
-            setSubjectIds(combo.subjectIds || []);
             setLoading(false);
           } else {
             message.error('Combo not found!');
@@ -85,7 +83,7 @@ const EditComboPage: React.FC = () => {
   }, [id, form, navigate]);
 
   const handleSubmit = (values: any) => {
-    setPreviewData({ ...values, id: Number(id), subjectIds });
+    setPreviewData({ ...values, id: Number(id) });
     setCurrentStep(1);
   };
 
@@ -95,7 +93,7 @@ const EditComboPage: React.FC = () => {
       data: {
         comboName: form.getFieldValue('comboName'),
         comboDescription: form.getFieldValue('comboDescription'),
-        subjectIds: subjectIds
+        subjectIds: []
       }
     }, {
       onSuccess: () => {
@@ -142,29 +140,13 @@ const EditComboPage: React.FC = () => {
               form={form}
               layout="vertical"
               onFinish={handleSubmit}
-              initialValues={{ comboName: '', comboDescription: '', subjectIds: [] }}
+              initialValues={{ comboName: '', comboDescription: '' }}
             >
               <Form.Item label="Combo Name" name="comboName" rules={[{ required: true, message: 'Please enter combo name' }]}> 
                 <Input />
               </Form.Item>
               <Form.Item label="Combo Description" name="comboDescription">
                 <Input.TextArea rows={3} />
-              </Form.Item>
-              <Form.Item label="Subjects" name="subjectIds">
-                <Select
-                  mode="multiple"
-                  value={subjectIds}
-                  onChange={setSubjectIds}
-                  placeholder="Select subjects"
-                  style={{ width: '100%' }}
-                  optionFilterProp="children"
-                >
-                  {subjectList.map(subj => (
-                    <Select.Option key={subj.id} value={subj.id}>
-                      {subj.subjectName} ({subj.subjectCode})
-                    </Select.Option>
-                  ))}
-                </Select>
               </Form.Item>
               <Form.Item>
                 <Button type="primary" htmlType="submit">Preview</Button>
@@ -182,7 +164,6 @@ const EditComboPage: React.FC = () => {
             <Card title="Review Combo Information" className="shadow-md">
               <p><b>Combo Name:</b> {previewData.comboName}</p>
               <p><b>Combo Description:</b> {previewData.comboDescription}</p>
-              <p><b>Subjects:</b> {subjectList.filter(s => previewData.subjectIds.includes(s.id)).map(s => `${s.subjectName} (${s.subjectCode})`).join(', ')}</p>
               <div style={{ marginTop: 24 }}>
                 <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleConfirm} loading={updateComboMutation.isPending}>
                   Confirm & Save

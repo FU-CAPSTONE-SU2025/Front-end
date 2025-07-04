@@ -20,25 +20,41 @@ export const subjects: Subject[] = [
 ];
 
 export const syllabuses: Syllabus[] = [
-  { id: 1, subjectId: 1, content: 'Syllabus for CS101' },
-  { id: 2, subjectId: 2, content: 'Syllabus for CS102' },
+  { 
+    id: 1, 
+    subjectId: 1, 
+    content: 'Syllabus for CS101',
+    assessments: [],
+    learningMaterials: [],
+    learningOutcomes: [],
+    sessions: []
+  },
+  { 
+    id: 2, 
+    subjectId: 2, 
+    content: 'Syllabus for CS102',
+    assessments: [],
+    learningMaterials: [],
+    learningOutcomes: [],
+    sessions: []
+  },
 ];
 
 export const combos: Combo[] = [
-  { id: 1, comboName: 'AI Electives', description: 'AI-focused electives.' },
-  { id: 2, comboName: 'Data Science Track', description: 'Data Science electives.' },
+  { id: 1, comboName: 'AI Electives', comboDescription: 'AI-focused electives.' },
+  { id: 2, comboName: 'Data Science Track', comboDescription: 'Data Science electives.' },
 ];
 
 export const curriculumSubjects: CurriculumSubject[] = [
   // Semester 1
-  { curriculumId: 1, subjectId: 1, semesterNumber: 1, isMandetory: true },
-  { curriculumId: 1, subjectId: 2, semesterNumber: 1, isMandetory: true },
-  { curriculumId: 1, subjectId: 5, semesterNumber: 1, isMandetory: true },
+  { curriculumId: 1, subjectId: 1, semesterNumber: 1, isMandatory: true },
+  { curriculumId: 1, subjectId: 2, semesterNumber: 1, isMandatory: true },
+  { curriculumId: 1, subjectId: 5, semesterNumber: 1, isMandatory: true },
   // Semester 5 with combo
-  { curriculumId: 1, subjectId: 1, semesterNumber: 5, isMandetory: true },
-  { curriculumId: 1, subjectId: 2, semesterNumber: 5, isMandetory: true },
-  { curriculumId: 1, subjectId: 1, semesterNumber: 5, isMandetory: false }, // Combo (comboId=1)
-  { curriculumId: 1, subjectId: 2, semesterNumber: 5, isMandetory: false }, // Combo (comboId=2)
+  { curriculumId: 1, subjectId: 1, semesterNumber: 5, isMandatory: true },
+  { curriculumId: 1, subjectId: 2, semesterNumber: 5, isMandatory: true },
+  { curriculumId: 1, subjectId: 1, semesterNumber: 5, isMandatory: false }, // Combo (comboId=1)
+  { curriculumId: 1, subjectId: 2, semesterNumber: 5, isMandatory: false }, // Combo (comboId=2)
 ];
 
 export const comboSubjects: ComboSubject[] = [

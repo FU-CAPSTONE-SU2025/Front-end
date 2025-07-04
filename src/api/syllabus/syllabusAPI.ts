@@ -1,9 +1,9 @@
 import { axiosRead } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { pagedSyllabusData, SyllabusItem } from "../../interfaces/ISyllabus";
+import { Syllabus, PagedData } from "../../interfaces/ISchoolProgram";
 
 const userURL = baseUrl+"/Syllabus"
-export const GetAllSyllabus = async (): Promise<SyllabusItem[] | null> => {
+export const GetAllSyllabus = async (): Promise<Syllabus[] | null> => {
     const props = {
         data: null,
         url: userURL,
@@ -25,7 +25,7 @@ interface FetchSyllabusParams {
     pageSize?: number;
 }
 
-export const fetchSyllabusPaged = async (params: FetchSyllabusParams): Promise<pagedSyllabusData | null> => {
+export const fetchSyllabusPaged = async (params: FetchSyllabusParams): Promise<PagedData<Syllabus> | null> => {
     const { search = '', page = 1, pageSize = 10 } = params;
     const queryParams: any = {
         search,

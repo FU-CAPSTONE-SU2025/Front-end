@@ -160,9 +160,9 @@ const CurriculumManagerPage: React.FC = () => {
                 {[...Array(9)].map((_, semIdx) => {
                   const semesterNumber = semIdx + 1;
                   // Subjects for this semester
-                  const semesterSubjects = curriculumSubjects.filter(cs => cs.curriculumId === curriculum.id && cs.semesterNumber === semesterNumber && cs.isMandetory);
+                  const semesterSubjects = curriculumSubjects.filter(cs => cs.curriculumId === curriculum.id && cs.semesterNumber === semesterNumber && cs.isMandatory);
                   // Combos for this semester
-                  const semesterCombos = curriculumSubjects.filter(cs => cs.curriculumId === curriculum.id && cs.semesterNumber === semesterNumber && !cs.isMandetory);
+                  const semesterCombos = curriculumSubjects.filter(cs => cs.curriculumId === curriculum.id && cs.semesterNumber === semesterNumber && !cs.isMandatory);
                   return (
                     <React.Fragment key={semesterNumber}>
                       {/* Timeline node: perfectly centered with semester card */}

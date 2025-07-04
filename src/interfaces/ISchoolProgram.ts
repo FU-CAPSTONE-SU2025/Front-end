@@ -48,6 +48,12 @@ export interface Combo {
   comboDescription: string; // text
 }
 
+// Interface for Combo_Subject table (junction table)
+export interface ComboSubject {
+  comboId: number; // Foreign key referencing Combo.id, part of composite primary key
+  subjectId: number; // Foreign key referencing Subject.id, part of composite primary key
+}
+
 // Interface for Curriculum_Subject table (junction table)
 export interface CurriculumSubject {
   curriculumId: number; // Foreign key referencing Curriculum.id, part of composite primary key

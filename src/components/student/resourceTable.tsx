@@ -3,10 +3,10 @@ import { Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileSearchOutlined, CodeOutlined, BookOutlined } from '@ant-design/icons';
-import { SyllabusItem } from '../../interfaces/ISyllabus';
+import { Syllabus } from '../../interfaces/ISchoolProgram';
 
 interface ResourceTableProps {
-  data: SyllabusItem[];
+  data: Syllabus[];
   isLoading: boolean;
   page: number;
   pageSize: number;
@@ -14,10 +14,10 @@ interface ResourceTableProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   searchTerm: string;
-  onSubjectSelect: (subject: SyllabusItem) => void;
+  onSubjectSelect: (subject: Syllabus) => void;
 }
 
-const getColumns = (onSubjectSelect: (subject: SyllabusItem) => void): ColumnsType<SyllabusItem> => [
+const getColumns = (onSubjectSelect: (subject: Syllabus) => void): ColumnsType<Syllabus> => [
   {
     title: 'Syllabus ID',
     dataIndex: 'id',
