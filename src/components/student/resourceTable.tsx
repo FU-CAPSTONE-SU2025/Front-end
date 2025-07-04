@@ -3,48 +3,25 @@ import { Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileSearchOutlined, CodeOutlined, BookOutlined } from '@ant-design/icons';
+import { SyllabusItem } from '../../interfaces/ISyllabus';
 
 interface ResourceTableProps {
+  data: SyllabusItem[];
+  isLoading: boolean;
+  page: number;
+  pageSize: number;
+  total: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
   searchTerm: string;
-  onSubjectSelect: (subject: any) => void;
+  onSubjectSelect: (subject: SyllabusItem) => void;
 }
 
-// Mock data for table
-const tableData = Array.from({ length: 14 }, (_, i) => ({
-  key: i + 1,
-  syllabusId: i + 1,
-  code: `PRN21${i % 3}`,
-  name: `Sample Subject Name ${i + 1}`,
-  credit: 3,
-  timeAllocation: 'Study hour (150h) = 49.5h contact hours + 1h final exam + 85 practical exam + 99.5h self-study',
-  preRequisite: ['PRO192', 'DBI202'],
-  details: {
-    description: `This is a sample description for subject PRN21${i % 3}. It covers the fundamental concepts and practical applications required for this field of study.`,
-    objectives: [
-      { 
-        id: 1, 
-        icon: <CodeOutlined />, 
-        main: 'Understand core concepts', 
-        sub: ['Concept A', 'Concept B'] 
-      },
-      { 
-        id: 2, 
-        icon: <BookOutlined />, 
-        main: 'Develop practical skills', 
-        sub: ['Skill X', 'Skill Y'] 
-      },
-    ],
-  },
-  tips: 'Practice regularly and collaborate with peers to succeed.',
-  syllabusName: `Syllabus for Sample Subject ${i + 1}`,
-  syllabusLink: '#',
-}));
-
-const getColumns = (onSubjectSelect: (subject: any) => void): ColumnsType<any> => [
+const getColumns = (onSubjectSelect: (subject: SyllabusItem) => void): ColumnsType<SyllabusItem> => [
   {
     title: 'Syllabus ID',
-    dataIndex: 'syllabusId',
-    key: 'syllabusId',
+    dataIndex: 'id',
+    key: 'id',
     align: 'center',
     width: 110,
     render: (text: string) => (
@@ -53,8 +30,8 @@ const getColumns = (onSubjectSelect: (subject: any) => void): ColumnsType<any> =
   },
   {
     title: 'Subject Code',
-    dataIndex: 'code',
-    key: 'code',
+    dataIndex: 'subjectCode',
+    key: 'subjectCode',
     align: 'center',
     width: 150,
     render: (text: string) => (
@@ -63,8 +40,8 @@ const getColumns = (onSubjectSelect: (subject: any) => void): ColumnsType<any> =
   },
   {
     title: 'Subject Name',
-    dataIndex: 'name',
-    key: 'name',
+    dataIndex: 'subjectName',
+    key: 'subjectName',
     align: 'left',
     width: 300,
     render: (text: string) => (
@@ -72,9 +49,9 @@ const getColumns = (onSubjectSelect: (subject: any) => void): ColumnsType<any> =
     ),
   },
   {
-    title: 'Syllabus Name',
-    dataIndex: 'syllabusName',
-    key: 'syllabusName',
+    title: 'Syllabus Content',
+    dataIndex: 'content',
+    key: 'content',
     align: 'left',
     render: (text: string, record) => (
       <span
@@ -84,19 +61,24 @@ const getColumns = (onSubjectSelect: (subject: any) => void): ColumnsType<any> =
         tabIndex={0}
         onKeyPress={(e) => { if (e.key === 'Enter') onSubjectSelect(record); }}
       >
-        {text}
+        {text ? text.slice(0, 40) + (text.length > 40 ? '...' : '') : 'View'}
       </span>
     ),
   },
 ];
 
-const ResourceTable: React.FC<ResourceTableProps> = ({ searchTerm, onSubjectSelect }) => {
+const ResourceTable: React.FC<ResourceTableProps> = ({
+  data,
+  isLoading,
+  page,
+  pageSize,
+  total,
+  onPageChange,
+  onPageSizeChange,
+  searchTerm,
+  onSubjectSelect,
+}) => {
   const columns = getColumns(onSubjectSelect);
-
-  const filteredData = tableData.filter((row) => 
-    row.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    row.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   if (!searchTerm.trim()) {
     return null;
@@ -115,18 +97,29 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ searchTerm, onSubjectSele
           Search Results
         </h3>
         <p className="text-gray-400 text-sm">
-          Found {filteredData.length} result{filteredData.length !== 1 ? 's' : ''} for "{searchTerm}"
+          Found {total} result{total !== 1 ? 's' : ''} for "{searchTerm}"
         </p>
       </div>
-      
       <AnimatePresence>
         <div className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-black/25 [&_.ant-table-tbody>tr>td]:!bg-transparent [&_.ant-table-thead>tr>th]:border-b-2 [&_.ant-table-thead>tr>th]:border-white/10 [&_.ant-table-thead>tr>th]:!text-white [&_.ant-table-thead>tr>th]:font-bold [&_.ant-table-thead>tr>th]:uppercase [&_.ant-table-thead>tr>th]:tracking-wider [&_.ant-table-thead>tr>th]:text-xs [&_.ant-table-thead>tr>th]:py-3 [&_.ant-table-tbody>tr>td]:py-4 [&_.ant-pagination-item]:bg-white/10 [&_.ant-pagination-item]:border-white/20 [&_.ant-pagination-item>a]:text-white [&_.ant-pagination-item:hover]:bg-white/20 [&_.ant-pagination-item-active]:bg-orange-500/50 [&_.ant-pagination-item-active]:border-orange-500/80 [&_.ant-pagination-prev]:bg-white/10 [&_.ant-pagination-prev>button]:text-white [&_.ant-pagination-next]:bg-white/10 [&_.ant-pagination-next>button]:text-white [&_.ant-pagination-disabled>button]:text-white/30 [&_.ant-pagination-prev:hover]:bg-white/20 [&_.ant-pagination-next:hover]:bg-white/20 [&_.ant-empty-description]:text-white/60">
           <Table
             columns={columns}
-            dataSource={filteredData}
-            pagination={{ 
-              pageSize: 10, 
-              showSizeChanger: false
+            dataSource={data}
+            loading={isLoading}
+            pagination={{
+              current: page,
+              pageSize: pageSize,
+              total: total,
+              showSizeChanger: true,
+              onChange: (p, ps) => {
+                if (ps !== pageSize) {
+                  onPageSizeChange(ps);
+                  onPageChange(1); // reset page về 1 khi đổi pageSize
+                } else {
+                  onPageChange(p);
+                }
+              },
+              pageSizeOptions: ['5', '10', '20', '50'],
             }}
             bordered={false}
             rowClassName="border-b border-white/10 hover:!bg-white/5 transition-colors duration-200"
