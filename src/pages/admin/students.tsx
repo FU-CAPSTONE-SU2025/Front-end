@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
 import styles from '../../css/admin/students.module.css';
 import DataImport from '../../components/common/dataImport';
+import BulkDataImport from '../../components/common/bulkDataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
 import { useNavigate } from 'react-router';
@@ -15,6 +16,7 @@ const { Option } = Select;
 
 const StudentList: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
   const [filterValue, setFilterValue] = useState<string>('');
@@ -69,11 +71,24 @@ const StudentList: React.FC = () => {
     setIsImportOpen(true);
   };
 
+  const handleBulkImport = () => {
+    setIsBulkImportOpen(true);
+  };
+
   const handleDataImported = (data: { [key: string]: string }[]) => {
     console.log('Imported student data:', data);
     setIsImportOpen(false);
     
     // Refresh the student list
+    refetch();
+    loadStudentData();
+  };
+
+  const handleBulkDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    console.log('Bulk imported data:', importedData);
+    setIsBulkImportOpen(false);
+    
+    // Refresh all data
     refetch();
     loadStudentData();
   };
@@ -243,10 +258,10 @@ const StudentList: React.FC = () => {
                 )}
               </div>
               <div className={styles.actions}>
-                {['Add New Account', 'Delete Account', 'Import Data From xlsx'].map((action, index) => (
+                {['Add New Account', 'Delete Account', 'Import Data From xlsx', 'Bulk Import'].map((action, index) => (
                   <motion.div
                     key={index}
-                    className={`${styles.actionButton} ${action === 'Delete Account' ? styles.deleteButton : ''}`}
+                    className={`${styles.actionButton} ${action === 'Delete Account' ? styles.deleteButton : ''} ${action === 'Bulk Import' ? styles.bulkImportButton : ''}`}
                     whileHover={{ scale: isDeleteMode ? 1 : 1.05 }}
                     onClick={
                       isDeleteMode
@@ -255,6 +270,8 @@ const StudentList: React.FC = () => {
                         ? handleAddNewAccount
                         : action === 'Import Data From xlsx'
                         ? handleImport
+                        : action === 'Bulk Import'
+                        ? handleBulkImport
                         : action === 'Delete Account'
                         ? handleDeleteModeToggle
                         : undefined
@@ -317,6 +334,13 @@ const StudentList: React.FC = () => {
               dataType="student"
             />
           </div>
+        )}
+        {isBulkImportOpen && (
+          <BulkDataImport 
+            onClose={() => setIsBulkImportOpen(false)} 
+            onDataImported={handleBulkDataImported}
+            supportedTypes={['STUDENT', 'STAFF', 'MANAGER', 'ADVISOR']}
+          />
         )}
       </div>
     </ConfigProvider>

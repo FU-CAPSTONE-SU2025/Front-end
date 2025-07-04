@@ -1,199 +1,261 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router';
-import { Button, Modal, Form, Input, InputNumber, Select, message } from 'antd';
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Input, Button, Collapse, Typography, Affix, Progress, message, Select, Modal } from 'antd';
+import { PlusOutlined, SearchOutlined, EditOutlined, ImportOutlined, CheckOutlined } from '@ant-design/icons';
+import styles from '../../css/staff/staffTranscript.module.css';
+import { useNavigate } from 'react-router';
+import DataImport from '../../components/common/dataImport';
+// Mock unified API/data (replace with real API later)
+import { curriculums, subjects, combos, curriculumSubjects, comboSubjects } from '../../data/schoolData';
+import { AddSubjectToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
 
-const { Option } = Select;
+const { Panel } = Collapse;
+const { Title } = Typography;
 
-// Mock data giống trang home
-const initialCurriculums = [
-  {
-    id: 1,
-    curriculumCode: 'IT2025',
-    name: 'Information Technology',
-    description: 'Bachelor of IT program',
-    decisionNo: '123/QD-IT',
-    decisionDate: '01/15/2023',
-    totalCredit: 150,
-    status: 'active',
-  },
-  {
-    id: 2,
-    curriculumCode: 'BA2025',
-    name: 'Business Administration',
-    description: 'BA program for managers',
-    decisionNo: '456/QD-BA',
-    decisionDate: '03/10/2023',
-    totalCredit: 140,
-    status: 'pending',
-  },
-  // ... (các mục khác, copy từ home.tsx nếu cần)
-];
+const nodeColor = 'rgba(30,64,175,1)';
+const nodeBorder = '2.5px solid #fff';
+const nodeSize = 18;
+const lineWidth = 4;
+const lineColor = 'rgba(30,64,175,0.18)';
 
-const statusOptions = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'active', label: 'Active' },
-  { value: 'in-active', label: 'Inactive' },
-];
-
-const CurriculumDetail: React.FC = () => {
-  const { id } = useParams();
+const CurriculumManagerPage: React.FC = () => {
+  const [search, setSearch] = useState('');
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [approvalStatus, setApprovalStatus] = useState<{ [id: number]: 'pending' | 'approved' }>({});
   const navigate = useNavigate();
-  const [form] = Form.useForm();
-  const [editing, setEditing] = useState(false);
-  const [curriculums, setCurriculums] = useState(initialCurriculums);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [addSubjectModal, setAddSubjectModal] = useState<{ open: boolean, curriculumId: number | null, semester: number | null }>({ open: false, curriculumId: null, semester: null });
+  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
 
-  const curriculum = curriculums.find(c => String(c.id) === String(id));
+  const filteredCurriculums = curriculums.filter(
+    c => c.curriculumName.toLowerCase().includes(search.toLowerCase()) || c.id.toString().includes(search)
+  );
 
-  if (!curriculum) {
-    return <div className="p-8">Curriculum not found.</div>;
-  }
-
-  const handleEdit = () => {
-    form.setFieldsValue(curriculum);
-    setEditing(true);
-    setModalOpen(true);
+  const handleAddCurriculum = () => {
+    navigate('/manager/addCurriculum');
   };
 
-  const handleDelete = () => {
-    Modal.confirm({
-      title: 'Delete Curriculum',
-      content: 'Are you sure you want to delete this curriculum?',
-      okText: 'Delete',
-      okType: 'danger',
-      cancelText: 'Cancel',
-      onOk: () => {
-        message.success('Deleted curriculum!');
-        navigate('/manager/home');
-      },
-    });
+  const handleEditCurriculum = (curriculumId: number) => {
+    navigate(`/manager/editCurriculum/${curriculumId}`);
   };
 
-  const handleOk = () => {
-    form.validateFields().then((values) => {
-      setCurriculums(curriculums.map((c) => (c.id === curriculum.id ? { ...curriculum, ...values } : c)));
-      message.success('Updated successfully!');
-      setModalOpen(false);
-    });
+  const handleImportCurriculum = () => {
+    setIsImportOpen(true);
+  };
+
+  const handleDataImported = (data: { [key: string]: string }[]) => {
+    message.success('Imported curriculum data!');
+    setIsImportOpen(false);
+  };
+
+  const handleApprove = (id: number) => {
+    setApprovalStatus(prev => ({ ...prev, [id]: 'approved' }));
+    message.success('Curriculum approved!');
+  };
+
+  const handleAddSubjectToSemester = (curriculumId: number, semester: number) => {
+    setAddSubjectModal({ open: true, curriculumId, semester });
+  };
+
+  const handleAddSubjectConfirm = async () => {
+    if (!addSubjectModal.curriculumId || !addSubjectModal.semester || !selectedSubjectId) return;
+    try {
+      await AddSubjectToCurriculum(addSubjectModal.curriculumId, {
+        subjectId: selectedSubjectId,
+        semesterNumber: addSubjectModal.semester,
+        isMandatory: true
+      });
+      message.success('Subject added to curriculum!');
+      // TODO: Refresh curriculumSubjects from API when available
+      setAddSubjectModal({ open: false, curriculumId: null, semester: null });
+      setSelectedSubjectId(null);
+    } catch (err) {
+      message.error('Failed to add subject to curriculum');
+    }
   };
 
   return (
-    <div className="max-w-xl mx-auto p-8 bg-white rounded-xl shadow-md mt-8">
-      <h2 className="text-2xl font-bold mb-4">Curriculum Detail</h2>
-      <div className="mb-4">
-        <b>Curriculum Code:</b> {curriculum.curriculumCode}
-      </div>
-      <div className="mb-4">
-        <b>Name:</b> {curriculum.name}
-      </div>
-      <div className="mb-4">
-        <b>Description:</b> {curriculum.description}
-      </div>
-      <div className="mb-4">
-        <b>Decision No:</b> {curriculum.decisionNo}
-      </div>
-      <div className="mb-4">
-        <b>Decision Date:</b> {curriculum.decisionDate}
-      </div>
-      <div className="mb-4">
-        <b>Total Credit:</b> {curriculum.totalCredit}
-      </div>
-      <div className="mb-4">
-        <b>Status:</b> {curriculum.status}
-      </div>
-      <div className="flex gap-2 mt-6">
-        <Button icon={<EditOutlined />} onClick={handleEdit} type="primary">Edit</Button>
-        <Button icon={<DeleteOutlined />} onClick={handleDelete} danger>Delete</Button>
-        <Button onClick={() => navigate('/manager/home')}>Back</Button>
-      </div>
-      <Modal
-        open={modalOpen}
-        title="Edit Curriculum"
-        onCancel={() => setModalOpen(false)}
-        onOk={handleOk}
-        okText="Update"
-        cancelText="Cancel"
-        centered
-        footer={null}
-        width={480}
-        className="rounded-xl"
-        destroyOnClose
-        style={{ background: '#fff', borderRadius: 16 }}
-        bodyStyle={{ background: '#fff', borderRadius: 16 }}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={curriculum}
-          onFinish={handleOk}
-          className="space-y-2"
-        >
-          <Form.Item
-            name="curriculumCode"
-            label="Curriculum Code"
-            rules={[{ required: true, message: 'Please enter curriculum code!' }]}
-          >
-            <Input className="!rounded-lg" placeholder="Enter curriculum code" />
-          </Form.Item>
-          <Form.Item
-            name="name"
-            label="Name"
-            rules={[{ required: true, message: 'Please enter name!' }]}
-          >
-            <Input className="!rounded-lg" placeholder="Enter curriculum name" />
-          </Form.Item>
-          <Form.Item
-            name="description"
-            label="Description"
-            rules={[{ required: true, message: 'Please enter description!' }]}
-          >
-            <Input.TextArea className="!rounded-lg" placeholder="Enter description" rows={2} />
-          </Form.Item>
-          <Form.Item
-            name="decisionNo"
-            label="Decision No"
-            rules={[{ required: true, message: 'Please enter decision number!' }]}
-          >
-            <Input className="!rounded-lg" placeholder="Enter decision number" />
-          </Form.Item>
-          <Form.Item
-            name="decisionDate"
-            label="Decision Date (MM/dd/yyyy)"
-            rules={[{ required: true, message: 'Please enter decision date!' }]}
-          >
-            <Input className="!rounded-lg" placeholder="MM/dd/yyyy" />
-          </Form.Item>
-          <Form.Item
-            name="totalCredit"
-            label="Total Credit"
-            rules={[{ required: true, message: 'Please enter total credit!' }]}
-          >
-            <InputNumber className="!rounded-lg w-full" min={1} max={300} placeholder="Enter total credit" />
-          </Form.Item>
-          <Form.Item
-            name="status"
-            label="Status"
-            rules={[{ required: true, message: 'Please select status!' }]}
-          >
-            <Select className="!rounded-lg">
-              {statusOptions.map((opt) => (
-                <Option key={opt.value} value={opt.value}>{opt.label}</Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button onClick={() => setModalOpen(false)}>
-              Cancel
+    <div>
+      <div className={styles.sttContainer} style={{ paddingTop: 12 }}>
+        {/* Sticky Toolbar */}
+        <Affix offsetTop={80} style={{zIndex: 10}}>
+          <div style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', border: '1.5px solid rgba(255,255,255,0.18)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
+            <Input
+              placeholder="Search by Curriculum ID or Name"
+              prefix={<SearchOutlined />}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{maxWidth: 240, borderRadius: 999}}
+              size="large"
+            />
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              size="large" 
+              style={{borderRadius: 999}}
+              onClick={handleAddCurriculum}
+            >
+              Add Curriculum
             </Button>
-            <Button type="primary" htmlType="submit">
-              Update
+            <Button 
+              icon={<ImportOutlined />} 
+              size="large" 
+              style={{borderRadius: 999}}
+              onClick={handleImportCurriculum}
+            >
+              Import Curricula
             </Button>
           </div>
-        </Form>
-      </Modal>
+        </Affix>
+        {/* Curriculum Cards */}
+        <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
+          {filteredCurriculums.map(curriculum => (
+            <Panel
+              header={
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <span style={{fontWeight: 700, fontSize: '1.2rem', color: '#1E40AF'}}>
+                    {curriculum.curriculumName} <span style={{color: '#f97316', fontWeight: 400, marginLeft: 8}}>[{curriculum.curriculumCode}]</span>
+                  </span>
+                  <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
+                    {/* Approval Progress Bar */}
+                    <Progress
+                      percent={approvalStatus[curriculum.id] === 'approved' ? 100 : 50}
+                      steps={2}
+                      showInfo={false}
+                      strokeColor={['#f59e42', '#52c41a']}
+                      style={{width: 60}}
+                    />
+                    <Button
+                      type={approvalStatus[curriculum.id] === 'approved' ? 'default' : 'primary'}
+                      icon={<CheckOutlined />}
+                      disabled={approvalStatus[curriculum.id] === 'approved'}
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleApprove(curriculum.id);
+                      }}
+                      style={{borderRadius: 8, height: 32, padding: '0 12px'}}
+                    >
+                      {approvalStatus[curriculum.id] === 'approved' ? 'Approved' : 'Approve'}
+                    </Button>
+                    <Button
+                      type="text"
+                      icon={<EditOutlined />}
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleEditCurriculum(curriculum.id);
+                      }}
+                      style={{ color: '#1E40AF', borderRadius: 8, height: 32, padding: '0 12px' }}
+                    >
+                      Edit
+                    </Button>
+                  </div>
+                </div>
+              }
+              key={curriculum.id}
+              style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}}
+            >
+              {/* Timeline for 9 Semesters */}
+              <div style={{display: 'grid', gridTemplateColumns: `${nodeSize + lineWidth + 18}px 1fr`, gap: 0, position: 'relative', marginLeft: 8}}>
+                {/* Vertical line: absolute, centered behind all nodes */}
+                <div style={{position: 'absolute', left: (nodeSize + lineWidth + 18) / 2 - lineWidth / 2, top: 0, width: lineWidth, height: '100%', background: lineColor, zIndex: 0, borderRadius: 2}} />
+                {/* Timeline and semester content rows */}
+                {[...Array(9)].map((_, semIdx) => {
+                  const semesterNumber = semIdx + 1;
+                  // Subjects for this semester
+                  const semesterSubjects = curriculumSubjects.filter(cs => cs.curriculumId === curriculum.id && cs.semesterNumber === semesterNumber && cs.isMandetory);
+                  // Combos for this semester
+                  const semesterCombos = curriculumSubjects.filter(cs => cs.curriculumId === curriculum.id && cs.semesterNumber === semesterNumber && !cs.isMandetory);
+                  return (
+                    <React.Fragment key={semesterNumber}>
+                      {/* Timeline node: perfectly centered with semester card */}
+                      <div style={{position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%'}}>
+                        <div style={{width: nodeSize, height: nodeSize, borderRadius: '50%', background: nodeColor, border: nodeBorder, boxShadow: '0 2px 8px #1E40AF33', zIndex: 2}} />
+                      </div>
+                      {/* Semester content */}
+                      <div style={{marginBottom: 12, background: 'rgba(255, 255, 255, 0.90)', borderRadius: 12, padding: 16, boxShadow: '0 1px 6px rgba(30,64,175,0.07)', minHeight: 64}}>
+                        <Title level={5} style={{color: '#1E40AF', marginBottom: 8}}>Semester {semesterNumber}</Title>
+                        {/* Normal Subjects */}
+                        <div style={{marginBottom: 8}}>
+                          <b style={{color: '#1E90FF'}}>Subjects:</b>
+                          <ul style={{margin: 0, paddingLeft: 20}}>
+                            {semesterSubjects.map(cs => {
+                              const subj = subjects.find(s => s.id === cs.subjectId);
+                              return subj ? (
+                                <li
+                                  key={subj.id}
+                                  style={{color: '#1E40AF', cursor: 'pointer', textDecoration: 'underline'}}
+                                  onClick={() => navigate(`/manager/subject?title=${encodeURIComponent(subj.subjectName)}`)}
+                                >
+                                  {subj.subjectName} ({subj.subjectCode})
+                                </li>
+                              ) : null;
+                            })}
+                          </ul>
+                        </div>
+                        {/* Combos (from semester 5+) */}
+                        {semesterNumber >= 5 && (
+                          <div>
+                            {semesterCombos.map(cs => {
+                              const combo = combos.find(cb => cb.id === cs.subjectId); // subjectId is comboId for combos
+                              if (!combo) return null;
+                              return (
+                                <div key={combo.id} style={{marginTop: 8, background: 'rgba(30,64,175,0.13)', borderRadius: 8, padding: 8}}>
+                                  <b style={{color: '#f97316'}}>Combo: {combo.comboName}</b>
+                                  <ul style={{margin: 0, paddingLeft: 20}}>
+                                    {comboSubjects.filter(cbs => cbs.comboId === combo.id).map(cbs => {
+                                      const subj = subjects.find(s => s.id === cbs.subjectId);
+                                      return subj ? <li key={subj.id} style={{color: '#1E40AF'}}>{subj.subjectName} ({subj.subjectCode})</li> : null;
+                                    })}
+                                  </ul>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        <Button type="dashed" icon={<PlusOutlined />} onClick={() => handleAddSubjectToSemester(curriculum.id, semesterNumber)} style={{ marginTop: 8 }}>Add Subject</Button>
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </Panel>
+          ))}
+        </Collapse>
+        {/* Data Import Modal */}
+        {isImportOpen && (
+          <DataImport 
+            onClose={() => setIsImportOpen(false)} 
+            onDataImported={handleDataImported}
+            headerConfig="CURRICULUM"
+            allowMultipleRows={true}
+            dataType="curriculum"
+          />
+        )}
+        {/* Add Subject Modal */}
+        <Modal
+          title="Add Subject to Semester"
+          open={addSubjectModal.open}
+          onOk={handleAddSubjectConfirm}
+          onCancel={() => setAddSubjectModal({ open: false, curriculumId: null, semester: null })}
+          okButtonProps={{ disabled: !selectedSubjectId }}
+        >
+          <Select
+            showSearch
+            placeholder="Select a subject"
+            style={{ width: '100%' }}
+            value={selectedSubjectId}
+            onChange={setSelectedSubjectId}
+            optionFilterProp="label"
+            filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+          >
+            {subjects.map(subj => (
+              <Select.Option key={subj.id} value={subj.id} label={`${subj.subjectName} (${subj.subjectCode})`}>
+                {subj.subjectName} ({subj.subjectCode})
+              </Select.Option>
+            ))}
+          </Select>
+        </Modal>
+      </div>
     </div>
   );
 };
 
-export default CurriculumDetail; 
+export default CurriculumManagerPage; 

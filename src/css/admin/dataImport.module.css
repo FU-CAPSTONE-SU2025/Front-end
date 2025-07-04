@@ -2,21 +2,24 @@
   width: 100vw;
   height: 100vh;
   top: 0%;
-  margin: 0;
+  left: 0%;
+  right: 0%;
   position: fixed;
   background: rgba(255, 255, 255, 0.5);
-  outline: 1px solid black;
   outline-offset: -1px;
-  display: flex;
   align-content: center;
 }
 
 .dropZone {
   min-width: 600px;
-  max-height: 400px;
+  max-width: 70vw;
+  max-height: 1400px;
+  height: 85vh;
   position: absolute;
-  top: 25%;
-  left: 25%;
+  top: 5vh;
+  left: 0%;
+  right: 0%;
+  margin: 0 auto;
   display: flex;
   justify-self: center;
   flex-direction: column;

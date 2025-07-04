@@ -17,7 +17,6 @@ export default function EditData({}: Props) {
   
   // Determine if this is create or edit mode
   const isCreateMode = !id;
-  const isEditMode = !!id;
   
   // Get the title based on type and mode
   const getPageTitle = () => {

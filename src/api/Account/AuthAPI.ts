@@ -68,7 +68,7 @@ export const RefreshToken = async () => {
         const {setAccessToken,setRefreshToken} = getAuthState()
         //console.log(newAccessToken.data)
         const tokens:TokenProps = newAccessToken.data
-        console.log("New token: ",newAccessToken.data)
+        //console.log("New token: ",newAccessToken.data)
           setAccessToken(tokens.accessToken);
           setRefreshToken(tokens.refreshToken);
         return true

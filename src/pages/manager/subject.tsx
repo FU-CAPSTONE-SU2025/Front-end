@@ -1,201 +1,248 @@
-import React, { useState } from 'react';
-import { Button, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import { motion } from 'framer-motion';
-import ManagerTable from '../../components/manager/managerTable';
-import StatusBadge from '../../components/manager/statusBadge';
-import SearchBar from '../../components/common/searchBar';
-import { useNavigate } from 'react-router-dom';
-import { ISubject } from '../../interfaces/ISubject';
+import React, { useState, useEffect } from 'react';
+import { Table, Input, Button, Select, Affix, Tag, message, Pagination, Spin, Empty } from 'antd';
+import { PlusOutlined, EditOutlined, SearchOutlined, CheckOutlined, UploadOutlined } from '@ant-design/icons';
+import styles from '../../css/staff/staffTranscript.module.css';
+import { curriculums, combos } from '../../data/schoolData';
+import { useNavigate, useSearchParams } from 'react-router';
+import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import DataImport from '../../components/common/dataImport';
 
-// Mock data based on the provided format
-const initialSubjects: ISubject[] = [
-  {
-    id: 1,
-    subjectCode: 'CSP202m',
-    subjectName: 'Introduction of Content Strategy',
-    combos: ['SE_COM1', 'SE_COM2'],
-    prerequisites: ['MKT101', 'COM201'],
-    status: 'active',
-  },
-  {
-    id: 2,
-    subjectCode: 'DXE291c',
-    subjectName: 'Digital Ecosystem: From Governance to Business',
-    combos: ['BA_COM1'],
-    prerequisites: ['BUS101', 'TECH201'],
-    status: 'active',
-  },
-  {
-    id: 3,
-    subjectCode: 'GRF491',
-    subjectName: 'Graduation Thesis - Finance',
-    combos: ['FIN_COM1'],
-    prerequisites: ['FIN301', 'FIN302'],
-    status: 'pending',
-  },
-  {
-    id: 4,
-    subjectCode: 'JJP301',
-    subjectName: 'Japanese Phonetics and Lexicology',
-    combos: ['LANG_COM1'],
-    prerequisites: ['JPN201', 'JPN202'],
-    status: 'in-active',
-  },
-  {
-    id: 5,
-    subjectCode: 'CSD301',
-    subjectName: 'Computer Science Design',
-    combos: ['IT_COM1', 'IT_COM2'],
-    prerequisites: ['CS101', 'CS102'],
-    status: 'active',
-  },
-  {
-    id: 6,
-    subjectCode: 'MKT401',
-    subjectName: 'Marketing Management',
-    combos: ['BA_COM2'],
-    prerequisites: ['MKT201', 'MKT202'],
-    status: 'active',
-  },
-  {
-    id: 7,
-    subjectCode: 'FIN301',
-    subjectName: 'Financial Management',
-    combos: ['FIN_COM1'],
-    prerequisites: ['FIN101', 'FIN102'],
-    status: 'pending',
-  },
-  {
-    id: 8,
-    subjectCode: 'ENG201',
-    subjectName: 'English Communication',
-    combos: ['LANG_COM1'],
-    prerequisites: ['ENG101'],
-    status: 'active',
-  },
-];
+const { Option } = Select;
 
-
-
-const pageSize = 5;
-
-const SubjectPage: React.FC = () => {
-  const [subjects, setSubjects] = useState<ISubject[]>(initialSubjects);
-  const [currentPage, setCurrentPage] = useState(1);
+const SubjectManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [curriculumFilter, setCurriculumFilter] = useState<number | undefined>();
+  const [comboFilter, setComboFilter] = useState<number | undefined>();
+  const [approvalStatus, setApprovalStatus] = useState<{ [id: number]: 'pending' | 'approved' }>({});
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  // Filtered data
-  const filtered = subjects.filter(s =>
-    s.subjectCode.toLowerCase().includes(search.toLowerCase()) ||
-    s.subjectName.toLowerCase().includes(search.toLowerCase())
-  );
-  
-  // Pagination
-  const pagedData = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  // CRUD hook
+  const {
+    getAllSubjects,
+    subjectList,
+    paginationSubject,
+    isLoading,
+    createSubject
+  } = useCRUDSubject();
 
-  // Table columns
+  useEffect(() => {
+    getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+  }, [page, pageSize, search]);
+
+  useEffect(() => {
+    const title = searchParams.get('title');
+    if (title) setSearch(title);
+  }, [searchParams]);
+
+  const handleAddSubject = () => {
+    navigate('/manager/subject/add');
+  };
+
+  const handleAddCombo = () => {
+    navigate('/manager/combo/add');
+  };
+
+  const handleEditSubject = (subjectId: number) => {
+    navigate(`/manager/subject/edit/${subjectId}`);
+  };
+
+  const handleCreateSyllabus = (subjectId: number) => {
+    navigate(`/manager/subject/${subjectId}/syllabus`);
+  };
+
+  const handleApprove = (id: number) => {
+    setApprovalStatus(prev => ({ ...prev, [id]: 'approved' }));
+    message.success('Subject approved!');
+  };
+
+  const handleDataImported = async (data: { [key: string]: string }[]) => {
+    try {
+      // Process each imported subject
+      for (const subjectData of data) {
+        await createSubject({
+          subjectCode: subjectData.subjectCode,
+          subjectName: subjectData.subjectName,
+          credits: parseInt(subjectData.credits) || 0,
+          description: subjectData.description || ''
+        });
+      }
+      
+      message.success(`Successfully imported ${data.length} subjects`);
+      // Refresh the subject list
+      getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+    } catch (error) {
+      message.error('Error importing subjects. Please check your data format.');
+    }
+  };
+
   const columns = [
-    {
-      title: 'Subject Code',
-      dataIndex: 'subjectCode',
-      key: 'subjectCode',
-      width: 120,
-      align: 'center' as const,
-    },
-    {
-      title: 'Subject Name',
-      dataIndex: 'subjectName',
-      key: 'subjectName',
-      width: 300,
-      align: 'left' as const,
-    },
-    {
-      title: 'Combos',
-      dataIndex: 'combos',
-      key: 'combos',
-      width: 200,
-      align: 'center' as const,
-      render: (combos: string[]) => combos?.join(', ') || '-',
-    },
-    {
-      title: 'Prerequisites',
-      dataIndex: 'prerequisites',
-      key: 'prerequisites',
-      width: 200,
-      align: 'center' as const,
-      render: (prerequisites: string[]) => prerequisites?.join(', ') || '-',
-    },
+    { title: 'Title', dataIndex: 'subjectName', key: 'subjectName', align: 'left' as 'left', width: 260 },
+    { title: 'Subject Code', dataIndex: 'subjectCode', key: 'subjectCode', align: 'left' as 'left', width: 140 },
+    { title: 'Combo Description', dataIndex: 'comboDescription', key: 'comboDescription', align: 'left' as 'left', width: 380, ellipsis: true },
     {
       title: 'Status',
-      dataIndex: 'status',
       key: 'status',
-      width: 110,
-      render: (status: string) => <StatusBadge status={status as 'pending' | 'active' | 'in-active'} />,
-      align: 'center' as const,
+      align: 'center' as 'center',
+      width: 180,
+      render: (_: any, record: any) => (
+        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+          <Tag color={approvalStatus[record.id] === 'approved' ? 'green' : 'orange'} style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6, marginBottom: 0 }}>
+            {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Waiting'}
+          </Tag>
+          <Button
+            type={approvalStatus[record.id] === 'approved' ? 'default' : 'primary'}
+            icon={<CheckOutlined style={{ fontSize: 12 }} />}
+            size="small"
+            disabled={approvalStatus[record.id] === 'approved'}
+            onClick={() => handleApprove(record.id)}
+            style={{borderRadius: 6, height: 22, padding: '0 6px', fontSize: 12, marginBottom: 0}}
+          >
+            {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Approve'}
+          </Button>
+        </div>
+      ),
     },
     {
-      title: 'View',
-      key: 'view',
-      dataIndex: 'view',
-      width: 80,
-      align: 'center' as const,
+      title: 'Action',
+      key: 'actions',
+      align: 'center' as 'center',
+      width: 160,
       render: (_: any, record: any) => (
-        <Button type="link" onClick={() => navigate(`/manager/subject/${record.id}`)}>
-          View
-        </Button>
+        <div className={styles.sttActionButtons}>
+          <Button
+            type="link"
+            icon={<EditOutlined style={{ color: '#f97316', fontSize: 16 }} />}
+            onClick={() => handleEditSubject(record.id)}
+            className={styles.sttFreshEditButton}
+            style={{ color: '#f97316', padding: 0, fontSize: 12 }}
+            title="Edit Subject"
+          />
+          <Button
+            type="link"
+            icon={<PlusOutlined style={{ color: '#1E40AF', fontSize: 16 }} />}
+            onClick={() => handleCreateSyllabus(record.id)}
+            style={{ color: '#1E40AF', padding: 0, fontSize: 12 }}
+            title="Create Syllabus"
+          >
+            Syllabus
+          </Button>
+        </div>
       ),
     },
   ];
 
-  // CRUD handlers
-  const onAdd = () => {
-    navigate('/manager/subject/add');
-  };
-
-  const onEdit = (record: any) => {
-    navigate(`/manager/subject/edit/${record.id}`);
-  };
-
-  const onDelete = (id: number) => {
-    setSubjects(subjects.filter((s) => s.id !== id));
-    message.success('Deleted subject!');
-  };
-
   return (
-    <div className="p-6 mx-auto">
-      <div className="bg-white rounded-t-xl border border-b-0 border-gray-200 shadow-md p-4 pb-2">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex-1">
-            <SearchBar
+    <div>
+      <div className={styles.sttContainer} style={{ paddingTop: 12 }}>
+        {/* Sticky Toolbar */}
+        <Affix offsetTop={80} style={{zIndex: 10}}>
+          <div className={styles.sttToolbar}>
+            <Input
+              placeholder="Search by Subject Name or ID"
+              prefix={<SearchOutlined />}
               value={search}
-              onChange={v => { setSearch(v); setCurrentPage(1); }}
-              placeholder="Search by subject code or name..."
-              className="w-full"
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              style={{maxWidth: 240, borderRadius: 999}}
+              size="large"
             />
-          </div>
-          <motion.div whileHover={{ scale: 1.05 }} className="sm:ml-4">
-            <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>
+            <Select
+              allowClear
+              placeholder="Filter by Curriculum"
+              style={{minWidth: 180, borderRadius: 999}}
+              size="large"
+              value={curriculumFilter}
+              onChange={setCurriculumFilter}
+            >
+              {curriculums.map(c => (
+                <Option key={c.id} value={c.id}>{c.curriculumName}</Option>
+              ))}
+            </Select>
+            <Select
+              allowClear
+              placeholder="Filter by Combo"
+              style={{minWidth: 180, borderRadius: 999}}
+              size="large"
+              value={comboFilter}
+              onChange={setComboFilter}
+            >
+              {combos.map(cb => (
+                <Option key={cb.id} value={cb.id}>{cb.comboName}</Option>
+              ))}
+            </Select>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              size="large" 
+              style={{borderRadius: 999}}
+              onClick={handleAddSubject}
+            >
               Add Subject
             </Button>
-          </motion.div>
-        </div>
-      </div>
-      <div className="bg-white rounded-b-xl border border-t-0 border-gray-200 shadow-md p-4">
-        <ManagerTable
-          columns={columns}
-          data={pagedData}
-          pageSize={pageSize}
-          currentPage={currentPage}
-          total={filtered.length}
-          onPageChange={setCurrentPage}
-          onEdit={onEdit}
-          onDelete={(row) => onDelete(row.id)}
-        />
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              size="large" 
+              style={{borderRadius: 999, background: '#1E40AF', borderColor: '#1E40AF'}} 
+              onClick={handleAddCombo}
+            >
+              Add Combo
+            </Button>
+            <Button 
+              type="default" 
+              icon={<UploadOutlined />} 
+              size="large" 
+              style={{borderRadius: 999, borderColor: '#10B981', color: '#10B981'}} 
+              onClick={() => setIsImportOpen(true)}
+            >
+              Import Subjects
+            </Button>
+          </div>
+        </Affix>
+        {/* Subject Table */}
+        <Spin spinning={isLoading} tip="Loading subjects...">
+          <Table
+            columns={columns}
+            dataSource={subjectList}
+            rowKey="id"
+            className={styles.sttFreshTable}
+            locale={{ emptyText: <Empty description="No records available." /> }}
+            scroll={{ x: 'max-content' }}
+            pagination={false}
+            style={{marginBottom: 48}}
+          />
+          {/* Pagination */}
+          {paginationSubject && paginationSubject.total > 0 && (
+            <div style={{marginTop: 32, display: 'flex', justifyContent: 'center'}}>
+              <Pagination
+                current={paginationSubject.current}
+                pageSize={paginationSubject.pageSize}
+                total={paginationSubject.total}
+                showSizeChanger
+                pageSizeOptions={[5, 10, 20, 50]}
+                onChange={(p, ps) => { setPage(p); setPageSize(ps); }}
+                style={{borderRadius: 8}}
+              />
+            </div>
+          )}
+        </Spin>
+        
+        {/* Data Import Modal */}
+        {isImportOpen && (
+          <DataImport 
+            onClose={() => setIsImportOpen(false)} 
+            onDataImported={handleDataImported}
+            headerConfig="SUBJECT"
+            allowMultipleRows={true}
+            dataType="subject"
+          />
+        )}
       </div>
     </div>
   );
 };
 
-export default SubjectPage; 
+export default SubjectManagerPage; 

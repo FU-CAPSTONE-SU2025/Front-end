@@ -1,118 +1,13 @@
 import React, { useState } from 'react';
-import { Button, Modal, Form, Input, InputNumber, Select, message } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Modal, Form, Input, InputNumber, Select, message, Affix, Table, Flex, Pagination } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
-import ManagerTable from '../../components/manager/managerTable';
 import StatusBadge from '../../components/manager/statusBadge';
-import { Pagination } from 'antd';
-import SearchBar from '../../components/common/searchBar';
 import { useNavigate } from 'react-router';
+import styles from '../../css/staff/staffTranscript.module.css';
+import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 
 const { Option } = Select;
-
-// Mock data (English fields, more rows)
-const initialCurriculums = [
-  {
-    id: 1,
-    curriculumCode: 'IT2025',
-    name: 'Information Technology',
-    description: 'Bachelor of IT program',
-    decisionNo: '123/QD-IT',
-    decisionDate: '01/15/2023',
-    totalCredit: 150,
-    status: 'active',
-  },
-  {
-    id: 2,
-    curriculumCode: 'BA2025',
-    name: 'Business Administration',
-    description: 'BA program for managers',
-    decisionNo: '456/QD-BA',
-    decisionDate: '03/10/2023',
-    totalCredit: 140,
-    status: 'pending',
-  },
-  {
-    id: 3,
-    curriculumCode: 'TOUR2025',
-    name: 'Tourism Management',
-    description: 'Tourism and hospitality',
-    decisionNo: '789/QD-TOUR',
-    decisionDate: '12/20/2022',
-    totalCredit: 135,
-    status: 'in-active',
-  },
-  {
-    id: 4,
-    curriculumCode: 'ENG2025',
-    name: 'English Language',
-    description: 'English for international communication',
-    decisionNo: '234/QD-ENG',
-    decisionDate: '05/05/2023',
-    totalCredit: 120,
-    status: 'active',
-  },
-  {
-    id: 5,
-    curriculumCode: 'LAW2025',
-    name: 'Law',
-    description: 'Bachelor of Law',
-    decisionNo: '567/QD-LAW',
-    decisionDate: '07/18/2023',
-    totalCredit: 130,
-    status: 'pending',
-  },
-  {
-    id: 6,
-    curriculumCode: 'MED2025',
-    name: 'Medicine',
-    description: 'General Medicine program',
-    decisionNo: '890/QD-MED',
-    decisionDate: '09/30/2022',
-    totalCredit: 180,
-    status: 'active',
-  },
-  {
-    id: 7,
-    curriculumCode: 'CS2025',
-    name: 'Computer Science',
-    description: 'CS for software engineers',
-    decisionNo: '321/QD-CS',
-    decisionDate: '11/11/2022',
-    totalCredit: 155,
-    status: 'in-active',
-  },
-  {
-    id: 8,
-    curriculumCode: 'FIN2025',
-    name: 'Finance',
-    description: 'Finance and banking',
-    decisionNo: '654/QD-FIN',
-    decisionDate: '02/22/2023',
-    totalCredit: 125,
-    status: 'active',
-  },
-  {
-    id: 9,
-    curriculumCode: 'ARCH2025',
-    name: 'Architecture',
-    description: 'Architecture and design',
-    decisionNo: '987/QD-ARCH',
-    decisionDate: '04/14/2023',
-    totalCredit: 160,
-    status: 'pending',
-  },
-  {
-    id: 10,
-    curriculumCode: 'EDU2025',
-    name: 'Education',
-    description: 'Teacher education program',
-    decisionNo: '111/QD-EDU',
-    decisionDate: '06/01/2023',
-    totalCredit: 110,
-    status: 'active',
-  },
-];
 
 const statusOptions = [
   { value: 'pending', label: 'Pending' },
@@ -120,25 +15,33 @@ const statusOptions = [
   { value: 'in-active', label: 'Inactive' },
 ];
 
-const pageSize = 5;
-
 const HomePage: React.FC = () => {
-  const [curriculums, setCurriculums] = useState(initialCurriculums);
-  const [currentPage, setCurrentPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form] = Form.useForm();
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const navigate = useNavigate();
 
-  // Filtered data
-  const filtered = curriculums.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.curriculumCode.toLowerCase().includes(search.toLowerCase()) ||
-    c.description.toLowerCase().includes(search.toLowerCase())
-  );
-  // Pagination
-  const pagedData = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  // API integration
+  const {
+    getCurriculumMutation,
+    addCurriculumMutation,
+    updateCurriculumMutation,
+    curriculumList,
+    paginationCurriculum,
+    isLoading
+  } = useCRUDCurriculum();
+
+  // Fetch curriculums on mount and when search/page changes
+  React.useEffect(() => {
+    getCurriculumMutation.mutate({
+      pageNumber: currentPage,
+      pageSize,
+      filterValue: search
+    });
+  }, [currentPage, pageSize, search]);
 
   // Table columns
   const columns = [
@@ -193,20 +96,32 @@ const HomePage: React.FC = () => {
       align: 'center' as const,
     },
     {
-      title: 'View',
-      key: 'view',
-      dataIndex: 'view',
-      width: 80,
+      title: 'Actions',
+      key: 'actions',
       align: 'center' as const,
+      width: 120,
       render: (_: any, record: any) => (
-        <Button type="link" onClick={() => navigate(`/manager/curriculum/${record.id}`)}>
-          View
-        </Button>
+        <div className={styles.sttActionButtons}>
+          <Button
+            type="link"
+            icon={<EditOutlined style={{ color: '#f97316' }} />}
+            onClick={() => onEdit(record)}
+            style={{ color: '#f97316' }}
+            title="Edit Curriculum"
+          />
+          <Button
+            type="link"
+            icon={<DeleteOutlined style={{ color: '#e53e3e' }} />}
+            onClick={() => onDelete(record.id)}
+            style={{ color: '#e53e3e' }}
+            title="Delete Curriculum"
+          />
+        </div>
       ),
     },
   ];
 
-  // CRUD handlers
+  // Handlers
   const onAdd = () => {
     setEditing(null);
     form.resetFields();
@@ -220,61 +135,92 @@ const HomePage: React.FC = () => {
   };
 
   const onDelete = (id: number) => {
-    setCurriculums(curriculums.filter((c) => c.id !== id));
-    message.success('Deleted curriculum!');
+    // TODO: Implement delete API call
+    message.info('Delete API not implemented yet.');
   };
 
   const handleOk = () => {
     form.validateFields().then((values) => {
       if (editing) {
-        setCurriculums(curriculums.map((c) => (c.id === editing.id ? { ...editing, ...values } : c)));
-        message.success('Updated successfully!');
-      } else {
-        const newId = Math.max(...curriculums.map((c) => c.id)) + 1;
-        setCurriculums([
-          ...curriculums,
-          {
-            ...values,
-            id: newId,
-            status: values.status,
+        updateCurriculumMutation.mutate({
+          id: editing.id,
+          data: values
+        }, {
+          onSuccess: () => {
+            message.success('Updated successfully!');
+            setModalOpen(false);
+            getCurriculumMutation.mutate({ pageNumber: currentPage, pageSize, filterValue: search });
           },
-        ]);
-        message.success('Added successfully!');
+          onError: () => {
+            message.error('Failed to update curriculum!');
+          }
+        });
+      } else {
+        addCurriculumMutation.mutate(values, {
+          onSuccess: () => {
+            message.success('Added successfully!');
+            setModalOpen(false);
+            getCurriculumMutation.mutate({ pageNumber: currentPage, pageSize, filterValue: search });
+          },
+          onError: () => {
+            message.error('Failed to add curriculum!');
+          }
+        });
       }
-      setModalOpen(false);
     });
   };
 
+  // Use API-driven data
+  const pagedData = curriculumList;
+
   return (
-    <div className="p-6 mx-auto">
-      <div className="bg-white rounded-t-xl border border-b-0 border-gray-200 shadow-md p-4 pb-2">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex-1">
-            <SearchBar
-              value={search}
-              onChange={v => { setSearch(v); setCurrentPage(1); }}
-              placeholder="Search by code, name, or description..."
-              className="w-full"
-            />
-          </div>
-          <motion.div whileHover={{ scale: 1.05 }} className="sm:ml-4">
-            <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>
-              Add Curriculum
-            </Button>
-          </motion.div>
+    <div className={styles.sttContainer}>
+      {/* Sticky Toolbar */}
+      <Affix offsetTop={80} style={{zIndex: 10}}>
+        <div className={styles.sttToolbar}>
+          <Input
+            placeholder="Search by code, name, or description..."
+            prefix={<SearchOutlined />}
+            value={search}
+            onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+            style={{maxWidth: 240, borderRadius: 999}}
+            size="large"
+          />
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />} 
+            size="large" 
+            style={{borderRadius: 999}}
+            onClick={onAdd}
+          >
+            Add Curriculum
+          </Button>
         </div>
-      </div>
-      <div className="bg-white rounded-b-xl border border-t-0 border-gray-200 shadow-md p-4">
-        <ManagerTable
+      </Affix>
+      {/* Curriculum Table */}
+      <div>
+        <Table
           columns={columns}
-          data={pagedData}
-          pageSize={pageSize}
-          currentPage={currentPage}
-          total={filtered.length}
-          onPageChange={setCurrentPage}
-          onDelete={(row) => onDelete(row.id)}
+          dataSource={pagedData}
+          rowKey="id"
+          loading={isLoading}
+          pagination={false}
         />
       </div>
+      {/* Pagination */}
+      {paginationCurriculum && paginationCurriculum.total > 0 && (
+        <div style={{marginTop: 32, display: 'flex', justifyContent: 'center'}}>
+          <Pagination
+            current={paginationCurriculum.current}
+            pageSize={paginationCurriculum.pageSize}
+            total={paginationCurriculum.total}
+            showSizeChanger
+            pageSizeOptions={[5, 10, 20, 50]}
+            onChange={(p, ps) => { setCurrentPage(p); setPageSize(ps); }}
+            style={{borderRadius: 8}}
+          />
+        </div>
+      )}
       <AnimatePresence>
         {modalOpen && (
           <Modal
@@ -287,10 +233,7 @@ const HomePage: React.FC = () => {
             centered
             footer={null}
             width={480}
-            className="rounded-xl"
             destroyOnClose
-            style={{ background: '#fff', borderRadius: 16 }}
-            bodyStyle={{ background: '#fff', borderRadius: 16 }}
           >
             <motion.div
               initial={{ opacity: 0, y: 40 }}
@@ -303,62 +246,61 @@ const HomePage: React.FC = () => {
                 layout="vertical"
                 initialValues={{ status: 'pending', totalCredit: 120 }}
                 onFinish={handleOk}
-                className="space-y-2"
               >
                 <Form.Item
                   name="curriculumCode"
                   label="Curriculum Code"
                   rules={[{ required: true, message: 'Please enter curriculum code!' }]}
                 >
-                  <Input className="!rounded-lg" placeholder="Enter curriculum code" />
+                  <Input placeholder="Enter curriculum code" />
                 </Form.Item>
                 <Form.Item
                   name="name"
                   label="Name"
                   rules={[{ required: true, message: 'Please enter name!' }]}
                 >
-                  <Input className="!rounded-lg" placeholder="Enter curriculum name" />
+                  <Input placeholder="Enter curriculum name" />
                 </Form.Item>
                 <Form.Item
                   name="description"
                   label="Description"
                   rules={[{ required: true, message: 'Please enter description!' }]}
                 >
-                  <Input.TextArea className="!rounded-lg" placeholder="Enter description" rows={2} />
+                  <Input.TextArea placeholder="Enter description" rows={2} />
                 </Form.Item>
                 <Form.Item
                   name="decisionNo"
                   label="Decision No"
                   rules={[{ required: true, message: 'Please enter decision number!' }]}
                 >
-                  <Input className="!rounded-lg" placeholder="Enter decision number" />
+                  <Input placeholder="Enter decision number" />
                 </Form.Item>
                 <Form.Item
                   name="decisionDate"
                   label="Decision Date (MM/dd/yyyy)"
                   rules={[{ required: true, message: 'Please enter decision date!' }]}
                 >
-                  <Input className="!rounded-lg" placeholder="MM/dd/yyyy" />
+                  <Input placeholder="MM/dd/yyyy" />
                 </Form.Item>
                 <Form.Item
                   name="totalCredit"
                   label="Total Credit"
                   rules={[{ required: true, message: 'Please enter total credit!' }]}
                 >
-                  <InputNumber className="!rounded-lg w-full" min={1} max={300} placeholder="Enter total credit" />
+                  <InputNumber min={1} max={300} placeholder="Enter total credit" style={{width: '100%'}} />
                 </Form.Item>
                 <Form.Item
                   name="status"
                   label="Status"
                   rules={[{ required: true, message: 'Please select status!' }]}
                 >
-                  <Select className="!rounded-lg">
+                  <Select>
                     {statusOptions.map((opt) => (
                       <Option key={opt.value} value={opt.value}>{opt.label}</Option>
                     ))}
                   </Select>
                 </Form.Item>
-                <div className="flex justify-end gap-2 mt-4">
+                <div style={{display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16}}>
                   <Button onClick={() => setModalOpen(false)}>
                     Cancel
                   </Button>
