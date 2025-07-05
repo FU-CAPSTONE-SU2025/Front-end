@@ -40,6 +40,7 @@ import EditSubjectPage from '../pages/manager/editSubject';
 import EditStudentTranscript from "../pages/staff/editStudentTranscript";
 import SubjectPage from "../pages/staff/subject";
 import SubjectSyllabus from "../pages/staff/subjectSyllabus";
+import ManagerSubjectSyllabus from "../pages/manager/subjectSyllabus";
 export const routes = createBrowserRouter([
   {
     path: "/admin",
@@ -210,6 +211,11 @@ export const routes = createBrowserRouter([
         path: "subject/:id",
         Component: SubjectDetail,
       },
+      {
+        path: "subject/:subjectId/syllabus/:syllabusId?",
+        Component: ManagerSubjectSyllabus,
+      },
+
     ]
   },
   {
