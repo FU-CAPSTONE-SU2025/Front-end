@@ -1,0 +1,110 @@
+.curriculumContainer {
+  padding: 1rem;
+}
+
+.curriculumTitle {
+  color: #1E40AF;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.curriculumForm {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.formSelect {
+  border-radius: 8px;
+}
+
+.formInput {
+  border-radius: 8px;
+}
+
+.datePicker {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.formActions {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.saveButton {
+  border-radius: 999px;
+  height: 48px;
+  padding-left: 32px;
+  padding-right: 32px;
+  background: #1E40AF;
+  border: none;
+  font-weight: 600;
+}
+
+.subjectsCard {
+  max-width: 800px;
+  margin: 2rem auto 0 auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.cardHeader {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+  border-bottom: none;
+}
+
+.cardTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardBody {
+  padding: 24px;
+}
+
+.addSubjectControls {
+  margin-bottom: 24px;
+}
+
+.subjectSelect {
+  min-width: 200px;
+  border-radius: 8px;
+}
+
+.semesterInput {
+  width: 120px;
+  border-radius: 8px;
+}
+
+.mandatoryCheckbox {
+  color: #475569;
+}
+
+.addSubjectButton {
+  background: #10b981;
+  border-color: #10b981;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.subjectsTable {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.semesterCell {
+  font-weight: 500;
+  color: #1e40af;
+}
+
+.deleteButton {
+  color: #ef4444;
+  font-weight: 600;
+} 

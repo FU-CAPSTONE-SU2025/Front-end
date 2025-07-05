@@ -54,6 +54,8 @@ const SessionTable: React.FC<SessionTableProps> = ({
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
   const [selectedOutcomeId, setSelectedOutcomeId] = useState<number | null>(null);
 
+  const [addOutcomeSessionId, setAddOutcomeSessionId] = useState<number | null>(null);
+
   const handleAddSession = async (values: any) => {
     try {
       await onAddSession(values);
@@ -109,18 +111,24 @@ const SessionTable: React.FC<SessionTableProps> = ({
   const handleSessionDataImported = async (data: { [key: string]: string }[]) => {
     try {
       for (const row of data) {
-        const sessionData: CreateSyllabusSession = {
+        const sessionData: Partial<CreateSyllabusSession> = {
+          syllabusId: parseInt(row.syllabusId),
           sessionNumber: parseInt(row.sessionNumber) || 1,
           topic: row.topic || '',
           mission: row.mission || ''
         };
-        await onAddSession(sessionData);
+        await onAddSession(sessionData as CreateSyllabusSession);
       }
       message.success(`Successfully imported ${data.length} session(s)`);
       setSessionImportVisible(false);
     } catch (error) {
       message.error('Failed to import session data');
     }
+  };
+
+  const openAddOutcomeModalForSession = (sessionId: number) => {
+    setAddOutcomeSessionId(sessionId);
+    setAddOutcomeModalVisible(true);
   };
 
   // Sessions columns with inline editing
@@ -159,27 +167,15 @@ const SessionTable: React.FC<SessionTableProps> = ({
       key: 'outcomes',
       render: (_: any, record: SyllabusSession) => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {/* TODO: Replace with real outcomes when backend supports session-outcome mapping */}
           {(/* record.outcomes || */ []).length > 0 ? (
             /* record.outcomes */ [].map((outcome: any) => (
               <div key={outcome.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span>{outcome.outcomeCode || outcome.description || 'Outcome'}</span>
-                {/* Remove button (mocked, disabled) */}
                 <Button size="small" disabled title="Remove not implemented">Remove</Button>
               </div>
             ))
           ) : (
             <span style={{ color: '#888' }}>No outcomes</span>
-          )}
-          {isEditing && (
-            <Button 
-              size="small" 
-              type="link" 
-              onClick={() => openAddOutcomeModal(record.id)}
-              style={{ padding: 0, height: 'auto' }}
-            >
-              + Add Outcome
-            </Button>
           )}
         </div>
       )
@@ -189,15 +185,67 @@ const SessionTable: React.FC<SessionTableProps> = ({
       key: 'actions',
       render: (_: any, record: SyllabusSession) =>
         isEditing && editingSessionId !== record.id ? (
-          <>
-            <Button icon={<EditOutlined />} onClick={() => startEditSession(record)} />
-            <Button icon={<DeleteOutlined />} onClick={() => handleDeleteItem(record.id)} />
-          </>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Button 
+              icon={<EditOutlined />} 
+              onClick={() => startEditSession(record)}
+              style={{ 
+                padding: '0.5rem',
+                background: '#3b82f6', 
+                borderColor: '#3b82f6', 
+                color: 'white',
+                fontWeight: '600',
+              }}
+            />
+            <Button 
+              icon={<DeleteOutlined />} 
+              onClick={() => handleDeleteItem(record.id)}
+              style={{ 
+                padding: '0.5rem',
+                background: '#ef4444', 
+                borderColor: '#ef4444', 
+                color: 'white',
+                fontWeight: '600'
+              }}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => openAddOutcomeModal(record.id)}
+              style={{ 
+                color: 'white',
+                padding: '0.5rem',
+                background: '#f97316', 
+                borderColor: '#f97316',
+                fontWeight: '600'
+              }}
+            >
+              Add Outcomes
+            </Button>
+          </div>
         ) : isEditing && editingSessionId === record.id ? (
-          <>
-            <Button icon={<SaveOutlined />} onClick={saveEditSession} />
-            <Button icon={<DeleteOutlined />} onClick={cancelEditSession} />
-          </>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Button 
+              icon={<SaveOutlined />} 
+              onClick={saveEditSession}
+              style={{ 
+                background: '#10b981', 
+                borderColor: '#10b981', 
+                color: 'white',
+                fontWeight: '600'
+              }}
+            />
+            <Button 
+              icon={<DeleteOutlined />} 
+              onClick={cancelEditSession}
+              style={{ 
+                background: '#ef4444', 
+                borderColor: '#ef4444', 
+                color: 'white',
+                fontWeight: '600'
+              }}
+            />
+          </div>
         ) : null
     },
   ];
@@ -298,7 +346,7 @@ const SessionTable: React.FC<SessionTableProps> = ({
 
       {/* Add Outcome to Session Modal */}
       <Modal
-        title="Add Outcome to Session"
+        title="Add Outcome"
         open={addOutcomeModalVisible}
         onCancel={() => setAddOutcomeModalVisible(false)}
         onOk={handleAddOutcomeToSession}

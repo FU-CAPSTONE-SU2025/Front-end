@@ -105,8 +105,9 @@ export const HEADER_CONFIGS = {
     }
   },
   ASSESSMENT: {
-    headers: ['Category', 'Quantity', 'Weight', 'Completion Criteria', 'Duration', 'Question Type'],
+    headers: ['Syllabus Id', 'Category', 'Quantity', 'Weight', 'Completion Criteria', 'Duration', 'Question Type'],
     fieldMap: {
+      'Syllabus Id': 'syllabusId',
       'Category': 'category',
       'Quantity': 'quantity',
       'Weight': 'weight',
@@ -116,8 +117,9 @@ export const HEADER_CONFIGS = {
     }
   },
   MATERIAL: {
-    headers: ['Material Name', 'Author Name', 'Published Date', 'Description', 'File Path or URL'],
+    headers: ['Syllabus Id', 'Material Name', 'Author Name', 'Published Date', 'Description', 'File Path or URL'],
     fieldMap: {
+      'Syllabus Id': 'syllabusId',
       'Material Name': 'materialName',
       'Author Name': 'authorName',
       'Published Date': 'publishedDate',
@@ -126,15 +128,17 @@ export const HEADER_CONFIGS = {
     }
   },
   OUTCOME: {
-    headers: ['Outcome Code', 'Description'],
+    headers: ['Syllabus Id', 'Outcome Code', 'Description'],
     fieldMap: {
+      'Syllabus Id': 'syllabusId',
       'Outcome Code': 'outcomeCode',
       'Description': 'description'
     }
   },
   SESSION: {
-    headers: ['Session Number', 'Topic', 'Mission'],
+    headers: ['Syllabus Id', 'Session Number', 'Topic', 'Mission'],
     fieldMap: {
+      'Syllabus Id': 'syllabusId',
       'Session Number': 'sessionNumber',
       'Topic': 'topic',
       'Mission': 'mission'

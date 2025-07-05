@@ -82,6 +82,7 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
     try {
       for (const row of data) {
         const assessmentData: CreateSyllabusAssessment = {
+          syllabusId: parseInt(row.syllabusId),
           category: row.category || 'Assignment',
           quantity: parseInt(row.quantity) || 1,
           weight: parseFloat(row.weight) || 0,
@@ -167,12 +168,51 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
       key: 'actions',
       render: (_: any, record: SyllabusAssessment) =>
         isEditing && editingAssessmentId === record.id ? (
-          <>
-            <Button type="link" icon={<SaveOutlined />} onClick={saveEditAssessment} />
-            <Button type="link" icon={<DeleteOutlined />} onClick={cancelEditAssessment} />
-          </>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Button 
+              icon={<SaveOutlined />} 
+              onClick={saveEditAssessment}
+              style={{ 
+                background: '#10b981', 
+                borderColor: '#10b981', 
+                color: 'white',
+                fontWeight: '600'
+              }}
+            />
+            <Button 
+              icon={<DeleteOutlined />} 
+              onClick={cancelEditAssessment}
+              style={{ 
+                background: '#ef4444', 
+                borderColor: '#ef4444', 
+                color: 'white',
+                fontWeight: '600'
+              }}
+            />
+          </div>
         ) : isEditing ? (
-          <Button type="link" icon={<EditOutlined />} onClick={() => startEditAssessment(record)} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Button 
+              icon={<EditOutlined />} 
+              onClick={() => startEditAssessment(record)}
+              style={{ 
+                background: '#3b82f6', 
+                borderColor: '#3b82f6', 
+                color: 'white',
+                fontWeight: '600'
+              }}
+            />
+            <Button 
+              icon={<DeleteOutlined />} 
+              onClick={() => handleDeleteItem(record.id)}
+              style={{ 
+                background: '#ef4444', 
+                borderColor: '#ef4444', 
+                color: 'white',
+                fontWeight: '600'
+              }}
+            />
+          </div>
         ) : null
     },
   ];

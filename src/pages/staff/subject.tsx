@@ -26,7 +26,7 @@ const SubjectPage: React.FC = () => {
     subjectList,
     paginationSubject,
     isLoading,
-    createSubject
+    addSubjectMutation
   } = useCRUDSubject();
 
   // CRUD hook for combos
@@ -77,7 +77,7 @@ const SubjectPage: React.FC = () => {
     try {
       // Process each imported subject
       for (const subjectData of data) {
-        await createSubject({
+        await addSubjectMutation.mutateAsync({
           subjectCode: subjectData.subjectCode,
           subjectName: subjectData.subjectName,
           credits: parseInt(subjectData.credits) || 0,

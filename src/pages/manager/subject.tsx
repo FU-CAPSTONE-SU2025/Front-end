@@ -26,7 +26,7 @@ const SubjectManagerPage: React.FC = () => {
     subjectList,
     paginationSubject,
     isLoading,
-    createSubject
+    addSubjectMutation
   } = useCRUDSubject();
 
   useEffect(() => {
@@ -63,17 +63,17 @@ const SubjectManagerPage: React.FC = () => {
     try {
       // Process each imported subject
       for (const subjectData of data) {
-        await createSubject({
+        await addSubjectMutation.mutateAsync({
           subjectCode: subjectData.subjectCode,
           subjectName: subjectData.subjectName,
-          credits: parseInt(subjectData.credits) || 0,
+          credits: parseInt(subjectData.credits),
           description: subjectData.description || ''
         });
       }
       
       message.success(`Successfully imported ${data.length} subjects`);
       // Refresh the subject list
-      getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+      getAllSubjects({ pageNumber: page, pageSize, filterValue: search });
     } catch (error) {
       message.error('Error importing subjects. Please check your data format.');
     }

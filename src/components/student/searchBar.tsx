@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
+  onEnter?: () => void;
   placeholder?: string;
   className?: string;
 }
@@ -12,6 +13,7 @@ interface SearchBarProps {
 const SearchBar: React.FC<SearchBarProps> = ({
   value,
   onChange,
+  onEnter,
   placeholder = "Search for subjects, courses, or resources...",
   className = "",
 }) => {
@@ -33,6 +35,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
             type="text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && onEnter) {
+                onEnter();
+              }
+            }}
             placeholder={placeholder}
             className="w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm placeholder-white/40 outline-none transition-all duration-200 hover:bg-white/10 hover:border-white/30 focus:bg-white/10 focus:border-white/40"
           />

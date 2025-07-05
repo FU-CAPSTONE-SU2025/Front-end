@@ -35,6 +35,10 @@ export interface Syllabus {
   id: number; // Primary key
   subjectId: number; // Foreign key referencing Subject.id
   content: string; // text
+  assessments: SyllabusAssessment[];
+  learningMaterials: SyllabusMaterial[];
+  learningOutcomes: SyllabusOutcome[];
+  sessions: SyllabusSession[];
 }
 
 // Interface for Combo table
@@ -44,12 +48,24 @@ export interface Combo {
   comboDescription: string; // text
 }
 
+// Interface for Combo_Subject table (junction table)
+export interface ComboSubject {
+  comboId: number; // Foreign key referencing Combo.id, part of composite primary key
+  subjectId: number; // Foreign key referencing Subject.id, part of composite primary key
+}
+
 // Interface for Curriculum_Subject table (junction table)
 export interface CurriculumSubject {
   curriculumId: number; // Foreign key referencing Curriculum.id, part of composite primary key
   subjectId: number; // Foreign key referencing Subject.id, part of composite primary key
   semesterNumber: number; // int
-  isMandetory: boolean; // bool
+  isMandatory: boolean; // bool
+}
+
+// Interface for displaying subject with curriculum relationship data
+export interface SubjectWithCurriculumInfo extends Subject {
+  semesterNumber: number;
+  isMandatory: boolean;
 }
 
 // Interface for Subject_Prerequisites table (junction table)

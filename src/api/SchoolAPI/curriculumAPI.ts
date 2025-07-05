@@ -1,7 +1,7 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps } from "../../interfaces/IAccount";
-import { CreateCurriculum, CreateSubjectToCurriculum, Curriculum, Subject, UpdateCurriculum } from "../../interfaces/ISchoolProgram";
+import { CreateCurriculum, CreateSubjectToCurriculum, Curriculum, Subject, UpdateCurriculum, CurriculumSubject, SubjectWithCurriculumInfo } from "../../interfaces/ISchoolProgram";
 import { PagedData } from "../../interfaces/ISchoolProgram";
 
 const curriculumURL = baseUrl + "/Curriculum";
@@ -21,13 +21,13 @@ export const AddCurriculum = async (data: CreateCurriculum): Promise<Curriculum 
   }
 };
 
-export const FetchSubjectToCurriculum = async (id: number): Promise<Subject[] | null> => {
+export const FetchSubjectToCurriculum = async (id: number): Promise<SubjectWithCurriculumInfo[] | null> => {
   const props = {
     data: null,
     url: curriculumURL+"/"+id+"/subjects",
     headers: GetHeader(),
   };
-  const result = await axiosCreate(props);
+  const result = await axiosRead(props);
   if (result.success) {
     return result.data;
   } else {

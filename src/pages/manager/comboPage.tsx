@@ -20,7 +20,7 @@ const ComboManagerPage: React.FC = () => {
     comboList,
     paginationCombo,
     getComboMutation,
-    createCombo
+    addComboMutation
   } = useCRUDCombo();
 
   useEffect(() => {
@@ -29,7 +29,7 @@ const ComboManagerPage: React.FC = () => {
   }, [page, pageSize, search]);
 
   const handleAddCombo = () => {
-    navigate('/manager/combo/add');
+    navigate('/manager/addCombo');
   };
 
   const handleEditCombo = (comboId: number) => {
@@ -50,9 +50,10 @@ const ComboManagerPage: React.FC = () => {
     try {
       // Process each imported combo
       for (const comboData of data) {
-        await createCombo({
+        await addComboMutation.mutateAsync({
           comboName: comboData.comboName,
-          comboDescription: comboData.comboDescription || ''
+          comboDescription: comboData.comboDescription || '',
+          subjectIds: []
         });
       }
       
