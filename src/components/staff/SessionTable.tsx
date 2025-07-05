@@ -126,14 +126,15 @@ const SessionTable: React.FC<SessionTableProps> = ({
     }
   };
 
-  const openAddOutcomeModalForSession = (sessionId: number) => {
-    setAddOutcomeSessionId(sessionId);
-    setAddOutcomeModalVisible(true);
-  };
+
 
   // Sessions columns with inline editing
   const sessionColumns = [
-    { title: 'Session #', dataIndex: 'sessionNumber', key: 'sessionNumber',
+    { 
+      title: 'Session', 
+      dataIndex: 'sessionNumber', 
+      key: 'sessionNumber',
+      width: 100,
       render: (_: any, record: SyllabusSession) =>
         isEditing && editingSessionId === record.id ? (
           <InputNumber
@@ -143,7 +144,12 @@ const SessionTable: React.FC<SessionTableProps> = ({
           />
         ) : record.sessionNumber
     },
-    { title: 'Topic', dataIndex: 'topic', key: 'topic', ellipsis: true,
+    { 
+      title: 'Topic', 
+      dataIndex: 'topic', 
+      key: 'topic', 
+      ellipsis: true,
+      width: 200,
       render: (_: any, record: SyllabusSession) =>
         isEditing && editingSessionId === record.id ? (
           <Input
@@ -152,19 +158,36 @@ const SessionTable: React.FC<SessionTableProps> = ({
           />
         ) : record.topic
     },
-    { title: 'Mission', dataIndex: 'mission', key: 'mission', ellipsis: true,
+    { 
+      title: 'Mission', 
+      dataIndex: 'mission', 
+      key: 'mission', 
+      ellipsis: false,
+      width: 300,
       render: (_: any, record: SyllabusSession) =>
         isEditing && editingSessionId === record.id ? (
-          <Input
+          <TextArea
             value={sessionEdit.mission}
             onChange={e => setSessionEdit(se => ({ ...se, mission: e.target.value }))}
+            autoSize={{ minRows: 2, maxRows: 4 }}
+            style={{ wordBreak: 'break-word' }}
           />
-        ) : record.mission
+        ) : (
+          <div style={{ 
+            wordBreak: 'break-word', 
+            whiteSpace: 'pre-wrap',
+            maxHeight: '100px',
+            overflow: 'auto'
+          }}>
+            {record.mission}
+          </div>
+        )
     },
     {
       title: 'Outcomes',
       dataIndex: 'outcomes',
       key: 'outcomes',
+      width: 250,
       render: (_: any, record: SyllabusSession) => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {(/* record.outcomes || */ []).length > 0 ? (

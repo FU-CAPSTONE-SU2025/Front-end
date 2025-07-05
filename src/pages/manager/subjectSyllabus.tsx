@@ -3,7 +3,6 @@ import {
   Button, 
   message,
   Typography,
-  Card,
   Spin
 } from 'antd';
 import { 
@@ -12,7 +11,7 @@ import {
   ArrowLeftOutlined
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router';
-import styles from '../../css/staff/staffEditSyllabus.module.css';
+import styles from '../../css/manager/managerSyllabus.module.css';
 
 import { useCRUDSyllabus, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { Syllabus,SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from '../../interfaces/ISchoolProgram';
@@ -250,180 +249,86 @@ const ManagerSubjectSyllabus: React.FC = () => {
 
   return (
     <div className={styles.syllabusContainer}>
-      {/* Header with back button and title */}
+      {/* Header */}
       <div className={styles.syllabusHeader}>
-        <Button
-          type="text"
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate('/manager/subject')}
-          className={styles.backButton}
-          style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontWeight: '600',
-            marginBottom: '1rem'
-          }}
-        >
-          Back to Subjects
-        </Button>
-        
-        <Title level={3} className={styles.syllabusTitle}>
-          Syllabus for {subject.subjectCode} - {subject.subjectName}
-        </Title>
-
-        {/* Sticky Edit Button */}
-        <div className={styles.editButtonContainer}>
-          {!isEditing ? (
-            <Button
-              type="primary"
-              icon={<EditOutlined />}
-              onClick={() => setIsEditing(true)}
-              className={styles.editButton}
-              style={{
-                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: '600'
-              }}
-            >
-              Edit Syllabus
-            </Button>
-          ) : (
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
+        <div className={styles.syllabusHeaderLeft}>
+          <button className={styles.backButton} onClick={() => navigate('/manager/subject')}>
+            <ArrowLeftOutlined /> Back to Subjects
+          </button>
+          <div className={styles.syllabusTitleCard}>
+            <h2 className={styles.syllabusTitle}>
+              {subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Syllabus'}
+            </h2>
+            <p className={styles.syllabusSubtitle}>
+              Course Syllabus & Learning Management
+            </p>
+          </div>
+          <div className={styles.syllabusHeaderRight}>
+          {isEditing ? (
+            <Button 
+              type="primary" 
+              icon={<SaveOutlined />} 
               onClick={handleSaveSyllabus}
               loading={loading}
               className={styles.saveButton}
-              style={{
-                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: '600'
-              }}
             >
-              Save Changes
+              Save Syllabus
+            </Button>
+          ) : (
+            <Button 
+              type="primary" 
+              icon={<EditOutlined />} 
+              onClick={() => setIsEditing(true)}
+              className={styles.editButton}
+            >
+              Edit Syllabus
             </Button>
           )}
         </div>
+        </div>
+
       </div>
 
       {/* Syllabus Content */}
       <div className={styles.syllabusContent}>
-        <Card 
-          title="Syllabus Content" 
-          className={styles.contentCard}
-          headStyle={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            borderRadius: '12px 12px 0 0',
-            borderBottom: 'none'
-          }}
-        >
-          <div className={styles.contentText}>
-            {syllabus.content}
-          </div>
-        </Card>
-
+        {/* Syllabus Content Section */}
         {/* Assessments Section */}
-        <Card 
-          title={
-            <div className={styles.cardTitle}>
-              📊 Assessments ({syllabus.assessments.length})
-            </div>
-          } 
-          className={styles.assessmentsCard}
-          headStyle={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            borderRadius: '12px 12px 0 0',
-            borderBottom: 'none'
-          }}
-        >
-          <AssessmentTable
-            assessments={syllabus.assessments}
-            isEditing={isEditing}
-            onAdd={handleAddAssessment}
-            onUpdate={handleUpdateAssessment}
-            onDelete={(id) => handleDeleteItem('Assessment', id)}
-          />
-        </Card>
+        <AssessmentTable
+          assessments={syllabus.assessments}
+          isEditing={isEditing}
+          onAddAssessment={handleAddAssessment}
+          onUpdateAssessment={handleUpdateAssessment}
+          onDeleteAssessment={(id: number) => handleDeleteItem('Assessment', id)}
+        />
 
         {/* Learning Materials Section */}
-        <Card 
-          title={
-            <div className={styles.cardTitle}>
-              📚 Learning Materials ({syllabus.learningMaterials.length})
-            </div>
-          } 
-          className={styles.materialsCard}
-          headStyle={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            borderRadius: '12px 12px 0 0',
-            borderBottom: 'none'
-          }}
-        >
-          <MaterialTable
-            materials={syllabus.learningMaterials}
-            isEditing={isEditing}
-            onAdd={handleAddMaterial}
-            onUpdate={handleUpdateMaterial}
-            onDelete={(id) => handleDeleteItem('Material', id)}
-          />
-        </Card>
+        <MaterialTable
+          materials={syllabus.learningMaterials}
+          isEditing={isEditing}
+          onAddMaterial={handleAddMaterial}
+          onUpdateMaterial={handleUpdateMaterial}
+          onDeleteMaterial={(id: number) => handleDeleteItem('Material', id)}
+        />
 
         {/* Learning Outcomes Section */}
-        <Card 
-          title={
-            <div className={styles.cardTitle}>
-              🎯 Learning Outcomes ({syllabus.learningOutcomes.length})
-            </div>
-          } 
-          className={styles.outcomesCard}
-          headStyle={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            borderRadius: '12px 12px 0 0',
-            borderBottom: 'none'
-          }}
-        >
-          <OutcomeTable
-            outcomes={syllabus.learningOutcomes}
-            isEditing={isEditing}
-            onAdd={handleAddOutcome}
-            onUpdate={handleUpdateOutcome}
-            onDelete={(id) => handleDeleteItem('Outcome', id)}
-          />
-        </Card>
+        <OutcomeTable
+          outcomes={syllabus.learningOutcomes}
+          isEditing={isEditing}
+          onAddOutcome={handleAddOutcome}
+          onUpdateOutcome={handleUpdateOutcome}
+          onDeleteOutcome={(id: number) => handleDeleteItem('Outcome', id)}
+        />
 
         {/* Sessions Section */}
-        <Card 
-          title={
-            <div className={styles.cardTitle}>
-              📅 Sessions ({syllabus.sessions.length})
-            </div>
-          } 
-          className={styles.sessionsCard}
-          headStyle={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            borderRadius: '12px 12px 0 0',
-            borderBottom: 'none'
-          }}
-        >
-          <SessionTable
-            sessions={syllabus.sessions}
-            outcomes={syllabus.learningOutcomes}
-            isEditing={isEditing}
-            onAdd={handleAddSession}
-            onUpdate={handleUpdateSession}
-            onDelete={(id) => handleDeleteItem('Session', id)}
-            onAddOutcomeToSession={handleAddOutcomeToSession}
-          />
-        </Card>
+        <SessionTable
+          sessions={syllabus.sessions}
+          outcomes={syllabus.learningOutcomes}
+          isEditing={isEditing}
+          onAddSession={handleAddSession}
+          onUpdateSession={handleUpdateSession}
+          onDeleteSession={(id: number) => handleDeleteItem('Session', id)}
+          onAddOutcomeToSession={handleAddOutcomeToSession}
+        />
       </div>
     </div>
   );

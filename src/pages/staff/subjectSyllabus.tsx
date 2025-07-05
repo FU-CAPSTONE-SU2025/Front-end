@@ -254,15 +254,17 @@ const SubjectSyllabus: React.FC = () => {
       <div className={styles.syllabusHeader}>
         <div className={styles.syllabusHeaderLeft}>
           <button className={styles.backButton} onClick={() => navigate(-1)}>
-            <ArrowLeftOutlined /> Back
+            <ArrowLeftOutlined /> Back to Subjects
           </button>
           <div className={styles.syllabusTitleCard}>
             <h2 className={styles.syllabusTitle}>
               {subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Syllabus'}
             </h2>
+            <p className={styles.syllabusSubtitle}>
+              Course Syllabus & Learning Management
+            </p>
           </div>
-        </div>
-        <div className={styles.syllabusHeaderRight}>
+          <div className={styles.syllabusHeaderRight}>
           {isEditing ? (
             <Button 
               type="primary" 
@@ -284,6 +286,7 @@ const SubjectSyllabus: React.FC = () => {
             </Button>
           )}
         </div>
+      </div>
       </div>
 
       {/* Syllabus Content */}

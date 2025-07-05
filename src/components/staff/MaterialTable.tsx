@@ -99,7 +99,11 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
 
   // Learning Materials columns with inline editing
   const materialColumns = [
-    { title: 'Material Name', dataIndex: 'materialName', key: 'materialName',
+    { 
+      title: 'Material Name', 
+      dataIndex: 'materialName', 
+      key: 'materialName',
+      width: 200,
       render: (_: any, record: SyllabusMaterial) =>
         isEditing && editingMaterialId === record.id ? (
           <Input
@@ -107,10 +111,19 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
             onChange={e => setMaterialEdit({ ...materialEdit, materialName: e.target.value })}
           />
         ) : (
-          record.materialName
+          <div style={{ 
+            fontWeight: '600',
+            color: '#1E40AF'
+          }}>
+            {record.materialName}
+          </div>
         )
     },
-    { title: 'Author', dataIndex: 'authorName', key: 'authorName',
+    { 
+      title: 'Author', 
+      dataIndex: 'authorName', 
+      key: 'authorName',
+      width: 150,
       render: (_: any, record: SyllabusMaterial) =>
         isEditing && editingMaterialId === record.id ? (
           <Input
@@ -118,10 +131,16 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
             onChange={e => setMaterialEdit({ ...materialEdit, authorName: e.target.value })}
           />
         ) : (
-          record.authorName
+          <div style={{ color: '#64748B' }}>
+            {record.authorName}
+          </div>
         )
     },
-    { title: 'Published Date', dataIndex: 'publishedDate', key: 'publishedDate',
+    { 
+      title: 'Published Date', 
+      dataIndex: 'publishedDate', 
+      key: 'publishedDate',
+      width: 120,
       render: (date: Date, record: SyllabusMaterial) =>
         isEditing && editingMaterialId === record.id ? (
           <DatePicker
@@ -129,30 +148,115 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
             onChange={date => setMaterialEdit({ ...materialEdit, publishedDate: date ? date.toDate() : undefined })}
           />
         ) : (
-          record.publishedDate ? new Date(record.publishedDate).toLocaleDateString() : ''
+          <div style={{ 
+            color: '#64748B',
+            fontSize: '0.9rem'
+          }}>
+            {record.publishedDate ? new Date(record.publishedDate).toLocaleDateString() : '-'}
+          </div>
         )
     },
-    { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true,
+    { 
+      title: 'Description', 
+      dataIndex: 'description', 
+      key: 'description', 
+      ellipsis: false,
+      width: 250,
       render: (_: any, record: SyllabusMaterial) =>
         isEditing && editingMaterialId === record.id ? (
-          <Input
+          <TextArea
             value={materialEdit.description}
             onChange={e => setMaterialEdit({ ...materialEdit, description: e.target.value })}
+            autoSize={{ minRows: 2, maxRows: 4 }}
+            style={{ wordBreak: 'break-word' }}
           />
         ) : (
-          record.description
+          <div style={{ 
+            wordBreak: 'break-word', 
+            whiteSpace: 'pre-wrap',
+            maxHeight: '80px',
+            overflow: 'auto',
+            fontSize: '0.9rem',
+            lineHeight: '1.4'
+          }}>
+            {record.description || '-'}
+          </div>
         )
     },
-    { title: 'File/URL', dataIndex: 'filepathOrUrl', key: 'filepathOrUrl', ellipsis: true,
-      render: (_: any, record: SyllabusMaterial) =>
-        isEditing && editingMaterialId === record.id ? (
+    { 
+      title: 'File/URL', 
+      dataIndex: 'filepathOrUrl', 
+      key: 'filepathOrUrl', 
+      ellipsis: false,
+      width: 200,
+      render: (_: any, record: SyllabusMaterial) => {
+        const isUrl = record.filepathOrUrl && (
+          record.filepathOrUrl.startsWith('http://') || 
+          record.filepathOrUrl.startsWith('https://') ||
+          record.filepathOrUrl.startsWith('www.')
+        );
+        const isFile = record.filepathOrUrl && (
+          record.filepathOrUrl.includes('.pdf') ||
+          record.filepathOrUrl.includes('.doc') ||
+          record.filepathOrUrl.includes('.ppt') ||
+          record.filepathOrUrl.includes('.xls') ||
+          record.filepathOrUrl.includes('.txt')
+        );
+
+        return isEditing && editingMaterialId === record.id ? (
           <Input
             value={materialEdit.filepathOrUrl}
             onChange={e => setMaterialEdit({ ...materialEdit, filepathOrUrl: e.target.value })}
+            placeholder="Enter file path or URL"
           />
+        ) : record.filepathOrUrl ? (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            wordBreak: 'break-all',
+            fontSize: '0.85rem'
+          }}>
+            <span style={{ 
+              fontSize: '1rem',
+              color: isUrl ? '#3B82F6' : isFile ? '#10B981' : '#64748B'
+            }}>
+              {isUrl ? '🔗' : isFile ? '📄' : '📁'}
+            </span>
+            {isUrl ? (
+              <a
+                href={record.filepathOrUrl.startsWith('www.') ? `https://${record.filepathOrUrl}` : record.filepathOrUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: '#3B82F6',
+                  textDecoration: 'none',
+                  wordBreak: 'break-all',
+                  lineHeight: '1.3'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.textDecoration = 'underline';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.textDecoration = 'none';
+                }}
+              >
+                {record.filepathOrUrl}
+              </a>
+            ) : (
+              <span style={{ 
+                color: isFile ? '#10B981' : '#64748B',
+                wordBreak: 'break-all',
+                lineHeight: '1.3'
+              }}>
+                {record.filepathOrUrl}
+              </span>
+            )}
+          </div>
         ) : (
-          record.filepathOrUrl
-        )
+          <span style={{ color: '#9CA3AF', fontStyle: 'italic' }}>-</span>
+        );
+      }
     },
     {
       title: 'Actions',

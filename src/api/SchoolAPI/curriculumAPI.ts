@@ -42,12 +42,13 @@ export const AddSubjectToCurriculum = async (id: number, data: CreateSubjectToCu
       url: curriculumURL+"/"+id+"/subjects",
       headers: GetHeader(),
     };
+    console.log(data);
     const result = await axiosCreate(props);
     if (result.success) {
       return result.data;
     } else {
       console.log(result.error);
-      return null;
+       throw Error(result.error);
     }
   };
   export const RemoveSubjectToCurriculum = async (subjectId: number, curriculumId: number): Promise<any | null> => {
