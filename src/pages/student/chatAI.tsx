@@ -451,8 +451,11 @@ const ChatAI: React.FC = () => {
     deleteSessionMutation.mutate(
       { chatSessionId: sessionId },
       {
-        onSuccess: () => {
-          message.success('Session deleted successfully');
+        onSuccess: (data) => {
+          // Use response message if available, otherwise use default message
+          const successMessage = data.message || 'Session deleted successfully';
+          message.success(successMessage);
+          
           // Select another session if current one was deleted
           if (selectedSessionId === sessionId) {
             const remainingSessions = sessions.filter(s => s.id !== sessionId);
@@ -465,7 +468,9 @@ const ChatAI: React.FC = () => {
         },
         onError: (error) => {
           console.error('Failed to delete session:', error);
-          message.error('Failed to delete session. Please try again.');
+          // Show more specific error message if available
+          const errorMessage = error.message || 'Failed to delete session. Please try again.';
+          message.error(errorMessage);
         },
       }
     );

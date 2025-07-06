@@ -76,17 +76,31 @@ export const getChatMessages = async (chatSessionId: number, page: number = 1, p
 };
 
 // Xóa một chat session
-export const deleteChatSession = async (chatSessionId: number): Promise<{ success: boolean }> => {
-  const props = {
-    url: `${sessionUrl}/${chatSessionId}`,
-    headers: GetHeader(),
-  };
-  const result = await axiosDelete(props);
-  if (result.success) {
-    return { success: true };
-  } else {
-    console.error('Failed to delete chat session', chatSessionId, ':', result.error);
-    throw new Error(result.error || 'Failed to delete chat session');
+export const deleteChatSession = async (chatSessionId: number): Promise<{ success: boolean; message?: string }> => {
+  try {
+    console.log(`Attempting to delete chat session with ID: ${chatSessionId}`);
+    
+    const props = {
+      url: `${sessionUrl}/${chatSessionId}`,
+      headers: GetHeader(),
+    };
+    
+    const result = await axiosDelete(props);
+    
+    if (result.success) {
+      console.log(`Successfully deleted chat session: ${chatSessionId}`);
+      return { success: true, message: 'Chat session deleted successfully' };
+    } else {
+      console.error(`Failed to delete chat session ${chatSessionId}:`, result.error);
+      throw new Error(result.error || 'Failed to delete chat session');
+    }
+  } catch (error) {
+    console.error(`Error deleting chat session ${chatSessionId}:`, error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to delete chat session: ${error.message}`);
+    } else {
+      throw new Error('An unexpected error occurred while deleting the chat session');
+    }
   }
 };
 
