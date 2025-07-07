@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Avatar, Button, Input, Spin, Modal, Popconfirm, Tooltip, ConfigProvider, message } from 'antd';
 import { SendOutlined, UserOutlined, PlusOutlined, DeleteOutlined, MessageOutlined, RobotOutlined, DownOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useChatSessions, useChatSessionMessages, useInitChatSession, useSendChatMessage, useDeleteChatSession, useRenameChatSession, usePrefetchChatSessions, usePrefetchChatMessages } from '../../hooks/useChatApi';
 import type { IChatMessage, IChatSession } from '../../interfaces/IChatAI';
 

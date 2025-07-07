@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom';
 import UserChatBox from './UserChatBox';
 import { ChatUser } from '../../interfaces/IChat';
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { mockChatUsers } from '../../data/mockChatUsers';
 
 const AI_BOT = {
