@@ -41,6 +41,7 @@ import EditStudentTranscript from "../pages/staff/editStudentTranscript";
 import SubjectPage from "../pages/staff/subject";
 import SubjectSyllabus from "../pages/staff/subjectSyllabus";
 import ManagerSubjectSyllabus from "../pages/manager/subjectSyllabus";
+import ChatAI from "../pages/student/chatAI";
 export const routes = createBrowserRouter([
   {
     path: "/admin",
@@ -110,6 +111,10 @@ export const routes = createBrowserRouter([
       {
         path: "semesterPlanner/:roadmap",
         Component: SemesterPlannerDetail,
+      },
+      {
+        path: "chat-ai",
+        Component: ChatAI,
       }
     ],
   },
