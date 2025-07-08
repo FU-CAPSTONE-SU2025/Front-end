@@ -1,109 +1,89 @@
-export interface SyllabusItem {
-  id: number;
-  subjectId: number;
-  subjectName: string;
-  subjectCode: string;
-  content: string;
-  createdAt: string;
-  updatedAt: string | null; 
-}
+// Interface for Syllabus table
 export interface Syllabus {
-  items: SyllabusItem[];
-  totalCount: number;
-  pageNumber: number;
-  pageSize: number;
+  id: number; // Primary key
+  subjectId: number; // Foreign key referencing Subject.id
+  content: string; // text
+  assessments: SyllabusAssessment[];
+  learningMaterials: SyllabusMaterial[];
+  learningOutcomes: SyllabusOutcome[];
+  sessions: SyllabusSession[];
 }
 
+// Additional interfaces for syllabus components
 export interface SyllabusAssessment {
   id: number;
-  syllabus_id: number;
-  category: 'Assignment' | 'Quiz' | 'Final Exam';
+  syllabusId: number;
+  category: string;
   quantity: number;
-  weight: number; // decimal(5,2) - percentage
-  completion_criteria: string;
-  duration: number; // in minutes
-  question_type: 'essay' | 'multiple-choice' | 'practical exam' | 'presentation' | 'project' | 'other';
+  weight: number;
+  completionCriteria: string;
+  duration: number;
+  questionType: string;
 }
 
-export interface SyllabusLearningMaterial {
+export interface SyllabusMaterial {
   id: number;
-  syllabus_id: number;
-  material_name: string;
-  author_name: string;
-  published_date: Date;
-  filepath_or_url: string;
+  syllabusId: number;
+  materialName: string;
+  authorName: string;
+  publishedDate: Date;
   description: string;
+  filepathOrUrl: string;
 }
 
-export interface SyllabusLearningOutcome {
+export interface SyllabusOutcome {
   id: number;
-  syllabus_id: number;
-  outcome_code: string; // LO1, LO2, etc.
+  syllabusId: number;
+  outcomeCode: string;
   description: string;
 }
 
 export interface SyllabusSession {
   id: number;
-  syllabus_id: number;
-  session_number: number;
+  syllabusId: number;
+  sessionNumber: number;
   topic: string;
   mission: string;
 }
 
-// Combined interface for a complete syllabus with all related data
-export interface CompleteSyllabus extends Syllabus {
-  assessments: SyllabusAssessment[];
-  learningMaterials: SyllabusLearningMaterial[];
-  learningOutcomes: SyllabusLearningOutcome[];
-  sessions: SyllabusSession[];
-}
-
-// Interface for creating a new syllabus
+// Create operation interfaces
 export interface CreateSyllabus {
-  subject_id: number;
+  subjectId: number;
   content: string;
 }
 
-// Interface for creating assessment
+export interface UpdateSyllabus {
+  content: string;
+}
+
 export interface CreateSyllabusAssessment {
-  syllabus_id: number;
-  category: 'Assignment' | 'Quiz' | 'Final Exam';
+  syllabusId: number;
+  category: string;
   quantity: number;
   weight: number;
-  completion_criteria: string;
+  completionCriteria: string;
   duration: number;
-  question_type: 'essay' | 'multiple-choice' | 'practical exam' | 'presentation' | 'project' | 'other';
+  questionType: string;
 }
 
-// Interface for creating learning material
-export interface CreateSyllabusLearningMaterial {
-  syllabus_id: number;
-  material_name: string;
-  author_name: string;
-  published_date: Date;
-  filepath_or_url: string;
+export interface CreateSyllabusMaterial {
+  syllabusId: number;
+  materialName: string;
+  authorName: string;
+  publishedDate: Date;
+  description: string;
+  filepathOrUrl: string;
+}
+
+export interface CreateSyllabusOutcome {
+  syllabusId: number;
+  outcomeCode: string;
   description: string;
 }
 
-// Interface for creating learning outcome
-export interface CreateSyllabusLearningOutcome {
-  syllabus_id: number;
-  outcome_code: string;
-  description: string;
-}
-
-// Interface for creating session
 export interface CreateSyllabusSession {
-  syllabus_id: number;
-  session_number: number;
+  syllabusId: number;
+  sessionNumber: number;
   topic: string;
   mission: string;
-}
-
-// Interface for paged syllabus data (chuẩn hóa trả về API phân trang)
-export interface pagedSyllabusData {
-  items: SyllabusItem[];
-  pageNumber: number;
-  pageSize: number;
-  totalCount: number;
 } 

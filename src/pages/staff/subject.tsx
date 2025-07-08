@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { Table, Input, Button, Select, Affix, Collapse } from 'antd';
-import { PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Table, Input, Button, Select, Affix, Collapse, Pagination, Spin, Empty, message } from 'antd';
+import { PlusOutlined, EditOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
-import { subjects, curriculums, combos, comboSubjects } from '../../data/schoolData';
+import { curriculums, combos, comboSubjects } from '../../data/schoolData';
 import { useNavigate, useSearchParams } from 'react-router';
+import { useCRUDSubject, useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
+import DataImport from '../../components/common/dataImport';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -12,20 +14,44 @@ const SubjectPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [curriculumFilter, setCurriculumFilter] = useState<number | undefined>();
   const [comboFilter, setComboFilter] = useState<number | undefined>();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  React.useEffect(() => {
+  // CRUD hook
+  const {
+    getAllSubjects,
+    subjectList,
+    paginationSubject,
+    isLoading,
+    addSubjectMutation
+  } = useCRUDSubject();
+
+  // CRUD hook for combos
+  const {
+    comboList,
+    paginationCombo,
+    getAllCombos,
+    comboPage,
+    setComboPage,
+    comboPageSize,
+    setComboPageSize,
+    comboSearch,
+    setComboSearch,
+    isComboLoading
+  } = useCRUDCombo();
+
+  useEffect(() => {
+    // Backend search: pass search as filterValue
+    getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+  }, [page, pageSize, search]);
+
+  useEffect(() => {
     const title = searchParams.get('title');
     if (title) setSearch(title);
   }, [searchParams]);
-
-  // Filtered subjects
-  let filteredSubjects = subjects.filter(s =>
-    (s.subjectName.toLowerCase().includes(search.toLowerCase()) || s.id.toString().includes(search)) &&
-    (!curriculumFilter || true) && // TODO: filter by curriculum
-    (!comboFilter || comboSubjects.some(cs => cs.comboId === comboFilter && cs.subjectId === s.id))
-  );
 
   const handleAddSubject = () => {
     navigate('/staff/editData/subject');
@@ -47,12 +73,31 @@ const SubjectPage: React.FC = () => {
     navigate(`/staff/subject/${subjectId}/syllabus`);
   };
 
+  const handleDataImported = async (data: { [key: string]: string }[]) => {
+    try {
+      // Process each imported subject
+      for (const subjectData of data) {
+        await addSubjectMutation.mutateAsync({
+          subjectCode: subjectData.subjectCode,
+          subjectName: subjectData.subjectName,
+          credits: parseInt(subjectData.credits) || 0,
+          description: subjectData.description || ''
+        });
+      }
+      
+      message.success(`Successfully imported ${data.length} subjects`);
+      // Refresh the subject list
+      getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+    } catch (error) {
+      message.error('Error importing subjects. Please check your data format.');
+    }
+  };
+
   const columns = [
-    { title: 'ID', dataIndex: 'id', key: 'id', align: 'left' as 'left' },
-    { title: 'Subject Name', dataIndex: 'subjectName', key: 'subjectName', align: 'left' as 'left' },
-    { title: 'Subject Code', dataIndex: 'subjectCode', key: 'subjectCode', align: 'left' as 'left' },
-    { title: 'Credits', dataIndex: 'credits', key: 'credits', align: 'center' as 'center' },
-    { title: 'Description', dataIndex: 'description', key: 'description', align: 'left' as 'left' },
+    { title: 'ID', dataIndex: 'id', key: 'id', align: 'left' as 'left', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
+    { title: 'Subject Name', dataIndex: 'subjectName', key: 'subjectName', align: 'left' as 'left', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
+    { title: 'Subject Code', dataIndex: 'subjectCode', key: 'subjectCode', align: 'left' as 'left', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
+    { title: 'Credits', dataIndex: 'credits', key: 'credits', align: 'center' as 'center', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
     {
       title: 'Actions',
       key: 'actions',
@@ -81,6 +126,34 @@ const SubjectPage: React.FC = () => {
     },
   ];
 
+  useEffect(() => {
+    getAllCombos({ pageNumber: comboPage, pageSize: comboPageSize, filterValue: comboSearch });
+  }, [comboPage, comboPageSize, comboSearch]);
+
+  const filteredCombos = comboList;
+
+  const comboColumns = [
+    { title: 'ID', dataIndex: 'id', key: 'id', align: 'left' as 'left', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
+    { title: 'Combo Name', dataIndex: 'comboName', key: 'comboName', align: 'left' as 'left', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
+    {
+      title: 'Actions',
+      key: 'actions',
+      align: 'center' as 'center',
+      render: (_: any, record: any) => (
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+          <Button
+            type="link"
+            icon={<EditOutlined style={{ color: '#f97316' }} />}
+            onClick={(e) => { e.stopPropagation(); handleEditCombo(record.id); }}
+            className={styles.sttFreshEditButton}
+            style={{ color: '#f97316' }}
+            title="Edit Combo"
+          />
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className={styles.sttContainer}>
       {/* Sticky Toolbar */}
@@ -90,7 +163,7 @@ const SubjectPage: React.FC = () => {
             placeholder="Search by Subject Name or ID"
             prefix={<SearchOutlined />}
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
             style={{maxWidth: 240, borderRadius: 999}}
             size="large"
           />
@@ -136,37 +209,79 @@ const SubjectPage: React.FC = () => {
           >
             Add Combo
           </Button>
+          <Button 
+            type="default" 
+            icon={<UploadOutlined />} 
+            size="large" 
+            style={{borderRadius: 999, borderColor: '#10B981', color: '#10B981'}} 
+            onClick={() => setIsImportOpen(true)}
+          >
+            Import Subjects
+          </Button>
         </div>
       </Affix>
       {/* Subject Table */}
-      <Table
-        columns={columns}
-        dataSource={filteredSubjects}
-        rowKey="id"
-        className={styles.sttFreshTable}
-        locale={{ emptyText: 'No records available.' }}
-        scroll={{ x: 'max-content' }}
-        pagination={{ pageSize: 10 }}
-        style={{marginBottom: 48}}
-      />
+      <Spin spinning={isLoading} tip="Loading subjects...">
+        <Table
+          columns={columns}
+          dataSource={subjectList}
+          rowKey="id"
+          className={styles.sttFreshTable}
+          locale={{ emptyText: <Empty description="No records available." /> }}
+          scroll={{ x: 'max-content' }}
+          pagination={false}
+          style={{marginBottom: 48}}
+        />
+        {/* Pagination */}
+        {paginationSubject && paginationSubject.total > 0 && (
+          <div style={{marginTop: 32, display: 'flex', justifyContent: 'center'}}>
+            <Pagination
+              current={paginationSubject.current}
+              pageSize={paginationSubject.pageSize}
+              total={paginationSubject.total}
+              showSizeChanger
+              pageSizeOptions={[5, 10, 20, 50]}
+              onChange={(p, ps) => { setPage(p); setPageSize(ps); }}
+              style={{borderRadius: 8}}
+            />
+          </div>
+        )}
+      </Spin>
       {/* Combo List Below Table */}
-      <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
-        {combos.map(combo => (
-          <Panel
-            header={<span style={{fontWeight: 700, fontSize: '1.1rem', color: '#1E40AF'}}>Combo: {combo.comboName}</span>}
-            key={combo.id}
-            style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF'}}
-            extra={<Button icon={<EditOutlined />} size="small" style={{borderRadius: 999, background: '#f97316', color: '#fff', border: 'none'}} onClick={(e) => { e.stopPropagation(); handleEditCombo(combo.id); }}>{'Edit'}</Button>}
-          >
-            <ul style={{margin: 0, paddingLeft: 20}}>
-              {comboSubjects.filter(cs => cs.comboId === combo.id).map(cs => {
-                const subj = subjects.find(s => s.id === cs.subjectId);
-                return subj ? <li key={subj.id} style={{color: '#1E40AF'}}>{subj.subjectName} ({subj.subjectCode})</li> : null;
-              })}
-            </ul>
-          </Panel>
-        ))}
-      </Collapse>
+      <div style={{ marginTop: 48 }}>
+        <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
+          {comboList.map(combo => (
+            <Panel
+              header={<span style={{fontWeight: 700, fontSize: '1.1rem', color: '#1E40AF'}}>Combo: {combo.comboName}</span>}
+              key={combo.id}
+              style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF'}}
+              extra={<Button icon={<EditOutlined />} size="small" style={{borderRadius: 999, background: '#f97316', color: '#fff', border: 'none'}} onClick={(e) => { e.stopPropagation(); handleEditCombo(combo.id); }}>{'Edit'}</Button>}
+            >
+              <ul style={{margin: 0, paddingLeft: 20}}>
+                {comboSubjects.filter(cs => cs.comboId === combo.id).length > 0 ? (
+                  comboSubjects.filter(cs => cs.comboId === combo.id).map(cs => (
+                    <li key={cs.subjectId} style={{color: '#1E40AF'}}>Subject ID: {cs.subjectId}</li>
+                  ))
+                ) : (
+                  <li style={{color: '#aaa'}}>No subjects</li>
+                )}
+              </ul>
+            </Panel>
+          ))}
+        </Collapse>
+      </div>
+      
+      {/* Data Import Modal */}
+      {isImportOpen && (
+        <DataImport 
+          onClose={() => setIsImportOpen(false)} 
+          onDataImported={handleDataImported}
+          headerConfig="SUBJECT"
+          allowMultipleRows={true}
+          dataType="subject"
+        />
+      )}
+   
     </div>
   );
 };

@@ -41,12 +41,12 @@ const GpaHistoryModal: React.FC<GpaHistoryModalProps> = ({
       footer={null}
       centered
       className="gpa-modal-card"
-      bodyStyle={{
+      styles={{ body: {
         background: 'rgba(255,255,255,0.97)',
         borderRadius: 24,
         padding: 32,
         boxShadow: '0 8px 32px rgba(0,0,0,0.10)',
-      }}
+      } }}
     >
       <div className="mb-6 flex flex-col items-center">
         <div className="flex items-center gap-2 text-2xl font-bold text-gray-800 mb-1">

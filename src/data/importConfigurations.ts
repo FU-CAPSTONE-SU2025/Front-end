@@ -104,6 +104,46 @@ export const HEADER_CONFIGS = {
       'Combo Description': 'comboDescription'
     }
   },
+  ASSESSMENT: {
+    headers: ['Syllabus Id', 'Category', 'Quantity', 'Weight', 'Completion Criteria', 'Duration', 'Question Type'],
+    fieldMap: {
+      'Syllabus Id': 'syllabusId',
+      'Category': 'category',
+      'Quantity': 'quantity',
+      'Weight': 'weight',
+      'Completion Criteria': 'completionCriteria',
+      'Duration': 'duration',
+      'Question Type': 'questionType'
+    }
+  },
+  MATERIAL: {
+    headers: ['Syllabus Id', 'Material Name', 'Author Name', 'Published Date', 'Description', 'File Path or URL'],
+    fieldMap: {
+      'Syllabus Id': 'syllabusId',
+      'Material Name': 'materialName',
+      'Author Name': 'authorName',
+      'Published Date': 'publishedDate',
+      'Description': 'description',
+      'File Path or URL': 'filepathOrUrl'
+    }
+  },
+  OUTCOME: {
+    headers: ['Syllabus Id', 'Outcome Code', 'Description'],
+    fieldMap: {
+      'Syllabus Id': 'syllabusId',
+      'Outcome Code': 'outcomeCode',
+      'Description': 'description'
+    }
+  },
+  SESSION: {
+    headers: ['Syllabus Id', 'Session Number', 'Topic', 'Mission'],
+    fieldMap: {
+      'Syllabus Id': 'syllabusId',
+      'Session Number': 'sessionNumber',
+      'Topic': 'topic',
+      'Mission': 'mission'
+    }
+  },
   // Admin profile configuration (commonly used)
   ADMIN_PROFILE: {
     headers: ['First Name', 'Last Name', 'Email', 'Password', 'Address', 'Phone', 'Date of Birth'],

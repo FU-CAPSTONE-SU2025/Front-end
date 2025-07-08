@@ -7,21 +7,3 @@
 }
 
 
-/* Override Antd button styles */
-.ant-btn-primary {
-  background-color: #ff3b3b !important;
-  border-color: #ff3b3b !important;
-}
-
-.ant-btn-primary:hover {
-  background-color: #ff2a2a !important;
-  border-color: #ff2a2a !important;
-}
-
-.ant-typography {
-  color: #363636 !important;
-}
-
-.ant-typography-secondary {
-  color: #242424 !important;
-}

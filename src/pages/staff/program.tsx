@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Input, Button, Collapse, Affix, Space } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined } from '@ant-design/icons';
+import { Input, Button, Collapse, Affix, Space, message } from 'antd';
+import { PlusOutlined, SearchOutlined, EditOutlined, UploadOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { programs, curriculums } from '../../data/schoolData';
 import { useNavigate } from 'react-router';
+import DataImport from '../../components/common/dataImport';
 
 const { Panel } = Collapse;
 
 const ProgramPage: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const navigate = useNavigate();
   const filteredPrograms = programs.filter(
     p => p.programName.toLowerCase().includes(search.toLowerCase()) || p.id.toString().includes(search)
@@ -20,6 +22,21 @@ const ProgramPage: React.FC = () => {
 
   const handleEditProgram = (programId: number) => {
     navigate(`/staff/editData/program/${programId}`);
+  };
+
+  const handleDataImported = async (data: { [key: string]: string }[]) => {
+    try {
+      // Process each imported program
+      for (const programData of data) {
+        // TODO: Add createProgram API call when available
+        console.log('Importing program:', programData);
+      }
+      
+      message.success(`Successfully imported ${data.length} programs`);
+      // TODO: Refresh the program list when API is available
+    } catch (error) {
+      message.error('Error importing programs. Please check your data format.');
+    }
   };
 
   return (
@@ -43,6 +60,15 @@ const ProgramPage: React.FC = () => {
             onClick={handleAddProgram}
           >
             Add Program
+          </Button>
+          <Button 
+            type="default" 
+            icon={<UploadOutlined />} 
+            size="large" 
+            style={{borderRadius: 999, borderColor: '#10B981', color: '#10B981'}} 
+            onClick={() => setIsImportOpen(true)}
+          >
+            Import Programs
           </Button>
         </div>
       </Affix>
@@ -94,6 +120,17 @@ const ProgramPage: React.FC = () => {
           </Panel>
         ))}
       </Collapse>
+      
+      {/* Data Import Modal */}
+      {isImportOpen && (
+        <DataImport 
+          onClose={() => setIsImportOpen(false)} 
+          onDataImported={handleDataImported}
+          headerConfig="PROGRAM"
+          allowMultipleRows={true}
+          dataType="program"
+        />
+      )}
     </div>
   );
 };

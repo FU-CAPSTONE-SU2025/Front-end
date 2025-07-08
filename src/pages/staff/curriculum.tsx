@@ -1,37 +1,74 @@
-/**
- * Timeline/stepper: all nodes perfectly aligned on a single vertical line.
- * The vertical line runs from the top node to the bottom node, with each node centered on the line.
- * Semester content is offset to the right.
- */
-import React, { useState } from 'react';
-import { Input, Button, Collapse, Typography, Affix, Space } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined, ImportOutlined } from '@ant-design/icons';
+
+import React, { useState, useEffect } from 'react';
+import { Input, Button, Collapse, Typography, Affix, Pagination, Spin, Empty, Table, Tag } from 'antd';
+import { PlusOutlined, SearchOutlined, EditOutlined, ImportOutlined, BookOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
-import { curriculums, subjects, combos, curriculumSubjects, comboSubjects } from '../../data/schoolData';
 import { useSearchParams, useNavigate } from 'react-router';
 import DataImport from '../../components/common/dataImport';
+import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
+import { Curriculum, SubjectWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
+import dayjs from 'dayjs';
 
 const { Panel } = Collapse;
 const { Title } = Typography;
-
-const nodeColor = 'rgba(30,64,175,1)';
-const nodeBorder = '2.5px solid #fff';
-const nodeSize = 18;
-const lineWidth = 4;
-const lineColor = 'rgba(30,64,175,0.18)';
 
 const CurriculumPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  React.useEffect(() => {
+  const [expandedCurriculum, setExpandedCurriculum] = useState<number | null>(null);
+  
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  // CRUD hooks
+  const {
+    getAllStaff,
+    curriculumList,
+    paginationCurriculum,
+    isLoading,
+    fetchCurriculumSubjectsMutation,
+  } = useCRUDCurriculum();
+
+  // State to store subjects for each curriculum
+  const [curriculumSubjectsMap, setCurriculumSubjectsMap] = useState<{[key: number]: SubjectWithCurriculumInfo[]}>({});
+
+  // Fetch data on mount, page, pageSize, or search change
+  useEffect(() => {
+    getAllStaff({ pageNumber: page, pageSize, filterType: 'search', filterValue: search });
+  }, [page, pageSize, search]);
+
+  useEffect(() => {
     const title = searchParams.get('title');
     if (title) setSearch(title);
   }, [searchParams]);
-  const filteredCurriculums = curriculums.filter(
-    c => c.curriculumName.toLowerCase().includes(search.toLowerCase()) || c.id.toString().includes(search)
-  );
+
+  // Fetch subjects when a curriculum is expanded
+  const handlePanelChange = async (key: string | string[]) => {
+    if (Array.isArray(key) && key.length > 0) {
+      const curriculumId = parseInt(key[0]);
+      setExpandedCurriculum(curriculumId);
+      
+      // Only fetch if we haven't already
+      if (!curriculumSubjectsMap[curriculumId]) {
+        try {
+          const subjects = await fetchCurriculumSubjectsMutation.mutateAsync(curriculumId);
+          if (subjects) {
+            setCurriculumSubjectsMap(prev => ({
+              ...prev,
+              [curriculumId]: subjects
+            }));
+          }
+        } catch (error) {
+          console.error('Failed to fetch curriculum subjects:', error);
+        }
+      }
+    } else {
+      setExpandedCurriculum(null);
+    }
+  };
 
   const handleAddCurriculum = () => {
     navigate('/staff/editData/curriculum');
@@ -47,10 +84,53 @@ const CurriculumPage: React.FC = () => {
 
   const handleDataImported = (data: { [key: string]: string }[]) => {
     console.log('Imported curriculum data:', data);
-    // Here you would typically send the data to your API
     setIsImportOpen(false);
-    // You could also update the local state or refresh data here
   };
+
+  // Table columns for subjects
+  const subjectColumns = [
+    {
+      title: 'Subject Code',
+      dataIndex: 'subjectCode',
+      key: 'subjectCode',
+      render: (text: string) => (
+        <span style={{ fontWeight: '600', color: '#1E40AF' }}>{text}</span>
+      ),
+    },
+    {
+      title: 'Subject Name',
+      dataIndex: 'subjectName',
+      key: 'subjectName',
+    },
+    {
+      title: 'Credits',
+      dataIndex: 'credits',
+      key: 'credits',
+      render: (credits: number) => (
+        <Tag color="blue" style={{ fontWeight: '600' }}>
+          {credits} credits
+        </Tag>
+      ),
+    },
+    {
+      title: 'Semester',
+      key: 'semester',
+      render: (_: any, record: SubjectWithCurriculumInfo) => (
+        <Tag color="green" style={{ fontWeight: '600' }}>
+          Semester {record.semesterNumber}
+        </Tag>
+      ),
+    },
+    {
+      title: 'isMandatory',
+      key: 'isMandatory',
+      render: (_: any, record: SubjectWithCurriculumInfo) => (
+        <Tag color={record.isMandatory ? 'red' : 'orange'} style={{ fontWeight: '600' }}>
+          {record.isMandatory ? 'Mandatory' : 'Optional'}
+        </Tag>
+      ),
+    },
+  ];
 
   return (
     <div className={styles.sttContainer}>
@@ -61,7 +141,7 @@ const CurriculumPage: React.FC = () => {
             placeholder="Search by Curriculum ID or Name"
             prefix={<SearchOutlined />}
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
             style={{maxWidth: 240, borderRadius: 999}}
             size="large"
           />
@@ -84,102 +164,160 @@ const CurriculumPage: React.FC = () => {
           </Button>
         </div>
       </Affix>
+      
       {/* Curriculum Cards */}
-      <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
-        {filteredCurriculums.map(curriculum => (
-          <Panel
-            header={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                <span style={{fontWeight: 700, fontSize: '1.2rem', color: '#1E40AF'}}>
-                  {curriculum.curriculumName} <span style={{color: '#f97316', fontWeight: 400, marginLeft: 8}}>[{curriculum.curriculumCode}]</span>
-                </span>
-                <Button
-                  type="text"
-                  icon={<EditOutlined />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditCurriculum(curriculum.id);
-                  }}
-                  style={{ 
-                    color: '#1E40AF',
-                    borderRadius: 8,
-                    height: 32,
-                    padding: '0 12px'
-                  }}
-                >
-                  Edit
-                </Button>
-              </div>
-            }
-            key={curriculum.id}
-            style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}}
-          >
-            {/* Timeline for 9 Semesters */}
-            <div style={{display: 'grid', gridTemplateColumns: `${nodeSize + lineWidth + 18}px 1fr`, gap: 0, position: 'relative', marginLeft: 8}}>
-              {/* Vertical line: absolute, centered behind all nodes */}
-              <div style={{position: 'absolute', left: (nodeSize + lineWidth + 18) / 2 - lineWidth / 2, top: 0, width: lineWidth, height: '100%', background: lineColor, zIndex: 0, borderRadius: 2}} />
-              {/* Timeline and semester content rows */}
-              {[...Array(9)].map((_, semIdx) => {
-                const semesterNumber = semIdx + 1;
-                // Subjects for this semester
-                const semesterSubjects = curriculumSubjects.filter(cs => cs.curriculumId === curriculum.id && cs.semesterNumber === semesterNumber && cs.isMandetory);
-                // Combos for this semester
-                const semesterCombos = curriculumSubjects.filter(cs => cs.curriculumId === curriculum.id && cs.semesterNumber === semesterNumber && !cs.isMandetory);
-                return (
-                  <React.Fragment key={semesterNumber}>
-                    {/* Timeline node: perfectly centered with semester card */}
-                    <div style={{position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%'}}>
-                      <div style={{width: nodeSize, height: nodeSize, borderRadius: '50%', background: nodeColor, border: nodeBorder, boxShadow: '0 2px 8px #1E40AF33', zIndex: 2}} />
+      <Spin spinning={isLoading} tip="Loading curricula...">
+        <Collapse 
+          accordion 
+          bordered={false} 
+          className={styles.sttFreshTable} 
+          style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}
+          onChange={handlePanelChange}
+        >
+          {curriculumList && curriculumList.length > 0 ? curriculumList.map((curriculum: Curriculum) => {
+            const subjects = curriculumSubjectsMap[curriculum.id] || [];
+            const isLoadingSubjects = expandedCurriculum === curriculum.id && fetchCurriculumSubjectsMutation.isPending;
+            
+            return (
+              <Panel
+                header={
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{fontWeight: 700, fontSize: '1.2rem', color: '#1E40AF'}}>
+                        {curriculum.curriculumName} 
+                        <span style={{color: '#f97316', fontWeight: 400, marginLeft: 8}}>
+                          [{curriculum.curriculumCode}]
+                        </span>
+                      </span>
+                      <Tag color="blue" style={{ margin: 0 }}>
+                        {subjects.length} subjects
+                      </Tag>
                     </div>
-                    {/* Semester content */}
-                    <div style={{marginBottom: 12, background: 'rgba(255, 255, 255, 0.90)', borderRadius: 12, padding: 16, boxShadow: '0 1px 6px rgba(30,64,175,0.07)', minHeight: 64}}>
-                      <Title level={5} style={{color: '#1E40AF', marginBottom: 8}}>Semester {semesterNumber}</Title>
-                      {/* Normal Subjects */}
-                      <div style={{marginBottom: 8}}>
-                        <b style={{color: '#1E90FF'}}>Subjects:</b>
-                        <ul style={{margin: 0, paddingLeft: 20}}>
-                          {semesterSubjects.map(cs => {
-                            const subj = subjects.find(s => s.id === cs.subjectId);
-                            return subj ? (
-                              <li
-                                key={subj.id}
-                                style={{color: '#1E40AF', cursor: 'pointer', textDecoration: 'underline'}}
-                                onClick={() => navigate(`/staff/subjects?title=${encodeURIComponent(subj.subjectName)}`)}
-                              >
-                                {subj.subjectName} ({subj.subjectCode})
-                              </li>
-                            ) : null;
-                          })}
-                        </ul>
+                    <Button
+                      type="text"
+                      icon={<EditOutlined />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditCurriculum(curriculum.id);
+                      }}
+                      style={{ 
+                        color: '#1E40AF',
+                        borderRadius: 8,
+                        height: 32,
+                        padding: '0 12px'
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  </div>
+                }
+                key={curriculum.id}
+                style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}}
+              >
+                <div style={{ padding: '16px 0' }}>
+                  {/* Curriculum Details */}
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                    gap: 16, 
+                    marginBottom: 24,
+                    padding: '16px',
+                    background: 'rgba(30,64,175,0.05)',
+                    borderRadius: 12
+                  }}>
+                    <div>
+                      <strong style={{ color: '#64748b' }}>Program ID:</strong>
+                      <div style={{ color: '#1E40AF', fontWeight: '600' }}>{curriculum.programId}</div>
+                    </div>
+                    <div>
+                      <strong style={{ color: '#64748b' }}>Effective Date:</strong>
+                      <div style={{ color: '#1E40AF', fontWeight: '600' }}>
+                        {curriculum.effectiveDate ? dayjs(curriculum.effectiveDate).format('MMM DD, YYYY') : 'N/A'}
                       </div>
-                      {/* Combos (from semester 5+) */}
-                      {semesterNumber >= 5 && (
-                        <div>
-                          {semesterCombos.map(cs => {
-                            const combo = combos.find(cb => cb.id === cs.subjectId); // subjectId is comboId for combos
-                            if (!combo) return null;
-                            return (
-                              <div key={combo.id} style={{marginTop: 8, background: 'rgba(30,64,175,0.13)', borderRadius: 8, padding: 8}}>
-                                <b style={{color: '#f97316'}}>Combo: {combo.comboName}</b>
-                                <ul style={{margin: 0, paddingLeft: 20}}>
-                                  {comboSubjects.filter(cbs => cbs.comboId === combo.id).map(cbs => {
-                                    const subj = subjects.find(s => s.id === cbs.subjectId);
-                                    return subj ? <li key={subj.id} style={{color: '#1E40AF'}}>{subj.subjectName} ({subj.subjectCode})</li> : null;
-                                  })}
-                                </ul>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
                     </div>
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          </Panel>
-        ))}
-      </Collapse>
+                    <div>
+                      <strong style={{ color: '#64748b' }}>Total Subjects:</strong>
+                      <div style={{ color: '#1E40AF', fontWeight: '600' }}>{subjects.length}</div>
+                    </div>
+                  </div>
+
+                  {/* Subjects Table */}
+                  <div>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 8, 
+                      marginBottom: 16,
+                      padding: '0 16px'
+                    }}>
+                      <BookOutlined style={{ color: '#1E40AF', fontSize: '18px' }} />
+                      <Title level={5} style={{ margin: 0, color: '#1E40AF' }}>
+                        Curriculum Subjects
+                      </Title>
+                    </div>
+                    
+                    {isLoadingSubjects ? (
+                      <div style={{ textAlign: 'center', padding: '40px' }}>
+                        <Spin tip="Loading subjects..." />
+                      </div>
+                    ) : subjects.length > 0 ? (
+                      <Table
+                        dataSource={subjects}
+                        columns={subjectColumns}
+                        rowKey="id"
+                        pagination={false}
+                        size="small"
+                        style={{
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                    ) : (
+                      <div style={{ 
+                        textAlign: 'center', 
+                        padding: '40px',
+                        color: '#64748b',
+                        background: 'rgba(30,64,175,0.05)',
+                        borderRadius: 12,
+                        margin: '0 16px'
+                      }}>
+                        <BookOutlined style={{ fontSize: '48px', marginBottom: 16, opacity: 0.5 }} />
+                        <div>No subjects assigned to this curriculum yet.</div>
+                        <Button 
+                          type="primary" 
+                          size="small" 
+                          style={{ marginTop: 12 }}
+                          onClick={() => handleEditCurriculum(curriculum.id)}
+                        >
+                          Add Subjects
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Panel>
+            );
+          }) : (
+            !isLoading && <Empty description="No curricula found" style={{margin: '40px 0'}} />
+          )}
+        </Collapse>
+        
+        {/* Pagination */}
+        {paginationCurriculum && paginationCurriculum.total > 0 && (
+          <div style={{marginTop: 32, display: 'flex', justifyContent: 'center'}}>
+            <Pagination
+              current={paginationCurriculum.current}
+              pageSize={paginationCurriculum.pageSize}
+              total={paginationCurriculum.total}
+              showSizeChanger
+              pageSizeOptions={[5, 10, 20, 50]}
+              onChange={(p, ps) => { setPage(p); setPageSize(ps); }}
+              style={{borderRadius: 8}}
+            />
+          </div>
+        )}
+      </Spin>
       
       {/* Data Import Modal */}
       {isImportOpen && (

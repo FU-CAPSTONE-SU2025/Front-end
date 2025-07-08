@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Button, Form, Input, Select, message, Card, Steps, Divider } from 'antd';
 import { CheckCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
+import { useCRUDCombo, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -42,126 +43,70 @@ const mockCombos = [
 const EditComboPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [form] = Form.useForm();
-  const [previewData, setPreviewData] = useState<ComboData[]>([]);
+  const [previewData, setPreviewData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [subjectIds, setSubjectIds] = useState<number[]>([]);
 
-  // Load combo data
+  const {
+    getComboById,
+    updateComboMutation
+  } = useCRUDCombo();
+  const {
+    subjectList,
+    getAllSubjects
+  } = useCRUDSubject();
+
   useEffect(() => {
     if (id) {
-      const combo = mockCombos.find(c => c.id === parseInt(id));
-      if (combo) {
-        form.setFieldsValue({
-          name: combo.name,
-          status: combo.status,
-          description: combo.description || '',
-          subjects: combo.subjects || '',
-          credits: combo.credits || 0,
-          semester: combo.semester || 1,
-          year: combo.year || new Date().getFullYear(),
-        });
-        setLoading(false);
-      } else {
-        message.error('Combo not found!');
-        navigate('/manager/combo');
-      }
+      getComboById.mutate(Number(id), {
+        onSuccess: (combo) => {
+          if (combo) {
+            form.setFieldsValue({
+              comboName: combo.comboName,
+              comboDescription: combo.comboDescription || '',
+            });
+            setLoading(false);
+          } else {
+            message.error('Combo not found!');
+            navigate('/manager/combo');
+          }
+        },
+        onError: () => {
+          message.error('Failed to fetch combo!');
+          navigate('/manager/combo');
+        }
+      });
     }
+    getAllSubjects({ pageNumber: 1, pageSize: 100 });
   }, [id, form, navigate]);
 
-  // Handle form submission
-  const handleSubmit = (values: ComboData) => {
-    const updatedCombo: ComboData = {
-      ...values,
-      id: parseInt(id!),
-    };
-    
-    setPreviewData([updatedCombo]);
+  const handleSubmit = (values: any) => {
+    setPreviewData({ ...values, id: Number(id) });
     setCurrentStep(1);
-    message.success('Combo data prepared for review');
   };
 
-  // Handle final confirmation
   const handleConfirm = () => {
-    // Here you would typically send the data to your API
-    console.log('Updated combo data:', previewData);
-    message.success('Combo updated successfully!');
-    navigate('/manager/combo');
+    updateComboMutation.mutate({
+      id: Number(id),
+      data: {
+        comboName: form.getFieldValue('comboName'),
+        comboDescription: form.getFieldValue('comboDescription'),
+        subjectIds: []
+      }
+    }, {
+      onSuccess: () => {
+        message.success('Combo updated successfully!');
+        navigate('/manager/combo');
+      },
+      onError: () => {
+        message.error('Failed to update combo!');
+      }
+    });
   };
 
-  // Preview table columns
-  const previewColumns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 80,
-    },
-    {
-      title: 'Combo Name',
-      dataIndex: 'name',
-      key: 'name',
-      width: 300,
-    },
-    {
-      title: 'Description',
-      dataIndex: 'description',
-      key: 'description',
-      width: 200,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (status: string) => (
-        <span className={`px-2 py-1 rounded-full text-xs ${
-          status === 'active' ? 'bg-green-100 text-green-800' :
-          status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-red-100 text-red-800'
-        }`}>
-          {status}
-        </span>
-      ),
-    },
-    {
-      title: 'Subjects',
-      dataIndex: 'subjects',
-      key: 'subjects',
-      width: 150,
-    },
-    {
-      title: 'Credits',
-      dataIndex: 'credits',
-      key: 'credits',
-      width: 80,
-    },
-    {
-      title: 'Semester',
-      dataIndex: 'semester',
-      key: 'semester',
-      width: 80,
-    },
-    {
-      title: 'Year',
-      dataIndex: 'year',
-      key: 'year',
-      width: 80,
-    },
-  ];
-
-  const steps = [
-    {
-      title: 'Edit Data',
-      description: 'Modify combo information',
-    },
-    {
-      title: 'Review',
-      description: 'Preview and confirm',
-    },
-  ];
-
-  if (loading) {
+  if (loading || getComboById.isPending) {
     return (
       <div className="p-6 mx-auto max-w-4xl">
         <div className="text-center py-8">
@@ -185,9 +130,8 @@ const EditComboPage: React.FC = () => {
         </div>
 
         <Steps current={currentStep} className="mb-8">
-          {steps.map((step, index) => (
-            <Steps.Step key={index} title={step.title} description={step.description} />
-          ))}
+          <Steps.Step title="Edit Data" description="Modify combo information" />
+          <Steps.Step title="Review" description="Preview and confirm" />
         </Steps>
 
         {currentStep === 0 && (
@@ -196,149 +140,37 @@ const EditComboPage: React.FC = () => {
               form={form}
               layout="vertical"
               onFinish={handleSubmit}
-              className="space-y-4"
+              initialValues={{ comboName: '', comboDescription: '' }}
             >
-              <Form.Item
-                name="name"
-                label="Combo Name"
-                rules={[{ required: true, message: 'Please enter combo name!' }]}
-              >
-                <Input placeholder="Enter combo name" className="rounded-lg" />
+              <Form.Item label="Combo Name" name="comboName" rules={[{ required: true, message: 'Please enter combo name' }]}> 
+                <Input />
               </Form.Item>
-
-              <Form.Item
-                name="description"
-                label="Description"
-              >
-                <TextArea 
-                  rows={3} 
-                  placeholder="Enter combo description" 
-                  className="rounded-lg" 
-                />
+              <Form.Item label="Combo Description" name="comboDescription">
+                <Input.TextArea rows={3} />
               </Form.Item>
-
-              <Form.Item
-                name="status"
-                label="Status"
-                rules={[{ required: true, message: 'Please select status!' }]}
-              >
-                <Select className="rounded-lg">
-                  {statusOptions.map((opt) => (
-                    <Option key={opt.value} value={opt.value}>{opt.label}</Option>
-                  ))}
-                </Select>
-              </Form.Item>
-
-              <Form.Item
-                name="subjects"
-                label="Subjects"
-              >
-                <TextArea 
-                  rows={2} 
-                  placeholder="Enter subjects (comma separated)" 
-                  className="rounded-lg" 
-                />
-              </Form.Item>
-
-              <div className="grid grid-cols-3 gap-4">
-                <Form.Item
-                  name="credits"
-                  label="Credits"
-                >
-                  <Input type="number" placeholder="0" className="rounded-lg" />
-                </Form.Item>
-
-                <Form.Item
-                  name="semester"
-                  label="Semester"
-                >
-                  <Input type="number" placeholder="1" className="rounded-lg" />
-                </Form.Item>
-
-                <Form.Item
-                  name="year"
-                  label="Year"
-                >
-                  <Input type="number" placeholder={new Date().getFullYear().toString()} className="rounded-lg" />
-                </Form.Item>
-              </div>
-
               <Form.Item>
-                <Button 
-                  type="primary" 
-                  htmlType="submit" 
-                  icon={<PlusOutlined />}
-                  className="w-full rounded-lg"
-                >
-                  Prepare for Review
-                </Button>
+                <Button type="primary" htmlType="submit">Preview</Button>
               </Form.Item>
             </Form>
           </Card>
         )}
 
-        {currentStep === 1 && (
+        {currentStep === 1 && previewData && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Card title="Review Updated Combo Data" className="shadow-md">
-              <div className="mb-4">
-                <p className="text-gray-600 mb-4">
-                  Please review the updated combo data below before confirming:
-                </p>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        {previewColumns.map((col, index) => (
-                          <th key={index} className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">
-                            {col.title}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {previewData.map((row, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
-                          {previewColumns.map((col, colIndex) => (
-                            <td key={colIndex} className="px-4 py-2 border-b text-sm">
-                              {col.render ? col.render(String(row[col.dataIndex as keyof ComboData] || '')) : String(row[col.dataIndex as keyof ComboData] || '')}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <Divider />
-
-              <div className="flex justify-between items-center">
-                <Button 
-                  onClick={() => setCurrentStep(0)}
-                  className="rounded-lg"
-                >
-                  Back to Edit
+            <Card title="Review Combo Information" className="shadow-md">
+              <p><b>Combo Name:</b> {previewData.comboName}</p>
+              <p><b>Combo Description:</b> {previewData.comboDescription}</p>
+              <div style={{ marginTop: 24 }}>
+                <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleConfirm} loading={updateComboMutation.isPending}>
+                  Confirm & Save
                 </Button>
-                <div className="flex gap-3">
-                  <Button 
-                    onClick={() => navigate('/manager/combo')}
-                    className="rounded-lg"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="primary" 
-                    onClick={handleConfirm}
-                    icon={<CheckCircleOutlined />}
-                    className="rounded-lg"
-                  >
-                    Confirm & Update
-                  </Button>
-                </div>
+                <Button style={{ marginLeft: 16 }} onClick={() => setCurrentStep(0)}>
+                  Back
+                </Button>
               </div>
             </Card>
           </motion.div>

@@ -176,8 +176,7 @@ const Messenger: React.FC = () => {
         width={400}
         onClose={() => setOpen(false)}
         open={open}
-        bodyStyle={{ padding: 0 }}
-        headerStyle={{ borderBottom: '1px solid #e5e7eb' }}
+        styles={{ body: { padding: 0 }, header: { borderBottom: '1px solid #e5e7eb' } }}
       >
         <Tabs
           activeKey={activeTab}

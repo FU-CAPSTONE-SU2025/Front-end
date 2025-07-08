@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, InputNumber, Button, message, Space, Typography, Select } from 'antd';
-import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Subject } from '../../interfaces/ISchoolProgram';
-import { subjects } from '../../data/schoolData';
-import { subjectPrerequisites } from '../../data/schoolData';
+import { SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import { GetPrerequisitesSubject, DeletePrerequisitesSubject } from '../../api/SchoolAPI/subjectAPI';
+import { CreateSubject, Subject } from '../../interfaces/ISchoolProgram';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -15,31 +15,54 @@ interface SubjectEditProps {
 
 const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
-  const [initialData, setInitialData] = useState<Subject | null>(null);
   const [prereqIds, setPrereqIds] = useState<number[]>([]);
+  const [currentPrerequisites, setCurrentPrerequisites] = useState<Subject[]>([]);
+  const [deletingPrereqId, setDeletingPrereqId] = useState<number | null>(null);
   const isCreateMode = !id;
   const isEditMode = !!id;
 
-  // Load existing data if in edit mode
+  // CRUD hook
+  const {
+    getSubjectById,
+    addSubjectMutation,
+    updateSubjectMutation,
+    isLoading,
+    subjectById,
+    addPrerequisiteMutation,
+    subjectList,
+    getAllSubjects
+  } = useCRUDSubject();
+
+  // Fetch subject by ID on mount (edit mode)
   useEffect(() => {
     if (isEditMode && id) {
-      const subject = subjects.find(s => s.id === id);
-      if (subject) {
-        setInitialData(subject);
-        form.setFieldsValue(subject);
-        // Pre-fill prerequisites
-        const prereqs = subjectPrerequisites
-          .filter(sp => sp.subject_id === id)
-          .map(sp => sp.prerequisite_subject_id);
-        setPrereqIds(prereqs);
-        form.setFieldsValue({ prerequisites: prereqs });
-      }
+      getSubjectById.mutate(id);
     }
-  }, [id, isEditMode, form]);
+  }, [id, isEditMode]);
+
+  // Set form fields when data is loaded
+  useEffect(() => {
+    if (isEditMode && getSubjectById.data) {
+      const s = getSubjectById.data;
+      form.setFieldsValue(s);
+    }
+  }, [getSubjectById.data, isEditMode, form]);
+
+  // Fetch all subjects for prerequisites select
+  useEffect(() => {
+    getAllSubjects({ pageNumber: 1, pageSize: 100 });
+  }, []);
+
+  // Fetch current prerequisites for this subject (edit mode)
+  useEffect(() => {
+    if (isEditMode && id) {
+      GetPrerequisitesSubject(id).then((data) => {
+        if (data) setCurrentPrerequisites(data);
+      });
+    }
+  }, [isEditMode, id]);
 
   const onFinish = async (values: any) => {
-    setLoading(true);
     try {
       const subjectData: Partial<Subject> = {
         ...values,
@@ -48,54 +71,80 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
       const selectedPrereqs: number[] = values.prerequisites || [];
 
       if (isCreateMode) {
-        // Simulate API call for create
-        console.log('Creating subject:', subjectData);
-        console.log('With prerequisites:', selectedPrereqs);
+        // Ensure subjectCode is a string (not undefined) to satisfy CreateSubject type
+        if (!subjectData.subjectCode) {
+          message.error('Subject code is required!');
+          return;
+        }
+        const created = await addSubjectMutation.mutateAsync(subjectData as CreateSubject);
         message.success('Subject created successfully!');
-      } else {
-        // Simulate API call for update
-        console.log('Updating subject:', { id, ...subjectData });
-        console.log('With prerequisites:', selectedPrereqs);
-        message.success('Subject updated successfully!');
-      }
-      
-      // Reset form after successful submission
-      if (isCreateMode) {
+        // Add prerequisites if any
+        if (created && created.id && selectedPrereqs.length > 0) {
+          for (const prereqId of selectedPrereqs) {
+            await addPrerequisiteMutation.mutateAsync({ id: created.id, prerequisitesId: prereqId });
+          }
+        }
         form.resetFields();
         setPrereqIds([]);
+      } else if (id) {
+        // Ensure subjectCode is a string (not undefined) to satisfy UpdateSubject type
+        if (!subjectData.subjectCode) {
+          message.error('Subject code is required!');
+          return;
+        }
+        // Ensure subjectName is a string to satisfy UpdateSubject type
+        if (!subjectData.subjectName) {
+          message.error('Subject name is required!');
+          return;
+        }
+        // Remove undefined status to satisfy UpdateSubject type
+        const { id: _omit, ...restSubjectData } = subjectData;
+        await updateSubjectMutation.mutateAsync({ 
+          id, 
+          data: {
+            id: id,
+            subjectCode: subjectData.subjectCode as string,
+            subjectName: subjectData.subjectName as string,
+            credits: subjectData.credits as number,
+            description: subjectData.description as string
+          } 
+        });
+        // Add prerequisites if any
+        if (selectedPrereqs.length > 0) {
+          for (const prereqId of selectedPrereqs) {
+            await addPrerequisiteMutation.mutateAsync({ id, prerequisitesId: prereqId });
+          }
+        }
+        message.success('Subject updated successfully!');
       }
     } catch (error) {
       message.error('An error occurred. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleDelete = async () => {
+  // Delete a prerequisite subject
+  const handleDeletePrerequisite = async (prereqId: number) => {
     if (!id) return;
-    
-    setLoading(true);
+    setDeletingPrereqId(prereqId);
     try {
-      // Simulate API call for delete
-      console.log('Deleting subject:', id);
-      message.success('Subject deleted successfully!');
-      // Navigate back or reset form
+      await DeletePrerequisitesSubject(id, prereqId);
+      setCurrentPrerequisites(prev => prev.filter(subj => subj.id !== prereqId));
+      message.success('Prerequisite removed successfully!');
     } catch (error) {
-      message.error('An error occurred while deleting.');
+      message.error('Failed to remove prerequisite.');
     } finally {
-      setLoading(false);
+      setDeletingPrereqId(null);
     }
   };
 
-  // All other subjects except this one
-  const otherSubjects = subjects.filter(s => s.id !== id);
+  // All other subjects except this one (for prerequisites)
+  const otherSubjects = subjectList.filter(s => s.id !== id);
 
   return (
     <div style={{ padding: '1rem' }}>
       <Title level={4} style={{ color: '#1E40AF', marginBottom: '2rem', textAlign: 'center' }}>
         {isCreateMode ? 'Create New Subject' : 'Edit Subject'}
       </Title>
-      
       <Form
         form={form}
         layout="vertical"
@@ -114,10 +163,8 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
           <Input 
             placeholder="e.g., CS101" 
             style={{ borderRadius: 8 }}
-            disabled={isEditMode} // Code shouldn't be changed after creation
           />
         </Form.Item>
-
         <Form.Item
           label="Subject Name"
           name="subjectName"
@@ -131,7 +178,6 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
             style={{ borderRadius: 8 }}
           />
         </Form.Item>
-
         <Form.Item
           label="Credits"
           name="credits"
@@ -147,7 +193,6 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
             max={6}
           />
         </Form.Item>
-
         <Form.Item
           label="Description"
           name="description"
@@ -162,67 +207,67 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
             style={{ borderRadius: 8 }}
           />
         </Form.Item>
-
         <Form.Item
           label="Prerequisite Subjects"
           name="prerequisites"
           extra="Select one or more subjects that must be completed before this subject."
         >
-          <Select
-            mode="multiple"
-            placeholder="Select prerequisite subjects"
-            value={prereqIds}
-            onChange={setPrereqIds}
-            style={{ borderRadius: 8 }}
-            optionFilterProp="children"
-            showSearch
-            allowClear
-          >
-            {otherSubjects.map(subject => (
-              <Option key={subject.id} value={subject.id}>
-                {subject.subjectName} ({subject.subjectCode})
-              </Option>
-            ))}
-          </Select>
+          <>
+            {isEditMode && currentPrerequisites.length > 0 && (
+              <div style={{ marginBottom: 8 }}>
+                <strong>Current Prerequisite Subjects:</strong>
+                <ul style={{ margin: 0, paddingLeft: 20 }}>
+                  {currentPrerequisites.map(subj => (
+                    <li key={subj.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {subj.subjectName} ({subj.subjectCode})
+                      <Button
+                        type="text"
+                        icon={<CloseOutlined style={{ color: '#f5222d' }} />}
+                        size="small"
+                        loading={deletingPrereqId === subj.id}
+                        onClick={() => handleDeletePrerequisite(subj.id)}
+                        style={{ marginLeft: 4 }}
+                        aria-label="Remove prerequisite"
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <Select
+              mode="multiple"
+              placeholder="Select prerequisite subjects"
+              value={prereqIds}
+              onChange={setPrereqIds}
+              style={{ borderRadius: 8 }}
+              optionFilterProp="children"
+              showSearch
+              allowClear
+            >
+              {otherSubjects.map(subject => (
+                <Option key={subject.id} value={subject.id}>
+                  {subject.subjectName} ({subject.subjectCode})
+                </Option>
+              ))}
+            </Select>
+          </>
         </Form.Item>
-
         <Form.Item style={{ marginTop: '2rem', textAlign: 'center' }}>
           <Space size="large">
             <Button
               type="primary"
               htmlType="submit"
               icon={<SaveOutlined />}
-              loading={loading}
+              loading={isLoading}
               style={{
                 borderRadius: 999,
                 height: 48,
                 paddingLeft: 32,
                 paddingRight: 32,
-                background: '#1E40AF',
-                border: 'none',
-                fontWeight: 600
               }}
             >
               {isCreateMode ? 'Create Subject' : 'Update Subject'}
             </Button>
-            
-            {isEditMode && (
-              <Button
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleDelete}
-                loading={loading}
-                style={{
-                  borderRadius: 999,
-                  height: 48,
-                  paddingLeft: 32,
-                  paddingRight: 32,
-                  fontWeight: 600
-                }}
-              >
-                Delete Subject
-              </Button>
-            )}
           </Space>
         </Form.Item>
       </Form>

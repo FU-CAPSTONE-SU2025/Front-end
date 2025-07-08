@@ -49,7 +49,7 @@ export const makeRequest = async (
                 console.error("Unauthorized access - possibly token expired or invalid");
                 if (retry < MAX_REFRESH_RETRIES) {
                     const refreshResult = await RefreshToken();
-                    console.log("Attempting to refresh token: ",refreshResult)
+                    //console.log("Attempting to refresh token: ",refreshResult)
                     if (refreshResult) {
                         retry +=1
                         return makeRequest(method, url, data);
