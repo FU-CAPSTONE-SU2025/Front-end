@@ -184,15 +184,17 @@ export function useSendChatMessage() {
 // Xóa session với optimistic updates
 export function useDeleteChatSession() {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { chatSessionId: number }>({
+  return useMutation<{ success: boolean; message?: string }, Error, { chatSessionId: number }>({
     mutationFn: async ({ chatSessionId }) => {
       console.log('Deleting chat session:', chatSessionId);
       const response = await deleteChatSession(chatSessionId);
       console.log('Delete session response:', response);
       return response;
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (data, variables) => {
       console.log('Chat session deleted successfully:', variables.chatSessionId);
+      console.log('Delete response message:', data.message);
+      
       // Invalidate sessions và xóa cache messages của session đã xóa
       queryClient.invalidateQueries({ queryKey: ['chatSessions'] });
       queryClient.removeQueries({ queryKey: ['chatMessages', variables.chatSessionId] });
@@ -200,6 +202,10 @@ export function useDeleteChatSession() {
     },
     onError: (error, variables) => {
       console.error('Failed to delete chat session', variables.chatSessionId, ':', error);
+      // Log additional error details for debugging
+      if (error.message) {
+        console.error('Error message:', error.message);
+      }
     }
   });
 }
