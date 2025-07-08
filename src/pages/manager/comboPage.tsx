@@ -166,7 +166,37 @@ const ComboManagerPage: React.FC = () => {
       key: 'subjects',
       align: 'center' as const,
       render: (_: any, record: any) => (
-        <Button size="small" onClick={() => handleOpenSubjectModal(record)}>
+        <Button
+          size="small"
+          onClick={() => handleOpenSubjectModal(record)}
+          style={{
+            background: 'linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #22c55e 0%, #16a34a 100%) border-box',
+            border: '2px solid transparent',
+            color: '#16a34a',
+            fontWeight: 700,
+            borderRadius: 999,
+            boxShadow: '0 2px 12px #22c55e22',
+            padding: '0 20px',
+            fontSize: 15,
+            letterSpacing: 0.5,
+            height: 36,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            transition: 'background 0.2s, color 0.2s, box-shadow 0.2s',
+            outline: 'none',
+          }}
+          onMouseOver={e => {
+            e.currentTarget.style.background = 'linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #16a34a 0%, #22c55e 100%) border-box';
+            e.currentTarget.style.color = '#22c55e';
+            e.currentTarget.style.boxShadow = '0 4px 16px #16a34a33';
+          }}
+          onMouseOut={e => {
+            e.currentTarget.style.background = 'linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #22c55e 0%, #16a34a 100%) border-box';
+            e.currentTarget.style.color = '#16a34a';
+            e.currentTarget.style.boxShadow = '0 2px 12px #22c55e22';
+          }}
+        >
           Add Subject
         </Button>
       ),
@@ -312,7 +342,7 @@ const ComboManagerPage: React.FC = () => {
       >
         <Spin spinning={modalLoading}>
           <div style={{ marginBottom: 20 }}>
-            <b style={{ color: '#22C55E', fontSize: 15 }}>Current Subjects:</b>
+            <b style={{ color: '#f97316', fontSize: 15 }}>Current Subjects:</b>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 10, minHeight: 32 }}>
               {comboSubjects.length === 0 ? (
                 <span style={{ color: '#aaa', fontStyle: 'italic' }}>No subjects in this combo.</span>
@@ -365,28 +395,36 @@ const ComboManagerPage: React.FC = () => {
             </Select>
             <Button
               type="primary"
-              icon={<PlusOutlined style={{ fontSize: 18, marginRight: 4 }} />}
+              icon={<PlusOutlined style={{ fontSize: 14, marginRight: 4 }} />}
               onClick={handleAddSubject}
               disabled={!addSubjectId}
               style={{
-                background: 'linear-gradient(90deg, #ea580c 0%, #fbbf24 100%)',
-                border: 'none',
+                background: 'linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #22c55e 0%, #16a34a 100%) border-box',
+                border: '2px solid transparent',
+                color: '#16a34a',
                 fontWeight: 700,
                 borderRadius: 999,
-                boxShadow: '0 2px 12px #fdba7455',
-                padding: '0 28px',
-                fontSize: 17,
-                color: '#fff',
+                boxShadow: '0 2px 12px #22c55e22',
+                padding: '0 20px',
+                fontSize: 14,
                 letterSpacing: 0.5,
-                height: 44,
+                height: 32,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
-                transition: 'background 0.2s, box-shadow 0.2s',
+                gap: 6,
+                transition: 'background 0.2s, color 0.2s, box-shadow 0.2s',
                 outline: 'none',
               }}
-              onMouseOver={e => e.currentTarget.style.background = 'linear-gradient(90deg, #fbbf24 0%, #ea580c 100%)'}
-              onMouseOut={e => e.currentTarget.style.background = 'linear-gradient(90deg, #ea580c 0%, #fbbf24 100%)'}
+              onMouseOver={e => {
+                e.currentTarget.style.background = 'linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #16a34a 0%, #22c55e 100%) border-box';
+                e.currentTarget.style.color = '#22c55e';
+                e.currentTarget.style.boxShadow = '0 4px 16px #16a34a33';
+              }}
+              onMouseOut={e => {
+                e.currentTarget.style.background = 'linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #22c55e 0%, #16a34a 100%) border-box';
+                e.currentTarget.style.color = '#16a34a';
+                e.currentTarget.style.boxShadow = '0 2px 12px #22c55e22';
+              }}
             >
               Add Subject
             </Button>

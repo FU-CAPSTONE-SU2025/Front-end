@@ -83,7 +83,8 @@ const ManagerHeader = () => {
                     <Avatar
                       size={40}
                       src="https://via.placeholder.com/150"
-                      style={{ border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                      style={{ border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', cursor: 'pointer' }}
+                      onClick={() => navigate('/manager/profile')}
                     />
                   </Badge>
                 </Tooltip>
