@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Badge, Avatar } from 'antd';
+import { Badge, Avatar, Dropdown, Menu } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router';
 import Messenger from './messenger';
 import Notification from './notification';
+import { useAuths } from '../../hooks/useAuths';
 
 const navItems = [
   { name: 'Dashboard', path: '/student' },
@@ -17,6 +18,7 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const logout = useAuths((state) => state.logout);
 
   const toggleMenu = () => setIsMenuOpen((open) => !open);
 
@@ -43,6 +45,29 @@ const Header: React.FC = () => {
     visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: 'easeOut' } },
     exit: { opacity: 0, x: -100, transition: { duration: 0.3 } },
   };
+
+  // Dropdown menu for avatar (chuẩn mới Ant Design v5+)
+  const avatarMenuItems = [
+    {
+      key: 'change-password',
+      label: (
+        <span onClick={() => navigate('/student/change-password')}>Đổi mật khẩu</span>
+      ),
+    },
+    {
+      key: 'logout',
+      label: (
+        <span
+          onClick={async () => {
+            await logout();
+            navigate('/');
+          }}
+        >
+          Đăng xuất
+        </span>
+      ),
+    },
+  ];
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-white/70 backdrop-blur-md shadow transition-all duration-300">
@@ -129,13 +154,15 @@ const Header: React.FC = () => {
           </motion.a>
           <Notification />
           <Messenger />
-          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-            <Avatar
-              src="https://i.pravatar.cc/150?img=3"
-              size={{ xs: 20, sm: 24, md: 26, lg: 28, xl: 30 }}
-              className="ring-1 ring-orange-200 hover:ring-orange-400 transition-all duration-300"
-            />
-          </motion.div>
+          <Dropdown menu={{ items: avatarMenuItems }} trigger={["click"]} placement="bottomRight">
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="cursor-pointer">
+              <Avatar
+                src="https://i.pravatar.cc/150?img=3"
+                size={{ xs: 20, sm: 24, md: 26, lg: 28, xl: 30 }}
+                className="ring-1 ring-orange-200 hover:ring-orange-400 transition-all duration-300"
+              />
+            </motion.div>
+          </Dropdown>
         </div>
         {/* Mobile menu */}
         <AnimatePresence>

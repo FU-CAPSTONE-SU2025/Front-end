@@ -1,38 +1,26 @@
 import React, { useState, useRef } from 'react';
 import { BellOutlined } from '@ant-design/icons';
-import { Avatar, Button } from 'antd';
+import { Avatar, Button, Modal, Badge } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNotificationHub, NotificationItem } from '../../hooks/useNotificationHub';
 
-const mockNotifications = [
-  {
-    id: 1,
-    avatar: 'https://i.pravatar.cc/40?img=4',
-    title: 'New Message',
-    description: 'You have a new message from John.',
-    time: '2m ago',
-    unread: true,
-  },
-  {
-    id: 2,
-    avatar: 'https://i.pravatar.cc/40?img=5',
-    title: 'Assignment Due',
-    description: 'Your assignment is due tomorrow.',
-    time: '1h ago',
-    unread: false,
-  },
-  {
-    id: 3,
-    avatar: 'https://i.pravatar.cc/40?img=6',
-    title: 'System Update',
-    description: 'System will be updated at 10PM.',
-    time: '3h ago',
-    unread: true,
-  },
-];
+function timeAgo(dateString?: string) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return date.toLocaleDateString();
+}
 
 const Notification: React.FC = () => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { notifications, connectionStatus } = useNotificationHub();
+  const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
+  const [localRead, setLocalRead] = useState<{ [id: number]: boolean }>({});
 
   // Đóng dropdown khi click ra ngoài
   React.useEffect(() => {
@@ -49,18 +37,31 @@ const Notification: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 
+  // Đếm số thông báo chưa đọc (dựa trên cả localRead và isRead từ backend)
+  const unreadCount = notifications.filter((n) => !(n.isRead || localRead[n.id])).length;
+  const badgeCount = unreadCount > 10 ? '10+' : unreadCount;
+
+  // Khi click vào thông báo: mở modal và đánh dấu đã đọc
+  const handleNotificationClick = (n: NotificationItem) => {
+    setSelectedNotification(n);
+    setLocalRead((prev) => ({ ...prev, [n.id]: true }));
+  };
+
+  // Đóng modal
+  const handleModalClose = () => {
+    setSelectedNotification(null);
+  };
+
   return (
     <div className="relative" ref={ref}>
-      <Button
-        icon={<BellOutlined className="text-lg" />}
-        shape="circle"
-        onClick={() => setOpen((v) => !v)}
-        className="relative"
-      >
-        {mockNotifications.some((n) => n.unread) && (
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-ping" />
-        )}
-      </Button>
+      <Badge count={badgeCount} overflowCount={10} offset={[-2, 2]} size="small" showZero={false}>
+        <Button
+          icon={<BellOutlined className="text-lg" />}
+          shape="circle"
+          onClick={() => setOpen((v) => !v)}
+          className="relative"
+        />
+      </Badge>
       <AnimatePresence>
         {open && (
           <motion.div
@@ -70,38 +71,65 @@ const Notification: React.FC = () => {
             transition={{ duration: 0.2 }}
             className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden"
           >
-            <div className="p-4 border-b border-gray-100 font-bold text-gray-800">Notifications</div>
+            <div className="p-4 border-b border-gray-100 font-bold text-gray-800 flex items-center justify-between">
+              <span>Notifications</span>
+              <span className="text-xs text-gray-400">{connectionStatus}</span>
+            </div>
             <div className="max-h-80 overflow-y-auto">
               <AnimatePresence>
-                {mockNotifications.length === 0 ? (
+                {notifications.length === 0 ? (
                   <div className="p-4 text-center text-gray-400">No notifications</div>
                 ) : (
-                  mockNotifications.map((n) => (
-                    <motion.div
-                      key={n.id}
-                      initial={{ opacity: 0, x: 30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 30 }}
-                      transition={{ duration: 0.2 }}
-                      className={`flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200 ${n.unread ? 'bg-orange-50' : ''}`}
-                    >
-                      <Avatar src={n.avatar} size={40} className="mt-1" />
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold text-gray-800">{n.title}</span>
-                          <span className="text-xs text-gray-400 ml-2">{n.time}</span>
+                  notifications.map((n) => {
+                    const isRead = n.isRead || localRead[n.id];
+                    return (
+                      <motion.div
+                        key={n.id}
+                        initial={{ opacity: 0, x: 30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 30 }}
+                        transition={{ duration: 0.2 }}
+                        className={`flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200 ${!isRead ? 'bg-orange-50' : ''}`}
+                        onClick={() => handleNotificationClick(n)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <Avatar src="/img/Logo.svg" size={40} className="mt-1" />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center">
+                            <span className="font-semibold text-gray-800">{n.title}</span>
+                            <span className="text-xs text-gray-400 ml-2">{timeAgo(n.createdAt)}</span>
+                          </div>
+                          <div className={`text-sm ${!isRead ? 'text-gray-800 font-medium' : 'text-gray-600'}`}>{n.content}</div>
+                          {n.link && (
+                            <a href={n.link} className="text-xs text-blue-500 underline" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>View details</a>
+                          )}
                         </div>
-                        <div className={`text-sm ${n.unread ? 'text-gray-800 font-medium' : 'text-gray-600'}`}>{n.description}</div>
-                      </div>
-                      {n.unread && <span className="w-2 h-2 bg-red-500 rounded-full mt-2 ml-1" />}
-                    </motion.div>
-                  ))
+                        {!isRead && <span className="w-2 h-2 bg-red-500 rounded-full mt-2 ml-1" />}
+                      </motion.div>
+                    );
+                  })
                 )}
               </AnimatePresence>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+      <Modal
+        open={!!selectedNotification}
+        onCancel={handleModalClose}
+        footer={null}
+        title={selectedNotification?.title || 'Notification Detail'}
+      >
+        {selectedNotification && (
+          <div>
+            <div className="mb-2 text-gray-500 text-xs">{timeAgo(selectedNotification.createdAt)}</div>
+            <div className="mb-4 text-base text-gray-800">{selectedNotification.content}</div>
+            {selectedNotification.link && (
+              <a href={selectedNotification.link} className="text-blue-500 underline" target="_blank" rel="noopener noreferrer">View details</a>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

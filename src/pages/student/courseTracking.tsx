@@ -115,12 +115,12 @@ const CourseTracking = () => {
           
           {/* First row - 3 cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8 max-w-6xl mx-auto">
-            {courses.slice(0, 3).map((course, idx) => (
+            {courses.slice(0, 3).map((course) => (
               <motion.div
-                key={idx}
+                key={course.code}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.1 }}
+                transition={{ delay: 0.1 }}
                 whileHover={{ scale: 1.02, y: -5 }}
                 className="w-full"
               >
@@ -135,12 +135,12 @@ const CourseTracking = () => {
           
           {/* Second row - 2 cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {courses.slice(3, 5).map((course, idx) => (
+            {courses.slice(3, 5).map((course) => (
               <motion.div
-                key={idx + 3}
+                key={course.code}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: (idx + 3) * 0.1 }}
+                transition={{ delay: 0.1 }}
                 whileHover={{ scale: 1.02, y: -5 }}
                 className="w-full"
               >

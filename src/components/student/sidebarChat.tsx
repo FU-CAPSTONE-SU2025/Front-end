@@ -211,7 +211,7 @@ const SidebarChat: React.FC<SidebarChatProps> = ({
                     <div className="text-xs text-gray-400 mt-1">{formatDate(session.updatedAt || session.createdAt)}</div>
                   </div>
                   {!isEditing && (
-                    <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight">
+                    <Dropdown menu={{ items: menu.props.items }} trigger={["click"]} placement="bottomRight">
                       <Button
                         type="text"
                         icon={<MoreOutlined className="text-lg text-gray-500 hover:text-blue-700" />}
