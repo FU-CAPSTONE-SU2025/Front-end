@@ -5,7 +5,7 @@ import AccountCounter from '../../components/admin/accountCounter';
 import { DatePicker } from 'antd';
 import dayjs from 'dayjs';
 import { validateEmail, validatePhone } from '../../components/common/validation';
-import DataImport from '../../components/common/dataImport';
+import BulkDataImport from '../../components/common/bulkDataImport';
 import { jwtDecode } from 'jwt-decode';
 import { getAuthState } from '../../hooks/useAuths';
 import { AccountProps, ActiveCategoriesProp } from '../../interfaces/IAccount';
@@ -238,15 +238,10 @@ const Profile: React.FC = () => {
           </div>
         </motion.div>
           {isImportOpen && (
-          <div className={styles.modalOverlay}>
-            <DataImport 
-              onClose={() => {setIsImportOpen(false);setIsEditing(true)}} 
-              onDataImported={handleDataImported}
-              headerConfig="ADMIN_PROFILE"
-              allowMultipleRows={false}
-              dataType="admin profile"
-            />
-          </div>
+          <BulkDataImport 
+            onClose={() => setIsImportOpen(false)} 
+            onDataImported={handleDataImported}
+          />
         )}
       </div>
     </>

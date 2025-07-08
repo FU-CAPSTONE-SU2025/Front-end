@@ -5,7 +5,8 @@ import styles from '../../css/staff/staffTranscript.module.css';
 import { curriculums, combos, comboSubjects } from '../../data/schoolData';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCRUDSubject, useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
-import DataImport from '../../components/common/dataImport';
+import BulkDataImport from '../../components/common/bulkDataImport';
+import ExcelImportButton from '../../components/common/ExcelImportButton';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -209,15 +210,13 @@ const SubjectPage: React.FC = () => {
           >
             Add Combo
           </Button>
-          <Button 
-            type="default" 
-            icon={<UploadOutlined />} 
-            size="large" 
-            style={{borderRadius: 999, borderColor: '#10B981', color: '#10B981'}} 
+          <ExcelImportButton
+            size="large"
+            style={{ borderRadius: 999 }}
             onClick={() => setIsImportOpen(true)}
           >
             Import Subjects
-          </Button>
+          </ExcelImportButton>
         </div>
       </Affix>
       {/* Subject Table */}
@@ -273,12 +272,9 @@ const SubjectPage: React.FC = () => {
       
       {/* Data Import Modal */}
       {isImportOpen && (
-        <DataImport 
+        <BulkDataImport 
           onClose={() => setIsImportOpen(false)} 
           onDataImported={handleDataImported}
-          headerConfig="SUBJECT"
-          allowMultipleRows={true}
-          dataType="subject"
         />
       )}
    

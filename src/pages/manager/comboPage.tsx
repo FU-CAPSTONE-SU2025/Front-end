@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Affix, Tag, message, Pagination, Spin, Empty } from 'antd';
+import { Table, Input, Button, Affix, Tag, message, Pagination, Spin, Empty, Modal, Select, Space, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
-import DataImport from '../../components/common/dataImport';
+import BulkDataImport from '../../components/common/bulkDataImport';
+import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import { GetSubjectsInCombo } from '../../api/SchoolAPI/comboAPI';
 
 const ComboManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -20,8 +22,17 @@ const ComboManagerPage: React.FC = () => {
     comboList,
     paginationCombo,
     getComboMutation,
-    addComboMutation
+    addComboMutation,
+    updateComboMutation
   } = useCRUDCombo();
+
+  const { subjectList, getAllSubjects } = useCRUDSubject();
+  const { addSubjectToComboMutation, removeSubjectFromComboMutation } = useCRUDCombo();
+  const [subjectModalOpen, setSubjectModalOpen] = useState(false);
+  const [selectedCombo, setSelectedCombo] = useState<any>(null);
+  const [comboSubjects, setComboSubjects] = useState<any[]>([]); // Will hold SubjectInCombo[]
+  const [addSubjectId, setAddSubjectId] = useState<number | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
     // Backend search: pass search as filterValue
@@ -29,7 +40,7 @@ const ComboManagerPage: React.FC = () => {
   }, [page, pageSize, search]);
 
   const handleAddCombo = () => {
-    navigate('/manager/addCombo');
+    navigate('/manager/combo/add');
   };
 
   const handleEditCombo = (comboId: number) => {
@@ -41,9 +52,69 @@ const ComboManagerPage: React.FC = () => {
     message.success('Deleted combo!');
   };
 
+  // Open modal and load subjects for combo
+  const handleOpenSubjectModal = async (combo: any) => {
+    setSelectedCombo(combo);
+    setAddSubjectId(null);
+    getAllSubjects({ pageNumber: 1, pageSize: 100 });
+    setSubjectModalOpen(true);
+    setModalLoading(true);
+    try {
+      const subjects = await GetSubjectsInCombo(combo.id);
+      setComboSubjects(subjects || []);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  // Add subject to combo (backend)
+  const handleAddSubject = async () => {
+    if (!selectedCombo || !addSubjectId || comboSubjects.some(s => s.subjectId === addSubjectId)) return;
+    setModalLoading(true);
+    try {
+      await addSubjectToComboMutation.mutateAsync({ comboId: selectedCombo.id, subjectId: addSubjectId });
+      const subjects = await GetSubjectsInCombo(selectedCombo.id);
+      setComboSubjects(subjects || []);
+      setAddSubjectId(null);
+      message.success('Subject added to combo!');
+    } catch {
+      message.error('Failed to add subject.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  // Remove subject from combo (backend)
+  const handleRemoveSubject = async (subjectId: number) => {
+    if (!selectedCombo) return;
+    setModalLoading(true);
+    try {
+      await removeSubjectFromComboMutation.mutateAsync({ comboId: selectedCombo.id, subjectId });
+      const subjects = await GetSubjectsInCombo(selectedCombo.id);
+      setComboSubjects(subjects || []);
+      message.success('Subject removed from combo!');
+    } catch {
+      message.error('Failed to remove subject.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  // Approve combo (backend)
   const handleApprove = (id: number) => {
-    setApprovalStatus(prev => ({ ...prev, [id]: 'approved' }));
-    message.success('Combo approved!');
+    updateComboMutation.mutate({
+      id,
+      data: { status: 'approved' }
+    }, {
+      onSuccess: () => {
+        setApprovalStatus(prev => ({ ...prev, [id]: 'approved' }));
+        message.success('Combo approved!');
+        getAllCombos({ pageNumber: page, pageSize, filterValue: search });
+      },
+      onError: () => {
+        message.error('Failed to approve combo!');
+      }
+    });
   };
 
   const handleDataImported = async (data: { [key: string]: string }[]) => {
@@ -85,27 +156,26 @@ const ComboManagerPage: React.FC = () => {
       key: 'status',
       align: 'center' as const,
       render: (_: any, record: any) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-          <Tag color={approvalStatus[record.id] === 'approved' ? 'green' : 'orange'} style={{ fontWeight: 600, fontSize: 14 }}>
-            {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Waiting for Approval'}
-          </Tag>
-          <Button
-            type={approvalStatus[record.id] === 'approved' ? 'default' : 'primary'}
-            icon={<CheckOutlined />}
-            disabled={approvalStatus[record.id] === 'approved'}
-            onClick={() => handleApprove(record.id)}
-            style={{borderRadius: 8, height: 28, padding: '0 8px'}}
-          >
-            {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Approve'}
-          </Button>
-        </div>
+        <Tag color={approvalStatus[record.id] === 'approved' ? 'green' : 'orange'} style={{ fontWeight: 600, fontSize: 14 }}>
+          {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Waiting for Approval'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Subjects',
+      key: 'subjects',
+      align: 'center' as const,
+      render: (_: any, record: any) => (
+        <Button size="small" onClick={() => handleOpenSubjectModal(record)}>
+          Add Subject
+        </Button>
       ),
     },
     {
       title: 'Actions',
       key: 'actions',
       align: 'center' as const,
-      width: 140,
+      width: 200,
       render: (_: any, record: any) => (
         <div className={styles.sttActionButtons}>
           <Button
@@ -122,6 +192,15 @@ const ComboManagerPage: React.FC = () => {
             style={{ color: '#e53e3e' }}
             title="Delete Combo"
           />
+          <Button
+            type={approvalStatus[record.id] === 'approved' ? 'default' : 'primary'}
+            icon={<CheckOutlined />}
+            disabled={approvalStatus[record.id] === 'approved'}
+            onClick={() => handleApprove(record.id)}
+            style={{borderRadius: 8, height: 28, padding: '0 8px', marginLeft: 8}}
+          >
+            {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Approve'}
+          </Button>
         </div>
       ),
     },
@@ -190,14 +269,130 @@ const ComboManagerPage: React.FC = () => {
       
       {/* Data Import Modal */}
       {isImportOpen && (
-        <DataImport 
+        <BulkDataImport 
           onClose={() => setIsImportOpen(false)} 
           onDataImported={handleDataImported}
-          headerConfig="COMBO"
-          allowMultipleRows={true}
-          dataType="combo"
         />
       )}
+
+      {/* Subject Management Modal */}
+      <Modal
+        open={subjectModalOpen}
+        onCancel={() => setSubjectModalOpen(false)}
+        footer={null}
+        title={selectedCombo ? (
+          <span style={{
+            fontWeight: 600,
+            fontSize: 18,
+            color: '#1E293B',
+            padding: '0 12px',
+            wordBreak: 'break-word',
+            whiteSpace: 'normal',
+            lineHeight: 1.3,
+            display: 'block',
+            maxWidth: 480,
+          }}>
+            Manage Subjects for {selectedCombo.comboName}
+          </span>
+        ) : 'Manage Subjects'}
+        destroyOnClose
+        width={540}
+        confirmLoading={modalLoading}
+        bodyStyle={{
+          background: '#fff',
+          borderRadius: 18,
+          boxShadow: '0 8px 32px 0 rgba(34,197,94,0.12), 0 1.5px 6px 0 rgba(30,64,175,0.10)',
+          padding: '32px 28px 24px 28px',
+          minHeight: 220,
+        }}
+        style={{
+          borderRadius: 18,
+          boxShadow: '0 8px 32px 0 rgba(34,197,94,0.12), 0 1.5px 6px 0 rgba(30,64,175,0.10)',
+        }}
+      >
+        <Spin spinning={modalLoading}>
+          <div style={{ marginBottom: 20 }}>
+            <b style={{ color: '#22C55E', fontSize: 15 }}>Current Subjects:</b>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 10, minHeight: 32 }}>
+              {comboSubjects.length === 0 ? (
+                <span style={{ color: '#aaa', fontStyle: 'italic' }}>No subjects in this combo.</span>
+              ) : (
+                comboSubjects.map(subject => (
+                  <Tag
+                    key={subject.subjectId}
+                    color="blue"
+                    closable
+                    onClose={() => handleRemoveSubject(subject.subjectId)}
+                    style={{
+                      fontSize: 15,
+                      padding: '6px 18px',
+                      borderRadius: 999,
+                      marginBottom: 6,
+                      background: '#f0fdf4',
+                      color: '#166534',
+                      border: '1px solid #bbf7d0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      minWidth: 0,
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                      <span style={{ fontWeight: 600, color: '#166534', maxWidth: 120, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'inline-block' }}>{subject.subjectName}</span>
+                      <span style={{ color: '#0ea5e9', fontWeight: 500, fontSize: 14 }}>{subject.subjectCode}</span>
+                    </span>
+                  </Tag>
+                ))
+              )}
+            </div>
+          </div>
+          <Space>
+            <Select
+              showSearch
+              placeholder="Add subject to combo"
+              value={addSubjectId}
+              onChange={setAddSubjectId}
+              style={{ width: 260 }}
+              optionFilterProp="children"
+            >
+              {subjectList
+                .filter(s => !comboSubjects.some(cs => cs.subjectId === s.id))
+                .map(subject => (
+                  <Select.Option key={subject.id} value={subject.id}>
+                    {subject.subjectName} ({subject.subjectCode})
+                  </Select.Option>
+                ))}
+            </Select>
+            <Button
+              type="primary"
+              icon={<PlusOutlined style={{ fontSize: 18, marginRight: 4 }} />}
+              onClick={handleAddSubject}
+              disabled={!addSubjectId}
+              style={{
+                background: 'linear-gradient(90deg, #ea580c 0%, #fbbf24 100%)',
+                border: 'none',
+                fontWeight: 700,
+                borderRadius: 999,
+                boxShadow: '0 2px 12px #fdba7455',
+                padding: '0 28px',
+                fontSize: 17,
+                color: '#fff',
+                letterSpacing: 0.5,
+                height: 44,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                transition: 'background 0.2s, box-shadow 0.2s',
+                outline: 'none',
+              }}
+              onMouseOver={e => e.currentTarget.style.background = 'linear-gradient(90deg, #fbbf24 0%, #ea580c 100%)'}
+              onMouseOut={e => e.currentTarget.style.background = 'linear-gradient(90deg, #ea580c 0%, #fbbf24 100%)'}
+            >
+              Add Subject
+            </Button>
+          </Space>
+        </Spin>
+      </Modal>
     </div>
   );
 };

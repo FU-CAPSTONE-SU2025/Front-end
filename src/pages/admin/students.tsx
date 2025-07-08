@@ -11,6 +11,7 @@ import { AccountProps } from '../../interfaces/IAccount';
 import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDStudent from '../../hooks/useCRUDStudent';
 import { StudentBase } from '../../interfaces/IStudent';
+import ExcelImportButton from '../../components/common/ExcelImportButton';
 
 const { Option } = Select;
 
@@ -277,9 +278,15 @@ const StudentList: React.FC = () => {
                         : undefined
                     }
                   >
-                    <div className={`${styles.buttonContent} ${isDeleteMode ? styles.disabledButton : ''}`}>
-                      {action}
-                    </div>
+                    {action === 'Import Data From xlsx' || action === 'Bulk Import' ? (
+                      <ExcelImportButton style={{ width: '100%' }}>
+                        {action}
+                      </ExcelImportButton>
+                    ) : (
+                      <div className={`${styles.buttonContent} ${isDeleteMode ? styles.disabledButton : ''}`}>
+                        {action}
+                      </div>
+                    )}
                   </motion.div>
                 ))}
               </div>
@@ -325,15 +332,10 @@ const StudentList: React.FC = () => {
           </div>
         </motion.div>
         {isImportOpen && (
-          <div className={styles.modalOverlay}>
-            <DataImport 
-              onClose={() => setIsImportOpen(false)} 
-              onDataImported={handleDataImported}
-              headerConfig="STUDENT"
-              allowMultipleRows={true}
-              dataType="student"
-            />
-          </div>
+          <BulkDataImport 
+            onClose={() => setIsImportOpen(false)} 
+            onDataImported={handleDataImported}
+          />
         )}
         {isBulkImportOpen && (
           <BulkDataImport 

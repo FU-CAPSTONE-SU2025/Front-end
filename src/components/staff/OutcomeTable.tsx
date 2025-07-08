@@ -15,7 +15,7 @@ import {
   FileExcelOutlined
 } from '@ant-design/icons';
 import { SyllabusOutcome, CreateSyllabusOutcome } from '../../interfaces/ISchoolProgram';
-import DataImport from '../common/dataImport';
+import BulkDataImport from '../common/bulkDataImport';
 import { getHeaderConfig } from '../../data/importConfigurations';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 
@@ -254,12 +254,9 @@ const OutcomeTable: React.FC<OutcomeTableProps> = ({
         footer={null}
         width={700}
       >
-        <DataImport
+        <BulkDataImport
           onClose={() => setOutcomeImportVisible(false)}
           onDataImported={handleOutcomeDataImported}
-          headerConfig={{...getHeaderConfig('OUTCOME'), headers: [...getHeaderConfig('OUTCOME').headers] }}
-          allowMultipleRows={true}
-          dataType="outcome"
         />
       </Modal>
     </>

@@ -5,7 +5,8 @@ import styles from '../../css/staff/staffTranscript.module.css';
 import { curriculums, combos } from '../../data/schoolData';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
-import DataImport from '../../components/common/dataImport';
+import BulkDataImport from '../../components/common/bulkDataImport';
+import ExcelImportButton from '../../components/common/ExcelImportButton';
 
 const { Option } = Select;
 
@@ -182,24 +183,13 @@ const SubjectManagerPage: React.FC = () => {
             >
               Add Subject
             </Button>
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />} 
-              size="large" 
-              style={{borderRadius: 999, background: '#1E40AF', borderColor: '#1E40AF'}} 
-              onClick={handleAddCombo}
-            >
-              Add Combo
-            </Button>
-            <Button 
-              type="default" 
-              icon={<UploadOutlined />} 
-              size="large" 
-              style={{borderRadius: 999, borderColor: '#10B981', color: '#10B981'}} 
+            <ExcelImportButton
+              size="large"
+              style={{ borderRadius: 999 }}
               onClick={() => setIsImportOpen(true)}
             >
               Import Subjects
-            </Button>
+            </ExcelImportButton>
           </div>
         </Affix>
         {/* Subject Table */}
@@ -232,12 +222,9 @@ const SubjectManagerPage: React.FC = () => {
         
         {/* Data Import Modal */}
         {isImportOpen && (
-          <DataImport 
+          <BulkDataImport 
             onClose={() => setIsImportOpen(false)} 
             onDataImported={handleDataImported}
-            headerConfig="SUBJECT"
-            allowMultipleRows={true}
-            dataType="subject"
           />
         )}
       </div>

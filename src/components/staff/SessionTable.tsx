@@ -17,7 +17,7 @@ import {
   FileExcelOutlined
 } from '@ant-design/icons';
 import { SyllabusSession, CreateSyllabusSession, SyllabusOutcome } from '../../interfaces/ISchoolProgram';
-import DataImport from '../common/dataImport';
+import BulkDataImport from '../common/bulkDataImport';
 import { getHeaderConfig } from '../../data/importConfigurations';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 
@@ -358,12 +358,9 @@ const SessionTable: React.FC<SessionTableProps> = ({
         footer={null}
         width={700}
       >
-        <DataImport
+        <BulkDataImport
           onClose={() => setSessionImportVisible(false)}
           onDataImported={handleSessionDataImported}
-          headerConfig={{...getHeaderConfig('SESSION'), headers: [...getHeaderConfig('SESSION').headers] }}
-          allowMultipleRows={true}
-          dataType="session"
         />
       </Modal>
 

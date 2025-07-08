@@ -4,10 +4,11 @@ import { Input, Button, Collapse, Typography, Affix, Pagination, Spin, Empty, Ta
 import { PlusOutlined, SearchOutlined, EditOutlined, ImportOutlined, BookOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { useSearchParams, useNavigate } from 'react-router';
-import DataImport from '../../components/common/dataImport';
+import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { Curriculum, SubjectWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
 import dayjs from 'dayjs';
+import ExcelImportButton from '../../components/common/ExcelImportButton';
 
 const { Panel } = Collapse;
 const { Title } = Typography;
@@ -154,14 +155,13 @@ const CurriculumPage: React.FC = () => {
           >
             Add Curriculum
           </Button>
-          <Button 
-            icon={<ImportOutlined />} 
-            size="large" 
-            style={{borderRadius: 999}}
+          <ExcelImportButton
+            size="large"
+            style={{ borderRadius: 999 }}
             onClick={handleImportCurriculum}
           >
             Import Curricula
-          </Button>
+          </ExcelImportButton>
         </div>
       </Affix>
       
@@ -321,12 +321,9 @@ const CurriculumPage: React.FC = () => {
       
       {/* Data Import Modal */}
       {isImportOpen && (
-        <DataImport 
+        <BulkDataImport 
           onClose={() => setIsImportOpen(false)} 
           onDataImported={handleDataImported}
-          headerConfig="CURRICULUM"
-          allowMultipleRows={true}
-          dataType="curriculum"
         />
       )}
     </div>

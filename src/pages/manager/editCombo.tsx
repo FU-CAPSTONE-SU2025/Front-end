@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Input, Select, message, Card, Steps, Divider } from 'antd';
+import { Button, Form, Input, Select, message, Card, Steps, Divider, Tag, Spin, Space } from 'antd';
 import { CheckCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router';
@@ -47,7 +47,8 @@ const EditComboPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [subjectIds, setSubjectIds] = useState<number[]>([]);
+  const [comboSubjects, setComboSubjects] = useState<number[]>([]);
+  const [addSubjectId, setAddSubjectId] = useState<number | null>(null);
 
   const {
     getComboById,
@@ -67,6 +68,7 @@ const EditComboPage: React.FC = () => {
               comboName: combo.comboName,
               comboDescription: combo.comboDescription || '',
             });
+            setComboSubjects(combo.subjectIds || []);
             setLoading(false);
           } else {
             message.error('Combo not found!');
@@ -87,13 +89,23 @@ const EditComboPage: React.FC = () => {
     setCurrentStep(1);
   };
 
+  const handleAddSubject = () => {
+    if (!addSubjectId || comboSubjects.includes(addSubjectId)) return;
+    setComboSubjects([...comboSubjects, addSubjectId]);
+    setAddSubjectId(null);
+  };
+
+  const handleRemoveSubject = (subjectId: number) => {
+    setComboSubjects(comboSubjects.filter(id => id !== subjectId));
+  };
+
   const handleConfirm = () => {
     updateComboMutation.mutate({
       id: Number(id),
       data: {
         comboName: form.getFieldValue('comboName'),
         comboDescription: form.getFieldValue('comboDescription'),
-        subjectIds: []
+        subjectIds: comboSubjects
       }
     }, {
       onSuccess: () => {
@@ -152,6 +164,56 @@ const EditComboPage: React.FC = () => {
                 <Button type="primary" htmlType="submit">Preview</Button>
               </Form.Item>
             </Form>
+            {id && (
+              <Card title="Subjects in this Combo" size="small" style={{ marginTop: 32 }}>
+                {comboSubjects.length === 0 ? (
+                  <div>No subjects in this combo.</div>
+                ) : (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {comboSubjects.map(subjectId => {
+                      const subject = subjectList.find(s => s.id === subjectId);
+                      if (!subject) return null;
+                      return (
+                        <Tag
+                          key={subject.id}
+                          color="blue"
+                          closable
+                          onClose={() => handleRemoveSubject(subject.id)}
+                        >
+                          {subject.subjectName} ({subject.subjectCode})
+                        </Tag>
+                      );
+                    })}
+                  </div>
+                )}
+                <div style={{ marginTop: 16 }}>
+                  <Select
+                    showSearch
+                    placeholder="Add subject to combo"
+                    value={addSubjectId}
+                    onChange={setAddSubjectId}
+                    style={{ width: 240, marginRight: 8 }}
+                    optionFilterProp="children"
+                  >
+                    {subjectList
+                      .filter(s => !comboSubjects.includes(s.id))
+                      .map(subject => (
+                        <Option key={subject.id} value={subject.id}>
+                          {subject.subjectName} ({subject.subjectCode})
+                        </Option>
+                      ))}
+                  </Select>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={handleAddSubject}
+                    disabled={!addSubjectId}
+                  >
+                    Add Subject
+                  </Button>
+                </div>
+              </Card>
+            )}
           </Card>
         )}
 

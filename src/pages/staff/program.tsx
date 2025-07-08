@@ -4,7 +4,7 @@ import { PlusOutlined, SearchOutlined, EditOutlined, UploadOutlined } from '@ant
 import styles from '../../css/staff/staffTranscript.module.css';
 import { programs, curriculums } from '../../data/schoolData';
 import { useNavigate } from 'react-router';
-import DataImport from '../../components/common/dataImport';
+import BulkDataImport from '../../components/common/bulkDataImport';
 
 const { Panel } = Collapse;
 
@@ -123,12 +123,9 @@ const ProgramPage: React.FC = () => {
       
       {/* Data Import Modal */}
       {isImportOpen && (
-        <DataImport 
+        <BulkDataImport 
           onClose={() => setIsImportOpen(false)} 
           onDataImported={handleDataImported}
-          headerConfig="PROGRAM"
-          allowMultipleRows={true}
-          dataType="program"
         />
       )}
     </div>

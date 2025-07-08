@@ -36,6 +36,7 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
   const [editingData, setEditingData] = useState<{ [type: string]: { [key: string]: string }[] }>({});
   const [selectedRows, setSelectedRows] = useState<{ [type: string]: number[] }>({});
   const [showPreview, setShowPreview] = useState(false);
+  const [importing, setImporting] = useState(false); // Add loading state for Import button
 
   const handleFileUpload = (file: File) => {
     setIsProcessing(true);
@@ -193,9 +194,13 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
   };
 
   const handleImportAll = () => {
-    setProcessedData(editingData);
-    onDataImported(editingData);
-    setCurrentStep(2);
+    setImporting(true);
+    setTimeout(() => { // Simulate loading for effect
+      setProcessedData(editingData);
+      onDataImported(editingData);
+      setCurrentStep(2);
+      setImporting(false);
+    }, 1200);
   };
 
   const getTypeDisplayName = (type: HeaderConfiguration): string => {
@@ -337,8 +342,43 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
     }
   ];
 
+  // Helper to get required headers for each supported type
+  const getRequiredHeadersList = () => {
+    return supportedTypes.map((type) => {
+      const config = getHeaderConfig(type);
+      return {
+        type: typeof type === 'string' ? type : 'Custom',
+        headers: config.headers,
+      };
+    });
+  };
+
+  // Helper to get the current type for header display
+  const getCurrentHeaderType = () => {
+    if (uploadedFiles.length > 0) {
+      const file = uploadedFiles[0];
+      return typeof file.type === 'string' ? file.type : 'Custom';
+    }
+    return typeof supportedTypes[0] === 'string' ? supportedTypes[0] : 'Custom';
+  };
+  const getCurrentHeaders = () => {
+    if (uploadedFiles.length > 0) {
+      const file = uploadedFiles[0];
+      return getHeaderConfig(file.type).headers;
+    }
+    return getHeaderConfig(supportedTypes[0]).headers;
+  };
+
+  // Click-outside-to-close handler
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    // Only close if the user clicked directly on the overlay, not inside the modal
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className={styles.bulkImportContainer}>
+    <div className={styles.bulkImportContainer} onClick={handleOverlayClick}>
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -346,16 +386,14 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
         className={styles.bulkImportModal}
       >
         <div className={styles.header}>
-          <h2 className={styles.headerTitle}>
-            Bulk Data Import
-          </h2>
+          <h2 className={styles.headerTitle}>Bulk Data Import</h2>
           <p className={styles.headerSubtitle}>
             Upload multiple Excel files to import different data types at once
           </p>
         </div>
 
         <div className={styles.stepsContainer}>
-          <Steps current={currentStep}>
+          <Steps current={currentStep} responsive={false}>
             {steps.map((step, index) => (
               <Step key={index} title={step.title} description={step.description} icon={step.icon} />
             ))}
@@ -377,54 +415,58 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className={styles.uploadZone}
+                  tabIndex={0}
                 >
                   <FileExcelOutlined className={styles.uploadIcon} />
                   <p className={styles.uploadTitle}>
-                    {isProcessing ? 'Processing...' : 'Click or drag Excel files here'}
+                    {isProcessing ? <LoadingOutlined spin /> : 'Click or drag Excel files here'}
                   </p>
                   <p className={styles.uploadSubtitle}>
-                    Support for .xlsx and .xls files. Multiple files can be uploaded.
+                    You can select or drag multiple Excel files at once. Each file will be processed and added to the import list individually.<br />
+                    <span style={{ color: '#ea580c', fontWeight: 500 }}>
+                      Note: Importing multiple types from a single file with multiple sheets is not supported.
+                    </span>
                   </p>
                 </motion.div>
               </Dragger>
 
-              <div className={styles.supportedTypesContainer}>
-                <h4 className={styles.supportedTypesTitle}>Supported Data Types:</h4>
-                <Space wrap>
-                  {supportedTypes.map((type, index) => (
-                    <Tag key={index} color="blue" style={{ padding: '4px 8px' }}>
-                      {getTypeDisplayName(type)}
-                    </Tag>
-                  ))}
-                </Space>
+              {/* Conditionally show only the relevant headers */}
+              <div style={{ marginTop: 24 }}>
+                <h4 style={{ color: '#22C55E', fontWeight: 600, marginBottom: 8 }}>Required Headers for Import:</h4>
+                <ul style={{ paddingLeft: 20, margin: 0 }}>
+                  <li style={{ marginBottom: 6 }}>
+                    <span style={{ color: '#ea580c', fontWeight: 500 }}>{getCurrentHeaderType()}:</span>
+                    <span style={{ color: '#16a34a', marginLeft: 6 }}>{getCurrentHeaders().join(', ')}</span>
+                  </li>
+                </ul>
               </div>
-            </Card>
 
-            {uploadedFiles.length > 0 && (
-              <div className={styles.fileListContainer}>
-                <h4 className={styles.fileListTitle}>Uploaded Files:</h4>
-                <Table
-                  columns={columns}
-                  dataSource={uploadedFiles}
-                  rowKey={(record, index) => index?.toString() || '0'}
-                  pagination={false}
-                  size="small"
-                />
-                <div className={styles.fileListActions}>
-                  <Button onClick={() => setUploadedFiles([])}>
-                    Clear All
-                  </Button>
-                  <Button 
-                    type="primary" 
-                    icon={<EyeOutlined />}
-                    onClick={handlePreviewData}
-                    disabled={uploadedFiles.length === 0}
-                  >
-                    Preview & Edit Data
-                  </Button>
+              {uploadedFiles.length > 0 && (
+                <div className={styles.fileListContainer}>
+                  <h4 className={styles.fileListTitle}>Uploaded Files:</h4>
+                  <Table
+                    columns={columns}
+                    dataSource={uploadedFiles}
+                    rowKey={(record, index) => index?.toString() || '0'}
+                    pagination={false}
+                    size="small"
+                  />
+                  <div className={styles.fileListActions}>
+                    <Button onClick={() => setUploadedFiles([])}>
+                      Clear All
+                    </Button>
+                    <Button 
+                      type="primary" 
+                      icon={<EyeOutlined />}
+                      onClick={handlePreviewData}
+                      disabled={uploadedFiles.length === 0}
+                    >
+                      Preview & Edit Data
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </Card>
           </div>
         )}
 
@@ -529,9 +571,9 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
                 <Button 
                   type="primary" 
                   onClick={handleImportAll}
-                  disabled={Object.values(editingData).every(data => data.length === 0)}
+                  disabled={Object.values(editingData).every(data => data.length === 0) || importing}
                 >
-                  Import All Data
+                  {importing ? <><LoadingOutlined spin /> Importing...</> : 'Import All Data'}
                 </Button>
               </div>
             </Card>

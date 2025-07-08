@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
-import DataImport from '../../components/common/dataImport';
+import BulkDataImport from '../../components/common/bulkDataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
 import useActiveUserData from '../../hooks/useActiveUserData';
@@ -283,15 +283,10 @@ const AdvisorList: React.FC = () => {
           </div>
         </motion.div>
         {isImportOpen && (
-          <div className={styles.modalOverlay}>
-            <DataImport 
-              onClose={() => setIsImportOpen(false)} 
-              onDataImported={handleDataImported}
-              headerConfig="ADVISOR"
-              allowMultipleRows={true}
-              dataType="advisor"
-            />
-          </div>
+          <BulkDataImport 
+            onClose={() => setIsImportOpen(false)} 
+            onDataImported={handleDataImported}
+          />
         )}
       </div>
     </ConfigProvider>

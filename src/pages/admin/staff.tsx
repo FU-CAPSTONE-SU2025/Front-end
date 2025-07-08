@@ -3,12 +3,13 @@ import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
-import DataImport from '../../components/common/dataImport';
+import BulkDataImport from '../../components/common/bulkDataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
 import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDStaff from '../../hooks/useCRUDStaff';
 import { StaffProfileData } from '../../interfaces/IStaff';
+import ExcelImportButton from '../../components/common/ExcelImportButton';
 
 const { Option } = Select;
 
@@ -250,9 +251,15 @@ const StaffList: React.FC = () => {
                         : undefined
                     }
                   >
-                    <div className={`${styles.buttonContent} ${isDeleteMode ? styles.disabledButton : ''}`}>
-                      {action}
-                    </div>
+                    {action === 'Import Data From xlsx' ? (
+                      <ExcelImportButton style={{ width: '100%' }}>
+                        {action}
+                      </ExcelImportButton>
+                    ) : (
+                      <div className={`${styles.buttonContent} ${isDeleteMode ? styles.disabledButton : ''}`}>
+                        {action}
+                      </div>
+                    )}
                   </motion.div>
                 ))}
               </div>
@@ -298,15 +305,10 @@ const StaffList: React.FC = () => {
           </div>
         </motion.div>
         {isImportOpen && (
-          <div className={styles.modalOverlay}>
-            <DataImport 
-              onClose={() => setIsImportOpen(false)} 
-              onDataImported={handleDataImported}
-              headerConfig="STAFF"
-              allowMultipleRows={true}
-              dataType="staff"
-            />
-          </div>
+          <BulkDataImport 
+            onClose={() => setIsImportOpen(false)} 
+            onDataImported={handleDataImported}
+          />
         )}
       </div>
     </ConfigProvider>

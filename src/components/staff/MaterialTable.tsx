@@ -16,7 +16,7 @@ import {
   FileExcelOutlined
 } from '@ant-design/icons';
 import { SyllabusMaterial, CreateSyllabusMaterial } from '../../interfaces/ISchoolProgram';
-import DataImport from '../common/dataImport';
+import BulkDataImport from '../common/bulkDataImport';
 import { getHeaderConfig } from '../../data/importConfigurations';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 import dayjs from 'dayjs';
@@ -405,12 +405,9 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
         footer={null}
         width={700}
       >
-        <DataImport
+        <BulkDataImport
           onClose={() => setMaterialImportVisible(false)}
           onDataImported={handleMaterialDataImported}
-          headerConfig={{...getHeaderConfig('MATERIAL'), headers: [...getHeaderConfig('MATERIAL').headers] }}
-          allowMultipleRows={true}
-          dataType="material"
         />
       </Modal>
     </>

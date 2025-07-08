@@ -3,7 +3,7 @@ import { Input, Button, Collapse, Typography, Affix, Progress, message, Select, 
 import { PlusOutlined, SearchOutlined, EditOutlined, ImportOutlined, CheckOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { useNavigate } from 'react-router';
-import DataImport from '../../components/common/dataImport';
+import BulkDataImport from '../../components/common/bulkDataImport';
 // Mock unified API/data (replace with real API later)
 import { curriculums, subjects, combos, curriculumSubjects, comboSubjects } from '../../data/schoolData';
 import { AddSubjectToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
@@ -221,12 +221,9 @@ const CurriculumManagerPage: React.FC = () => {
         </Collapse>
         {/* Data Import Modal */}
         {isImportOpen && (
-          <DataImport 
+          <BulkDataImport 
             onClose={() => setIsImportOpen(false)} 
             onDataImported={handleDataImported}
-            headerConfig="CURRICULUM"
-            allowMultipleRows={true}
-            dataType="curriculum"
           />
         )}
         {/* Add Subject Modal */}

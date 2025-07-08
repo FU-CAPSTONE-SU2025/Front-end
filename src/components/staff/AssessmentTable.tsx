@@ -17,7 +17,7 @@ import {
   FileExcelOutlined
 } from '@ant-design/icons';
 import { SyllabusAssessment, CreateSyllabusAssessment } from '../../interfaces/ISchoolProgram';
-import DataImport from '../common/dataImport';
+import BulkDataImport from '../common/bulkDataImport';
 import { getHeaderConfig } from '../../data/importConfigurations';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 
@@ -326,12 +326,9 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
         footer={null}
         width={700}
       >
-        <DataImport
+        <BulkDataImport
           onClose={() => setAssessmentImportVisible(false)}
           onDataImported={handleAssessmentDataImported}
-          headerConfig={{...getHeaderConfig('ASSESSMENT'), headers: [...getHeaderConfig('ASSESSMENT').headers] }}
-          allowMultipleRows={true}
-          dataType="assessment"
         />
       </Modal>
     </>
