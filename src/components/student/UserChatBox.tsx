@@ -173,7 +173,7 @@ const UserChatBox: React.FC<UserChatBoxProps> = ({ onClose, selectedUser }) => {
         destroyOnClose
         width="90vw"
         style={{ top: 20, maxWidth: '1200px', height: '90vh' }}
-        bodyStyle={{ padding: 0, height: '100%', overflow: 'hidden' }}
+        styles={{ body: { padding: 0, height: '100%', overflow: 'hidden' } }}
       >
         <div className="flex h-full">
           {/* Main Chat Area */}

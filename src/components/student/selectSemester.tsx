@@ -37,10 +37,10 @@ const SemesterSelect: React.FC<SemesterSelectProps> = ({ value, options, onChang
         options={options as SelectProps['options']}
         onChange={onChange}
         size="large"
-        dropdownStyle={{ zIndex: 2000, background: '#fff', borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
-        popupClassName="rounded-2xl custom-semester-dropdown"
+        styles={{ popup: { root: { zIndex: 2000, background: '#fff', borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.12)' } } }}
+        classNames={{ popup: { root: 'rounded-2xl custom-semester-dropdown' } }}
         style={customSelectStyle}
-        bordered={false}
+        variant="borderless"
         placeholder="Select semester"
         suffixIcon={<span style={{ color: '#fff' }}>▼</span>}
         optionLabelProp="label"
