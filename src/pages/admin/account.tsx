@@ -97,10 +97,10 @@ const Profile: React.FC = () => {
   };
 
   const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    // Extract account data from the imported data
-    const accountData = importedData['ACCOUNT'] || [];
-    message.success(`Successfully imported ${accountData.length} accounts`);
-    // TODO: Implement actual account import logic
+    // Extract admin profile data from the imported data
+    const adminProfileData = importedData['ADMIN_PROFILE'] || [];
+    message.success(`Successfully imported ${adminProfileData.length} admin profiles`);
+    // TODO: Implement actual admin profile import logic
     setIsImportOpen(false);
     // Refresh the account list
     refetch();
@@ -240,7 +240,7 @@ const Profile: React.FC = () => {
             <BulkDataImport 
               onClose={() => setIsImportOpen(false)} 
               onDataImported={handleDataImported}
-              supportedTypes={['ACCOUNT']}
+              supportedTypes={['ADMIN_PROFILE']}
             />
           )}
       </div>
