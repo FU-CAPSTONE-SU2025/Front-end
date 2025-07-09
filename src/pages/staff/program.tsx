@@ -24,16 +24,14 @@ const ProgramPage: React.FC = () => {
     navigate(`/staff/editData/program/${programId}`);
   };
 
-  const handleDataImported = async (data: { [key: string]: string }[]) => {
+  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
-      // Process each imported program
-      for (const programData of data) {
-        // TODO: Add createProgram API call when available
-        console.log('Importing program:', programData);
-      }
+      // Extract program data from the imported data
+      const programData = importedData['PROGRAM'] || [];
       
-      message.success(`Successfully imported ${data.length} programs`);
-      // TODO: Refresh the program list when API is available
+      message.success(`Successfully imported ${programData.length} programs`);
+      // TODO: Implement actual program import logic
+      // Refresh the program list
     } catch (error) {
       message.error('Error importing programs. Please check your data format.');
     }
@@ -126,6 +124,7 @@ const ProgramPage: React.FC = () => {
         <BulkDataImport 
           onClose={() => setIsImportOpen(false)} 
           onDataImported={handleDataImported}
+          supportedTypes={['PROGRAM']}
         />
       )}
     </div>

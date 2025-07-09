@@ -22,7 +22,6 @@ const mockManager: ManagerBase = {
   id: 1,
   roleId: 4,
   phone: '+1-555-0123',
-  campus: 'Main Campus',
   startWorkAt: new Date('2020-01-15'),
   endWorkAt: undefined
 };
@@ -132,7 +131,6 @@ const ManagerProfile: React.FC = () => {
               <Descriptions column={1} bordered className={styles.description}>
                 <Descriptions.Item label="Department">{mockManager.department}</Descriptions.Item>
                 <Descriptions.Item label="Position">{mockManager.position}</Descriptions.Item>
-                <Descriptions.Item label="Campus">{mockManager.campus}</Descriptions.Item>
                 <Descriptions.Item label="Start Work Date">
                   {mockManager.startWorkAt.toLocaleDateString('en-GB')}
                 </Descriptions.Item>

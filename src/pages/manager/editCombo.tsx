@@ -68,7 +68,8 @@ const EditComboPage: React.FC = () => {
               comboName: combo.comboName,
               comboDescription: combo.comboDescription || '',
             });
-            setComboSubjects(combo.subjectIds || []);
+            // Initialize subjects as empty array since they're managed separately
+            setComboSubjects([]);
             setLoading(false);
           } else {
             message.error('Combo not found!');

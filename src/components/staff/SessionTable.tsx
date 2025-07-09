@@ -108,18 +108,21 @@ const SessionTable: React.FC<SessionTableProps> = ({
     }
   };
 
-  const handleSessionDataImported = async (data: { [key: string]: string }[]) => {
+  const handleSessionDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
-      for (const row of data) {
-        const sessionData: Partial<CreateSyllabusSession> = {
+      // Extract session data from the imported data
+      const sessionData = importedData['SESSION'] || [];
+      
+      for (const row of sessionData) {
+        const session: CreateSyllabusSession = {
           syllabusId: parseInt(row.syllabusId),
           sessionNumber: parseInt(row.sessionNumber) || 1,
           topic: row.topic || '',
           mission: row.mission || ''
         };
-        await onAddSession(sessionData as CreateSyllabusSession);
+        await onAddSession(session);
       }
-      message.success(`Successfully imported ${data.length} session(s)`);
+      message.success(`Successfully imported ${sessionData.length} session(s)`);
       setSessionImportVisible(false);
     } catch (error) {
       message.error('Failed to import session data');
@@ -361,6 +364,7 @@ const SessionTable: React.FC<SessionTableProps> = ({
         <BulkDataImport
           onClose={() => setSessionImportVisible(false)}
           onDataImported={handleSessionDataImported}
+          supportedTypes={['SESSION']}
         />
       </Modal>
 

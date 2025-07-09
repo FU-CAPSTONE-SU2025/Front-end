@@ -77,20 +77,23 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
     setMaterialEdit({});
   };
 
-  const handleMaterialDataImported = async (data: { [key: string]: string }[]) => {
+  const handleMaterialDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
-      for (const row of data) {
-        const materialData: CreateSyllabusMaterial = {
+      // Extract material data from the imported data
+      const materialData = importedData['MATERIAL'] || [];
+      
+      for (const row of materialData) {
+        const material: CreateSyllabusMaterial = {
           syllabusId: parseInt(row.syllabusId),
-          materialName: row.materialName || '',
-          authorName: row.authorName || '',
-          publishedDate: row.publishedDate ? new Date(row.publishedDate) : new Date(),
+          materialName: row.materialName || 'Untitled',
+          authorName: row.authorName || 'Unknown',
+          publishedDate: new Date(row.publishedDate || Date.now()),
           description: row.description || '',
           filepathOrUrl: row.filepathOrUrl || ''
         };
-        await onAddMaterial(materialData);
+        await onAddMaterial(material);
       }
-      message.success(`Successfully imported ${data.length} material(s)`);
+      message.success(`Successfully imported ${materialData.length} material(s)`);
       setMaterialImportVisible(false);
     } catch (error) {
       message.error('Failed to import material data');
@@ -408,6 +411,7 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
         <BulkDataImport
           onClose={() => setMaterialImportVisible(false)}
           onDataImported={handleMaterialDataImported}
+          supportedTypes={['MATERIAL']}
         />
       </Modal>
     </>

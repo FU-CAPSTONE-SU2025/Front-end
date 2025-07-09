@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Input, Button, Collapse, Typography, Affix, Pagination, Spin, Empty, Table, Tag } from 'antd';
+import { Input, Button, Collapse, Typography, Affix, Pagination, Spin, Empty, Table, Tag, message } from 'antd';
 import { PlusOutlined, SearchOutlined, EditOutlined, ImportOutlined, BookOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { useSearchParams, useNavigate } from 'react-router';
@@ -31,6 +31,7 @@ const CurriculumPage: React.FC = () => {
     paginationCurriculum,
     isLoading,
     fetchCurriculumSubjectsMutation,
+    getCurriculums,
   } = useCRUDCurriculum();
 
   // State to store subjects for each curriculum
@@ -83,9 +84,12 @@ const CurriculumPage: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleDataImported = (data: { [key: string]: string }[]) => {
-    console.log('Imported curriculum data:', data);
-    setIsImportOpen(false);
+  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    // Extract curriculum data from the imported data
+    const curriculumData = importedData['CURRICULUM'] || [];
+    message.success(`Successfully imported ${curriculumData.length} curricula`);
+    // TODO: Implement actual curriculum import logic
+    getCurriculums({ pageNumber: page, pageSize });
   };
 
   // Table columns for subjects
@@ -156,11 +160,10 @@ const CurriculumPage: React.FC = () => {
             Add Curriculum
           </Button>
           <ExcelImportButton
-            size="large"
             style={{ borderRadius: 999 }}
-            onClick={handleImportCurriculum}
+            onClick={() => setIsImportOpen(true)}
           >
-            Import Curricula
+            Import Curriculum
           </ExcelImportButton>
         </div>
       </Affix>
@@ -324,6 +327,7 @@ const CurriculumPage: React.FC = () => {
         <BulkDataImport 
           onClose={() => setIsImportOpen(false)} 
           onDataImported={handleDataImported}
+          supportedTypes={['CURRICULUM']}
         />
       )}
     </div>

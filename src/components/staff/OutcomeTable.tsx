@@ -75,17 +75,20 @@ const OutcomeTable: React.FC<OutcomeTableProps> = ({
     setOutcomeEdit({});
   };
 
-  const handleOutcomeDataImported = async (data: { [key: string]: string }[]) => {
+  const handleOutcomeDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
-      for (const row of data) {
-        const outcomeData: CreateSyllabusOutcome = {
+      // Extract outcome data from the imported data
+      const outcomeData = importedData['OUTCOME'] || [];
+      
+      for (const row of outcomeData) {
+        const outcome: CreateSyllabusOutcome = {
           syllabusId: parseInt(row.syllabusId),
           outcomeCode: row.outcomeCode || '',
           description: row.description || ''
         };
-        await onAddOutcome(outcomeData);
+        await onAddOutcome(outcome);
       }
-      message.success(`Successfully imported ${data.length} outcome(s)`);
+      message.success(`Successfully imported ${outcomeData.length} outcome(s)`);
       setOutcomeImportVisible(false);
     } catch (error) {
       message.error('Failed to import outcome data');
@@ -257,6 +260,7 @@ const OutcomeTable: React.FC<OutcomeTableProps> = ({
         <BulkDataImport
           onClose={() => setOutcomeImportVisible(false)}
           onDataImported={handleOutcomeDataImported}
+          supportedTypes={['OUTCOME']}
         />
       </Modal>
     </>

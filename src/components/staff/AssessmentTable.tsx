@@ -78,10 +78,13 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
     setAssessmentEdit({});
   };
 
-  const handleAssessmentDataImported = async (data: { [key: string]: string }[]) => {
+  const handleAssessmentDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
-      for (const row of data) {
-        const assessmentData: CreateSyllabusAssessment = {
+      // Extract assessment data from the imported data
+      const assessmentData = importedData['ASSESSMENT'] || [];
+      
+      for (const row of assessmentData) {
+        const assessment: CreateSyllabusAssessment = {
           syllabusId: parseInt(row.syllabusId),
           category: row.category || 'Assignment',
           quantity: parseInt(row.quantity) || 1,
@@ -90,9 +93,9 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
           questionType: row.questionType || 'essay',
           completionCriteria: row.completionCriteria || ''
         };
-        await onAddAssessment(assessmentData);
+        await onAddAssessment(assessment);
       }
-      message.success(`Successfully imported ${data.length} assessment(s)`);
+      message.success(`Successfully imported ${assessmentData.length} assessment(s)`);
       setAssessmentImportVisible(false);
     } catch (error) {
       message.error('Failed to import assessment data');
@@ -329,6 +332,7 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
         <BulkDataImport
           onClose={() => setAssessmentImportVisible(false)}
           onDataImported={handleAssessmentDataImported}
+          supportedTypes={['ASSESSMENT']}
         />
       </Modal>
     </>

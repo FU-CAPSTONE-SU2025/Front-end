@@ -60,19 +60,22 @@ const SubjectManagerPage: React.FC = () => {
     message.success('Subject approved!');
   };
 
-  const handleDataImported = async (data: { [key: string]: string }[]) => {
+  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
+      // Extract subject data from the imported data
+      const subjectData = importedData['SUBJECT'] || [];
+      
       // Process each imported subject
-      for (const subjectData of data) {
+      for (const subject of subjectData) {
         await addSubjectMutation.mutateAsync({
-          subjectCode: subjectData.subjectCode,
-          subjectName: subjectData.subjectName,
-          credits: parseInt(subjectData.credits),
-          description: subjectData.description || ''
+          subjectCode: subject.subjectCode,
+          subjectName: subject.subjectName,
+          credits: parseInt(subject.credits),
+          description: subject.description || ''
         });
       }
       
-      message.success(`Successfully imported ${data.length} subjects`);
+      message.success(`Successfully imported ${subjectData.length} subjects`);
       // Refresh the subject list
       getAllSubjects({ pageNumber: page, pageSize, filterValue: search });
     } catch (error) {
@@ -184,7 +187,6 @@ const SubjectManagerPage: React.FC = () => {
               Add Subject
             </Button>
             <ExcelImportButton
-              size="large"
               style={{ borderRadius: 999 }}
               onClick={() => setIsImportOpen(true)}
             >
@@ -225,6 +227,7 @@ const SubjectManagerPage: React.FC = () => {
           <BulkDataImport 
             onClose={() => setIsImportOpen(false)} 
             onDataImported={handleDataImported}
+            supportedTypes={['SUBJECT']}
           />
         )}
       </div>

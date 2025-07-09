@@ -74,19 +74,22 @@ const SubjectPage: React.FC = () => {
     navigate(`/staff/subject/${subjectId}/syllabus`);
   };
 
-  const handleDataImported = async (data: { [key: string]: string }[]) => {
+  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
+      // Extract subject data from the imported data
+      const subjectData = importedData['SUBJECT'] || [];
+      
       // Process each imported subject
-      for (const subjectData of data) {
+      for (const subject of subjectData) {
         await addSubjectMutation.mutateAsync({
-          subjectCode: subjectData.subjectCode,
-          subjectName: subjectData.subjectName,
-          credits: parseInt(subjectData.credits) || 0,
-          description: subjectData.description || ''
+          subjectCode: subject.subjectCode,
+          subjectName: subject.subjectName,
+          credits: parseInt(subject.credits),
+          description: subject.description || ''
         });
       }
       
-      message.success(`Successfully imported ${data.length} subjects`);
+      message.success(`Successfully imported ${subjectData.length} subjects`);
       // Refresh the subject list
       getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
     } catch (error) {
@@ -211,7 +214,6 @@ const SubjectPage: React.FC = () => {
             Add Combo
           </Button>
           <ExcelImportButton
-            size="large"
             style={{ borderRadius: 999 }}
             onClick={() => setIsImportOpen(true)}
           >
@@ -275,6 +277,7 @@ const SubjectPage: React.FC = () => {
         <BulkDataImport 
           onClose={() => setIsImportOpen(false)} 
           onDataImported={handleDataImported}
+          supportedTypes={['SUBJECT']}
         />
       )}
    
