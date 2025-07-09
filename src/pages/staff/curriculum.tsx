@@ -26,12 +26,11 @@ const CurriculumPage: React.FC = () => {
 
   // CRUD hooks
   const {
-    getAllStaff,
+    getAllCurriculums,
     curriculumList,
     paginationCurriculum,
     isLoading,
     fetchCurriculumSubjectsMutation,
-    getCurriculums,
   } = useCRUDCurriculum();
 
   // State to store subjects for each curriculum
@@ -39,7 +38,7 @@ const CurriculumPage: React.FC = () => {
 
   // Fetch data on mount, page, pageSize, or search change
   useEffect(() => {
-    getAllStaff({ pageNumber: page, pageSize, filterType: 'search', filterValue: search });
+    getAllCurriculums({ pageNumber: page, pageSize, filterType: 'search', filterValue: search });
   }, [page, pageSize, search]);
 
   useEffect(() => {
@@ -89,7 +88,7 @@ const CurriculumPage: React.FC = () => {
     const curriculumData = importedData['CURRICULUM'] || [];
     message.success(`Successfully imported ${curriculumData.length} curricula`);
     // TODO: Implement actual curriculum import logic
-    getAllStaff({ pageNumber: page, pageSize });
+    getAllCurriculums({ pageNumber: page, pageSize });
   };
 
   // Table columns for subjects

@@ -108,7 +108,7 @@ export function useCRUDCurriculum() {
     getCurriculumMutation,
     fetchCurriculumSubjectsMutation,
     fetchSubjectsMutation,
-    getAllStaff: getCurriculumMutation.mutate,
+    getAllCurriculums: getCurriculumMutation.mutate,
     curriculumList,
     paginationCurriculum,
     isLoading: getCurriculumMutation.isPending,
