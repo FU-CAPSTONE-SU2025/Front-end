@@ -1,4 +1,4 @@
-import { axiosCreate, axiosRead, axiosPatch, axiosDelete } from "../AxiosCRUD";
+import { axiosCreate, axiosRead, axiosDelete, axiosUpdate, extractErrorMessage } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import type {
   IChatSessionListResponse,
@@ -25,7 +25,7 @@ export const initChatSession = async (request: IInitChatSessionRequest): Promise
     return result.data as IInitChatSessionResponse;
   } else {
     console.error('Failed to initialize chat session:', result.error);
-    throw new Error(result.error || 'Failed to initialize chat session');
+    throw new Error(extractErrorMessage(result.error) || 'Failed to initialize chat session');
   }
 };
 
@@ -41,7 +41,7 @@ export const sendChatMessage = async (request: ISendChatMessageRequest): Promise
     return result.data as ISendChatMessageResponse;
   } else {
     console.error('Failed to send message to AI:', result.error);
-    throw new Error(result.error || 'Failed to send message to AI');
+    throw new Error(extractErrorMessage(result.error) || 'Failed to send message to AI');
   }
 };
 
@@ -56,7 +56,7 @@ export const getChatSessions = async (): Promise<IChatSessionListResponse> => {
     return result.data as IChatSessionListResponse;
   } else {
     console.error('Failed to fetch chat sessions:', result.error);
-    throw new Error(result.error || 'Failed to fetch chat sessions');
+    throw new Error(extractErrorMessage(result.error) || 'Failed to fetch chat sessions');
   }
 };
 
@@ -71,7 +71,7 @@ export const getChatMessages = async (chatSessionId: number, page: number = 1, p
     return result.data as IChatMessageListResponse;
   } else {
     console.error('Failed to fetch chat messages for session', chatSessionId, ':', result.error);
-    throw new Error(result.error || 'Failed to fetch chat messages');
+    throw new Error(extractErrorMessage(result.error) || 'Failed to fetch chat messages');
   }
 };
 
@@ -92,7 +92,7 @@ export const deleteChatSession = async (chatSessionId: number): Promise<{ succes
       return { success: true, message: 'Chat session deleted successfully' };
     } else {
       console.error(`Failed to delete chat session ${chatSessionId}:`, result.error);
-      throw new Error(result.error || 'Failed to delete chat session');
+      throw new Error(extractErrorMessage(result.error) || 'Failed to delete chat session');
     }
   } catch (error) {
     console.error(`Error deleting chat session ${chatSessionId}:`, error);
@@ -111,12 +111,12 @@ export const renameChatSession = async (chatSessionId: number, title: string): P
     url: `${sessionUrl}/${chatSessionId}`,
     headers: GetHeader(),
   };
-  const result = await axiosPatch(props);
+  const result = await axiosUpdate(props);
   if (result.success) {
     return { success: true };
   } else {
     console.error('Failed to rename chat session', chatSessionId, ':', result.error);
-    throw new Error(result.error || 'Failed to rename chat session');
+    throw new Error(extractErrorMessage(result.error) || 'Failed to rename chat session');
   }
 };
 

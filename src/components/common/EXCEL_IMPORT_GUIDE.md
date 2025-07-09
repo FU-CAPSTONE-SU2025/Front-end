@@ -1,312 +1,206 @@
-# Excel Data Import Guide
+# Excel Import Guide
 
-## Overview
+This guide explains how to prepare Excel files for bulk import into the system.
 
-The system provides comprehensive Excel data import functionality to quickly add large amounts of data. There are two main import options:
+## 📋 Supported Data Types
 
-1. **Single Type Import** - Import one data type at a time with preview and editing
-2. **Bulk Import** - Import multiple data types from multiple files at once with advanced preview
+The system supports importing the following data types:
+- **STUDENT** - Student accounts and profiles
+- **STAFF** - Staff member accounts and profiles  
+- **ADVISOR** - Academic advisor accounts and profiles
+- **MANAGER** - Manager accounts and profiles
+- **SUBJECT** - Course subjects and curriculum data
+- **PROGRAM** - Academic programs
+- **COMBO** - Subject combinations/packages
+- **CURRICULUM** - Curriculum structures
+- **ASSESSMENT** - Assessment configurations
+- **MATERIAL** - Learning materials and resources
+- **OUTCOME** - Learning outcomes
+- **SESSION** - Class sessions and schedules
 
-## 🆕 New Preview & Edit Features
+## 🔀 Flexible Header System
 
-### **Quality Assurance Preview**
-Both import types now include comprehensive preview functionality:
+Our import system uses **flexible header matching** that automatically recognizes different header formats:
 
-- **📊 Data Preview** - See exactly what data will be imported
-- **✏️ Inline Editing** - Edit individual cells before import
-- **🗑️ Row Management** - Delete individual or multiple rows
-- **✅ Bulk Selection** - Select multiple rows for bulk operations
-- **📋 Import Summary** - Review final data before confirming
+### ✅ Supported Header Variations
 
-### **Preview Workflow**
-1. **Upload File** → Drag & drop Excel file
-2. **Preview Data** → Review and edit imported data
-3. **Confirm Import** → Final confirmation before backend processing
+The system accepts headers in multiple formats for each field:
 
-## Available Import Locations
+#### Examples for "firstName":
+- `firstName` (camelCase)
+- `FirstName` (PascalCase) 
+- `first_name` (snake_case)
+- `first-name` (kebab-case)
+- `first name` (space separated)
+- `First Name` (Title Case)
+- `FIRST NAME` (UPPER CASE)
+- `FIRST_NAME` (UPPER_SNAKE_CASE)
 
-### Admin Pages
-- **Students** (`/admin/students`) - Import student data
-- **Staff** (`/admin/staff`) - Import staff data  
-- **Managers** (`/admin/managers`) - Import manager data
-- **Advisors** (`/admin/advisors`) - Import advisor data
-- **Account** (`/admin/account`) - Import admin profile data
+#### Examples for "dateOfBirth":
+- `dateOfBirth`
+- `DateOfBirth`
+- `date_of_birth`
+- `date-of-birth`
+- `date of birth`
+- `Date Of Birth`
+- `DATE OF BIRTH`
+- `DATE_OF_BIRTH`
 
-### Staff Pages
-- **Subjects** (`/staff/subject`) - Import subject data
-- **Programs** (`/staff/program`) - Import program data
-- **Curriculum** (`/staff/curriculum`) - Import curriculum data
+### 🎯 Header Recognition
 
-### Manager Pages
-- **Subjects** (`/manager/subject`) - Import subject data
-- **Combos** (`/manager/combo`) - Import combo data
+The system automatically:
+1. **Normalizes** your headers by removing spaces, underscores, hyphens
+2. **Converts** to lowercase for comparison
+3. **Matches** against all possible variations
+4. **Identifies** the correct data type based on header patterns
 
-## Data Type Configurations
+## 📊 Required Headers by Data Type
 
-### Student Import
-**Headers Required:**
-- First Name
-- Last Name
-- Email
-- Password
-- Address
-- Phone
-- Date of Birth
-- Student Code
-- Enroll Date
+### STUDENT Import
+**Required Fields:**
+- First Name: `firstName`, `FirstName`, `first_name`, `First Name`, etc.
+- Last Name: `lastName`, `LastName`, `last_name`, `Last Name`, etc.
+- Email: `email`, `Email`, `EMAIL`, etc.
+- Password: `password`, `Password`, `PASSWORD`, etc.
+- Address: `address`, `Address`, `ADDRESS`, etc.
+- Phone: `phone`, `Phone`, `PHONE`, etc.
+- Date of Birth: `dateOfBirth`, `DateOfBirth`, `date_of_birth`, `Date Of Birth`, etc.
+- Student Code: `studentCode`, `StudentCode`, `student_code`, `Student Code`, etc.
+- Enroll Date: `enrollDate`, `EnrollDate`, `enroll_date`, `Enroll Date`, etc.
 
-**Example Excel:**
-| First Name | Last Name | Email | Password | Address | Phone | Date of Birth | Student Code | Enroll Date |
-|------------|-----------|-------|----------|---------|-------|---------------|--------------|-------------|
-| John | Doe | john@example.com | password123 | 123 Main St | 555-0123 | 1990-01-15 | ST001 | 2023-09-01 |
+### STAFF Import
+**Required Fields:**
+- First Name, Last Name, Email, Password, Address, Phone, Date of Birth (same as Student)
+- Campus: `campus`, `Campus`, `CAMPUS`, etc.
+- Department: `department`, `Department`, `DEPARTMENT`, etc.
+- Position: `position`, `Position`, `POSITION`, etc.
+- Start Work Date: `startWorkAt`, `StartWorkAt`, `start_work_at`, `Start Work At`, etc.
 
-### Staff Import
-**Headers Required:**
-- First Name
-- Last Name
-- Email
-- Password
-- Address
-- Phone
-- Date of Birth
-- Campus
-- Department
-- Position
-- Start Work Date
+### PROGRAM Import
+**Required Fields:**
+- Program Code: `programCode`, `ProgramCode`, `program_code`, `Program Code`, etc.
+- Program Name: `programName`, `ProgramName`, `program_name`, `Program Name`, etc.
 
-**Example Excel:**
-| First Name | Last Name | Email | Password | Address | Phone | Date of Birth | Campus | Department | Position | Start Work Date |
-|------------|-----------|-------|----------|---------|-------|---------------|--------|------------|----------|-----------------|
-| Jane | Smith | jane@example.com | password456 | 456 Oak Ave | 555-0456 | 1985-03-22 | HCMC Campus | IT | Lecturer | 2020-01-15 |
+### CURRICULUM Import
+**Required Fields:**
+- Program ID: `programId`, `ProgramId`, `program_id`, `Program ID`, etc.
+- Curriculum Code: `curriculumCode`, `CurriculumCode`, `curriculum_code`, `Curriculum Code`, etc.
+- Curriculum Name: `curriculumName`, `CurriculumName`, `curriculum_name`, `Curriculum Name`, etc.
+- Effective Date: `effectiveDate`, `EffectiveDate`, `effective_date`, `Effective Date`, etc.
 
-### Subject Import
-**Headers Required:**
-- Subject Code
-- Subject Name
-- Credits
-- Description
+### SUBJECT Import
+**Required Fields:**
+- Subject Code: `subjectCode`, `SubjectCode`, `subject_code`, `Subject Code`, etc.
+- Subject Name: `subjectName`, `SubjectName`, `subject_name`, `Subject Name`, etc.
+- Credits: `credits`, `Credits`, `CREDITS`, etc.
+- Description: `description`, `Description`, `DESCRIPTION`, etc.
 
-**Example Excel:**
-| Subject Code | Subject Name | Credits | Description |
-|--------------|--------------|---------|-------------|
-| SE101 | Introduction to Software Engineering | 3 | Basic concepts of software engineering |
-| SE102 | Object-Oriented Programming | 4 | Learn OOP principles and practices |
+**💡 Note:** Subject bulk import is fully implemented and supports comprehensive validation including credit parsing and required field validation.
 
-### Program Import
-**Headers Required:**
-- Program Code
-- Program Name
+*[Continue with other data types...]*
 
-**Example Excel:**
-| Program Code | Program Name |
-|--------------|--------------|
-| SE | Software Engineering |
-| CE | Computer Engineering |
+## ✨ Key Benefits
 
-### Combo Import
-**Headers Required:**
-- Combo Name
-- Combo Description
+### 🔄 Automatic Recognition
+- No need to worry about exact header formatting
+- System automatically detects your data type
+- Supports common Excel naming conventions
 
-**Example Excel:**
-| Combo Name | Combo Description |
-|------------|-------------------|
-| SE_COM1 | Software Engineering Core Subjects |
-| SE_COM2 | Advanced Software Engineering |
+### 🛡️ Error Prevention
+- Flexible matching reduces import errors
+- Clear error messages if headers don't match
+- Preview step allows verification before import
 
-### Curriculum Import
-**Headers Required:**
-- Program Code
-- Curriculum Code
-- Curriculum Name
-- Effective Date
+### 📈 User Friendly
+- Works with existing Excel templates
+- No need to rename headers manually
+- Supports various naming conventions
 
-**Example Excel:**
-| Program Code | Curriculum Code | Curriculum Name | Effective Date |
-|--------------|-----------------|-----------------|----------------|
-| SE | SE2024 | Software Engineering 2024 | 2024-09-01 |
+## 🚀 Import Process
 
-## How to Use Single Type Import
+### Step 1: Prepare Your Excel File
+1. **Create** an Excel file (.xlsx or .xls)
+2. **Add headers** in row 1 using any supported format
+3. **Enter data** starting from row 2
+4. **Save** the file
 
-### Step 1: Upload File
-1. **Navigate** to the appropriate page (e.g., `/admin/students`)
-2. **Click** the "Import [Data Type]" button (e.g., "Import Students")
-3. **Drag and drop** your Excel file or click to browse
-4. **Verify** the expected headers are shown
+### Step 2: Upload and Verify
+1. **Upload** your Excel file
+2. **Review** the automatically detected data type
+3. **Preview** the parsed data
+4. **Edit** any incorrect values if needed
 
-### Step 2: Preview & Edit Data
-1. **Review** the imported data in the preview table
-2. **Edit** individual cells by clicking on them
-3. **Select** rows using the checkboxes for bulk operations
-4. **Delete** unwanted rows individually or in bulk
-5. **Navigate** through pages if you have many records
+### Step 3: Import to System
+1. **Confirm** the data looks correct
+2. **Click** "Upload to Server"
+3. **Verify** successful import message
 
-### Step 3: Confirm Import
-1. **Review** the import summary
-2. **Click** "Import [X] Records" to proceed
-3. **Wait** for confirmation of successful import
-
-## How to Use Bulk Import
-
-### Step 1: Upload Multiple Files
-1. **Navigate** to a page with bulk import (e.g., `/admin/students`)
-2. **Click** the "Bulk Import" button
-3. **Upload multiple Excel files** - the system will automatically detect the data type
-4. **Review** the uploaded files and their data types
-
-### Step 2: Preview & Edit All Data
-1. **Click** "Preview & Edit Data" to see all imported data
-2. **Navigate** between data types using tabs
-3. **Edit** individual cells, delete rows, or select multiple rows
-4. **Review** the comprehensive import summary
-
-### Step 3: Confirm Bulk Import
-1. **Verify** all data types and record counts
-2. **Click** "Import All Data" to process everything
-3. **Review** the final confirmation screen
-
-## 🆕 Preview Features in Detail
-
-### **Data Table Preview**
-- **Editable Cells** - Click any cell to edit the value
-- **Row Selection** - Use switches to select individual or all rows
-- **Bulk Operations** - Delete multiple selected rows at once
-- **Pagination** - Navigate through large datasets
-- **Field Names** - Hover over column headers for field information
-
-### **Import Summary**
-- **Record Count** - See exactly how many records will be imported
-- **Data Type Breakdown** - For bulk imports, see counts by data type
-- **Validation Status** - Confirmation that data is ready for import
-- **Backend Status** - Note about backend API implementation status
-
-### **Quality Assurance Tools**
-- **Data Validation** - Automatic validation of required fields
-- **Format Checking** - Verification of data types and formats
-- **Duplicate Detection** - Identification of potential duplicate entries
-- **Error Highlighting** - Clear indication of any data issues
-
-## File Requirements
-
-### Format
-- **File Type:** `.xlsx` or `.xls`
-- **Encoding:** UTF-8 recommended
-- **Headers:** Must be in the first row
-- **Data:** Starts from the second row
+## ⚠️ Important Notes
 
 ### Data Validation
-- **Required Fields:** All specified headers must be present
-- **Empty Rows:** Will be automatically filtered out
-- **Data Types:** All values are converted to strings
-- **Whitespace:** Automatically trimmed
+- All required fields must have values
+- Empty rows are automatically skipped
+- Invalid data formats will be highlighted
 
-### Output Format
-The component returns an array of objects where:
-- Keys are the mapped field names (from `fieldMap`)
-- Values are cleaned string data from Excel
-- Only rows with at least one valid field are included
+### File Requirements
+- **Format**: Excel (.xlsx, .xls)
+- **Size**: Maximum 10MB recommended
+- **Encoding**: UTF-8 preferred
+- **Headers**: Must be in row 1
 
-## Best Practices
+### Common Issues
+1. **Mixed Data Types**: Each file should contain only one data type
+2. **Missing Required Fields**: All required headers must be present
+3. **Data Format**: Dates should be in recognizable format (YYYY-MM-DD, MM/DD/YYYY, etc.)
+4. **Duplicate Headers**: Each header should appear only once
 
-### File Preparation
-1. **Use Templates:** Download the provided templates for consistent formatting
-2. **Check Headers:** Ensure exact header names match the requirements
-3. **Clean Data:** Remove empty rows and fix formatting issues
-4. **Test Small:** Import a few records first to verify the format
+## 💡 Tips for Success
 
-### Data Quality
-1. **Unique Identifiers:** Ensure unique values for codes and emails
-2. **Valid Formats:** Use proper date formats (YYYY-MM-DD)
-3. **Consistent Values:** Use standardized values for campus, department, etc.
-4. **Required Fields:** Fill in all required fields
+### Header Formatting
+- ✅ Use consistent naming within your file
+- ✅ Any common format works (camelCase, Title Case, snake_case, etc.)
+- ✅ Spaces, underscores, and hyphens are all supported
+- ❌ Don't mix different formats for the same field type
 
-### Import Process
-1. **Backup:** Always backup existing data before large imports
-2. **Preview:** Always review the preview before confirming import
-3. **Edit:** Use the inline editing to fix any issues found during preview
-4. **Monitor:** Watch for success/error messages
-5. **Refresh:** Refresh the page after import to see new data
+### Data Entry
+- ✅ Use consistent date formats
+- ✅ Keep text data clean (no extra spaces)
+- ✅ Use valid email formats
+- ✅ Phone numbers can include formatting (123-456-7890 or 1234567890)
 
-## Error Handling
+### File Organization
+- ✅ One data type per file
+- ✅ Clear, descriptive filenames
+- ✅ Remove empty rows at the end
+- ✅ Check for merged cells (not recommended)
 
-### Common Errors
-- **Missing Headers:** "Missing required headers for [data type]"
-- **Empty File:** "The Excel file is empty"
-- **No Data:** "No valid data found in the Excel file"
-- **Invalid Format:** "Error reading Excel file. Please check the file format"
+## 🆘 Troubleshooting
 
-### Troubleshooting
-1. **Check Headers:** Verify all required headers are present and spelled correctly
-2. **File Format:** Ensure the file is a valid Excel format
-3. **Data Rows:** Make sure there's at least one data row after headers
-4. **Special Characters:** Remove any special characters from headers
+### "Could not identify data type"
+- **Check** that you have all required headers
+- **Verify** header names match supported variations
+- **Ensure** headers are in row 1
+- **Remove** any merged cells or formatting
 
-## Advanced Features
+### "No valid data found"
+- **Check** that you have data rows below headers
+- **Verify** required fields are not empty
+- **Remove** completely empty rows
 
-### Multiple Row Import
-- **Single Import:** Import one record at a time (for sensitive data)
-- **Multiple Import:** Import multiple records at once (default for most types)
+### Import Errors
+- **Review** the preview step carefully
+- **Edit** any highlighted errors
+- **Check** data formats (especially dates)
+- **Verify** all required fields have values
 
-### Custom Headers
-- **Predefined Types:** Use built-in configurations for common data types
-- **Custom Types:** Create custom header configurations for specific needs
+## 📞 Support
 
-### Data Transformation
-- **Automatic Mapping:** Headers are automatically mapped to database fields
-- **Data Cleaning:** Whitespace and formatting are automatically handled
-- **Type Conversion:** Values are converted to appropriate data types
-
-### Preview & Edit Capabilities
-- **Inline Editing:** Edit any cell directly in the preview table
-- **Row Management:** Delete individual rows or bulk delete selected rows
-- **Data Validation:** Real-time validation during editing
-- **Import Summary:** Comprehensive summary before final confirmation
-
-## Security Considerations
-
-### Data Validation
-- **Input Sanitization:** All imported data is sanitized
-- **Type Checking:** Data types are validated before import
-- **Duplicate Detection:** System checks for duplicate entries
-- **Preview Security:** Data is only processed after user confirmation
-
-### Access Control
-- **Role-Based Access:** Import functionality is restricted by user roles
-- **Audit Trail:** Import activities are logged for security
-- **Data Privacy:** Sensitive data is handled according to privacy policies
-
-## Backend Integration Status
-
-### Current Status
-- **Single Import:** ✅ Fully integrated with backend APIs
-- **Bulk Import:** ⏳ Frontend ready, backend API pending implementation
-
-### Preview Mode Benefits
-- **Quality Assurance:** Users can review and edit data before backend processing
-- **Error Prevention:** Catch and fix data issues before they reach the backend
-- **User Confidence:** Clear preview of exactly what will be imported
-- **Data Validation:** Comprehensive validation before backend submission
-
-## Support
-
-### Getting Help
-1. **Check Templates:** Use the provided Excel templates
-2. **Review Examples:** See the example data formats above
-3. **Error Messages:** Read error messages carefully for specific issues
-4. **Preview Feature:** Use the preview to identify and fix data issues
-5. **Contact Admin:** Reach out to system administrators for complex issues
-
-### Template Downloads
-- Templates are available in the import interface
-- Click "Download Template" to get the correct format
-- Templates include example data and proper headers
-
-### Preview Troubleshooting
-- **Large Files:** Use pagination to navigate through large datasets
-- **Editing Issues:** Ensure you're clicking on the cell, not the header
-- **Selection Problems:** Use the "Select All" switch to select all rows
-- **Data Loss:** Your original file is never modified - only the preview data
+If you continue to experience issues:
+1. **Check** this guide for common solutions
+2. **Verify** your file format and headers
+3. **Contact** system administrator for assistance
+4. **Include** sample data and error messages when reporting issues
 
 ---
 
-**Note:** This guide covers the current Excel import functionality with preview features. The preview functionality provides comprehensive quality assurance before data reaches the backend, ensuring data integrity and user confidence. 
+*This guide covers the flexible import system. The system automatically handles various header formats, making your import process smooth and error-free.* 

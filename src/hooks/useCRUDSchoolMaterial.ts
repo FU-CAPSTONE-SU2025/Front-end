@@ -1,10 +1,11 @@
 import { useMutation } from '@tanstack/react-query';
-import { CreateCurriculum, CreateSubject, Curriculum, Subject, UpdateCurriculum, CurriculumSubject, SubjectWithCurriculumInfo } from '../interfaces/ISchoolProgram';
-import { AddCurriculum, FetchCurriculumById, FetchCurriculumList, UpdateCurriculumById, FetchSubjectToCurriculum } from '../api/SchoolAPI/curriculumAPI';
+import { CreateCurriculum, CreateSubject, Curriculum, Subject, UpdateCurriculum, CurriculumSubject, SubjectWithCurriculumInfo, Program, CreateProgram } from '../interfaces/ISchoolProgram';
+import { AddCurriculum, FetchCurriculumById, FetchCurriculumList, UpdateCurriculumById, FetchSubjectToCurriculum, RegisterMultipleCurriculum } from '../api/SchoolAPI/curriculumAPI';
 import { PagedData } from '../interfaces/ISchoolProgram';
-import { AddSubject, FetchSubjectById, FetchSubjectList, UpdateSubjectById, AddPrerequisitesSubject } from '../api/SchoolAPI/subjectAPI';
+import { AddSubject, FetchSubjectById, FetchSubjectList, UpdateSubjectById, AddPrerequisitesSubject, RegisterMultipleSubject } from '../api/SchoolAPI/subjectAPI';
+import { AddProgram, FetchProgramList, FetchProgramById, UpdateProgramById, DisableProgram, RegisterMultiplePrograms } from '../api/SchoolAPI/programAPI';
 import { Combo, CreateCombo, UpdateCombo } from '../interfaces/ISchoolProgram';
-import { AddCombo, FetchComboList, FetchComboById, UpdateComboById, AddSubjectToCombo, RemoveSubjectToCombo } from '../api/SchoolAPI/comboAPI';
+import { AddCombo, FetchComboList, FetchComboById, UpdateComboById, AddSubjectToCombo, RemoveSubjectToCombo, RegisterMultipleCombo } from '../api/SchoolAPI/comboAPI';
 import { useState } from 'react';
 import { 
   AddSyllabus, 
@@ -69,6 +70,16 @@ export function useCRUDCurriculum() {
     },
   });
 
+  const addMultipleCurriculumsMutation = useMutation<any | null, unknown, CreateCurriculum[]>({
+    mutationFn: async (data: CreateCurriculum[]) => {
+      const result = await RegisterMultipleCurriculum(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
   const fetchCurriculumSubjectsMutation = useMutation<SubjectWithCurriculumInfo[] | null, unknown, number>({
     mutationFn: async (curriculumId: number) => {
       const result = await FetchSubjectToCurriculum(curriculumId);
@@ -91,6 +102,7 @@ export function useCRUDCurriculum() {
   
   const isSuccessCreateCurriculum = addCurriculumMutation.isSuccess;
   const isSuccessUpdateCurriculum = updateCurriculumMutation.isSuccess;
+  const isSuccessBulkImport = addMultipleCurriculumsMutation.isSuccess;
   
   const curriculumById = getCurriculumById.data || null;
   const metaData = getCurriculumMutation.data || null;
@@ -105,6 +117,7 @@ export function useCRUDCurriculum() {
   return {
     updateCurriculumMutation,
     addCurriculumMutation,
+    addMultipleCurriculumsMutation,
     getCurriculumMutation,
     fetchCurriculumSubjectsMutation,
     fetchSubjectsMutation,
@@ -114,6 +127,7 @@ export function useCRUDCurriculum() {
     isLoading: getCurriculumMutation.isPending,
     isSuccessCreateCurriculum,
     isSuccessUpdateCurriculum,
+    isSuccessBulkImport,
     curriculumById,
     getCurriculumById
   }
@@ -163,6 +177,16 @@ export function useCRUDSubject() {
     },
   });
 
+  const addMultipleSubjectsMutation = useMutation<any | null, unknown, CreateSubject[]>({
+    mutationFn: async (data: CreateSubject[]) => {
+      const result = await RegisterMultipleSubject(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
   const addPrerequisiteMutation = useMutation<Subject | null, unknown, { id: number; prerequisitesId: number }>({
     mutationFn: async ({ id, prerequisitesId }) => {
       const result = await AddPrerequisitesSubject(id, prerequisitesId);
@@ -175,6 +199,7 @@ export function useCRUDSubject() {
 
   const isSuccessCreateSubject = addSubjectMutation.isSuccess;
   const isSuccessUpdateSubject = updateSubjectMutation.isSuccess;
+  const isSuccessBulkImport = addMultipleSubjectsMutation.isSuccess;
 
   const subjectById = getSubjectById.data || null;
   const metaData = getSubjectMutation.data || null;
@@ -189,6 +214,7 @@ export function useCRUDSubject() {
   return {
     updateSubjectMutation,
     addSubjectMutation,
+    addMultipleSubjectsMutation,
     getSubjectMutation,
     getAllSubjects: getSubjectMutation.mutate,
     subjectList,
@@ -196,6 +222,7 @@ export function useCRUDSubject() {
     isLoading: getSubjectMutation.isPending,
     isSuccessCreateSubject,
     isSuccessUpdateSubject,
+    isSuccessBulkImport,
     subjectById,
     getSubjectById,
     addPrerequisiteMutation
@@ -225,6 +252,16 @@ export function useCRUDCombo() {
     mutationFn: async (data: CreateCombo) => {
       const result = await AddCombo(data);
       return result;
+    },
+  });
+
+  const addMultipleCombosMutation = useMutation<any | null, unknown, CreateCombo[]>({
+    mutationFn: async (data: CreateCombo[]) => {
+      const result = await RegisterMultipleCombo(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
     },
   });
 
@@ -269,6 +306,8 @@ export function useCRUDCombo() {
     },
   });
 
+  const isSuccessBulkImport = addMultipleCombosMutation.isSuccess;
+
   const metaData = getComboMutation.data || null;
   const comboList = metaData?.items || [];
   const paginationCombo = metaData ? {
@@ -282,6 +321,7 @@ export function useCRUDCombo() {
 
   return {
     addComboMutation,
+    addMultipleCombosMutation,
     updateComboMutation,
     getComboMutation,
     getAllCombos: getComboMutation.mutate,
@@ -290,6 +330,7 @@ export function useCRUDCombo() {
     addSubjectToComboMutation,
     removeSubjectFromComboMutation,
     getComboById,
+    isSuccessBulkImport,
     comboPage,
     setComboPage,
     comboPageSize,
@@ -411,5 +452,104 @@ export function useCRUDSyllabus() {
     addSyllabusOutcomeMutation,
     addSyllabusSessionMutation,
     addSyllabusOutcomesToSessionMutation
+  };
+}
+
+export function useCRUDProgram() {
+  const getProgramMutation = useMutation<PagedData<Program> | null, unknown, PaginationParams & { searchQuery?: string }>({
+    mutationFn: async (params) => {
+      const data = await FetchProgramList(
+        params.pageNumber,
+        params.pageSize,
+        params.searchQuery,
+        params.filterType,
+        params.filterValue
+      );
+      return data;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  const addProgramMutation = useMutation<Program | null, unknown, CreateProgram>({
+    mutationFn: async (data: CreateProgram) => {
+      const result = await AddProgram(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  const addMultipleProgramsMutation = useMutation<any | null, unknown, CreateProgram[]>({
+    mutationFn: async (data: CreateProgram[]) => {
+      const result = await RegisterMultiplePrograms(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  const updateProgramMutation = useMutation<Program | null, unknown, { id: number; data: CreateProgram }>({
+    mutationFn: async ({ id, data }) => {
+      const result = await UpdateProgramById(id, data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  const getProgramById = useMutation<Program | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await FetchProgramById(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  const disableProgramMutation = useMutation<Program | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await DisableProgram(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  const isSuccessCreateProgram = addProgramMutation.isSuccess;
+  const isSuccessUpdateProgram = updateProgramMutation.isSuccess;
+  const isSuccessBulkImport = addMultipleProgramsMutation.isSuccess;
+
+  const programById = getProgramById.data || null;
+  const metaData = getProgramMutation.data || null;
+  const programList = metaData?.items || [];
+  const paginationProgram = metaData ? {
+    current: metaData.pageNumber,
+    pageSize: metaData.pageSize,
+    total: metaData.totalCount,
+    totalPages: Math.ceil(metaData.totalCount / metaData.pageSize)
+  } : null;
+
+  return {
+    addProgramMutation,
+    addMultipleProgramsMutation,
+    updateProgramMutation,
+    getProgramMutation,
+    disableProgramMutation,
+    getAllPrograms: getProgramMutation.mutate,
+    programList,
+    paginationProgram,
+    isLoading: getProgramMutation.isPending,
+    isSuccessCreateProgram,
+    isSuccessUpdateProgram,
+    isSuccessBulkImport,
+    programById,
+    getProgramById
   };
 }

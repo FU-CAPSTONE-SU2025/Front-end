@@ -6,7 +6,8 @@ import styles from '../../css/staff/staffTranscript.module.css';
 import { useSearchParams, useNavigate } from 'react-router';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
-import { Curriculum, SubjectWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
+import { Curriculum, SubjectWithCurriculumInfo, CreateCurriculum } from '../../interfaces/ISchoolProgram';
+import { ErrorResponse, isErrorResponse } from '../../api/AxiosCRUD';
 import dayjs from 'dayjs';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 
@@ -16,6 +17,7 @@ const { Title } = Typography;
 const CurriculumPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [expandedCurriculum, setExpandedCurriculum] = useState<number | null>(null);
@@ -31,6 +33,7 @@ const CurriculumPage: React.FC = () => {
     paginationCurriculum,
     isLoading,
     fetchCurriculumSubjectsMutation,
+    addMultipleCurriculumsMutation
   } = useCRUDCurriculum();
 
   // State to store subjects for each curriculum
@@ -45,6 +48,9 @@ const CurriculumPage: React.FC = () => {
     const title = searchParams.get('title');
     if (title) setSearch(title);
   }, [searchParams]);
+
+  // Remove the automatic success handling effect to prevent false positives
+  // Success handling is now only done in the mutation's onSuccess callback
 
   // Fetch subjects when a curriculum is expanded
   const handlePanelChange = async (key: string | string[]) => {
@@ -80,15 +86,106 @@ const CurriculumPage: React.FC = () => {
   };
 
   const handleImportCurriculum = () => {
+    setUploadStatus('idle'); // Reset status when opening modal
     setIsImportOpen(true);
   };
 
-  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    // Extract curriculum data from the imported data
-    const curriculumData = importedData['CURRICULUM'] || [];
-    message.success(`Successfully imported ${curriculumData.length} curricula`);
-    // TODO: Implement actual curriculum import logic
-    getAllCurriculums({ pageNumber: page, pageSize });
+  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    try {
+      setUploadStatus('uploading');
+      
+      // Extract curriculum data from the imported data
+      const curriculumData = importedData['CURRICULUM'] || [];
+      
+      if (curriculumData.length === 0) {
+        message.warning('No curriculum data found in the imported file');
+        setUploadStatus('error');
+        return;
+      }
+
+      // Transform the imported data to match CreateCurriculum interface
+      const transformedData: CreateCurriculum[] = curriculumData.map(item => {
+        // Parse the date properly
+        let effectiveDate: Date;
+        if (item.effectiveDate) {
+          effectiveDate = new Date(item.effectiveDate);
+          // If the date is invalid, use current date
+          if (isNaN(effectiveDate.getTime())) {
+            effectiveDate = new Date();
+          }
+        } else {
+          effectiveDate = new Date();
+        }
+
+        return {
+          programId: parseInt(item.programId) || 0,
+          curriculumCode: item.curriculumCode || '',
+          curriculumName: item.curriculumName || '',
+          effectiveDate: effectiveDate
+        };
+      });
+
+      // Validate the data
+      const validData = transformedData.filter(item => 
+        item.curriculumCode.trim() !== '' && 
+        item.curriculumName.trim() !== '' && 
+        item.programId > 0
+      );
+
+      if (validData.length === 0) {
+        message.error('No valid curriculum data found. Please check your data format and ensure all required fields are filled.');
+        setUploadStatus('error');
+        return;
+      }
+
+      if (validData.length !== transformedData.length) {
+        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+      }
+
+      // Call the bulk import mutation
+      addMultipleCurriculumsMutation.mutate(validData, {
+        onSuccess: () => {
+          message.success(`Successfully imported ${validData.length} curricula`);
+          setUploadStatus('success');
+          setTimeout(() => {
+            setIsImportOpen(false);
+            setUploadStatus('idle');
+            // Refresh the curriculum list
+            getAllCurriculums({ pageNumber: page, pageSize, filterType: 'search', filterValue: search });
+          }, 2000); // Show success for 2 seconds before closing
+        },
+        onError: (error: any) => {
+          console.error('Import error:', error);
+          
+          // Extract ErrorResponse details if available
+          let errorMessage = 'Unknown error occurred';
+          let errorStatus = '';
+          
+          // Check if the error has an attached ErrorResponse
+          if (error.errorResponse && isErrorResponse(error.errorResponse)) {
+            errorMessage = error.errorResponse.message;
+            errorStatus = ` (Status: ${error.errorResponse.status})`;
+          } 
+          // Check if the error itself is an ErrorResponse
+          else if (isErrorResponse(error)) {
+            errorMessage = error.message;
+            errorStatus = ` (Status: ${error.status})`;
+          }
+          // Fallback to error message
+          else if (error?.message) {
+            errorMessage = error.message;
+          }
+          
+          message.error(`Error importing curricula: ${errorMessage}${errorStatus}`);
+          setUploadStatus('error');
+        }
+      });
+
+    } catch (error) {
+      console.error('Import error:', error);
+      message.error('Error processing imported data. Please check your data format.');
+      setUploadStatus('error');
+    }
   };
 
   // Table columns for subjects
@@ -327,6 +424,7 @@ const CurriculumPage: React.FC = () => {
           onClose={() => setIsImportOpen(false)} 
           onDataImported={handleDataImported}
           supportedTypes={['CURRICULUM']}
+          uploadStatus={uploadStatus}
         />
       )}
     </div>

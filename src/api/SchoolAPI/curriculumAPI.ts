@@ -1,4 +1,4 @@
-import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
+import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, ErrorResponse, isErrorResponse, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps } from "../../interfaces/IAccount";
 import { CreateCurriculum, CreateSubjectToCurriculum, Curriculum, Subject, UpdateCurriculum, CurriculumSubject, SubjectWithCurriculumInfo } from "../../interfaces/ISchoolProgram";
@@ -48,10 +48,12 @@ export const AddSubjectToCurriculum = async (id: number, data: CreateSubjectToCu
       return result.data;
     } else {
       console.log(result.error);
-       throw Error(result.error);
+      throwApiError(result);
+      return null; // This will never be reached, but TypeScript needs it
     }
   };
-  export const RemoveSubjectToCurriculum = async (subjectId: number, curriculumId: number): Promise<any | null> => {
+
+export const RemoveSubjectToCurriculum = async (subjectId: number, curriculumId: number): Promise<any | null> => {
     const props = {
       data: null,
       url: curriculumURL+"/"+curriculumId+"/subjects/"+subjectId,
@@ -69,7 +71,7 @@ export const AddSubjectToCurriculum = async (id: number, data: CreateSubjectToCu
 export const RegisterMultipleCurriculum = async (data: CreateCurriculum[]): Promise<any> => {
   const props = {
     data: data,
-    url: curriculumURL,
+    url: curriculumURL+"/bulk",
     headers: GetHeader(),
   };
   const result = await axiosCreate(props);
@@ -77,7 +79,8 @@ export const RegisterMultipleCurriculum = async (data: CreateCurriculum[]): Prom
     return result.data;
   } else {
     console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 };
 

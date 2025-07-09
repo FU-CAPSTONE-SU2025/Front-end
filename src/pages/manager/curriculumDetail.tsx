@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
-import { Input, Button, Collapse, Typography, Affix, Progress, message, Select, Modal } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined, ImportOutlined, CheckOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Table, Input, Button, Affix, message, Pagination, Spin, Empty, Collapse, Modal, Form, Tag, Space, DatePicker, Typography, Progress, Select } from 'antd';
+import { PlusOutlined, EditOutlined, SearchOutlined, CheckOutlined, UploadOutlined, ImportOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { useNavigate } from 'react-router';
+import { useCRUDCurriculum, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import { CreateCurriculum } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
-// Mock unified API/data (replace with real API later)
-import { curriculums, subjects, combos, curriculumSubjects, comboSubjects } from '../../data/schoolData';
+import ExcelImportButton from '../../components/common/ExcelImportButton';
+import { subjects, combos, comboSubjects, curriculums, curriculumSubjects } from '../../data/schoolData';
 import { AddSubjectToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
+import dayjs from 'dayjs';
+import { isErrorResponse } from '../../api/AxiosCRUD';
 
 const { Panel } = Collapse;
 const { Title } = Typography;
@@ -25,6 +29,11 @@ const CurriculumManagerPage: React.FC = () => {
   const [addSubjectModal, setAddSubjectModal] = useState<{ open: boolean, curriculumId: number | null, semester: number | null }>({ open: false, curriculumId: null, semester: null });
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
 
+  // Add CRUD hooks
+  const {
+    addMultipleCurriculumsMutation
+  } = useCRUDCurriculum();
+
   const filteredCurriculums = curriculums.filter(
     c => c.curriculumName.toLowerCase().includes(search.toLowerCase()) || c.id.toString().includes(search)
   );
@@ -41,12 +50,90 @@ const CurriculumManagerPage: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    // Extract curriculum data from the imported data
-    const curriculumData = importedData['CURRICULUM'] || [];
-    message.success(`Successfully imported ${curriculumData.length} curriculum items`);
-    // TODO: Implement actual curriculum import logic
-    setIsImportOpen(false);
+  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    try {
+      // Extract curriculum data from the imported data
+      const curriculumData = importedData['CURRICULUM'] || [];
+      
+      if (curriculumData.length === 0) {
+        message.warning('No curriculum data found in the imported file');
+        return;
+      }
+
+      // Transform the imported data to match CreateCurriculum interface
+      const transformedData: CreateCurriculum[] = curriculumData.map(item => {
+        // Parse the date properly
+        let effectiveDate: Date;
+        if (item.effectiveDate) {
+          effectiveDate = new Date(item.effectiveDate);
+          // If the date is invalid, use current date
+          if (isNaN(effectiveDate.getTime())) {
+            effectiveDate = new Date();
+          }
+        } else {
+          effectiveDate = new Date();
+        }
+
+        return {
+          programId: parseInt(item.programId) || 0,
+          curriculumCode: item.curriculumCode || '',
+          curriculumName: item.curriculumName || '',
+          effectiveDate: effectiveDate
+        };
+      });
+
+      // Validate the data
+      const validData = transformedData.filter(item => 
+        item.curriculumCode.trim() !== '' && 
+        item.curriculumName.trim() !== '' && 
+        item.programId > 0
+      );
+
+      if (validData.length === 0) {
+        message.error('No valid curriculum data found. Please check your data format and ensure all required fields are filled.');
+        return;
+      }
+
+      if (validData.length !== transformedData.length) {
+        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+      }
+
+      // Call the bulk import mutation
+      addMultipleCurriculumsMutation.mutate(validData, {
+        onSuccess: () => {
+          message.success(`Successfully imported ${validData.length} curricula`);
+          setIsImportOpen(false);
+        },
+        onError: (error: any) => {
+          console.error('Import error:', error);
+          
+          // Extract ErrorResponse details if available
+          let errorMessage = 'Unknown error occurred';
+          let errorStatus = '';
+          
+          // Check if the error has an attached ErrorResponse
+          if (error.errorResponse && isErrorResponse(error.errorResponse)) {
+            errorMessage = error.errorResponse.message;
+            errorStatus = ` (Status: ${error.errorResponse.status})`;
+          } 
+          // Check if the error itself is an ErrorResponse
+          else if (isErrorResponse(error)) {
+            errorMessage = error.message;
+            errorStatus = ` (Status: ${error.status})`;
+          }
+          // Fallback to error message
+          else if (error?.message) {
+            errorMessage = error.message;
+          }
+          
+          message.error(`Error importing curricula: ${errorMessage}${errorStatus}`);
+        }
+      });
+
+    } catch (error) {
+      console.error('Import error:', error);
+      message.error('Error processing imported data. Please check your data format.');
+    }
   };
 
   const handleApprove = (id: number) => {

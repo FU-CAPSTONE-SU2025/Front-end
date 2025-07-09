@@ -5,8 +5,10 @@ import styles from '../../css/staff/staffTranscript.module.css';
 import { curriculums, combos } from '../../data/schoolData';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import { CreateSubject } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
+import { isErrorResponse } from '../../api/AxiosCRUD';
 
 const { Option } = Select;
 
@@ -27,7 +29,7 @@ const SubjectManagerPage: React.FC = () => {
     subjectList,
     paginationSubject,
     isLoading,
-    addSubjectMutation
+    addMultipleSubjectsMutation
   } = useCRUDSubject();
 
   useEffect(() => {
@@ -38,6 +40,9 @@ const SubjectManagerPage: React.FC = () => {
     const title = searchParams.get('title');
     if (title) setSearch(title);
   }, [searchParams]);
+
+  // Remove the automatic success handling effect to prevent false positives
+  // Success handling is now only done in the mutation's onSuccess callback
 
   const handleAddSubject = () => {
     navigate('/manager/subject/add');
@@ -65,21 +70,72 @@ const SubjectManagerPage: React.FC = () => {
       // Extract subject data from the imported data
       const subjectData = importedData['SUBJECT'] || [];
       
-      // Process each imported subject
-      for (const subject of subjectData) {
-        await addSubjectMutation.mutateAsync({
-          subjectCode: subject.subjectCode,
-          subjectName: subject.subjectName,
-          credits: parseInt(subject.credits),
-          description: subject.description || ''
-        });
+      if (subjectData.length === 0) {
+        message.warning('No subject data found in the imported file');
+        return;
       }
-      
-      message.success(`Successfully imported ${subjectData.length} subjects`);
-      // Refresh the subject list
-      getAllSubjects({ pageNumber: page, pageSize, filterValue: search });
+
+      // Transform the imported data to match CreateSubject interface
+      const transformedData: CreateSubject[] = subjectData.map(item => ({
+        subjectCode: item.subjectCode || '',
+        subjectName: item.subjectName || '',
+        credits: parseInt(item.credits) || 0,
+        description: item.description || ''
+      }));
+
+      // Validate the data
+      const validData = transformedData.filter(item => 
+        item.subjectCode.trim() !== '' && 
+        item.subjectName.trim() !== '' && 
+        item.credits > 0
+      );
+
+      if (validData.length === 0) {
+        message.error('No valid subject data found. Please check your data format and ensure all required fields are filled.');
+        return;
+      }
+
+      if (validData.length !== transformedData.length) {
+        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+      }
+
+      // Call the bulk import mutation
+      addMultipleSubjectsMutation.mutate(validData, {
+        onSuccess: () => {
+          message.success(`Successfully imported ${validData.length} subjects`);
+          setIsImportOpen(false);
+          // Refresh the subject list
+          getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+        },
+        onError: (error: any) => {
+          console.error('Import error:', error);
+          
+          // Extract ErrorResponse details if available
+          let errorMessage = 'Unknown error occurred';
+          let errorStatus = '';
+          
+          // Check if the error has an attached ErrorResponse
+          if (error.errorResponse && isErrorResponse(error.errorResponse)) {
+            errorMessage = error.errorResponse.message;
+            errorStatus = ` (Status: ${error.errorResponse.status})`;
+          } 
+          // Check if the error itself is an ErrorResponse
+          else if (isErrorResponse(error)) {
+            errorMessage = error.message;
+            errorStatus = ` (Status: ${error.status})`;
+          }
+          // Fallback to error message
+          else if (error?.message) {
+            errorMessage = error.message;
+          }
+          
+          message.error(`Error importing subjects: ${errorMessage}${errorStatus}`);
+        }
+      });
+
     } catch (error) {
-      message.error('Error importing subjects. Please check your data format.');
+      console.error('Import error:', error);
+      message.error('Error processing imported data. Please check your data format.');
     }
   };
 

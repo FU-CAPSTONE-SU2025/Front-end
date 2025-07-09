@@ -28,6 +28,7 @@ import HomePage from '../pages/manager/home';
 import ComboPage from "../pages/manager/comboPage";
 import AddComboPage from "../pages/manager/addCombo";
 import EditComboPage from "../pages/manager/editCombo";
+import ManagerProgramPage from "../pages/manager/program";
 import StaffTranscript from "../pages/staff/transcript";
 import CurriculumPage from "../pages/staff/curriculum";
 import ProgramPage from "../pages/staff/program";
@@ -184,6 +185,10 @@ export const routes = createBrowserRouter([
       {
         path: "profile",
         Component: ManagerProfile,
+      },
+      {
+        path: "program",
+        Component: ManagerProgramPage,
       },
       {
         path: "combo",

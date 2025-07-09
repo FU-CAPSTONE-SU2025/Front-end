@@ -4,6 +4,10 @@ export interface Program {
   programName: string; // nvarchar(255)
   programCode: string; // varchar(50)
 }
+export interface CreateProgram {
+  programName: string,
+  programCode: string
+}
 
 // Interface for Curriculum table
 export interface Curriculum {

@@ -1,4 +1,4 @@
-import { axiosCreate, axiosRead } from "../AxiosCRUD";
+import { axiosCreate, axiosRead, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { LoginProps } from "../../interfaces/IAccount";
 import { TokenProps } from "../../interfaces/IAuthen";
@@ -23,10 +23,11 @@ export const LoginGoogleAccount = async (data: string) => {
         return result.data
     }
     else {
-        console.log(result.error)
-        return null
+        throwApiError(result);
+        return null; // This will never be reached, but TypeScript needs it
     }
 }
+
 export const LoginAccount = async (data: LoginProps) => {
     const props = {
         data: data,
@@ -37,12 +38,11 @@ export const LoginAccount = async (data: LoginProps) => {
         return result.data
     }
     else {
-        console.log(result.error)
-        return null
+        throwApiError(result);
+        return null; // This will never be reached, but TypeScript needs it
     }
-
-
 }
+
 export const Logout = async () => {
     const props = {
         data: null,
@@ -53,9 +53,9 @@ export const Logout = async () => {
         return response.data
     }
     else {
-        return null
+        throwApiError(response);
+        return null; // This will never be reached, but TypeScript needs it
     }
-
 }
 
 export const RefreshToken = async () => {
@@ -77,7 +77,6 @@ export const RefreshToken = async () => {
         console.log(newAccessToken.error)
         return false
     }
-
 }
 
 //send email
@@ -92,11 +91,11 @@ export const SendEmail = async (data:any) => {
         return result.data
     }
     else {
-        console.log(result.error)
-        return null
+        throwApiError(result);
+        return null; // This will never be reached, but TypeScript needs it
     }
-
 }
+
 export const ResetPassword = async (data:any) => {
       const props = {
         data: data,
@@ -109,8 +108,7 @@ export const ResetPassword = async (data:any) => {
         return result.data
     }
     else {
-        console.log(result.error)
-        return null
+        throwApiError(result);
+        return null; // This will never be reached, but TypeScript needs it
     }
-
 }

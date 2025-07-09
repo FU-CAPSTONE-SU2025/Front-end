@@ -6,6 +6,7 @@ import { getAuthState } from '../../hooks/useAuths';
 
 const navLinks = [
   { name: 'Home', path: '/manager' },
+  { name: 'Programs', path: '/manager/program' },
   { name: 'Combos', path: '/manager/combo' },
   { name: 'Subjects', path: '/manager/subject' },
 ];

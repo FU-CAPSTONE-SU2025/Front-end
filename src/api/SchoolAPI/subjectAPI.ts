@@ -1,4 +1,4 @@
-import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
+import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps } from "../../interfaces/IAccount";
 import { CreateSubject, PagedData, Subject, UpdateSubject } from "../../interfaces/ISchoolProgram";
@@ -15,8 +15,8 @@ export const AddSubject = async (data: CreateSubject): Promise<Subject | null> =
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -30,52 +30,53 @@ export const AddPrerequisitesSubject = async (id:number,prerequisitesId:number):
     if (result.success) {
       return result.data;
     } else {
-      console.log(result.error);
-      return null;
+      throwApiError(result);
+      return null; // This will never be reached, but TypeScript needs it
     }
   };
-  export const DeletePrerequisitesSubject = async (id:number,prerequisitesId:number): Promise<Subject | null> => {
-    const props = {
-      data: null,
-      url: subjectURL + `/${id}/prerequisites/${prerequisitesId}`,
-      headers: GetHeader(),
-    };
-    const result = await axiosDelete(props);
-    if (result.success) {
-      return result.data;
-    } else {
-      console.log(result.error);
-      return null;
-    }
+  
+export const DeletePrerequisitesSubject = async (id:number,prerequisitesId:number): Promise<Subject | null> => {
+  const props = {
+    data: null,
+    url: subjectURL + `/${id}/prerequisites/${prerequisitesId}`,
+    headers: GetHeader(),
   };
-
-  export const GetPrerequisitesSubject = async (id:number): Promise<Subject[] | null> => {
-    const props = {
-      data: null,
-      url: subjectURL + `/${id}/prerequisites`,
-      headers: GetHeader(),
-    };
-    const result = await axiosRead(props);
-    if (result.success) {
-      return result.data;
-    } else {
-      console.log(result.error);
-      return null;
-    }
+  const result = await axiosDelete(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
+};
+
+export const GetPrerequisitesSubject = async (id:number): Promise<Subject[] | null> => {
+  const props = {
+    data: null,
+    url: subjectURL + `/${id}/prerequisites`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
+  }
+}
 
 export const RegisterMultipleSubject = async (data: CreateSubject[]): Promise<any> => {
   const props = {
     data: data,
-    url: subjectURL,
+    url: subjectURL+"/bulk",
     headers: GetHeader(),
   };
   const result = await axiosCreate(props);
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -110,8 +111,8 @@ export const FetchSubjectList = async (
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -125,8 +126,8 @@ export const FetchSubjectById = async (id: number): Promise<Subject | null> => {
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -140,8 +141,8 @@ export const UpdateSubjectById = async (id: number, data: UpdateSubject): Promis
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -155,7 +156,7 @@ export const DisableSubject = async (userId: number): Promise<AccountProps | nul
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 }; 

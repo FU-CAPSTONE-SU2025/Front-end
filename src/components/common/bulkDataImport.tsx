@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import { Card, Steps, Button, Upload, message, Table, Space, Tag, Modal, Tabs, Input, Select, Switch, Tooltip } from 'antd';
-import { UploadOutlined, FileExcelOutlined, CheckCircleOutlined, LoadingOutlined, EyeOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { Card, Steps, Button, Upload, message, Table, Space, Tag, Input, Tooltip, Spin } from 'antd';
+import { UploadOutlined, FileExcelOutlined, CheckCircleOutlined, LoadingOutlined, EyeOutlined, CloudUploadOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
-import { getHeaderConfig, HeaderConfiguration } from '../../data/importConfigurations';
+import { getHeaderConfig, HeaderConfiguration, matchesConfiguration, findFieldMapping } from '../../data/importConfigurations';
 import styles from '../../css/bulkImport.module.css';
 
 const { Dragger } = Upload;
 const { Step } = Steps;
-const { TabPane } = Tabs;
 
-interface BulkImportData {
+interface ProcessedData {
   type: HeaderConfiguration;
   data: { [key: string]: string }[];
   fileName: string;
@@ -21,22 +20,37 @@ interface BulkDataImportProps {
   onClose: () => void;
   onDataImported: (importedData: { [type: string]: { [key: string]: string }[] }) => void;
   supportedTypes?: HeaderConfiguration[];
+  uploadStatus?: 'idle' | 'uploading' | 'success' | 'error';
+  uploadMessage?: string;
 }
 
 const BulkDataImport: React.FC<BulkDataImportProps> = ({
   onClose,
   onDataImported,
-  supportedTypes = ['STUDENT', 'STAFF', 'SUBJECT', 'PROGRAM', 'COMBO', 'CURRICULUM']
+  supportedTypes = ['STUDENT', 'STAFF', 'SUBJECT', 'PROGRAM', 'COMBO', 'CURRICULUM'],
+  uploadStatus = 'idle',
+  uploadMessage
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [uploadedFiles, setUploadedFiles] = useState<BulkImportData[]>([]);
+  const [processedData, setProcessedData] = useState<ProcessedData | null>(null);
+  const [editableData, setEditableData] = useState<{ [key: string]: string }[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processedData, setProcessedData] = useState<{ [type: string]: { [key: string]: string }[] }>({});
-  const [previewData, setPreviewData] = useState<{ [type: string]: { [key: string]: string }[] }>({});
-  const [editingData, setEditingData] = useState<{ [type: string]: { [key: string]: string }[] }>({});
-  const [selectedRows, setSelectedRows] = useState<{ [type: string]: number[] }>({});
-  const [showPreview, setShowPreview] = useState(false);
-  const [importing, setImporting] = useState(false); // Add loading state for Import button
+  const [isUploading, setIsUploading] = useState(false);
+
+  // React to upload status changes from parent
+  React.useEffect(() => {
+    if (uploadStatus === 'success') {
+      setCurrentStep(2); // Move to completion step
+      setIsUploading(false);
+    } else if (uploadStatus === 'error') {
+      setIsUploading(false);
+      // Stay on step 1 for retry
+    } else if (uploadStatus === 'uploading') {
+      setIsUploading(true);
+    } else {
+      setIsUploading(false);
+    }
+  }, [uploadStatus]);
 
   const handleFileUpload = (file: File) => {
     setIsProcessing(true);
@@ -58,30 +72,46 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
 
         const headers = jsonData[0] as string[];
         
-        // Try to identify the data type based on headers
+        // Try to identify the data type based on headers using flexible matching
         let identifiedType: HeaderConfiguration | null = null;
+        let matchScore = 0;
         
         for (const type of supportedTypes) {
           if (typeof type === 'string') {
             const config = getHeaderConfig(type);
-            const hasAllRequiredHeaders = config.headers.every(header => 
-              headers.includes(header)
-            );
             
-            if (hasAllRequiredHeaders) {
-              identifiedType = type;
-              break;
+            // Use flexible header matching
+            if (matchesConfiguration(headers, config.headers)) {
+              // Calculate match score based on how many headers match
+              const currentMatchScore = config.headers.filter(configHeader => 
+                headers.some(excelHeader => findFieldMapping(excelHeader, config.fieldMap))
+              ).length;
+              
+              // Choose the configuration with the highest match score
+              if (currentMatchScore > matchScore) {
+                identifiedType = type;
+                matchScore = currentMatchScore;
+              }
             }
           }
         }
 
         if (!identifiedType) {
-          message.error('Could not identify data type. Please check your file headers.');
+          message.error(`Could not identify data type. Please check your file headers.
+            
+Expected headers for supported types:
+${supportedTypes.map(type => {
+  if (typeof type === 'string') {
+    const config = getHeaderConfig(type);
+    return `${type}: ${config.headers.join(', ')}`;
+  }
+  return '';
+}).filter(Boolean).join('\n')}`);
           setIsProcessing(false);
           return;
         }
 
-        // Process the data
+        // Process the data using flexible field mapping
         const config = getHeaderConfig(identifiedType);
         const processedRows: { [key: string]: string }[] = [];
 
@@ -91,7 +121,7 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
           let hasValidData = false;
 
           headers.forEach((header, index) => {
-            const fieldKey = config.fieldMap[header];
+            const fieldKey = findFieldMapping(header, config.fieldMap);
             if (fieldKey && row[index] !== undefined && row[index] !== null && row[index] !== '') {
               processedRow[fieldKey] = String(row[index]).trim();
               hasValidData = true;
@@ -109,16 +139,18 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
           return;
         }
 
-        const newUploadedFile: BulkImportData = {
+        const processed: ProcessedData = {
           type: identifiedType,
           data: processedRows,
           fileName: file.name,
           originalHeaders: headers
         };
 
-        setUploadedFiles(prev => [...prev, newUploadedFile]);
-        message.success(`Successfully processed ${file.name} - ${processedRows.length} records`);
+        setProcessedData(processed);
+        setEditableData([...processedRows]); // Create editable copy
+        message.success(`Successfully processed ${file.name} - ${processedRows.length} records identified as ${getTypeDisplayName(identifiedType)} data`);
         setIsProcessing(false);
+        setCurrentStep(1); // Move to preview step
       } catch (error) {
         message.error('Error processing file. Please check the file format.');
         setIsProcessing(false);
@@ -129,78 +161,38 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
     return false; // Prevent default upload behavior
   };
 
-  const handleRemoveFile = (index: number) => {
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handlePreviewData = () => {
-    const previewDataObj: { [type: string]: { [key: string]: string }[] } = {};
-    
-    uploadedFiles.forEach(file => {
-      const typeKey = typeof file.type === 'string' ? file.type : 'custom';
-      if (!previewDataObj[typeKey]) {
-        previewDataObj[typeKey] = [];
-      }
-      previewDataObj[typeKey].push(...file.data);
-    });
-
-    setPreviewData(previewDataObj);
-    setEditingData(JSON.parse(JSON.stringify(previewDataObj))); // Deep copy for editing
-    setShowPreview(true);
-  };
-
-  const handleEditRow = (type: string, rowIndex: number, field: string, value: string) => {
-    setEditingData(prev => ({
-      ...prev,
-      [type]: prev[type].map((row, index) => 
+  const handleEditCell = (rowIndex: number, field: string, value: string) => {
+    setEditableData(prev => 
+      prev.map((row, index) => 
         index === rowIndex ? { ...row, [field]: value } : row
       )
-    }));
+    );
   };
 
-  const handleDeleteRow = (type: string, rowIndex: number) => {
-    setEditingData(prev => ({
-      ...prev,
-      [type]: prev[type].filter((_, index) => index !== rowIndex)
-    }));
+  const handleDeleteRow = (rowIndex: number) => {
+    setEditableData(prev => prev.filter((_, index) => index !== rowIndex));
   };
 
-  const handleSelectRow = (type: string, rowIndex: number, selected: boolean) => {
-    setSelectedRows(prev => ({
-      ...prev,
-      [type]: selected 
-        ? [...(prev[type] || []), rowIndex]
-        : (prev[type] || []).filter(index => index !== rowIndex)
-    }));
+  const handleUploadToServer = () => {
+    if (!processedData) return;
+    
+    // Prepare data for upload
+    const dataType = processedData.type as string;
+    const uploadData = {
+      [dataType]: editableData
+    };
+    
+    // Call the parent's onDataImported function
+    // The parent will handle the async mutation and update uploadStatus accordingly
+    onDataImported(uploadData);
   };
 
-  const handleSelectAllRows = (type: string, selected: boolean) => {
-    setSelectedRows(prev => ({
-      ...prev,
-      [type]: selected ? editingData[type].map((_, index) => index) : []
-    }));
-  };
-
-  const handleDeleteSelectedRows = (type: string) => {
-    const selectedIndices = selectedRows[type] || [];
-    setEditingData(prev => ({
-      ...prev,
-      [type]: prev[type].filter((_, index) => !selectedIndices.includes(index))
-    }));
-    setSelectedRows(prev => ({
-      ...prev,
-      [type]: []
-    }));
-  };
-
-  const handleImportAll = () => {
-    setImporting(true);
-    setTimeout(() => { // Simulate loading for effect
-      setProcessedData(editingData);
-      onDataImported(editingData);
-      setCurrentStep(2);
-      setImporting(false);
-    }, 1200);
+  const handleReset = () => {
+    setCurrentStep(0);
+    setProcessedData(null);
+    setEditableData([]);
+    setIsProcessing(false);
+    setIsUploading(false);
   };
 
   const getTypeDisplayName = (type: HeaderConfiguration): string => {
@@ -215,77 +207,11 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
     return field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   };
 
-  const columns = [
-    {
-      title: 'File Name',
-      dataIndex: 'fileName',
-      key: 'fileName',
-      render: (text: string) => <span style={{ fontWeight: 500 }}>{text}</span>
-    },
-    {
-      title: 'Data Type',
-      dataIndex: 'type',
-      key: 'type',
-      render: (type: HeaderConfiguration) => (
-        <Tag color="blue" style={{ fontWeight: 500 }}>
-          {getTypeDisplayName(type)}
-        </Tag>
-      )
-    },
-    {
-      title: 'Records',
-      dataIndex: 'data',
-      key: 'records',
-      render: (data: { [key: string]: string }[]) => (
-        <span style={{ fontWeight: 500, color: '#10B981' }}>
-          {data.length} records
-        </span>
-      )
-    },
-    {
-      title: 'Action',
-      key: 'action',
-      render: (_: any, record: any, index: number) => (
-        <Button 
-          type="text" 
-          danger 
-          onClick={() => handleRemoveFile(index)}
-          size="small"
-        >
-          Remove
-        </Button>
-      )
-    }
-  ];
-
-  const getPreviewColumns = (type: string) => {
-    if (!editingData[type] || editingData[type].length === 0) return [];
+  const getPreviewColumns = () => {
+    if (!editableData || editableData.length === 0) return [];
     
-    const sampleRow = editingData[type][0];
-    const baseColumns = [
-      {
-        title: (
-          <div className={styles.tableHeader}>
-            <Switch
-              size="small"
-              checked={selectedRows[type]?.length === editingData[type]?.length}
-              onChange={(checked) => handleSelectAllRows(type, checked)}
-            />
-            Select
-          </div>
-        ),
-        key: 'select',
-        width: 100,
-        render: (_: any, record: any, index: number) => (
-          <Switch
-            size="small"
-            checked={selectedRows[type]?.includes(index) || false}
-            onChange={(checked) => handleSelectRow(type, index, checked)}
-          />
-        )
-      }
-    ];
-
+    const sampleRow = editableData[0];
+    
     const dataColumns = Object.keys(sampleRow).map(field => ({
       title: (
         <Tooltip title={`Field: ${field}`}>
@@ -294,12 +220,12 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
       ),
       dataIndex: field,
       key: field,
-      width: 150,
+      width: 200,
       render: (value: string, record: any, index: number) => (
         <Input
           size="small"
-          value={value}
-          onChange={(e) => handleEditRow(type, index, field, e.target.value)}
+          value={value || ''}
+          onChange={(e) => handleEditCell(index, field, e.target.value)}
           className={styles.tableCell}
         />
       )
@@ -309,76 +235,60 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
       title: 'Actions',
       key: 'actions',
       width: 80,
+      fixed: 'right' as const,
       render: (_: any, record: any, index: number) => (
         <Button
           type="text"
           danger
           size="small"
           icon={<DeleteOutlined />}
-          onClick={() => handleDeleteRow(type, index)}
+          onClick={() => handleDeleteRow(index)}
           className={styles.tableActionButton}
         />
       )
     };
 
-    return [...baseColumns, ...dataColumns, actionColumn];
+    return [...dataColumns, actionColumn];
   };
 
   const steps = [
     {
-      title: 'Upload Files',
-      description: 'Upload Excel files to import',
-      icon: currentStep === 0 ? <LoadingOutlined /> : <UploadOutlined />
+      title: 'Upload File',
+      description: 'Select and upload Excel file',
+      icon: currentStep === 0 && isProcessing ? <LoadingOutlined /> : <UploadOutlined />
     },
     {
       title: 'Preview & Edit',
-      description: 'Review and edit data before import',
-      icon: currentStep === 1 ? <LoadingOutlined /> : <EyeOutlined />
+      description: 'Review and edit data',
+      icon: currentStep === 1 ? <EyeOutlined /> : <EyeOutlined />
     },
     {
-      title: 'Import Complete',
-      description: 'Data imported successfully',
-      icon: <CheckCircleOutlined />
+      title: 'Upload to Server',
+      description: 'Save data to database',
+      icon: currentStep === 2 ? <CheckCircleOutlined /> : <CloudUploadOutlined />
     }
   ];
 
-  // Helper to get required headers for each supported type
-  const getRequiredHeadersList = () => {
-    return supportedTypes.map((type) => {
-      const config = getHeaderConfig(type);
-      return {
-        type: typeof type === 'string' ? type : 'Custom',
-        headers: config.headers,
-      };
-    });
+  // Get the expected headers for the supported type
+  const getExpectedHeaders = () => {
+    if (supportedTypes.length === 1) {
+      const config = getHeaderConfig(supportedTypes[0]);
+      return config.headers;
+    }
+    return ['Please check documentation for expected headers'];
   };
 
-  // Helper to get the current type for header display
-  const getCurrentHeaderType = () => {
-    if (uploadedFiles.length > 0) {
-      const file = uploadedFiles[0];
-      return typeof file.type === 'string' ? file.type : 'Custom';
+  const getSupportedTypeDisplay = () => {
+    if (supportedTypes.length === 1) {
+      return getTypeDisplayName(supportedTypes[0]);
     }
-    return typeof supportedTypes[0] === 'string' ? supportedTypes[0] : 'Custom';
-  };
-  const getCurrentHeaders = () => {
-    if (uploadedFiles.length > 0) {
-      const file = uploadedFiles[0];
-      return getHeaderConfig(file.type).headers;
-    }
-    return getHeaderConfig(supportedTypes[0]).headers;
-  };
-
-  // Click-outside-to-close handler
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    // Only close if the user clicked directly on the overlay, not inside the modal
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
+    return supportedTypes.map(type => getTypeDisplayName(type)).join(', ');
   };
 
   return (
-    <div className={styles.bulkImportContainer} onClick={handleOverlayClick}>
+    <div className={styles.bulkImportContainer} onClick={(e) => {
+      if (e.target === e.currentTarget) onClose();
+    }}>
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -388,7 +298,7 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
         <div className={styles.header}>
           <h2 className={styles.headerTitle}>Bulk Data Import</h2>
           <p className={styles.headerSubtitle}>
-            Upload multiple Excel files to import different data types at once
+            Upload Excel file to import {getSupportedTypeDisplay()} data
           </p>
         </div>
 
@@ -400,221 +310,122 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
           </Steps>
         </div>
 
+        {/* Step 1: Upload File */}
         {currentStep === 0 && (
-          <div>
-            <Card title="Upload Excel Files" className={styles.uploadCard}>
-              <Dragger
-                name="file"
-                accept=".xlsx,.xls"
-                beforeUpload={handleFileUpload}
-                showUploadList={false}
-                disabled={isProcessing}
-                multiple
+          <Card title="Upload Excel File" className={styles.uploadCard}>
+            <Dragger
+              name="file"
+              accept=".xlsx,.xls"
+              beforeUpload={handleFileUpload}
+              showUploadList={false}
+              disabled={isProcessing}
+              maxCount={1}
+            >
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={styles.uploadZone}
               >
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={styles.uploadZone}
-                  tabIndex={0}
-                >
-                  <FileExcelOutlined className={styles.uploadIcon} />
-                  <p className={styles.uploadTitle}>
-                    {isProcessing ? <LoadingOutlined spin /> : 'Click or drag Excel files here'}
-                  </p>
-                  <p className={styles.uploadSubtitle}>
-                    You can select or drag multiple Excel files at once. Each file will be processed and added to the import list individually.<br />
-                    <span style={{ color: '#ea580c', fontWeight: 500 }}>
-                      Note: Importing multiple types from a single file with multiple sheets is not supported.
-                    </span>
-                  </p>
-                </motion.div>
-              </Dragger>
+                {isProcessing ? (
+                  <Spin size="large" />
+                ) : (
+                  <>
+                    <FileExcelOutlined className={styles.uploadIcon} />
+                    <p className={styles.uploadTitle}>Click or drag Excel file here</p>
+                    <p className={styles.uploadSubtitle}>
+                      Upload a single Excel file (.xlsx, .xls) with {getSupportedTypeDisplay()} data
+                    </p>
+                  </>
+                )}
+              </motion.div>
+            </Dragger>
 
-              {/* Conditionally show only the relevant headers */}
-              <div style={{ marginTop: 24 }}>
-                <h4 style={{ color: '#22C55E', fontWeight: 600, marginBottom: 8 }}>Required Headers for Import:</h4>
-                <ul style={{ paddingLeft: 20, margin: 0 }}>
-                  <li style={{ marginBottom: 6 }}>
-                    <span style={{ color: '#ea580c', fontWeight: 500 }}>{getCurrentHeaderType()}:</span>
-                    <span style={{ color: '#16a34a', marginLeft: 6 }}>{getCurrentHeaders().join(', ')}</span>
-                  </li>
-                </ul>
-              </div>
-
-              {uploadedFiles.length > 0 && (
-                <div className={styles.fileListContainer}>
-                  <h4 className={styles.fileListTitle}>Uploaded Files:</h4>
-                  <Table
-                    columns={columns}
-                    dataSource={uploadedFiles}
-                    rowKey={(record, index) => index?.toString() || '0'}
-                    pagination={false}
-                    size="small"
-                  />
-                  <div className={styles.fileListActions}>
-                    <Button onClick={() => setUploadedFiles([])}>
-                      Clear All
-                    </Button>
-                    <Button 
-                      type="primary" 
-                      icon={<EyeOutlined />}
-                      onClick={handlePreviewData}
-                      disabled={uploadedFiles.length === 0}
-                    >
-                      Preview & Edit Data
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </Card>
-          </div>
+            <div style={{ marginTop: 24 }}>
+              <h4 style={{ color: '#22C55E', fontWeight: 600, marginBottom: 8 }}>
+                Expected Headers for {getSupportedTypeDisplay()}:
+              </h4>
+              <Tag color="blue" style={{ margin: '4px 8px 4px 0' }}>
+                {getExpectedHeaders().join(', ')}
+              </Tag>
+            </div>
+          </Card>
         )}
 
-        {currentStep === 1 && showPreview && (
-          <div>
-            <Card 
-              title={
-                <div className={styles.previewHeader}>
-                  <EyeOutlined className={styles.previewIcon} />
-                  <span className={styles.previewTitle}>Preview & Edit Import Data</span>
-                  <Tooltip title="You can edit individual cells, delete rows, or select multiple rows for bulk deletion">
-                    <InfoCircleOutlined className={styles.previewInfoIcon} />
-                  </Tooltip>
-                </div>
-              } 
-              className={styles.previewCard}
-              extra={
-                <div className={styles.previewExtra}>
-                  {Object.keys(selectedRows).map(type => 
-                    selectedRows[type]?.length > 0 && (
-                      <Button
-                        key={type}
-                        danger
-                        size="small"
-                        onClick={() => handleDeleteSelectedRows(type)}
-                        className={styles.deleteSelectedButton}
-                      >
-                        Delete {selectedRows[type].length} Selected
-                      </Button>
-                    )
-                  )}
-                </div>
-              }
-            >
-              <Tabs defaultActiveKey={Object.keys(editingData)[0]}>
-                {Object.entries(editingData).map(([type, data]) => (
-                  <TabPane 
-                    tab={
-                      <span className={styles.tabLabel}>
-                        {getTypeDisplayName(type as HeaderConfiguration)}
-                        <Tag color="blue" className={styles.tabCount}>
-                          {data.length} records
-                        </Tag>
-                      </span>
-                    } 
-                    key={type}
-                  >
-                    <div className={styles.previewContent}>
-                      <div className={styles.previewContentHeader}>
-                        <h4 className={styles.previewContentTitle}>
-                          {getTypeDisplayName(type as HeaderConfiguration)} Data
-                        </h4>
-                        <span className={styles.previewContentCount}>
-                          {data.length} records ready for import
-                        </span>
-                      </div>
-                      <p className={styles.previewContentDescription}>
-                        Click on any cell to edit the value. Use the switches to select rows for bulk deletion.
-                      </p>
-                    </div>
-                    
-                    <div className={styles.previewTable}>
-                      <Table
-                        columns={getPreviewColumns(type)}
-                        dataSource={data.map((row, index) => ({ ...row, key: index }))}
-                        rowKey="key"
-                        pagination={{
-                          pageSize: 10,
-                          showSizeChanger: true,
-                          showQuickJumper: true,
-                          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} records`
-                        }}
-                        scroll={{ x: 'max-content', y: 400 }}
-                        size="small"
-                      />
-                    </div>
-                  </TabPane>
-                ))}
-              </Tabs>
-
-              <div className={styles.summaryContainer}>
-                <h4 className={styles.summaryTitle}>Import Summary:</h4>
-                <ul className={styles.summaryList}>
-                  {Object.entries(editingData).map(([type, data]) => (
-                    <li key={type}>
-                      <strong>{getTypeDisplayName(type as HeaderConfiguration)}:</strong> {data.length} records
-                    </li>
-                  ))}
-                </ul>
-                <div className={styles.summaryNote}>
-                  <p className={styles.summaryNoteText}>
-                    <strong>Note:</strong> This is a preview. No data has been imported yet. 
-                    Review and edit the data above, then click "Import All Data" to proceed.
-                  </p>
-                </div>
+        {/* Step 2: Preview & Edit */}
+        {currentStep === 1 && processedData && (
+          <Card 
+            title={
+              <div className={styles.previewHeader}>
+                <EyeOutlined className={styles.previewIcon} />
+                <span className={styles.previewTitle}>
+                  Preview {getTypeDisplayName(processedData.type)} Data
+                </span>
+                <Tag color="blue">{editableData.length} records</Tag>
               </div>
+            } 
+            className={styles.previewCard}
+          >
+            <div className={styles.previewContent}>
+              <p className={styles.previewContentDescription}>
+                <InfoCircleOutlined style={{ color: '#1890ff', marginRight: 8 }} />
+                Review your data below. You can edit any cell by clicking on it or delete entire rows.
+              </p>
+            </div>
+            
+            <div className={styles.previewTable}>
+              <Table
+                columns={getPreviewColumns()}
+                dataSource={editableData.map((row, index) => ({ ...row, key: index }))}
+                rowKey="key"
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: true,
+                  showQuickJumper: true,
+                  showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} records`
+                }}
+                scroll={{ x: 'max-content', y: 400 }}
+                size="small"
+              />
+            </div>
 
-              <div className={styles.actionButtons}>
-                <Button onClick={() => setCurrentStep(0)}>
-                  Back to Upload
+            <div style={{ marginTop: 16, textAlign: 'right' }}>
+              <Space>
+                <Button onClick={handleReset}>
+                  Start Over
                 </Button>
                 <Button 
                   type="primary" 
-                  onClick={handleImportAll}
-                  disabled={Object.values(editingData).every(data => data.length === 0) || importing}
+                  icon={<CloudUploadOutlined />}
+                  onClick={handleUploadToServer}
+                  loading={isUploading}
+                  disabled={editableData.length === 0}
                 >
-                  {importing ? <><LoadingOutlined spin /> Importing...</> : 'Import All Data'}
+                  Upload to Server ({editableData.length} records)
                 </Button>
-              </div>
-            </Card>
-          </div>
+              </Space>
+            </div>
+          </Card>
         )}
 
+        {/* Step 3: Success */}
         {currentStep === 2 && (
-          <div>
-            <Card title="Import Complete" className={styles.completeCard}>
-              <div className={styles.completeContent}>
-                <CheckCircleOutlined className={styles.completeIcon} />
-                <h3 className={styles.completeTitle}>Import Successful!</h3>
-                <p className={styles.completeSubtitle}>
-                  All data has been processed and is ready for backend import.
-                </p>
-                
-                <div className={styles.completeSummary}>
-                  <h4 className={styles.completeSummaryTitle}>Processed Data:</h4>
-                  {Object.entries(processedData).map(([type, data]) => (
-                    <div key={type} style={{ marginBottom: 8 }}>
-                      <strong>{getTypeDisplayName(type as HeaderConfiguration)}:</strong> {data.length} records
-                    </div>
-                  ))}
-                </div>
-
-                <div className={styles.completeBackendNote}>
-                  <h4 className={styles.completeBackendNoteTitle}>Backend Integration Note:</h4>
-                  <p className={styles.completeBackendNoteText}>
-                    The bulk import API is not yet implemented in the backend. 
-                    This preview shows exactly what data would be sent to the backend when the API is ready.
-                  </p>
-                </div>
-
-                <div className={styles.completeActions}>
-                  <Button type="primary" onClick={onClose}>
-                    Close
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
+          <Card className={styles.successCard}>
+            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <CheckCircleOutlined style={{ fontSize: 64, color: '#52c41a', marginBottom: 16 }} />
+              <h3 style={{ color: '#52c41a', marginBottom: 8 }}>Import Successful!</h3>
+              <p style={{ color: '#666', marginBottom: 24 }}>
+                Successfully imported {editableData.length} {getTypeDisplayName(processedData?.type || supportedTypes[0])} records
+              </p>
+              <Space>
+                <Button onClick={handleReset} type="default">
+                  Import Another File
+                </Button>
+                <Button onClick={onClose} type="primary">
+                  Close
+                </Button>
+              </Space>
+            </div>
+          </Card>
         )}
       </motion.div>
     </div>

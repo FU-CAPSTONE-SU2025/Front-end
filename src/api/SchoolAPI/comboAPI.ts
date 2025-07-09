@@ -1,4 +1,4 @@
-import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
+import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps } from "../../interfaces/IAccount";
 import { CreateCombo, Combo, UpdateCombo, Subject, SubjectInCombo } from "../../interfaces/ISchoolProgram";
@@ -16,8 +16,8 @@ export const AddCombo = async (data: CreateCombo): Promise<Combo | null> => {
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 };
 export const GetSubjectsInCombo = async (comboId:number): Promise<SubjectInCombo[] | null> => {
@@ -30,8 +30,8 @@ export const GetSubjectsInCombo = async (comboId:number): Promise<SubjectInCombo
     if (result.success) {
       return result.data;
     } else {
-      console.log(result.error);
-      return null;
+      throwApiError(result);
+      return null; // This will never be reached, but TypeScript needs it
     }
   };
 
@@ -46,8 +46,8 @@ export const AddSubjectToCombo = async (comboId:number,subjectId:number): Promis
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -61,23 +61,23 @@ export const RemoveSubjectToCombo = async (comboId:number,subjectId:number): Pro
     if (result.success) {
       return result.data;
     } else {
-      console.log(result.error);
-      return null;
+      throwApiError(result);
+      return null; // This will never be reached, but TypeScript needs it
     }
   };
 
 export const RegisterMultipleCombo = async (data: CreateCombo[]): Promise<any> => {
   const props = {
     data: data,
-    url: comboURL,
+    url: comboURL+"/bulk",
     headers: GetHeader(),
   };
   const result = await axiosCreate(props);
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -105,8 +105,8 @@ export const FetchComboList = async (
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -120,8 +120,8 @@ export const FetchComboById = async (id: number): Promise<Combo | null> => {
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -135,8 +135,8 @@ export const UpdateComboById = async (id: number, data: any): Promise<Combo | nu
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -150,7 +150,7 @@ export const DisableCombo = async (comboId: number): Promise<AccountProps | null
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
   }
 }; 

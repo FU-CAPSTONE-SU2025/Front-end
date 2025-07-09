@@ -4,9 +4,11 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined, SearchOutlin
 import styles from '../../css/staff/staffTranscript.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
+import { CreateCombo } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { GetSubjectsInCombo } from '../../api/SchoolAPI/comboAPI';
+import { isErrorResponse } from '../../api/AxiosCRUD';
 
 const ComboManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -22,7 +24,7 @@ const ComboManagerPage: React.FC = () => {
     comboList,
     paginationCombo,
     getComboMutation,
-    addComboMutation,
+    addMultipleCombosMutation,
     updateComboMutation
   } = useCRUDCombo();
 
@@ -38,6 +40,9 @@ const ComboManagerPage: React.FC = () => {
     // Backend search: pass search as filterValue
     getAllCombos({ pageNumber: page, pageSize, filterValue: search });
   }, [page, pageSize, search]);
+
+  // Remove the automatic success handling effect to prevent false positives
+  // Success handling is now only done in the mutation's onSuccess callback
 
   const handleAddCombo = () => {
     navigate('/manager/combo/add');
@@ -113,20 +118,69 @@ const ComboManagerPage: React.FC = () => {
       // Extract combo data from the imported data
       const comboData = importedData['COMBO'] || [];
       
-      // Process each imported combo
-      for (const combo of comboData) {
-        await addComboMutation.mutateAsync({
-          comboName: combo.comboName,
-          comboDescription: combo.comboDescription || '',
-          subjectIds: []
-        });
+      if (comboData.length === 0) {
+        message.warning('No combo data found in the imported file');
+        return;
       }
-      
-      message.success(`Successfully imported ${comboData.length} combos`);
-      // Refresh the combo list
-      getAllCombos({ pageNumber: page, pageSize, filterValue: search });
+
+      // Transform the imported data to match CreateCombo interface
+      const transformedData: CreateCombo[] = comboData.map(item => ({
+        comboName: item.comboName || '',
+        comboDescription: item.comboDescription || '',
+        subjectIds: [] // Start with empty subject IDs array
+      }));
+
+      // Validate the data
+      const validData = transformedData.filter(item => 
+        item.comboName.trim() !== ''
+      );
+
+      if (validData.length === 0) {
+        message.error('No valid combo data found. Please check your data format and ensure combo names are provided.');
+        return;
+      }
+
+      if (validData.length !== transformedData.length) {
+        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+      }
+
+      // Call the bulk import mutation
+      addMultipleCombosMutation.mutate(validData, {
+        onSuccess: () => {
+          message.success(`Successfully imported ${validData.length} combos`);
+          setIsImportOpen(false);
+          // Refresh the combo list
+          getAllCombos({ pageNumber: page, pageSize, filterValue: search });
+        },
+        onError: (error: any) => {
+          console.error('Import error:', error);
+          
+          // Extract ErrorResponse details if available
+          let errorMessage = 'Unknown error occurred';
+          let errorStatus = '';
+          
+          // Check if the error has an attached ErrorResponse
+          if (error.errorResponse && isErrorResponse(error.errorResponse)) {
+            errorMessage = error.errorResponse.message;
+            errorStatus = ` (Status: ${error.errorResponse.status})`;
+          } 
+          // Check if the error itself is an ErrorResponse
+          else if (isErrorResponse(error)) {
+            errorMessage = error.message;
+            errorStatus = ` (Status: ${error.status})`;
+          }
+          // Fallback to error message
+          else if (error?.message) {
+            errorMessage = error.message;
+          }
+          
+          message.error(`Error importing combos: ${errorMessage}${errorStatus}`);
+        }
+      });
+
     } catch (error) {
-      message.error('Error importing combos. Please check your data format.');
+      console.error('Import error:', error);
+      message.error('Error processing imported data. Please check your data format.');
     }
   };
 

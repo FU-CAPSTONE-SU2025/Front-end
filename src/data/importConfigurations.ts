@@ -11,151 +11,236 @@ export interface CustomHeaderConfig {
   fieldMap: { [header: string]: string };
 }
 
+/**
+ * Normalize header for flexible matching
+ * Converts to lowercase and removes spaces, underscores, and special characters
+ */
+export const normalizeHeader = (header: string): string => {
+  return header
+    .toLowerCase()
+    .replace(/[\s_-]/g, '') // Remove spaces, underscores, and hyphens
+    .replace(/[^\w]/g, ''); // Remove any other non-word characters
+};
+
+/**
+ * Generate all possible header variations for a field
+ * Includes: original, camelCase, PascalCase, snake_case, kebab-case, space separated, etc.
+ */
+export const generateHeaderVariations = (baseField: string): string[] => {
+  const variations = new Set<string>();
+  
+  // Original field name
+  variations.add(baseField);
+  
+  // Convert camelCase to different formats
+  const words = baseField.replace(/([A-Z])/g, ' $1').split(/[\s_-]+/).filter(w => w);
+  
+  // Add various formats
+  variations.add(words.join('')); // no spaces, all lowercase
+  variations.add(words.map(w => w.toLowerCase()).join('')); // camelCase style
+  variations.add(words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('')); // PascalCase
+  variations.add(words.map(w => w.toLowerCase()).join('_')); // snake_case
+  variations.add(words.map(w => w.toLowerCase()).join('-')); // kebab-case
+  variations.add(words.map(w => w.toLowerCase()).join(' ')); // space separated lowercase
+  variations.add(words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')); // Title Case
+  variations.add(words.map(w => w.toUpperCase()).join(' ')); // UPPER CASE
+  variations.add(words.map(w => w.toUpperCase()).join('_')); // UPPER_SNAKE_CASE
+  
+  return Array.from(variations);
+};
+
+/**
+ * Create a comprehensive field map with all possible header variations
+ */
+export const createFlexibleFieldMap = (fieldMappings: { [key: string]: string }): { [header: string]: string } => {
+  const flexibleMap: { [header: string]: string } = {};
+  
+  Object.entries(fieldMappings).forEach(([targetField, sourceField]) => {
+    const variations = generateHeaderVariations(sourceField);
+    variations.forEach(variation => {
+      flexibleMap[variation] = targetField;
+    });
+  });
+  
+  return flexibleMap;
+};
+
+/**
+ * Check if headers match a configuration with flexible matching
+ */
+export const matchesConfiguration = (excelHeaders: string[], configHeaders: readonly string[]): boolean => {
+  const normalizedExcelHeaders = excelHeaders.map(normalizeHeader);
+  const normalizedConfigHeaders = configHeaders.map(normalizeHeader);
+  
+  // Check if all required headers are present (flexible matching)
+  return normalizedConfigHeaders.every(configHeader => 
+    normalizedExcelHeaders.some(excelHeader => excelHeader === configHeader)
+  );
+};
+
+/**
+ * Find matching field name from Excel header using flexible mapping
+ */
+export const findFieldMapping = (excelHeader: string, fieldMap: { readonly [key: string]: string }): string | undefined => {
+  // First try exact match
+  if (fieldMap[excelHeader]) {
+    return fieldMap[excelHeader];
+  }
+  
+  // Then try normalized matching
+  const normalizedExcelHeader = normalizeHeader(excelHeader);
+  const matchingEntry = Object.entries(fieldMap).find(([key]) => 
+    normalizeHeader(key) === normalizedExcelHeader
+  );
+  
+  return matchingEntry ? matchingEntry[1] : undefined;
+};
+
 // Predefined header configurations for different data types
 export const HEADER_CONFIGS = {
   STUDENT: {
-    headers: ['First Name', 'Last Name', 'Email', 'Password', 'Address', 'Phone', 'Date of Birth', 'Student Code', 'Enroll Date'],
-    fieldMap: {
-      'First Name': 'firstName',
-      'Last Name': 'lastName',
-      'Email': 'email',
-      'Password': 'password',
-      'Address': 'address',
-      'Phone': 'phone',
-      'Date of Birth': 'dateOfBirth',
-      'Student Code': 'studentCode',
-      'Enroll Date': 'enrollDate'
-    }
+    headers: ['firstName', 'lastName', 'email', 'password', 'address', 'phone', 'dateOfBirth', 'studentCode', 'enrollDate'],
+    fieldMap: createFlexibleFieldMap({
+      'firstName': 'firstName',
+      'lastName': 'lastName', 
+      'email': 'email',
+      'password': 'password',
+      'address': 'address',
+      'phone': 'phone',
+      'dateOfBirth': 'dateOfBirth',
+      'studentCode': 'studentCode',
+      'enrollDate': 'enrollDate'
+    })
   },
   STAFF: {
-    headers: ['First Name', 'Last Name', 'Email', 'Password', 'Address', 'Phone', 'Date of Birth', 'Campus', 'Department', 'Position', 'Start Work Date'],
-    fieldMap: {
-      'First Name': 'firstName',
-      'Last Name': 'lastName',
-      'Email': 'email',
-      'Password': 'password',
-      'Address': 'address',
-      'Phone': 'phone',
-      'Date of Birth': 'dateOfBirth',
-      'Campus': 'campus',
-      'Department': 'department',
-      'Position': 'position',
-      'Start Work Date': 'startWorkAt'
-    }
+    headers: ['firstName', 'lastName', 'email', 'password', 'address', 'phone', 'dateOfBirth', 'campus', 'department', 'position', 'startWorkAt'],
+    fieldMap: createFlexibleFieldMap({
+      'firstName': 'firstName',
+      'lastName': 'lastName',
+      'email': 'email', 
+      'password': 'password',
+      'address': 'address',
+      'phone': 'phone',
+      'dateOfBirth': 'dateOfBirth',
+      'campus': 'campus',
+      'department': 'department',
+      'position': 'position',
+      'startWorkAt': 'startWorkAt'
+    })
   },
   ADVISOR: {
-    headers: ['First Name', 'Last Name', 'Email', 'Password', 'Address', 'Phone', 'Date of Birth', 'Specialization', 'Years of Experience'],
-    fieldMap: {
-      'First Name': 'firstName',
-      'Last Name': 'lastName',
-      'Email': 'email',
-      'Password': 'password',
-      'Address': 'address',
-      'Phone': 'phone',
-      'Date of Birth': 'dateOfBirth',
-      'Specialization': 'specialization',
-      'Years of Experience': 'yearsOfExperience'
-    }
+    headers: ['firstName', 'lastName', 'email', 'password', 'address', 'phone', 'dateOfBirth', 'specialization', 'yearsOfExperience'],
+    fieldMap: createFlexibleFieldMap({
+      'firstName': 'firstName',
+      'lastName': 'lastName',
+      'email': 'email',
+      'password': 'password', 
+      'address': 'address',
+      'phone': 'phone',
+      'dateOfBirth': 'dateOfBirth',
+      'specialization': 'specialization',
+      'yearsOfExperience': 'yearsOfExperience'
+    })
   },
   MANAGER: {
-    headers: ['First Name', 'Last Name', 'Email', 'Password', 'Address', 'Phone', 'Date of Birth', 'Department', 'Position', 'Start Work Date'],
-    fieldMap: {
-      'First Name': 'firstName',
-      'Last Name': 'lastName',
-      'Email': 'email',
-      'Password': 'password',
-      'Address': 'address',
-      'Phone': 'phone',
-      'Date of Birth': 'dateOfBirth',
-      'Department': 'department',
-      'Position': 'position',
-      'Start Work Date': 'startWorkAt'
-    }
+    headers: ['firstName', 'lastName', 'email', 'password', 'address', 'phone', 'dateOfBirth', 'department', 'position', 'startWorkAt'],
+    fieldMap: createFlexibleFieldMap({
+      'firstName': 'firstName',
+      'lastName': 'lastName',
+      'email': 'email',
+      'password': 'password',
+      'address': 'address', 
+      'phone': 'phone',
+      'dateOfBirth': 'dateOfBirth',
+      'department': 'department',
+      'position': 'position',
+      'startWorkAt': 'startWorkAt'
+    })
   },
   CURRICULUM: {
-    headers: ['Program Code', 'Curriculum Code', 'Curriculum Name', 'Effective Date'],
-    fieldMap: {
-      'Program Code': 'programCode',
-      'Curriculum Code': 'curriculumCode',
-      'Curriculum Name': 'curriculumName',
-      'Effective Date': 'effectiveDate'
-    }
+    headers: ['programId', 'curriculumCode', 'curriculumName', 'effectiveDate'],
+    fieldMap: createFlexibleFieldMap({
+      'programId': 'programId',
+      'curriculumCode': 'curriculumCode',
+      'curriculumName': 'curriculumName',
+      'effectiveDate': 'effectiveDate'
+    })
   },
   SUBJECT: {
-    headers: ['Subject Code', 'Subject Name', 'Credits', 'Description'],
-    fieldMap: {
-      'Subject Code': 'subjectCode',
-      'Subject Name': 'subjectName',
-      'Credits': 'credits',
-      'Description': 'description'
-    }
+    headers: ['subjectCode', 'subjectName', 'credits', 'description'],
+    fieldMap: createFlexibleFieldMap({
+      'subjectCode': 'subjectCode',
+      'subjectName': 'subjectName',
+      'credits': 'credits',
+      'description': 'description'
+    })
   },
   PROGRAM: {
-    headers: ['Program Code', 'Program Name'],
-    fieldMap: {
-      'Program Code': 'programCode',
-      'Program Name': 'programName'
-    }
+    headers: ['programCode', 'programName'],
+    fieldMap: createFlexibleFieldMap({
+      'programCode': 'programCode',
+      'programName': 'programName'
+    })
   },
   COMBO: {
-    headers: ['Combo Name', 'Combo Description'],
-    fieldMap: {
-      'Combo Name': 'comboName',
-      'Combo Description': 'comboDescription'
-    }
+    headers: ['comboName', 'comboDescription'],
+    fieldMap: createFlexibleFieldMap({
+      'comboName': 'comboName',
+      'comboDescription': 'comboDescription'
+    })
   },
   ASSESSMENT: {
-    headers: ['Syllabus Id', 'Category', 'Quantity', 'Weight', 'Completion Criteria', 'Duration', 'Question Type'],
-    fieldMap: {
-      'Syllabus Id': 'syllabusId',
-      'Category': 'category',
-      'Quantity': 'quantity',
-      'Weight': 'weight',
-      'Completion Criteria': 'completionCriteria',
-      'Duration': 'duration',
-      'Question Type': 'questionType'
-    }
+    headers: ['syllabusId', 'category', 'quantity', 'weight', 'completionCriteria', 'duration', 'questionType'],
+    fieldMap: createFlexibleFieldMap({
+      'syllabusId': 'syllabusId',
+      'category': 'category',
+      'quantity': 'quantity',
+      'weight': 'weight',
+      'completionCriteria': 'completionCriteria',
+      'duration': 'duration', 
+      'questionType': 'questionType'
+    })
   },
   MATERIAL: {
-    headers: ['Syllabus Id', 'Material Name', 'Author Name', 'Published Date', 'Description', 'File Path or URL'],
-    fieldMap: {
-      'Syllabus Id': 'syllabusId',
-      'Material Name': 'materialName',
-      'Author Name': 'authorName',
-      'Published Date': 'publishedDate',
-      'Description': 'description',
-      'File Path or URL': 'filepathOrUrl'
-    }
+    headers: ['syllabusId', 'materialName', 'authorName', 'publishedDate', 'description', 'filepathOrUrl'],
+    fieldMap: createFlexibleFieldMap({
+      'syllabusId': 'syllabusId',
+      'materialName': 'materialName',
+      'authorName': 'authorName',
+      'publishedDate': 'publishedDate',
+      'description': 'description',
+      'filepathOrUrl': 'filepathOrUrl'
+    })
   },
   OUTCOME: {
-    headers: ['Syllabus Id', 'Outcome Code', 'Description'],
-    fieldMap: {
-      'Syllabus Id': 'syllabusId',
-      'Outcome Code': 'outcomeCode',
-      'Description': 'description'
-    }
+    headers: ['syllabusId', 'outcomeCode', 'description'],
+    fieldMap: createFlexibleFieldMap({
+      'syllabusId': 'syllabusId',
+      'outcomeCode': 'outcomeCode',
+      'description': 'description'
+    })
   },
   SESSION: {
-    headers: ['Syllabus Id', 'Session Number', 'Topic', 'Mission'],
-    fieldMap: {
-      'Syllabus Id': 'syllabusId',
-      'Session Number': 'sessionNumber',
-      'Topic': 'topic',
-      'Mission': 'mission'
-    }
+    headers: ['syllabusId', 'sessionNumber', 'topic', 'mission'],
+    fieldMap: createFlexibleFieldMap({
+      'syllabusId': 'syllabusId',
+      'sessionNumber': 'sessionNumber',
+      'topic': 'topic',
+      'mission': 'mission'
+    })
   },
   // Admin profile configuration (commonly used)
   ADMIN_PROFILE: {
-    headers: ['First Name', 'Last Name', 'Email', 'Password', 'Address', 'Phone', 'Date of Birth'],
-    fieldMap: {
-      'First Name': 'firstName',
-      'Last Name': 'lastName',
-      'Email': 'email',
-      'Password': 'password',
-      'Address': 'address',
-      'Phone': 'phone',
-      'Date of Birth': 'dateOfBirth'
-    }
+    headers: ['firstName', 'lastName', 'email', 'password', 'address', 'phone', 'dateOfBirth'],
+    fieldMap: createFlexibleFieldMap({
+      'firstName': 'firstName',
+      'lastName': 'lastName',
+      'email': 'email',
+      'password': 'password',
+      'address': 'address',
+      'phone': 'phone',
+      'dateOfBirth': 'dateOfBirth'
+    })
   }
 } as const;
 

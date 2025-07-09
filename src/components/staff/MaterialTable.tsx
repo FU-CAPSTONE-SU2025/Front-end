@@ -13,7 +13,8 @@ import {
   EditOutlined,
   DeleteOutlined,
   SaveOutlined,
-  FileExcelOutlined
+  FileExcelOutlined,
+  UploadOutlined
 } from '@ant-design/icons';
 import { SyllabusMaterial, CreateSyllabusMaterial } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../common/bulkDataImport';
@@ -333,9 +334,10 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
                 Add Material
               </Button>
               <Button
-                icon={<FileExcelOutlined />}
+                type="default"
+                icon={<UploadOutlined />}
                 onClick={() => setMaterialImportVisible(true)}
-                style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
+                style={{ borderRadius: 999, borderColor: '#10B981', color: '#10B981' }}
               >
                 Import from Excel
               </Button>

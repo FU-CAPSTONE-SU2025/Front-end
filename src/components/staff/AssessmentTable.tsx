@@ -14,7 +14,8 @@ import {
   EditOutlined,
   DeleteOutlined,
   SaveOutlined,
-  FileExcelOutlined
+  FileExcelOutlined,
+  UploadOutlined
 } from '@ant-design/icons';
 import { SyllabusAssessment, CreateSyllabusAssessment } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../common/bulkDataImport';
@@ -238,9 +239,10 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
                 Add Assessment
               </Button>
               <Button
-                icon={<FileExcelOutlined />}
+                type="default"
+                icon={<UploadOutlined />}
                 onClick={() => setAssessmentImportVisible(true)}
-                style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
+                style={{ borderRadius: 999, borderColor: '#10B981', color: '#10B981' }}
               >
                 Import from Excel
               </Button>
