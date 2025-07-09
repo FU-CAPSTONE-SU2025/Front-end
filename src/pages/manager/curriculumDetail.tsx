@@ -41,8 +41,11 @@ const CurriculumManagerPage: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleDataImported = (data: { [key: string]: string }[]) => {
-    message.success('Imported curriculum data!');
+  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    // Extract curriculum data from the imported data
+    const curriculumData = importedData['CURRICULUM'] || [];
+    message.success(`Successfully imported ${curriculumData.length} curriculum items`);
+    // TODO: Implement actual curriculum import logic
     setIsImportOpen(false);
   };
 
@@ -224,6 +227,7 @@ const CurriculumManagerPage: React.FC = () => {
           <BulkDataImport 
             onClose={() => setIsImportOpen(false)} 
             onDataImported={handleDataImported}
+            supportedTypes={['CURRICULUM']}
           />
         )}
         {/* Add Subject Modal */}

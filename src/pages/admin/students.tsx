@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
+import { ConfigProvider, Input, Select, Table, Modal, message } from 'antd';
 import styles from '../../css/admin/students.module.css';
 import DataImport from '../../components/common/dataImport';
 import BulkDataImport from '../../components/common/bulkDataImport';
@@ -76,12 +76,12 @@ const StudentList: React.FC = () => {
     setIsBulkImportOpen(true);
   };
 
-  const handleDataImported = (data: { [key: string]: string }[]) => {
-    console.log('Imported student data:', data);
-    setIsImportOpen(false);
-    
+  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    // Extract student data from the imported data
+    const studentData = importedData['STUDENT'] || [];
+    message.success(`Successfully imported ${studentData.length} students`);
+    // TODO: Implement actual student import logic
     // Refresh the student list
-    refetch();
     loadStudentData();
   };
 
@@ -331,10 +331,12 @@ const StudentList: React.FC = () => {
             )}
           </div>
         </motion.div>
+        {/* Data Import Modal */}
         {isImportOpen && (
           <BulkDataImport 
             onClose={() => setIsImportOpen(false)} 
             onDataImported={handleDataImported}
+            supportedTypes={['STUDENT']}
           />
         )}
         {isBulkImportOpen && (

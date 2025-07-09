@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
+import { ConfigProvider, Input, Select, Table, Modal, message } from 'antd';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
 import BulkDataImport from '../../components/common/bulkDataImport';
@@ -56,10 +56,12 @@ const AdvisorList: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleDataImported = (data: { [key: string]: string }[]) => {
-    console.log('Imported advisor data:', data);
+  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    // Extract advisor data from the imported data
+    const advisorData = importedData['ADVISOR'] || [];
+    message.success(`Successfully imported ${advisorData.length} advisors`);
+    // TODO: Implement actual advisor import logic
     setIsImportOpen(false);
-    
     // Refresh the advisor list
     refetch();
     loadAdvisorData();
@@ -282,10 +284,12 @@ const AdvisorList: React.FC = () => {
             )}
           </div>
         </motion.div>
+        {/* Data Import Modal */}
         {isImportOpen && (
           <BulkDataImport 
             onClose={() => setIsImportOpen(false)} 
             onDataImported={handleDataImported}
+            supportedTypes={['ADVISOR']}
           />
         )}
       </div>

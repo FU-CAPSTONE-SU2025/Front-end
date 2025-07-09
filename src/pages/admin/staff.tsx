@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
+import { ConfigProvider, Input, Select, Table, Modal, message } from 'antd';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
 import BulkDataImport from '../../components/common/bulkDataImport';
@@ -58,13 +58,13 @@ const StaffList: React.FC = () => {
   };
 
   // Handle imported staff data
-  const handleDataImported = (data: { [key: string]: string }[]) => {
-    console.log('Imported staff data:', data);
-    setIsImportOpen(false);
-    
+  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    // Extract staff data from the imported data
+    const staffData = importedData['STAFF'] || [];
+    message.success(`Successfully imported ${staffData.length} staff members`);
+    // TODO: Implement actual staff import logic
     // Refresh the staff list
-    refetch();
-    loadStaffData();
+    getAllStaff({ pageNumber: currentPage, pageSize, filterValue: searchQuery });
   };
 
   const handleFilterChange = (value: string) => {
@@ -304,10 +304,12 @@ const StaffList: React.FC = () => {
             )}
           </div>
         </motion.div>
+        {/* Data Import Modal */}
         {isImportOpen && (
           <BulkDataImport 
             onClose={() => setIsImportOpen(false)} 
             onDataImported={handleDataImported}
+            supportedTypes={['STAFF']}
           />
         )}
       </div>

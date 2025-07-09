@@ -89,7 +89,7 @@ const CurriculumPage: React.FC = () => {
     const curriculumData = importedData['CURRICULUM'] || [];
     message.success(`Successfully imported ${curriculumData.length} curricula`);
     // TODO: Implement actual curriculum import logic
-    getCurriculums({ pageNumber: page, pageSize });
+    getAllStaff({ pageNumber: page, pageSize });
   };
 
   // Table columns for subjects

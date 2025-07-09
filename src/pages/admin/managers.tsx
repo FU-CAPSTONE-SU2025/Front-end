@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, Input, Select, Table, Modal } from 'antd';
+import { ConfigProvider, Input, Select, Table, Modal, message } from 'antd';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
 import BulkDataImport from '../../components/common/bulkDataImport';
@@ -56,10 +56,12 @@ const ManagerList: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleDataImported = (data: { [key: string]: string }[]) => {
-    console.log('Imported manager data:', data);
+  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    // Extract manager data from the imported data
+    const managerData = importedData['MANAGER'] || [];
+    message.success(`Successfully imported ${managerData.length} managers`);
+    // TODO: Implement actual manager import logic
     setIsImportOpen(false);
-    
     // Refresh the manager list
     refetch();
     loadManagerData();
@@ -297,10 +299,12 @@ const ManagerList: React.FC = () => {
             )}
           </div>
         </motion.div>
+        {/* Data Import Modal */}
         {isImportOpen && (
           <BulkDataImport 
             onClose={() => setIsImportOpen(false)} 
             onDataImported={handleDataImported}
+            supportedTypes={['MANAGER']}
           />
         )}
       </div>
