@@ -18,11 +18,10 @@ function timeAgo(dateString?: string) {
 const Notification: React.FC = () => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { notifications, connectionStatus } = useNotificationHub();
+  const { notifications, loading, markAsRead } = useNotificationHub();
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [localRead, setLocalRead] = useState<{ [id: number]: boolean }>({});
 
-  // Đóng dropdown khi click ra ngoài
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (ref.current && !ref.current.contains(event.target as Node)) {
@@ -37,19 +36,25 @@ const Notification: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 
-  // Đếm số thông báo chưa đọc (dựa trên cả localRead và isRead từ backend)
   const unreadCount = notifications.filter((n) => !(n.isRead || localRead[n.id])).length;
   const badgeCount = unreadCount > 10 ? '10+' : unreadCount;
 
-  // Khi click vào thông báo: mở modal và đánh dấu đã đọc
-  const handleNotificationClick = (n: NotificationItem) => {
+  const handleNotificationClick = async (n: NotificationItem) => {
     setSelectedNotification(n);
     setLocalRead((prev) => ({ ...prev, [n.id]: true }));
+    if (!n.isRead) {
+      try {
+        await markAsRead(n.id);
+      } catch {}
+    }
   };
 
-  // Đóng modal
   const handleModalClose = () => {
     setSelectedNotification(null);
+  };
+
+  const handleBellClick = () => {
+    setOpen((prev) => !prev);
   };
 
   return (
@@ -58,7 +63,7 @@ const Notification: React.FC = () => {
         <Button
           icon={<BellOutlined className="text-lg" />}
           shape="circle"
-          onClick={() => setOpen((v) => !v)}
+          onClick={handleBellClick}
           className="relative"
         />
       </Badge>
@@ -73,12 +78,13 @@ const Notification: React.FC = () => {
           >
             <div className="p-4 border-b border-gray-100 font-bold text-gray-800 flex items-center justify-between">
               <span>Notifications</span>
-              <span className="text-xs text-gray-400">{connectionStatus}</span>
             </div>
             <div className="max-h-80 overflow-y-auto">
               <AnimatePresence>
                 {notifications.length === 0 ? (
-                  <div className="p-4 text-center text-gray-400">No notifications</div>
+                  <div className="p-4 text-center text-gray-400">
+                    {loading ? 'Loading notifications...' : 'No notifications'}
+                  </div>
                 ) : (
                   notifications.map((n) => {
                     const isRead = n.isRead || localRead[n.id];
