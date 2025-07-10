@@ -41,6 +41,8 @@ import EditStudentTranscript from "../pages/staff/editStudentTranscript";
 import SubjectPage from "../pages/staff/subject";
 import SubjectSyllabus from "../pages/staff/subjectSyllabus";
 import ChatAI from "../pages/student/chatAI";
+import AdvisorLayout from "../components/advisor/layout";
+import AdvisorDashboard from "../pages/advisor/dashboard";
 export const routes = createBrowserRouter([
   {
     path: "/admin",
@@ -164,10 +166,13 @@ export const routes = createBrowserRouter([
   },
    {
     path: "/advisor",
-    Component: Dummy,
+    Component: AdvisorLayout,
     loader: protectedLoader(['3']),
     children:[
-      
+      {
+        index: true,
+        Component: AdvisorDashboard,
+      },
     ]
   },
    {

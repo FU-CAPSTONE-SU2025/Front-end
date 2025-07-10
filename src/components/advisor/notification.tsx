@@ -95,7 +95,7 @@ const Notification: React.FC = () => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 30 }}
                         transition={{ duration: 0.2 }}
-                        className={`flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200 ${!isRead ? 'bg-orange-50' : ''}`}
+                        className={`flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200 ${!isRead ? 'bg-blue-50' : ''}`}
                         onClick={() => handleNotificationClick(n)}
                         style={{ cursor: 'pointer' }}
                       >
@@ -110,7 +110,7 @@ const Notification: React.FC = () => {
                             <a href={n.link} className="text-xs text-blue-500 underline" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>View details</a>
                           )}
                         </div>
-                        {!isRead && <span className="w-2 h-2 bg-red-500 rounded-full mt-2 ml-1" />}
+                        {!isRead && <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 ml-1" />}
                       </motion.div>
                     );
                   })
@@ -140,4 +140,4 @@ const Notification: React.FC = () => {
   );
 };
 
-export default Notification;
+export default Notification; 
