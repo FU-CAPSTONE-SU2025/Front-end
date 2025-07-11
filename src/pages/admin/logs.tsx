@@ -79,10 +79,29 @@ const LogsPage: React.FC = () => {
       theme={{
         components: {
           Table: {
-            headerBg: 'rgba(255, 255, 255, 0.1)',
-            headerColor: '#ffffff',
-            rowHoverBg: 'rgba(255, 255, 255, 0.05)',
+            headerBg: 'linear-gradient(90deg, #f97316 0%, #1E40AF 100%)',
+            headerColor: '#fff',
             borderColor: 'rgba(255, 255, 255, 0.3)',
+            colorText: '#1E293B',
+            colorBgContainer: 'rgba(255,255,255,0.6)',
+            colorBgElevated: 'rgba(255,255,255,0.3)',
+            rowHoverBg: 'rgba(249, 115, 22, 0.15)',
+            colorPrimary: '#1E40AF',
+            colorPrimaryHover: '#1d4ed8',
+          },
+          DatePicker: {
+            colorBgContainer: 'rgba(255,255,255,0.8)',
+            colorBorder: 'rgba(30, 64, 175, 0.3)',
+            colorText: '#1E293B',
+            colorPrimary: '#1E40AF',
+            colorPrimaryHover: '#1d4ed8',
+          },
+          Button: {
+            colorPrimary: '#f97316',
+            colorPrimaryHover: '#ea580c',
+            colorText: '#fff',
+            colorTextLightSolid: '#fff',
+            colorTextDisabled: '#bdbdbd',
           },
         },
       }}

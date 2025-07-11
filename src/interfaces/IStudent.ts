@@ -35,3 +35,9 @@ export interface StudentDataListResponse {
     doGraduate: boolean
     careerGoal: string
 }
+
+export interface StudentDataUpdateRequest {
+    enrolledAt: "2025-07-11T14:56:47.207Z" | Date,
+    doGraduate: true,
+    careerGoal: string
+}

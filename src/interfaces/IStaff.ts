@@ -20,3 +20,11 @@ export interface pagedStaffData {
   pageSize: number
   totalCount: number
 }
+
+export interface StaffDataUpdateRequest {
+  campus: string,
+  position: string,
+  department: string,
+  startWorkAt: Date,
+  endWorkAt: Date
+}

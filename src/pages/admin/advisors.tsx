@@ -9,6 +9,7 @@ import DataTable from '../../components/common/dataTable';
 import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDAdvisor from '../../hooks/useCRUDAdvisor';
 import { AdvisorBase } from '../../interfaces/IAdvisor';
+import ExcelImportButton from '../../components/common/ExcelImportButton';
 
 const { Option } = Select;
 
@@ -161,10 +162,36 @@ const AdvisorList: React.FC = () => {
       theme={{
         components: {
           Table: {
-            headerBg: 'rgba(255, 255, 255, 0.1)',
-            headerColor: '#ffffff',
-            rowHoverBg: 'rgba(255, 255, 255, 0.05)',
+            headerBg: 'linear-gradient(90deg, #f97316 0%, #1E40AF 100%)',
+            headerColor: '#fff',
             borderColor: 'rgba(255, 255, 255, 0.3)',
+            colorText: '#1E293B',
+            colorBgContainer: 'rgba(255,255,255,0.6)',
+            colorBgElevated: 'rgba(255,255,255,0.3)',
+            rowHoverBg: 'rgba(249, 115, 22, 0.15)',
+            colorPrimary: '#1E40AF',
+            colorPrimaryHover: '#1d4ed8',
+          },
+          Input: {
+            colorBgContainer: 'rgba(255,255,255,0.8)',
+            colorBorder: 'rgba(30, 64, 175, 0.3)',
+            colorText: '#1E293B',
+            colorPrimary: '#1E40AF',
+            colorPrimaryHover: '#1d4ed8',
+          },
+          Select: {
+            colorBgContainer: 'rgba(255,255,255,0.8)',
+            colorBorder: 'rgba(30, 64, 175, 0.3)',
+            colorText: '#1E293B',
+            colorPrimary: '#1E40AF',
+            colorPrimaryHover: '#1d4ed8',
+          },
+          Button: {
+            colorPrimary: '#1E40AF',
+            colorPrimaryHover: '#1d4ed8',
+            colorText: '#fff',
+            colorTextLightSolid: '#fff',
+            colorTextDisabled: '#bdbdbd',
           },
         },
       }}
@@ -220,7 +247,7 @@ const AdvisorList: React.FC = () => {
                 )}
               </div>
               <div className={styles.actions}>
-                {['Add New Account', 'Delete Account', 'Import Data From xlsx'].map((action, index) => (
+                {['Add New Account', 'Delete Account'].map((action, index) => (
                   <motion.div
                     key={index}
                     className={`${styles.actionButton} ${action === 'Delete Account' ? styles.deleteButton : ''}`}
@@ -230,8 +257,6 @@ const AdvisorList: React.FC = () => {
                         ? undefined
                         : action === 'Add New Account'
                         ? handleAddNewAccount
-                        : action === 'Import Data From xlsx'
-                        ? handleImport
                         : action === 'Delete Account'
                         ? handleDeleteModeToggle
                         : undefined
@@ -242,6 +267,10 @@ const AdvisorList: React.FC = () => {
                     </div>
                   </motion.div>
                 ))}
+                {/* Excel Import Button without blue wrapper */}
+                <ExcelImportButton onClick={handleImport}>
+                  Import Data From xlsx
+                </ExcelImportButton>
               </div>
             </div>
             {/* External Table display with server-side pagination */}

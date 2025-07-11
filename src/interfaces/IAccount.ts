@@ -1,5 +1,5 @@
-import { StaffProfileData } from "./IStaff"
-import { StudentProfileData } from "./IStudent"
+import { StaffDataUpdateRequest, StaffProfileData } from "./IStaff"
+import { StudentDataUpdateRequest, StudentProfileData } from "./IStudent"
 
 export type ActiveCategoriesProp = {
   admin: ActiveAccountProps[];
@@ -8,6 +8,7 @@ export type ActiveCategoriesProp = {
   manager: ActiveAccountProps[];
   student: ActiveAccountProps[];
 };
+
 export interface ActiveAccountProps{
   id: number
   username :string
@@ -31,9 +32,31 @@ export interface AccountProps{
   firstName :string
   lastName :string
   dateOfBirth :Date
-  address :string
-  phone:string
-  roleId :number | 0 | 1 | 2| 3 | 4 
+  roleName: string
+  staffDataDetailResponse: StaffProfileData | null
+  studentDataDetailResponse: StudentProfileData |null
+  status: number | boolean
+}
+export interface UpdateAccountProps{
+  username: string,
+  email: string,
+  firstName: string,
+  lastName: string,
+  dateOfBirth: "2025-07-11T13:58:26.421Z" | Date,
+  avatarUrl: string,
+  roleId: 0,
+  status: 0,
+  staffDataUpdateRequest: StaffDataUpdateRequest
+  studentDataUpdateRequest: StudentDataUpdateRequest
+}
+
+export interface JWTAccountProps{
+  FirstName: string
+  LastName: string
+  LoginAtTime: string
+  Role: number
+  UserId: number
+  UserName: string
 }
 
 export interface LoginProps{

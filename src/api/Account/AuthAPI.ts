@@ -26,7 +26,7 @@ export const LoginGoogleAccount = async (data: string) => {
         throwApiError(result);
         return null; // This will never be reached, but TypeScript needs it
     }
-}
+} // TODO change to use axiosCreate
 
 export const LoginAccount = async (data: LoginProps) => {
     const props = {
@@ -56,7 +56,7 @@ export const Logout = async () => {
         throwApiError(response);
         return null; // This will never be reached, but TypeScript needs it
     }
-}
+} // TODO change to use axiosCreate
 
 export const RefreshToken = async () => {
     const props = {
