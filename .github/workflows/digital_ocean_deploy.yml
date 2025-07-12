@@ -26,7 +26,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ghcr.io/${{ secret.RESPOSITORY_URL }}:latest
+          tags: ghcr.io/${{ secrets.RESPOSITORY_URL }}:latest
           build-args: |
             VITE_API_AISEA_API_BASEURL=${{secrets.VITE_API_AISEA_API_BASEURL}}
             VITE_API_GOOGLE_CLIENT_ID=${{secrets.VITE_API_GOOGLE_CLIENT_ID}}
@@ -48,12 +48,12 @@ jobs:
             # Login to GitHub Container Registry
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             # Pull latest image
-            docker pull ghcr.io/${{ secret.RESPOSITORY_URL }}:latest
+            docker pull ghcr.io/${{ secrets.RESPOSITORY_URL }}:latest
             
             docker stop ai-sea || true
             docker rm ai-sea || true
             docker run -d --name ai-sea \
-              -p 8080:80 ghcr.io/${{ secret.RESPOSITORY_URL }}:latest
+              -p 8080:80 ghcr.io/${{ secrets.RESPOSITORY_URL }}:latest
         # Note: Don't be needing port 443 this anymore. Nginx over the server already handling the SSL certificate over 443 port. No need for us to do the job
         # 1. Connect to the droplet docker app, login with username and password
         # 2. pull the latest image from Github registry
