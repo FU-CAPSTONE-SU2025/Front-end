@@ -12,22 +12,21 @@ jobs:
       - name: Verified Code
         uses: actions/checkout@v4
         # Checking is code is available, or, you know, up to par before build
-
-      - name: Login to Docker Hub
+        
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{secrets.DOCKER_USERNAME}}
-          password: ${{secrets.DOCKER_PASSWORD}}
-        # Login to my account in Docker Hub
-        # The account is store in the ball, github secret key - only I know it, lol
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push container to Docker Hub
+      - name: Push container to Github Regitry
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{secrets.DOCKER_USERNAME}}/ai-sea:latest
+          tags: ghcr.io/${{ secret.RESPOSITORY_URL }}:latest
           build-args: |
             VITE_API_AISEA_API_BASEURL=${{secrets.VITE_API_AISEA_API_BASEURL}}
             VITE_API_GOOGLE_CLIENT_ID=${{secrets.VITE_API_GOOGLE_CLIENT_ID}}
@@ -35,6 +34,7 @@ jobs:
             VITE_THERE_IS_AN_EGG=${{secrets.VITE_THERE_IS_AN_EGG}}
             VITE_GITHUB_CLIENTID=${{secrets.VITE_GITHUB_CLIENTID}}
             VITE_GITHUB_CLIENTSECRET=${{secrets.VITE_GITHUB_CLIENTSECRET}}
+        # The account is store in the ball, github secret key - only I know it, lol
         # Push to containerize by running the script Dockerfile, check the code folder to see that file, also the Nginx config
 
       - name: Connect and Deploy to the DigitalOcean Droplet Ubuntu VM
@@ -45,15 +45,18 @@ jobs:
           key: ${{secrets.SSH_KEY}}
           port: 22
           script: |
-            echo "${{secrets.DOCKER_PASSWORD}}" | docker login -u "${{secrets.DOCKER_USERNAME}}" --password-stdin
-            docker pull ${{secrets.DOCKER_USERNAME}}/ai-sea:latest
+            # Login to GitHub Container Registry
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # Pull latest image
+            docker pull ghcr.io/${{ secret.RESPOSITORY_URL }}:latest
+            
             docker stop ai-sea || true
             docker rm ai-sea || true
             docker run -d --name ai-sea \
-              -p 8080:80 ${{secrets.DOCKER_USERNAME}}/ai-sea:latest
+              -p 8080:80 ghcr.io/${{ secret.RESPOSITORY_URL }}:latest
         # Note: Don't be needing port 443 this anymore. Nginx over the server already handling the SSL certificate over 443 port. No need for us to do the job
         # 1. Connect to the droplet docker app, login with username and password
-        # 2. pull the latest image
+        # 2. pull the latest image from Github registry
         # 3. check - stop - remove any currently running instance of the containers
         # 4. Update and re-run the container with the latest update/code with the config-ed port, check the nginx file for port number.
         # Noted: ${{secrets.SSH_KEY}} is the SSH PRIVATE KEY, aka the -----BEGIN OPENSSH PRIVATE KEY-----
