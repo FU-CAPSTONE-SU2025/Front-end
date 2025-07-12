@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import { BellOutlined } from '@ant-design/icons';
 import { Avatar, Button, Modal, Badge } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNotificationHub, NotificationItem } from '../../hooks/useNotificationHub';
+import { useNotificationHub } from '../../hooks/useNotificationHub';
+import { NotificationItem } from '../../interfaces/INotification';
 
 function timeAgo(dateString?: string) {
   if (!dateString) return '';
