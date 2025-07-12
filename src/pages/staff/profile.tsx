@@ -1,33 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Descriptions, Avatar, Button, ConfigProvider } from 'antd';
+import { Descriptions, Avatar, Button, ConfigProvider, message } from 'antd';
 import { LogOut, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffProfile.module.css';
 import { StaffProfileData } from '../../interfaces/IStaff';
 import { getAuthState } from '../../hooks/useAuths';
+import { jwtDecode } from 'jwt-decode';
+import { JWTAccountProps, AccountProps } from '../../interfaces/IAccount';
+import { GetCurrentStaffUser } from '../../api/Account/UserAPI';
 
-// Mock staff data (replace with API call in production)
-const mockStaff: StaffProfileData = {
-  username: 'staffUser123',
-  password: 'securePass123',
-  email: 'staff@example.com',
-  avatarUrl: '/img/avatar-placeholder.png',
-  firstName: 'Jane',
-  lastName: 'Doe',
-  dateOfBirth: new Date('1990-05-15'),
-  address: '123 Main St, City, Country',
-  department: 'Academic Services',
-  position: 'Counselor',
-  id: 1,
-  roleId: 3,
-  phone: '',
-  campus: '',
-  startWorkAt: new Date,
-  endWorkAt: new Date
-};
-
-// Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.3 } },
@@ -54,26 +36,63 @@ const buttonVariants = {
 
 const StaffProfile: React.FC = () => {
   const navigate = useNavigate();
-  const {logout}  = getAuthState()
-  // Debug animation states
-  useEffect(() => {
-    console.log('StaffProfile animation triggered');
-    return () => console.log('StaffProfile animation cleanup');
-  }, []);
+  const { logout, accessToken } = getAuthState();
+  const [userId, setUserId] = useState<number | null>(null);
+  const [staffData, setStaffData] = useState<AccountProps | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock logout function (replace with actual auth logic)
+  // Get user ID from JWT token
+  useEffect(() => {
+    try {
+      const data: JWTAccountProps = jwtDecode(accessToken ?? '');
+      setUserId(data?.UserId ?? null);
+    } catch (err) {
+      setError('Failed to decode user token.');
+    }
+  }, [accessToken]);
+
+  // Fetch staff data
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!userId) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await GetCurrentStaffUser(userId);
+        setStaffData(data);
+      } catch (err) {
+        setError('Failed to fetch staff data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (userId) fetchData();
+  }, [userId]);
+
   const handleLogout = () => {
-    logout()
-    localStorage.removeItem('authToken'); // Example placeholder
+    logout();
     navigate('/');
   };
 
-  // Contact support via Gmail
   const handleContactSupport = () => {
     const subject = encodeURIComponent('Support Request');
     const mailto = `mailto:support@example.com?subject=${subject}`;
     window.open(mailto, '_blank');
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  if (error) {
+    return <div>{error}</div>;
+  }
+  if (!staffData) {
+    return <div>No staff data found.</div>;
+  }
+
+  // StaffProfileData is nested in staffData.staffDataDetailResponse
+  const staffProfile: StaffProfileData | null = staffData.staffDataDetailResponse ?? null;
 
   return (
     <ConfigProvider
@@ -99,21 +118,19 @@ const StaffProfile: React.FC = () => {
             variants={leftCardVariants}
             initial="hidden"
             animate="visible"
-            onAnimationComplete={() => console.log('Left card animation complete')}
           >
             <h2 className={styles.title}>Profile Information</h2>
             <div className={styles.avatarWrapper}>
-              <Avatar src={mockStaff.avatarUrl} size={100} className={styles.avatar} />
+              <Avatar src={staffData.avatarUrl} size={100} className={styles.avatar} />
             </div>
             <Descriptions column={1} bordered className={styles.description}>
-              <Descriptions.Item label="Username">{mockStaff.username}</Descriptions.Item>
-              <Descriptions.Item label="Email">{mockStaff.email}</Descriptions.Item>
-              <Descriptions.Item label="First Name">{mockStaff.firstName}</Descriptions.Item>
-              <Descriptions.Item label="Last Name">{mockStaff.lastName}</Descriptions.Item>
+              <Descriptions.Item label="Username">{staffData.username}</Descriptions.Item>
+              <Descriptions.Item label="Email">{staffData.email}</Descriptions.Item>
+              <Descriptions.Item label="First Name">{staffData.firstName}</Descriptions.Item>
+              <Descriptions.Item label="Last Name">{staffData.lastName}</Descriptions.Item>
               <Descriptions.Item label="Date of Birth">
-                {mockStaff.dateOfBirth.toLocaleDateString('en-GB')}
+                {new Date(staffData.dateOfBirth).toLocaleDateString('en-GB')}
               </Descriptions.Item>
-              <Descriptions.Item label="Address">{mockStaff.address}</Descriptions.Item>
             </Descriptions>
           </motion.div>
 
@@ -124,12 +141,14 @@ const StaffProfile: React.FC = () => {
               variants={rightCardVariants}
               initial="hidden"
               animate="visible"
-              onAnimationComplete={() => console.log('Right card animation complete')}
             >
               <h2 className={styles.title}>Staff's Details</h2>
               <Descriptions column={1} bordered className={styles.description}>
-                <Descriptions.Item label="Department">{mockStaff.department}</Descriptions.Item>
-                <Descriptions.Item label="Position">{mockStaff.position}</Descriptions.Item>
+                <Descriptions.Item label="Department">{staffProfile?.department ?? '-'}</Descriptions.Item>
+                <Descriptions.Item label="Position">{staffProfile?.position ?? '-'}</Descriptions.Item>
+                <Descriptions.Item label="Campus">{staffProfile?.campus ?? '-'}</Descriptions.Item>
+                <Descriptions.Item label="Start Work At">{staffProfile?.startWorkAt ? new Date(staffProfile.startWorkAt).toLocaleDateString('en-GB') : '-'}</Descriptions.Item>
+                <Descriptions.Item label="End Work At">{staffProfile?.endWorkAt ? new Date(staffProfile.endWorkAt).toLocaleDateString('en-GB') : '-'}</Descriptions.Item>
               </Descriptions>
             </motion.div>
 
@@ -139,7 +158,6 @@ const StaffProfile: React.FC = () => {
               variants={actionCardVariants}
               initial="hidden"
               animate="visible"
-              onAnimationComplete={() => console.log('Action card animation complete')}
             >
               <h2 className={styles.title}>Actions</h2>
               <div className={styles.actionButtons}>

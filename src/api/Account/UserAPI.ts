@@ -1,6 +1,8 @@
  import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { AccountProps, AccountPropsCreate, ActiveAccountProps, LoginProps } from "../../interfaces/IAccount";
+import { AccountProps, AccountPropsCreate, ActiveAccountProps, UpdateAccountProps } from "../../interfaces/IAccount";
+
+
 
 const userURL = baseUrl+"/User"
 
@@ -39,7 +41,7 @@ export const GetCurrentStaffUser = async (userId:number):Promise<AccountProps|nu
         return null
     }
 }
-export const UpdateCurrentStaffUser = async (userId:number,data:AccountPropsCreate):Promise<AccountProps|null> => {
+export const UpdateCurrentStaffUser = async (userId:number,data:UpdateAccountProps):Promise<AccountProps|null> => {
     const props = {
         data: data,
         url: userURL+`/staff/`+userId,

@@ -1,32 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Descriptions, Avatar, Button, ConfigProvider } from 'antd';
 import { LogOut, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffProfile.module.css';
-import { ManagerBase } from '../../interfaces/IManager';
 import { getAuthState } from '../../hooks/useAuths';
+import { jwtDecode } from 'jwt-decode';
+import { JWTAccountProps, AccountProps } from '../../interfaces/IAccount';
+import { GetCurrentStaffUser } from '../../api/Account/UserAPI';
 
-// Mock manager data (replace with API call in production)
-const mockManager: ManagerBase = {
-  username: 'managerUser123',
-  password: 'securePass123',
-  email: 'manager@example.com',
-  avatarUrl: '/img/avatar-placeholder.png',
-  firstName: 'John',
-  lastName: 'Smith',
-  dateOfBirth: new Date('1985-03-20'),
-  address: '456 Executive Ave, Business District, Country',
-  department: 'Academic Management',
-  position: 'Program Manager',
-  id: 1,
-  roleId: 4,
-  phone: '+1-555-0123',
-  startWorkAt: new Date('2020-01-15'),
-  endWorkAt: undefined
-};
-
-// Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.3 } },
@@ -53,27 +35,64 @@ const buttonVariants = {
 
 const ManagerProfile: React.FC = () => {
   const navigate = useNavigate();
-  const { logout } = getAuthState();
+  const { logout, accessToken } = getAuthState();
+  const [userId, setUserId] = useState<number | null>(null);
+  const [managerData, setManagerData] = useState<AccountProps | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Debug animation states
+  // Get user ID from JWT token
   useEffect(() => {
-    console.log('ManagerProfile animation triggered');
-    return () => console.log('ManagerProfile animation cleanup');
-  }, []);
+    try {
+      const data: JWTAccountProps = jwtDecode(accessToken ?? '');
+      setUserId(data?.UserId ?? null);
+    } catch (err) {
+      setError('Failed to decode user token.');
+    }
+  }, [accessToken]);
 
-  // Mock logout function (replace with actual auth logic)
+  // Fetch manager data
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!userId) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await GetCurrentStaffUser(userId);
+        setManagerData(data);
+      } catch (err) {
+        setError('Failed to fetch manager data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (userId) fetchData();
+  }, [userId]);
+
   const handleLogout = () => {
     logout();
-    localStorage.removeItem('authToken'); // Example placeholder
+    localStorage.removeItem('authToken');
     navigate('/');
   };
 
-  // Contact support via Gmail
   const handleContactSupport = () => {
     const subject = encodeURIComponent('Manager Support Request');
     const mailto = `mailto:support@example.com?subject=${subject}`;
     window.open(mailto, '_blank');
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  if (error) {
+    return <div>{error}</div>;
+  }
+  if (!managerData) {
+    return <div>No manager data found.</div>;
+  }
+
+  // Manager data is in the main AccountProps object
+  // For managers, we'll use the basic account data since they don't have a separate profile object like staff
 
   return (
     <ConfigProvider
@@ -99,22 +118,19 @@ const ManagerProfile: React.FC = () => {
             variants={leftCardVariants}
             initial="hidden"
             animate="visible"
-            onAnimationComplete={() => console.log('Left card animation complete')}
           >
             <h2 className={styles.title}>Profile Information</h2>
             <div className={styles.avatarWrapper}>
-              <Avatar src={mockManager.avatarUrl} size={100} className={styles.avatar} />
+              <Avatar src={managerData.avatarUrl} size={100} className={styles.avatar} />
             </div>
             <Descriptions column={1} bordered className={styles.description}>
-              <Descriptions.Item label="Username">{mockManager.username}</Descriptions.Item>
-              <Descriptions.Item label="Email">{mockManager.email}</Descriptions.Item>
-              <Descriptions.Item label="First Name">{mockManager.firstName}</Descriptions.Item>
-              <Descriptions.Item label="Last Name">{mockManager.lastName}</Descriptions.Item>
-              <Descriptions.Item label="Phone">{mockManager.phone}</Descriptions.Item>
+              <Descriptions.Item label="Username">{managerData.username}</Descriptions.Item>
+              <Descriptions.Item label="Email">{managerData.email}</Descriptions.Item>
+              <Descriptions.Item label="First Name">{managerData.firstName}</Descriptions.Item>
+              <Descriptions.Item label="Last Name">{managerData.lastName}</Descriptions.Item>
               <Descriptions.Item label="Date of Birth">
-                {mockManager.dateOfBirth.toLocaleDateString('en-GB')}
+                {new Date(managerData.dateOfBirth).toLocaleDateString('en-GB')}
               </Descriptions.Item>
-              <Descriptions.Item label="Address">{mockManager.address}</Descriptions.Item>
             </Descriptions>
           </motion.div>
 
@@ -125,18 +141,11 @@ const ManagerProfile: React.FC = () => {
               variants={rightCardVariants}
               initial="hidden"
               animate="visible"
-              onAnimationComplete={() => console.log('Right card animation complete')}
             >
               <h2 className={styles.title}>Management Details</h2>
               <Descriptions column={1} bordered className={styles.description}>
-                <Descriptions.Item label="Department">{mockManager.department}</Descriptions.Item>
-                <Descriptions.Item label="Position">{mockManager.position}</Descriptions.Item>
-                <Descriptions.Item label="Start Work Date">
-                  {mockManager.startWorkAt.toLocaleDateString('en-GB')}
-                </Descriptions.Item>
-                <Descriptions.Item label="End Work Date">
-                  {mockManager.endWorkAt ? mockManager.endWorkAt.toLocaleDateString('en-GB') : 'Current'}
-                </Descriptions.Item>
+                <Descriptions.Item label="Role">{managerData.roleName}</Descriptions.Item>
+                <Descriptions.Item label="Status">{managerData.status ? 'Active' : 'Inactive'}</Descriptions.Item>
               </Descriptions>
             </motion.div>
 
@@ -146,7 +155,6 @@ const ManagerProfile: React.FC = () => {
               variants={actionCardVariants}
               initial="hidden"
               animate="visible"
-              onAnimationComplete={() => console.log('Action card animation complete')}
             >
               <h2 className={styles.title}>Actions</h2>
               <div className={styles.actionButtons}>

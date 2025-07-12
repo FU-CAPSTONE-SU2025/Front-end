@@ -83,9 +83,10 @@ const EditAccount: React.FC = () => {
             firstName: '',
             lastName: '',
             dateOfBirth: new Date(),
-            address: '',
-            phone: '',
-            roleId: 0
+            roleName: 'Academic Staff',
+            staffDataDetailResponse: null,
+            studentDataDetailResponse: null,
+            status: 0
           },
         };
         console.log("staff: ",payload)
@@ -143,9 +144,6 @@ const EditAccount: React.FC = () => {
                 </Form.Item>
                 <Form.Item label="Date of Birth" name="dateOfBirth" rules={[{ required: true }]}>
                   <DatePicker style={{ width: '100%' }} />
-                </Form.Item>
-                <Form.Item label="Address" name="address" rules={[{ required: true }]}>
-                  <Input placeholder="Enter address" />
                 </Form.Item>
                 <Form.Item
                   label="Password"

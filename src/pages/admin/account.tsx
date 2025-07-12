@@ -8,7 +8,7 @@ import { validateEmail } from '../../components/common/validation';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { jwtDecode } from 'jwt-decode';
 import { getAuthState } from '../../hooks/useAuths';
-import { JWTAccountProps } from '../../interfaces/IAccount';
+import { JWTAccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
 import useActiveUserData from '../../hooks/useActiveUserData';
 import { message } from 'antd';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
@@ -190,12 +190,17 @@ const Profile: React.FC = () => {
         return;
       }
 
-      const updateData = {
+      const updateData: UpdateAccountProps = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),
         username: username.trim(),
-        dateOfBirth: selectedDate ? dayjs(selectedDate).format('YYYY-MM-DD') : undefined,
+        dateOfBirth: selectedDate ?? new Date(),
+        avatarUrl: '',
+        roleId: 1,
+        status: 1,
+        staffDataUpdateRequest: null,
+        studentDataUpdateRequest: null
       };
 
       console.log('Saving profile with data:', updateData);

@@ -1,16 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { AccountProps } from '../interfaces/IAccount';
+import { AccountProps, UpdateAccountProps } from '../interfaces/IAccount';
 import { GetCurrentStaffUser, UpdateCurrentStaffUser } from '../api/Account/UserAPI';
+import { StaffDataUpdateRequest } from '../interfaces/IStaff';
+import { StudentDataUpdateRequest } from '../interfaces/IStudent';
 
-interface UpdateProfileData {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  username?: string;
-  dateOfBirth?: string;
-  avatarUrl?: string;
-  status?: number | boolean;
-}
 
 export default function useUserProfile() {
   // Query for fetching current user profile - this will auto-fetch when userId changes
@@ -32,10 +25,25 @@ export default function useUserProfile() {
   });
 
   // Mutation for updating user profile
-  const updateUserMutation = useMutation<AccountProps | null, unknown, { userId: number; data: UpdateProfileData }>({
+  const updateUserMutation = useMutation<AccountProps | null, unknown, { userId: number; data: UpdateAccountProps }>({
     mutationFn: async ({ userId, data }) => {
       console.log('Updating user profile:', { userId, data });
-      const result = await UpdateCurrentStaffUser(userId, data);
+      
+      // Convert UpdateProfileData to UpdateAccountProps
+      const updateData: UpdateAccountProps = {
+        username: data.username || '',
+        email: data.email || '',
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : new Date(),
+        avatarUrl: data.avatarUrl || '',
+        roleId: 0,
+        status: 0,
+        staffDataUpdateRequest: {} as StaffDataUpdateRequest, // Empty object for now
+        studentDataUpdateRequest: {} as StudentDataUpdateRequest // Empty object for now
+      };
+      
+      const result = await UpdateCurrentStaffUser(userId, updateData);
       console.log('Update result:', result);
       return result;
     },
