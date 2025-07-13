@@ -8,6 +8,7 @@ import { useAuths } from '../../hooks/useAuths';
 
 const navItems = [
   { name: 'Dashboard', path: '/advisor' },
+  { name: 'Work Schedule', path: '/advisor/workSchedule' },
   { name: 'Students', path: '/advisor/students' },
   { name: 'Appointments', path: '/advisor/appointments' },
   { name: 'Reports', path: '/advisor/reports' },

@@ -46,6 +46,7 @@ import ManagerSubjectSyllabus from "../pages/manager/subjectSyllabus";
 import ChatAI from "../pages/student/chatAI";
 import AdvisorLayout from "../components/advisor/layout";
 import AdvisorDashboard from "../pages/advisor/dashboard";
+import WorkSchedule from "../pages/advisor/workSchedule";
 export const routes = createBrowserRouter([
   {
     path: "/admin",
@@ -175,6 +176,10 @@ export const routes = createBrowserRouter([
       {
         index: true,
         Component: AdvisorDashboard,
+      },
+      {
+        path: "workSchedule",
+        Component: WorkSchedule,
       },
     ]
   },
