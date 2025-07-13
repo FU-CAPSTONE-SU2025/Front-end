@@ -88,7 +88,7 @@ export default function DataTable({columns, data, rowSelection, pagination, onPa
               onRow={onRow}
               loading={loading}
               pagination={paginationConfig}
-              rowKey="Id"
+              rowKey="id"
               bordered
               size="middle"
               scroll={{ x: 'max-content' }}

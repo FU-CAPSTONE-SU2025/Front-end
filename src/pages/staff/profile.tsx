@@ -4,12 +4,13 @@ import { Descriptions, Avatar, Button, ConfigProvider, message } from 'antd';
 import { LogOut, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffProfile.module.css';
-import { StaffProfileData } from '../../interfaces/IStaff';
+import { AccountProps } from '../../interfaces/IAccount';
 import { getAuthState } from '../../hooks/useAuths';
 import { jwtDecode } from 'jwt-decode';
-import { JWTAccountProps, AccountProps } from '../../interfaces/IAccount';
-import { GetCurrentStaffUser } from '../../api/Account/UserAPI';
+import { JWTAccountProps } from '../../interfaces/IAccount';
+import useUserProfile from '../../hooks/useUserProfile';
 
+// Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.3 } },
@@ -36,63 +37,110 @@ const buttonVariants = {
 
 const StaffProfile: React.FC = () => {
   const navigate = useNavigate();
-  const { logout, accessToken } = getAuthState();
+  const { logout } = getAuthState();
   const [userId, setUserId] = useState<number | null>(null);
-  const [staffData, setStaffData] = useState<AccountProps | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { accessToken } = getAuthState();
+  
+  // Use the user profile hook
+  const {
+    getCurrentUserQuery,
+    updateProfileAsync,
+    isUpdatingProfile,
+    isUpdateSuccess,
+    updateError,
+  } = useUserProfile();
+
+  // Get the user query using the current userId
+  const userQuery = getCurrentUserQuery(userId);
+  const { data: currentUserData, isLoading: isLoadingCurrentUser, error: currentUserError, refetch: refetchUser } = userQuery;
 
   // Get user ID from JWT token
-  useEffect(() => {
+  const getUserIdFromToken = () => {
     try {
-      const data: JWTAccountProps = jwtDecode(accessToken ?? '');
-      setUserId(data?.UserId ?? null);
-    } catch (err) {
-      setError('Failed to decode user token.');
+      const data: JWTAccountProps = jwtDecode(accessToken ?? "N/A");
+      console.log('Decoded JWT data:', data);
+      return data?.UserId ?? null;
+    } catch (error) {
+      console.error("Failed to decode token:", error);
+      return null;
     }
+  };
+
+  // Set userId on component mount
+  useEffect(() => {
+    const id = getUserIdFromToken();
+    console.log('Setting user ID:', id);
+    setUserId(id);
   }, [accessToken]);
 
-  // Fetch staff data
+  // Handle successful profile update
   useEffect(() => {
-    const fetchData = async () => {
-      if (!userId) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await GetCurrentStaffUser(userId);
-        setStaffData(data);
-      } catch (err) {
-        setError('Failed to fetch staff data.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (userId) fetchData();
-  }, [userId]);
+    if (isUpdateSuccess) {
+      message.success('Profile updated successfully!');
+      // Refresh the profile data
+      refetchUser();
+    }
+  }, [isUpdateSuccess, refetchUser]);
 
+  // Handle update errors
+  useEffect(() => {
+    if (updateError) {
+      message.error('Failed to update profile. Please try again.');
+      console.error('Update error:', updateError);
+    }
+  }, [updateError]);
+
+  // Handle current user fetch errors
+  useEffect(() => {
+    if (currentUserError) {
+      console.error('Failed to fetch user data:', currentUserError);
+      message.error('Failed to load user profile.');
+    }
+  }, [currentUserError]);
+
+  // Debug animation states
+  useEffect(() => {
+    console.log('StaffProfile animation triggered');
+    return () => console.log('StaffProfile animation cleanup');
+  }, []);
+
+  // Helper function to get display value with loading state
+  const getDisplayValue = (value: any, placeholder: string) => {
+    if (isLoadingCurrentUser) return "Loading...";
+    return value && String(value).trim() !== "" ? String(value) : placeholder;
+  };
+
+  // Helper function to get avatar URL
+  const getAvatarUrl = () => {
+    if (currentUserData?.avatarUrl) return currentUserData.avatarUrl;
+    if (isLoadingCurrentUser) return "https://ui-avatars.com/api/?name=Loading&background=64748B&color=ffffff&size=120";
+    return "https://ui-avatars.com/api/?name=Staff+User&background=1E40AF&color=ffffff&size=120";
+  };
+
+  // Helper function to format date
+  const formatDate = (date: any) => {
+    if (isLoadingCurrentUser) return "Loading...";
+    if (!date) return "Not specified";
+    try {
+      return new Date(date).toLocaleDateString('en-GB');
+    } catch {
+      return "Invalid date";
+    }
+  };
+
+  // Mock logout function (replace with actual auth logic)
   const handleLogout = () => {
     logout();
+    localStorage.removeItem('authToken'); // Example placeholder
     navigate('/');
   };
 
+  // Contact support via Gmail
   const handleContactSupport = () => {
-    const subject = encodeURIComponent('Support Request');
+    const subject = encodeURIComponent('Staff Support Request');
     const mailto = `mailto:support@example.com?subject=${subject}`;
     window.open(mailto, '_blank');
   };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  if (error) {
-    return <div>{error}</div>;
-  }
-  if (!staffData) {
-    return <div>No staff data found.</div>;
-  }
-
-  // StaffProfileData is nested in staffData.staffDataDetailResponse
-  const staffProfile: StaffProfileData | null = staffData.staffDataDetailResponse ?? null;
 
   return (
     <ConfigProvider
@@ -118,19 +166,19 @@ const StaffProfile: React.FC = () => {
             variants={leftCardVariants}
             initial="hidden"
             animate="visible"
+            onAnimationComplete={() => console.log('Left card animation complete')}
           >
             <h2 className={styles.title}>Profile Information</h2>
             <div className={styles.avatarWrapper}>
-              <Avatar src={staffData.avatarUrl} size={100} className={styles.avatar} />
+              <Avatar src={getAvatarUrl()} size={100} className={styles.avatar} />
             </div>
             <Descriptions column={1} bordered className={styles.description}>
-              <Descriptions.Item label="Username">{staffData.username}</Descriptions.Item>
-              <Descriptions.Item label="Email">{staffData.email}</Descriptions.Item>
-              <Descriptions.Item label="First Name">{staffData.firstName}</Descriptions.Item>
-              <Descriptions.Item label="Last Name">{staffData.lastName}</Descriptions.Item>
-              <Descriptions.Item label="Date of Birth">
-                {new Date(staffData.dateOfBirth).toLocaleDateString('en-GB')}
-              </Descriptions.Item>
+              <Descriptions.Item label="Username">{getDisplayValue(currentUserData?.username, "Not specified")}</Descriptions.Item>
+              <Descriptions.Item label="Email">{getDisplayValue(currentUserData?.email, "Not specified")}</Descriptions.Item>
+              <Descriptions.Item label="First Name">{getDisplayValue(currentUserData?.firstName, "Not specified")}</Descriptions.Item>
+              <Descriptions.Item label="Last Name">{getDisplayValue(currentUserData?.lastName, "Not specified")}</Descriptions.Item>
+              <Descriptions.Item label="Date of Birth">{formatDate(currentUserData?.dateOfBirth)}</Descriptions.Item>
+              <Descriptions.Item label="Role">{getDisplayValue(currentUserData?.roleName, "Academic Staff")}</Descriptions.Item>
             </Descriptions>
           </motion.div>
 
@@ -141,14 +189,15 @@ const StaffProfile: React.FC = () => {
               variants={rightCardVariants}
               initial="hidden"
               animate="visible"
+              onAnimationComplete={() => console.log('Right card animation complete')}
             >
               <h2 className={styles.title}>Staff's Details</h2>
               <Descriptions column={1} bordered className={styles.description}>
-                <Descriptions.Item label="Department">{staffProfile?.department ?? '-'}</Descriptions.Item>
-                <Descriptions.Item label="Position">{staffProfile?.position ?? '-'}</Descriptions.Item>
-                <Descriptions.Item label="Campus">{staffProfile?.campus ?? '-'}</Descriptions.Item>
-                <Descriptions.Item label="Start Work At">{staffProfile?.startWorkAt ? new Date(staffProfile.startWorkAt).toLocaleDateString('en-GB') : '-'}</Descriptions.Item>
-                <Descriptions.Item label="End Work At">{staffProfile?.endWorkAt ? new Date(staffProfile.endWorkAt).toLocaleDateString('en-GB') : '-'}</Descriptions.Item>
+                <Descriptions.Item label="Department">{getDisplayValue(currentUserData?.staffDataDetailResponse?.department, "Not specified")}</Descriptions.Item>
+                <Descriptions.Item label="Position">{getDisplayValue(currentUserData?.staffDataDetailResponse?.position, "Not specified")}</Descriptions.Item>
+                <Descriptions.Item label="Campus">{getDisplayValue(currentUserData?.staffDataDetailResponse?.campus, "Not specified")}</Descriptions.Item>
+                <Descriptions.Item label="Start Work Date">{formatDate(currentUserData?.staffDataDetailResponse?.startWorkAt)}</Descriptions.Item>
+                <Descriptions.Item label="End Work Date">{formatDate(currentUserData?.staffDataDetailResponse?.endWorkAt)}</Descriptions.Item>
               </Descriptions>
             </motion.div>
 
@@ -158,6 +207,7 @@ const StaffProfile: React.FC = () => {
               variants={actionCardVariants}
               initial="hidden"
               animate="visible"
+              onAnimationComplete={() => console.log('Action card animation complete')}
             >
               <h2 className={styles.title}>Actions</h2>
               <div className={styles.actionButtons}>

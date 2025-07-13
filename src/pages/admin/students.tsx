@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal, message } from 'antd';
 import styles from '../../css/admin/students.module.css';
-import DataImport from '../../components/common/dataImport';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
@@ -12,12 +11,14 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDStudent from '../../hooks/useCRUDStudent';
 import { StudentBase } from '../../interfaces/IStudent';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
+import { BulkRegisterStudent, BulkRegisterStaff, BulkRegisterManager, BulkRegisterAdvisor, BulkRegisterAdmin, DisableUser } from '../../api/Account/UserAPI';
+import {validateBulkData } from '../../utils/bulkImportTransformers';
 
 const { Option } = Select;
 
 const StudentList: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
-  const [isBulkImportOpen, setIsBulkImportOpen] = useState<boolean>(false);
+  // Removed bulk import state - only role-specific import is allowed
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
   const [filterValue, setFilterValue] = useState<string>('');
@@ -25,6 +26,8 @@ const StudentList: React.FC = () => {
   const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadMessage, setUploadMessage] = useState<string>('');
   
   const { categorizedData, refetch } = useActiveUserData();
   const { studentList, getAllStudent, pagination, isLoading } = useCRUDStudent();
@@ -72,27 +75,87 @@ const StudentList: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleBulkImport = () => {
-    setIsBulkImportOpen(true);
+  // Removed bulk import - only role-specific import is allowed
+
+  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    try {
+      setUploadStatus('uploading');
+      setUploadMessage('Processing import...');
+      
+      // Extract student data from the imported data
+      const studentData = importedData['STUDENT'] || [];
+      
+      if (studentData.length === 0) {
+        setUploadStatus('error');
+        setUploadMessage('No student data found in the imported file');
+        message.warning('No student data found in the imported file');
+        return;
+      }
+
+      // Transform the imported data to match BulkAccountPropsCreate interface
+      const transformedData = studentData.map(item => ({
+        email: item.email || '',
+        username: item.username || item.email?.split('@')[0] || '',
+        password: item.password || 'defaultPassword123',
+        firstName: item.firstName || '',
+        lastName: item.lastName || '',
+        dateOfBirth: item.dateOfBirth || new Date().toISOString(),
+        studentProfileData: {
+          enrolledAt: item.enrolledAt ? new Date(item.enrolledAt) : (item.enrollDate ? new Date(item.enrollDate) : new Date()),
+          careerGoal: item.careerGoal || 'Not specified'
+        },
+        staffProfileData: null
+      }));
+
+      // Validate the data
+      const validData = transformedData.filter(item => 
+        item.email.trim() !== '' && 
+        item.firstName.trim() !== '' && 
+        item.lastName.trim() !== ''
+      );
+
+      if (validData.length === 0) {
+        setUploadStatus('error');
+        setUploadMessage('No valid student data found. Please check your data format and ensure all required fields are filled.');
+        message.error('No valid student data found. Please check your data format and ensure all required fields are filled.');
+        return;
+      }
+
+      if (validData.length !== transformedData.length) {
+        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+      }
+
+      // Call the bulk registration API
+      let response;
+      try {
+        response = await BulkRegisterStudent(validData);
+      } catch (err) {
+        setUploadStatus('error');
+        setUploadMessage('Failed to import students. Please try again.');
+        message.error('Failed to import students. Please try again.');
+        return;
+      }
+      // Treat null/undefined (204 No Content) as success
+      if (response !== null && response !== undefined || response === null) {
+        setUploadStatus('success');
+        setUploadMessage(`Successfully imported ${validData.length} students`);
+        message.success(`Successfully imported ${validData.length} students`);
+        // Refresh the student list
+        loadStudentData();
+      } else {
+        setUploadStatus('error');
+        setUploadMessage('Failed to import students. Please try again.');
+        message.error('Failed to import students. Please try again.');
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      setUploadStatus('error');
+      setUploadMessage('An error occurred during import. Please check your data and try again.');
+      message.error('An error occurred during import. Please check your data and try again.');
+    }
   };
 
-  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    // Extract student data from the imported data
-    const studentData = importedData['STUDENT'] || [];
-    message.success(`Successfully imported ${studentData.length} students`);
-    // TODO: Implement actual student import logic
-    // Refresh the student list
-    loadStudentData();
-  };
-
-  const handleBulkDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    console.log('Bulk imported data:', importedData);
-    setIsBulkImportOpen(false);
-    
-    // Refresh all data
-    refetch();
-    loadStudentData();
-  };
+  // Removed bulk import handler - only role-specific import is allowed
 
   const handleFilterChange = (value: string) => {
     setFilterType(value);
@@ -121,19 +184,25 @@ const StudentList: React.FC = () => {
     setSelectedStudents([]);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
+    if (selectedStudents.length === 0) return;
+    const studentId = selectedStudents[0];
     Modal.confirm({
       title: `Confirm Deletion`,
-      content: `Are you sure you want to delete ${selectedStudents.length} student account(s)?`,
+      content: `Are you sure you want to delete this student account?`,
       okText: 'Delete',
       okType: 'danger',
       cancelText: 'Cancel',
-      onOk: () => {
-        // Here you would typically call the API to delete the selected students
-        // For now, we'll just refresh the data
-        loadStudentData();
-        setSelectedStudents([]);
-        setIsDeleteMode(false);
+      onOk: async () => {
+        try {
+          await DisableUser(studentId);
+          message.success('Student account deleted successfully');
+          loadStudentData();
+          setSelectedStudents([]);
+          setIsDeleteMode(false);
+        } catch (error) {
+          message.error('Failed to delete student account');
+        }
       },
       maskStyle: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
       centered: true,
@@ -156,21 +225,46 @@ const StudentList: React.FC = () => {
     { title: 'Last Name', dataIndex: 'lastName', key: 'lastName', width: 120 },
     { title: 'Date of Birth', dataIndex: 'dateOfBirth', key: 'dateOfBirth', width: 120,
       render: (date: Date) => date ? new Date(date).toLocaleDateString() : '' },
-    { title: 'Role', dataIndex: 'roleName', key: 'roleName', width: 120 },
-    { title: 'Status', dataIndex: 'status', key: 'status', width: 100 },
-    { title: 'Enrolled At', dataIndex: 'enrolledAt', key: 'enrolledAt', width: 120,
+    { title: 'Status', dataIndex: 'status', key: 'status', width: 100,
+      render: (status: number | boolean) => {
+        const isActive = typeof status === 'boolean' ? status : status === 0;
+        return (
+          <span
+            style={{
+              backgroundColor: isActive ? '#10B981' : '#EF4444',
+              color: 'white',
+              padding: '4px 12px',
+              borderRadius: '12px',
+              fontSize: '0.75rem',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              display: 'inline-block',
+              minWidth: '60px',
+              textAlign: 'center'
+            }}
+          >
+            {isActive ? 'Active' : 'Inactive'}
+          </span>
+        );
+      }},
+    { title: 'Enrolled At', key: 'enrolledAt', width: 120,
       render: (_: any, record: StudentBase) =>
         record.studentDataListResponse?.enrolledAt
           ? new Date(record.studentDataListResponse.enrolledAt).toLocaleDateString()
           : '' },
-    { title: 'Career Goal', dataIndex: 'careerGoal', key: 'careerGoal', width: 180,
+    { title: 'Career Goal', key: 'careerGoal', width: 180,
       render: (_: any, record: StudentBase) =>
         record.studentDataListResponse?.careerGoal || '' },
+    { title: 'Graduation Status', key: 'doGraduate', width: 120,
+      render: (_: any, record: StudentBase) =>
+        record.studentDataListResponse?.doGraduate ? 'Graduated' : 'Enrolled' },
   ];
 
   // Row selection for delete mode
   const rowSelection = isDeleteMode
     ? {
+        type: 'radio',
         selectedRowKeys: selectedStudents,
         onChange: (selectedRowKeys: React.Key[]) => {
           setSelectedStudents(selectedRowKeys as number[]);
@@ -186,26 +280,26 @@ const StudentList: React.FC = () => {
       theme={{
         components: {
           Table: {
-            headerBg: 'linear-gradient(90deg, #f97316 0%, #1E40AF 100%)',
-            headerColor: '#fff',
-            borderColor: 'rgba(255, 255, 255, 0.3)',
+            headerBg: 'rgba(255, 255, 255, 0.95)',
+            headerColor: '#1E293B',
+            borderColor: 'rgba(30, 64, 175, 0.2)',
             colorText: '#1E293B',
-            colorBgContainer: 'rgba(255,255,255,0.6)',
-            colorBgElevated: 'rgba(255,255,255,0.3)',
-            rowHoverBg: 'rgba(249, 115, 22, 0.15)',
+            colorBgContainer: 'rgba(255, 255, 255, 0.95)',
+            colorBgElevated: 'rgba(255, 255, 255, 0.95)',
+            rowHoverBg: 'rgba(30, 64, 175, 0.08)',
             colorPrimary: '#1E40AF',
             colorPrimaryHover: '#1d4ed8',
           },
           Input: {
-            colorBgContainer: 'rgba(255,255,255,0.8)',
-            colorBorder: 'rgba(30, 64, 175, 0.3)',
+            colorBgContainer: 'rgba(255,255,255,0.95)',
+            colorBorder: 'rgba(30, 64, 175, 0.25)',
             colorText: '#1E293B',
             colorPrimary: '#1E40AF',
             colorPrimaryHover: '#1d4ed8',
           },
           Select: {
-            colorBgContainer: 'rgba(255,255,255,0.8)',
-            colorBorder: 'rgba(30, 64, 175, 0.3)',
+            colorBgContainer: 'rgba(255,255,255,0.95)',
+            colorBorder: 'rgba(30, 64, 175, 0.25)',
             colorText: '#1E293B',
             colorPrimary: '#1E40AF',
             colorPrimaryHover: '#1d4ed8',
@@ -307,9 +401,6 @@ const StudentList: React.FC = () => {
                 ))}
                 {/* Excel Import Buttons without blue wrapper */}
                 <ExcelImportButton onClick={handleImport}>
-                  Import Data From xlsx
-                </ExcelImportButton>
-                <ExcelImportButton onClick={handleBulkImport}>
                   Bulk Import
                 </ExcelImportButton>
               </div>
@@ -357,18 +448,18 @@ const StudentList: React.FC = () => {
         {/* Data Import Modal */}
         {isImportOpen && (
           <BulkDataImport 
-            onClose={() => setIsImportOpen(false)} 
+            onClose={() => {
+              setIsImportOpen(false);
+              setUploadStatus('idle');
+              setUploadMessage('');
+            }} 
             onDataImported={handleDataImported}
             supportedTypes={['STUDENT']}
+            uploadStatus={uploadStatus}
+            uploadMessage={uploadMessage}
           />
         )}
-        {isBulkImportOpen && (
-          <BulkDataImport 
-            onClose={() => setIsBulkImportOpen(false)} 
-            onDataImported={handleBulkDataImported}
-            supportedTypes={['STUDENT', 'STAFF', 'MANAGER', 'ADVISOR']}
-          />
-        )}
+        {/* Removed bulk import modal - only role-specific import is allowed */}
       </div>
     </ConfigProvider>
   );

@@ -42,7 +42,7 @@ export interface UpdateAccountProps{
   email: string,
   firstName: string,
   lastName: string,
-  dateOfBirth:  Date,
+  dateOfBirth: string | Date,
   avatarUrl: string,
   roleId: number,
   status: number | boolean,
@@ -70,10 +70,22 @@ export interface AccountPropsCreate{
     firstName:string,
     lastName:string,
     dateOfBirth:string|Date,
-    roleId:number
+    roleId:number,
     studentProfileData: StudentProfileData | null,
-    staffProfileData: StaffProfileData | null
+    staffProfileData: StaffProfileData | null,
 }
+
+export interface BulkAccountPropsCreate{
+  email: string,
+  username: string,
+  password: string,
+  firstName:string,
+  lastName:string,
+  dateOfBirth:string|Date,
+  studentProfileData: StudentProfileData | null,
+  staffProfileData: StaffProfileData | null
+}
+
 export interface GoogleAccountRequestProps {
     email: string
     sub: string,

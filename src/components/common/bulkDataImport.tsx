@@ -4,6 +4,7 @@ import { UploadOutlined, FileExcelOutlined, CheckCircleOutlined, LoadingOutlined
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import { getHeaderConfig, HeaderConfiguration, matchesConfiguration, findFieldMapping } from '../../data/importConfigurations';
+import { transformBulkImportData, createPreviewData } from '../../utils/bulkImportTransformers';
 import styles from '../../css/bulkImport.module.css';
 
 const { Dragger } = Upload;
@@ -18,7 +19,7 @@ interface ProcessedData {
 
 interface BulkDataImportProps {
   onClose: () => void;
-  onDataImported: (importedData: { [type: string]: { [key: string]: string }[] }) => void;
+  onDataImported: (importedData: { [type: string]: any[] }) => void;
   supportedTypes?: HeaderConfiguration[];
   uploadStatus?: 'idle' | 'uploading' | 'success' | 'error';
   uploadMessage?: string;
@@ -97,18 +98,36 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
         }
 
         if (!identifiedType) {
+          const expectedHeaders = supportedTypes.map(type => {
+            if (typeof type === 'string') {
+              const config = getHeaderConfig(type);
+              return `${type}: ${config.headers.join(', ')}`;
+            }
+            return '';
+          }).filter(Boolean);
+
           message.error(`Could not identify data type. Please check your file headers.
             
-Expected headers for supported types:
-${supportedTypes.map(type => {
-  if (typeof type === 'string') {
-    const config = getHeaderConfig(type);
-    return `${type}: ${config.headers.join(', ')}`;
-  }
-  return '';
-}).filter(Boolean).join('\n')}`);
+${supportedTypes.length === 1 ? 
+  `This page only supports ${supportedTypes[0]} data. Expected headers: ${expectedHeaders[0]}` :
+  `Expected headers for supported types:\n${expectedHeaders.join('\n')}`
+}`);
           setIsProcessing(false);
           return;
+        }
+
+        // Enhanced role-specific validation
+        if (supportedTypes.length === 1 && typeof supportedTypes[0] === 'string') {
+          const expectedType = supportedTypes[0];
+          if (identifiedType !== expectedType) {
+            message.error(`This page only supports importing ${expectedType} data. 
+            
+Your file appears to contain ${identifiedType} data with headers: ${headers.join(', ')}
+            
+Please use the correct file format for ${expectedType} import or go to the appropriate admin page.`);
+            setIsProcessing(false);
+            return;
+          }
         }
 
         // Process the data using flexible field mapping
@@ -139,15 +158,28 @@ ${supportedTypes.map(type => {
           return;
         }
 
+        // Transform data to proper nested structure for account types
+        let transformedData: any = processedRows;
+        if (typeof identifiedType === 'string' && ['STUDENT', 'STAFF', 'MANAGER', 'ADVISOR', 'ADMIN'].includes(identifiedType)) {
+          transformedData = transformBulkImportData(processedRows, identifiedType);
+        }
+
         const processed: ProcessedData = {
           type: identifiedType,
-          data: processedRows,
+          data: transformedData,
           fileName: file.name,
           originalHeaders: headers
         };
 
         setProcessedData(processed);
-        setEditableData([...processedRows]); // Create editable copy
+        
+        // Create preview data for display
+        let previewData: any = processedRows;
+        if (typeof identifiedType === 'string' && ['STUDENT', 'STAFF', 'MANAGER', 'ADVISOR', 'ADMIN'].includes(identifiedType)) {
+          previewData = createPreviewData(transformedData, identifiedType);
+        }
+        
+        setEditableData([...previewData]); // Create editable copy
         message.success(`Successfully processed ${file.name} - ${processedRows.length} records identified as ${getTypeDisplayName(identifiedType)} data`);
         setIsProcessing(false);
         setCurrentStep(1); // Move to preview step
@@ -178,9 +210,19 @@ ${supportedTypes.map(type => {
     
     // Prepare data for upload
     const dataType = processedData.type as string;
-    const uploadData = {
-      [dataType]: editableData
-    };
+    
+    // For account types, we need to transform the edited preview data back to the proper structure
+    let uploadData;
+    if (['STUDENT', 'STAFF', 'MANAGER', 'ADVISOR', 'ADMIN'].includes(dataType)) {
+      const transformedData = transformBulkImportData(editableData, dataType);
+      uploadData = {
+        [dataType]: transformedData
+      };
+    } else {
+      uploadData = {
+        [dataType]: editableData
+      };
+    }
     
     // Call the parent's onDataImported function
     // The parent will handle the async mutation and update uploadStatus accordingly
@@ -298,7 +340,10 @@ ${supportedTypes.map(type => {
         <div className={styles.header}>
           <h2 className={styles.headerTitle}>Bulk Data Import</h2>
           <p className={styles.headerSubtitle}>
-            Upload Excel file to import {getSupportedTypeDisplay()} data
+            {supportedTypes.length === 1 ? 
+              `Upload Excel file to import ${getSupportedTypeDisplay()} data only` :
+              `Upload Excel file to import ${getSupportedTypeDisplay()} data`
+            }
           </p>
         </div>
 
@@ -333,18 +378,21 @@ ${supportedTypes.map(type => {
                     <FileExcelOutlined className={styles.uploadIcon} />
                     <p className={styles.uploadTitle}>Click or drag Excel file here</p>
                     <p className={styles.uploadSubtitle}>
-                      Upload a single Excel file (.xlsx, .xls) with {getSupportedTypeDisplay()} data
+                      {supportedTypes.length === 1 ? 
+                        `Upload a single Excel file (.xlsx, .xls) with ${getSupportedTypeDisplay()} data only` :
+                        `Upload a single Excel file (.xlsx, .xls) with ${getSupportedTypeDisplay()} data`
+                      }
                     </p>
                   </>
                 )}
               </motion.div>
             </Dragger>
 
-            <div style={{ marginTop: 24 }}>
-              <h4 style={{ color: '#22C55E', fontWeight: 600, marginBottom: 8 }}>
+            <div className={styles.expectedHeadersContainer}>
+              <h4 className={styles.expectedHeadersTitle}>
                 Expected Headers for {getSupportedTypeDisplay()}:
               </h4>
-              <Tag color="blue" style={{ margin: '4px 8px 4px 0' }}>
+              <Tag color="blue" className={styles.expectedHeadersTag}>
                 {getExpectedHeaders().join(', ')}
               </Tag>
             </div>
@@ -366,8 +414,8 @@ ${supportedTypes.map(type => {
             className={styles.previewCard}
           >
             <div className={styles.previewContent}>
-              <p className={styles.previewContentDescription}>
-                <InfoCircleOutlined style={{ color: '#1890ff', marginRight: 8 }} />
+              <p className={styles.previewDescription}>
+                <InfoCircleOutlined className={styles.previewDescriptionIcon} />
                 Review your data below. You can edit any cell by clicking on it or delete entire rows.
               </p>
             </div>
@@ -385,24 +433,24 @@ ${supportedTypes.map(type => {
                 }}
                 scroll={{ x: 'max-content', y: 400 }}
                 size="small"
+                className={styles.bulkImportTable}
+               
               />
             </div>
 
-            <div style={{ marginTop: 16, textAlign: 'right' }}>
-              <Space>
+                          <div className={styles.actionButtons}>
                 <Button onClick={handleReset}>
                   Start Over
                 </Button>
-                <Button 
-                  type="primary" 
-                  icon={<CloudUploadOutlined />}
-                  onClick={handleUploadToServer}
-                  loading={isUploading}
-                  disabled={editableData.length === 0}
-                >
-                  Upload to Server ({editableData.length} records)
-                </Button>
-              </Space>
+              <Button 
+                type="primary" 
+                icon={<CloudUploadOutlined />}
+                onClick={handleUploadToServer}
+                loading={isUploading}
+                disabled={editableData.length === 0}
+              >
+                Upload to Server ({editableData.length} records)
+              </Button>
             </div>
           </Card>
         )}
@@ -410,20 +458,20 @@ ${supportedTypes.map(type => {
         {/* Step 3: Success */}
         {currentStep === 2 && (
           <Card className={styles.successCard}>
-            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-              <CheckCircleOutlined style={{ fontSize: 64, color: '#52c41a', marginBottom: 16 }} />
-              <h3 style={{ color: '#52c41a', marginBottom: 8 }}>Import Successful!</h3>
-              <p style={{ color: '#666', marginBottom: 24 }}>
+            <div className={styles.successContent}>
+              <CheckCircleOutlined className={styles.successIcon} />
+              <h3 className={styles.successTitle}>Import Successful!</h3>
+              <p className={styles.successSubtitle}>
                 Successfully imported {editableData.length} {getTypeDisplayName(processedData?.type || supportedTypes[0])} records
               </p>
-              <Space>
+              <div className={styles.actionButtons}>
                 <Button onClick={handleReset} type="default">
                   Import Another File
                 </Button>
                 <Button onClick={onClose} type="primary">
                   Close
                 </Button>
-              </Space>
+              </div>
             </div>
           </Card>
         )}

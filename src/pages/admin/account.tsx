@@ -8,7 +8,7 @@ import { validateEmail } from '../../components/common/validation';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { jwtDecode } from 'jwt-decode';
 import { getAuthState } from '../../hooks/useAuths';
-import { JWTAccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
+import { JWTAccountProps } from '../../interfaces/IAccount';
 import useActiveUserData from '../../hooks/useActiveUserData';
 import { message } from 'antd';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
@@ -190,14 +190,14 @@ const Profile: React.FC = () => {
         return;
       }
 
-      const updateData: UpdateAccountProps = {
+      const updateData = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),
         username: username.trim(),
-        dateOfBirth: selectedDate ?? new Date(),
-        avatarUrl: '',
-        roleId: 1,
+        dateOfBirth: selectedDate ? dayjs(selectedDate).format('YYYY-MM-DD') : new Date(),
+        avatarUrl: currentUserData?.avatarUrl || '',
+        roleId: 1, // Default admin role ID
         status: 1,
         staffDataUpdateRequest: null,
         studentDataUpdateRequest: null
@@ -391,9 +391,6 @@ const Profile: React.FC = () => {
               </motion.div>
             ))}
             {/* Excel Import Button without blue wrapper */}
-            <ExcelImportButton onClick={handleImport} size="large">
-              Import Data From xlsx
-            </ExcelImportButton>
           </div>
         </motion.div>
 

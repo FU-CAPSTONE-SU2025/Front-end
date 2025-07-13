@@ -10,11 +10,15 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDStaff from '../../hooks/useCRUDStaff';
 import { StaffProfileData } from '../../interfaces/IStaff';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
+import { BulkRegisterStaff, BulkRegisterManager, BulkRegisterAdvisor, BulkRegisterAdmin } from '../../api/Account/UserAPI';
+import { transformBulkImportData, validateBulkData, getApiFunctionName } from '../../utils/bulkImportTransformers';
+import { AccountProps } from '../../interfaces/IAccount';
 
 const { Option } = Select;
 
 const StaffList: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
+  // Removed bulk import state - only role-specific import is allowed
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
   const [filterValue, setFilterValue] = useState<string>('');
@@ -22,6 +26,8 @@ const StaffList: React.FC = () => {
   const [selectedStaffs, setSelectedStaffs] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadMessage, setUploadMessage] = useState<string>('');
   
   const { categorizedData, refetch } = useActiveUserData();
   const { getAllStaff, staffList, pagination, isLoading } = useCRUDStaff();
@@ -57,15 +63,91 @@ const StaffList: React.FC = () => {
     setIsImportOpen(true);
   };
 
+  // Removed bulk import - only role-specific import is allowed
+
   // Handle imported staff data
-  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    // Extract staff data from the imported data
-    const staffData = importedData['STAFF'] || [];
-    message.success(`Successfully imported ${staffData.length} staff members`);
-    // TODO: Implement actual staff import logic
-    // Refresh the staff list
-    getAllStaff({ pageNumber: currentPage, pageSize, filterValue: searchQuery });
+  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    try {
+      setUploadStatus('uploading');
+      setUploadMessage('Processing import...');
+      
+      // Extract staff data from the imported data
+      const staffData = importedData['STAFF'] || [];
+      
+      if (staffData.length === 0) {
+        setUploadStatus('error');
+        setUploadMessage('No staff data found in the imported file');
+        message.warning('No staff data found in the imported file');
+        return;
+      }
+
+      // Transform the imported data to match BulkAccountPropsCreate interface
+      const transformedData = staffData.map(item => ({
+        email: item.email || '',
+        username: item.username || item.email?.split('@')[0] || '',
+        password: item.password || 'defaultPassword123',
+        firstName: item.firstName || '',
+        lastName: item.lastName || '',
+        dateOfBirth: item.dateOfBirth || new Date().toISOString(),
+        studentProfileData: null,
+        staffProfileData: {
+          campus: item.campus || '',
+          department: item.department || '',
+          position: item.position || '',
+          startWorkAt: item.startWorkAt ? new Date(item.startWorkAt) : new Date(),
+          endWorkAt: item.endWorkAt ? new Date(item.endWorkAt) : new Date()
+        }
+      }));
+
+      // Validate the data
+      const validData = transformedData.filter(item => 
+        item.email.trim() !== '' && 
+        item.firstName.trim() !== '' && 
+        item.lastName.trim() !== ''
+      );
+
+      if (validData.length === 0) {
+        setUploadStatus('error');
+        setUploadMessage('No valid staff data found. Please check your data format and ensure all required fields are filled.');
+        message.error('No valid staff data found. Please check your data format and ensure all required fields are filled.');
+        return;
+      }
+
+      if (validData.length !== transformedData.length) {
+        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+      }
+
+      // Call the bulk registration API
+      let response;
+      try {
+        response = await BulkRegisterStaff(validData);
+      } catch (err) {
+        setUploadStatus('error');
+        setUploadMessage('Failed to import staff members. Please try again.');
+        message.error('Failed to import staff members. Please try again.');
+        return;
+      }
+      // Treat null/undefined (204 No Content) as success
+      if (response !== null && response !== undefined || response === null) {
+        setUploadStatus('success');
+        setUploadMessage(`Successfully imported ${validData.length} staff members`);
+        message.success(`Successfully imported ${validData.length} staff members`);
+        // Refresh the staff list
+        loadStaffData();
+      } else {
+        setUploadStatus('error');
+        setUploadMessage('Failed to import staff members. Please try again.');
+        message.error('Failed to import staff members. Please try again.');
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      setUploadStatus('error');
+      setUploadMessage('An error occurred during import. Please check your data and try again.');
+      message.error('An error occurred during import. Please check your data and try again.');
+    }
   };
+
+  // Removed bulk import handler - only role-specific import is allowed
 
   const handleFilterChange = (value: string) => {
     setFilterType(value);
@@ -121,7 +203,7 @@ const StaffList: React.FC = () => {
   };
 
   // Redirect to edit page when a staff row is clicked
-  const handleRowClick = (data: StaffProfileData) => {
+  const handleRowClick = (data: AccountProps) => {
     if (!isDeleteMode) {
       nav(`/admin/edit/staff/${data.id}`);
     }
@@ -136,11 +218,11 @@ const StaffList: React.FC = () => {
   const columns = [
     { title: 'Id', dataIndex: 'id', key: 'id', width: 100 },
     { title: 'Email', dataIndex: 'email', key: 'email', width: 200 },
-    { title: 'Name', key: 'name', width: 150, render: (_: any, record: StaffProfileData) => `${record.firstName} ${record.lastName}` },
+    { title: 'Name', key: 'name', width: 150, render: (_: any, record: AccountProps) => `${record.firstName} ${record.lastName}` },
     { title: 'Phone', dataIndex: 'phone', key: 'phone', width: 120 },
     { title: 'Address', dataIndex: 'address', key: 'address', width: 200 },
     { title: 'Campus', dataIndex: 'campus', key: 'campus', width: 120 },
-    { title: 'Added', key: 'added', width: 100, render: (_: any, record: StaffProfileData) => record.startWorkAt ? new Date(record.startWorkAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '' },
+    { title: 'Added', key: 'added', width: 100, render: (_: any, record: AccountProps) => record.staffDataDetailResponse?.startWorkAt ? new Date(record.staffDataDetailResponse?.startWorkAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '' },
   ];
 
   // Row selection for delete mode
@@ -150,7 +232,7 @@ const StaffList: React.FC = () => {
         onChange: (selectedRowKeys: React.Key[]) => {
           setSelectedStaffs(selectedRowKeys.map(String));
         },
-        getCheckboxProps: (record: StaffProfileData) => ({
+        getCheckboxProps: (record: AccountProps) => ({
           name: String(record.id),
         }),
       }
@@ -161,26 +243,26 @@ const StaffList: React.FC = () => {
       theme={{
         components: {
           Table: {
-            headerBg: 'linear-gradient(90deg, #f97316 0%, #1E40AF 100%)',
-            headerColor: '#fff',
-            borderColor: 'rgba(255, 255, 255, 0.3)',
+            headerBg: 'rgba(255, 255, 255, 0.95)',
+            headerColor: '#1E293B',
+            borderColor: 'rgba(30, 64, 175, 0.2)',
             colorText: '#1E293B',
-            colorBgContainer: 'rgba(255,255,255,0.6)',
-            colorBgElevated: 'rgba(255,255,255,0.3)',
-            rowHoverBg: 'rgba(249, 115, 22, 0.15)',
+            colorBgContainer: 'rgba(255, 255, 255, 0.95)',
+            colorBgElevated: 'rgba(255, 255, 255, 0.95)',
+            rowHoverBg: 'rgba(30, 64, 175, 0.08)',
             colorPrimary: '#1E40AF',
             colorPrimaryHover: '#1d4ed8',
           },
           Input: {
-            colorBgContainer: 'rgba(255,255,255,0.8)',
-            colorBorder: 'rgba(30, 64, 175, 0.3)',
+            colorBgContainer: 'rgba(255,255,255,0.95)',
+            colorBorder: 'rgba(30, 64, 175, 0.25)',
             colorText: '#1E293B',
             colorPrimary: '#1E40AF',
             colorPrimaryHover: '#1d4ed8',
           },
           Select: {
-            colorBgContainer: 'rgba(255,255,255,0.8)',
-            colorBorder: 'rgba(30, 64, 175, 0.3)',
+            colorBgContainer: 'rgba(255,255,255,0.95)',
+            colorBorder: 'rgba(30, 64, 175, 0.25)',
             colorText: '#1E293B',
             colorPrimary: '#1E40AF',
             colorPrimaryHover: '#1d4ed8',
@@ -282,7 +364,7 @@ const StaffList: React.FC = () => {
                 ))}
                 {/* Excel Import Button without blue wrapper */}
                 <ExcelImportButton onClick={handleImport}>
-                  Import Data From xlsx
+                  Bulk Import
                 </ExcelImportButton>
               </div>
             </div>
@@ -293,7 +375,7 @@ const StaffList: React.FC = () => {
               rowSelection={rowSelection}
               pagination={pagination}
               onPageChange={handlePageChange}
-              onRow={(record: StaffProfileData) => ({
+              onRow={(record: AccountProps) => ({
                 onClick: () => handleRowClick(record),
               })}
               loading={isLoading}
@@ -329,11 +411,18 @@ const StaffList: React.FC = () => {
         {/* Data Import Modal */}
         {isImportOpen && (
           <BulkDataImport 
-            onClose={() => setIsImportOpen(false)} 
+            onClose={() => {
+              setIsImportOpen(false);
+              setUploadStatus('idle');
+              setUploadMessage('');
+            }} 
             onDataImported={handleDataImported}
             supportedTypes={['STAFF']}
+            uploadStatus={uploadStatus}
+            uploadMessage={uploadMessage}
           />
         )}
+        {/* Removed bulk import modal - only role-specific import is allowed */}
       </div>
     </ConfigProvider>
   );
