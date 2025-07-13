@@ -1,33 +1,164 @@
+/* Loading Animation */
+.loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, transparent 37%, #f0f0f0 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1.1rem;
+  color: #64748B;
+  font-style: italic;
+}
+
 .container {
   width: calc(100% - 250px);
   position: absolute;
   left: 0;
   top: 0;
-  height: auto;
-  min-height: calc(100vh - 6.625rem);
+  height: 100vh;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  margin-top: 6.625rem;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
   margin-left: 250px;
   box-sizing: border-box;
-  background: transparent;
-  z-index: 2;
-  padding: 2rem;
+  overflow: hidden;
 }
 
-.formCard {
+.profileCard {
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+  max-width: 800px;
+  height: calc(100vh - 4rem);
   padding: 2rem;
-  background: rgba(255, 255, 255, 0.25) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border-radius: 20px !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
   box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(25px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(25px) saturate(120%) !important;
+  border-radius: 24px !important;
+  border: 2px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  overflow-y: auto;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.name {
+  color: #0F172A;
+  font-size: 1.75rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.profileInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.role {
+  color: #1E293B;
+  font-size: 0.875rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  margin: 0;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.divider {
+  color: #64748B;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.email {
+  color: #EA580C;
+  font-size: 0.875rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  margin: 0;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.formFields {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sectionTitle {
+  color: #0F172A;
+  font-size: 1.1rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem 0;
+  padding: 0.5rem 0;
+  border-bottom: 2px solid rgba(30, 64, 175, 0.2);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+.fieldRow {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+.fieldColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.fieldLabel {
+  color: #0F172A;
+  font-size: 0.85rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
 }
 
 .form {
@@ -35,68 +166,227 @@
 }
 
 .form :global(.ant-form-item-label > label) {
-  color: #1E293B !important;
+  color: #0F172A !important;
   font-family: 'Inter', sans-serif;
   font-weight: 600;
+  font-size: 0.85rem;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+.form :global(.ant-form-item) {
+  margin-bottom: 1rem;
+}
+
+.form :global(.ant-form-item-explain-error) {
+  color: #dc2626;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.editActions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid rgba(30, 64, 175, 0.1);
+}
+
+.saveButton,
+.cancelButton {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  outline: none;
+}
+
+.saveButton {
+  background: linear-gradient(135deg, #1E40AF 0%, #1d4ed8 100%);
+  color: white;
+}
+
+.saveButton:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(30, 64, 175, 0.3);
+}
+
+.cancelButton {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+}
+
+.cancelButton:hover {
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(107, 114, 128, 0.3);
+}
+
+.buttonContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .form :global(.ant-input),
-.form :global(.ant-select-selector) {
-  background: rgba(255, 255, 255, 0.8) !important;
-  border: 1px solid rgba(30, 64, 175, 0.3) !important;
-  color: #1E293B !important;
-  border-radius: 8px !important;
-  transition: all 0.2s ease !important;
+.form :global(.ant-select-selector),
+.form :global(.ant-picker) {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid rgba(30, 64, 175, 0.25) !important;
+  border-radius: 12px !important;
+  color: #0F172A !important;
+  font-size: 0.9rem !important;
+  font-family: 'Geist', sans-serif !important;
+  font-weight: 500 !important;
+  box-sizing: border-box !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  outline: none !important;
 }
 
 .form :global(.ant-input:focus),
-.form :global(.ant-select-selector:focus),
-.form :global(.ant-select-focused .ant-select-selector) {
+.form :global(.ant-select-focused .ant-select-selector),
+.form :global(.ant-picker-focused) {
   border-color: #1E40AF !important;
-  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1) !important;
+  box-shadow: 
+    0 0 0 4px rgba(30, 64, 175, 0.15), 
+    0 4px 12px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  transform: translateY(-1px) !important;
+}
+
+.form :global(.ant-input:disabled),
+.form :global(.ant-select-disabled .ant-select-selector),
+.form :global(.ant-picker-disabled) {
+  background: rgba(248, 250, 252, 0.7) !important;
+  color: #475569 !important;
+  cursor: not-allowed !important;
+  border-color: rgba(203, 213, 225, 0.6) !important;
 }
 
 .form :global(.ant-input::placeholder),
-.form :global(.ant-select-placeholder) {
-  color: rgba(30, 41, 59, 0.5) !important;
+.form :global(.ant-select-placeholder),
+.form :global(.ant-picker-input > input::placeholder) {
+  color: rgba(15, 23, 42, 0.5) !important;
 }
 
 .form :global(.ant-select-arrow) {
   color: #1E40AF !important;
 }
 
-.formActions {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  margin-top: 1.5rem;
+.form :global(.ant-picker-input > input) {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #0F172A !important;
+  font-size: 0.9rem !important;
+  font-family: 'Geist', sans-serif !important;
+  font-weight: 500 !important;
 }
 
-.formActions :global(.ant-btn) {
-  background: #1E40AF;
-  border: none;
-  color: white;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.2);
+.form :global(.ant-picker-separator),
+.form :global(.ant-picker-suffix) {
+  color: #1E40AF !important;
 }
 
-.formActions :global(.ant-btn-primary:hover) {
-  background: #1d4ed8 !important;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3) !important;
+/* Responsive Design */
+@media (max-width: 1023px) {
+  .container {
+    width: calc(100% - 200px);
+    margin-left: 200px;
+    padding: 1rem;
+  }
+
+  .profileCard {
+    height: calc(100vh - 2rem);
+    padding: 1.5rem;
+  }
+
+  .name {
+    font-size: 1.5rem;
+  }
+
+  .fieldRow {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .editActions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .saveButton,
+  .cancelButton {
+    width: 100%;
+    max-width: 300px;
+  }
 }
 
-.formActions :global(.ant-btn-default) {
-  background: #6b7280;
-  border: none;
-  color: white;
+@media (max-width: 767px) {
+  .container {
+    width: 100%;
+    margin-left: 0;
+    padding: 0.5rem;
+  }
+
+  .profileCard {
+    height: calc(100vh - 1rem);
+    padding: 1rem;
+    border-radius: 16px;
+  }
+
+  .name {
+    font-size: 1.25rem;
+  }
+
+  .profileInfo {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .divider {
+    display: none;
+  }
+
+  .editActions {
+    margin-top: 1.5rem;
+  }
 }
 
-.formActions :global(.ant-btn-default:hover) {
-  background: #4b5563 !important;
-  color: white !important;
-  transform: translateY(-2px);
+@media (max-width: 480px) {
+  .container {
+    padding: 0.25rem;
+  }
+
+  .profileCard {
+    padding: 0.75rem;
+    border-radius: 12px;
+  }
+
+  .name {
+    font-size: 1.1rem;
+  }
+
+  .sectionTitle {
+    font-size: 1rem;
+  }
+
+  .fieldContent {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+  }
 }

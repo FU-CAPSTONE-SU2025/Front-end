@@ -225,16 +225,40 @@ const StudentList: React.FC = () => {
     { title: 'Last Name', dataIndex: 'lastName', key: 'lastName', width: 120 },
     { title: 'Date of Birth', dataIndex: 'dateOfBirth', key: 'dateOfBirth', width: 120,
       render: (date: Date) => date ? new Date(date).toLocaleDateString() : '' },
-    { title: 'Role', dataIndex: 'roleName', key: 'roleName', width: 120 },
-    { title: 'Status', dataIndex: 'status', key: 'status', width: 100 },
-    { title: 'Enrolled At', dataIndex: 'enrolledAt', key: 'enrolledAt', width: 120,
+    { title: 'Status', dataIndex: 'status', key: 'status', width: 100,
+      render: (status: number | boolean) => {
+        const isActive = typeof status === 'boolean' ? status : status === 0;
+        return (
+          <span
+            style={{
+              backgroundColor: isActive ? '#10B981' : '#EF4444',
+              color: 'white',
+              padding: '4px 12px',
+              borderRadius: '12px',
+              fontSize: '0.75rem',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              display: 'inline-block',
+              minWidth: '60px',
+              textAlign: 'center'
+            }}
+          >
+            {isActive ? 'Active' : 'Inactive'}
+          </span>
+        );
+      }},
+    { title: 'Enrolled At', key: 'enrolledAt', width: 120,
       render: (_: any, record: StudentBase) =>
         record.studentDataListResponse?.enrolledAt
           ? new Date(record.studentDataListResponse.enrolledAt).toLocaleDateString()
           : '' },
-    { title: 'Career Goal', dataIndex: 'careerGoal', key: 'careerGoal', width: 180,
+    { title: 'Career Goal', key: 'careerGoal', width: 180,
       render: (_: any, record: StudentBase) =>
         record.studentDataListResponse?.careerGoal || '' },
+    { title: 'Graduation Status', key: 'doGraduate', width: 120,
+      render: (_: any, record: StudentBase) =>
+        record.studentDataListResponse?.doGraduate ? 'Graduated' : 'Enrolled' },
   ];
 
   // Row selection for delete mode
@@ -256,26 +280,26 @@ const StudentList: React.FC = () => {
       theme={{
         components: {
           Table: {
-            headerBg: 'linear-gradient(90deg, #f97316 0%, #1E40AF 100%)',
-            headerColor: '#fff',
-            borderColor: 'rgba(255, 255, 255, 0.3)',
+            headerBg: 'rgba(255, 255, 255, 0.95)',
+            headerColor: '#1E293B',
+            borderColor: 'rgba(30, 64, 175, 0.2)',
             colorText: '#1E293B',
-            colorBgContainer: 'rgba(255,255,255,0.6)',
-            colorBgElevated: 'rgba(255,255,255,0.3)',
-            rowHoverBg: 'rgba(249, 115, 22, 0.15)',
+            colorBgContainer: 'rgba(255, 255, 255, 0.95)',
+            colorBgElevated: 'rgba(255, 255, 255, 0.95)',
+            rowHoverBg: 'rgba(30, 64, 175, 0.08)',
             colorPrimary: '#1E40AF',
             colorPrimaryHover: '#1d4ed8',
           },
           Input: {
-            colorBgContainer: 'rgba(255,255,255,0.8)',
-            colorBorder: 'rgba(30, 64, 175, 0.3)',
+            colorBgContainer: 'rgba(255,255,255,0.95)',
+            colorBorder: 'rgba(30, 64, 175, 0.25)',
             colorText: '#1E293B',
             colorPrimary: '#1E40AF',
             colorPrimaryHover: '#1d4ed8',
           },
           Select: {
-            colorBgContainer: 'rgba(255,255,255,0.8)',
-            colorBorder: 'rgba(30, 64, 175, 0.3)',
+            colorBgContainer: 'rgba(255,255,255,0.95)',
+            colorBorder: 'rgba(30, 64, 175, 0.25)',
             colorText: '#1E293B',
             colorPrimary: '#1E40AF',
             colorPrimaryHover: '#1d4ed8',
