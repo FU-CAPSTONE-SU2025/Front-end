@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { Form, Input, Button, ConfigProvider, Modal } from 'antd';
-import { Mail } from 'lucide-react';
+import { Mail, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/forgetPassword.module.css';
 import { ResetPassword, SendEmail } from '../../api/Account/AuthAPI';
@@ -281,6 +281,51 @@ const ForgetPassword: React.FC = () => {
   return (
     <ConfigProvider>
       <div className={styles.background}>
+        {/* Back Button */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          style={{
+            position: 'absolute',
+            top: 32,
+            left: 32,
+            zIndex: 10,
+          }}
+        >
+          <Button
+            type="text"
+            icon={<ArrowLeft size={20} />}
+            onClick={() => navigate('/')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              color: '#666',
+              fontSize: '1rem',
+              fontWeight: 500,
+              padding: '8px 16px',
+              borderRadius: 8,
+              border: '1px solid #d9d9d9',
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+              e.currentTarget.style.color = '#1E40AF';
+              e.currentTarget.style.borderColor = '#1E40AF';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+              e.currentTarget.style.color = '#666';
+              e.currentTarget.style.borderColor = '#d9d9d9';
+            }}
+          >
+            Back to Login
+          </Button>
+        </motion.div>
+
         <div className={styles.container}>
           <div style={{ position: 'absolute', top: 32, left: 0, width: '100%', textAlign: 'center', zIndex: 2 }}>
             <span className={styles.stepIndicator}>

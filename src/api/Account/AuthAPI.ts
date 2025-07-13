@@ -18,7 +18,7 @@ export const LoginGoogleAccount = async (data: string) => {
         url: googleLoginURL,
         headers: googleHeader
     }
-    const result = await axiosRead(props)
+    const result = await axiosCreate(props)
     if (result.success) {
         return result.data
     }
@@ -48,7 +48,7 @@ export const Logout = async () => {
         data: null,
         url: accountUrl+`/logout`,
     }
-    const response = await axiosRead(props)
+    const response = await axiosCreate(props)
     if (response.success) {
         return response.data
     }
@@ -63,7 +63,7 @@ export const RefreshToken = async () => {
         data: null,
         url: accountUrl+`/refresh-token`,
     }
-    const newAccessToken = await axiosRead(props)
+    const newAccessToken = await axiosCreate(props)
     if (newAccessToken.success) {
         const {setAccessToken,setRefreshToken} = getAuthState()
         //console.log(newAccessToken.data)
