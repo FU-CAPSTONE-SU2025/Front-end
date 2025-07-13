@@ -18,7 +18,7 @@ const { Option } = Select;
 
 const StaffList: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
-  const [isBulkImportOpen, setIsBulkImportOpen] = useState<boolean>(false);
+  // Removed bulk import state - only role-specific import is allowed
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
   const [filterValue, setFilterValue] = useState<string>('');
@@ -26,6 +26,8 @@ const StaffList: React.FC = () => {
   const [selectedStaffs, setSelectedStaffs] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadMessage, setUploadMessage] = useState<string>('');
   
   const { categorizedData, refetch } = useActiveUserData();
   const { getAllStaff, staffList, pagination, isLoading } = useCRUDStaff();
@@ -61,17 +63,20 @@ const StaffList: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleBulkImport = () => {
-    setIsBulkImportOpen(true);
-  };
+  // Removed bulk import - only role-specific import is allowed
 
   // Handle imported staff data
   const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
+      setUploadStatus('uploading');
+      setUploadMessage('Processing import...');
+      
       // Extract staff data from the imported data
       const staffData = importedData['STAFF'] || [];
       
       if (staffData.length === 0) {
+        setUploadStatus('error');
+        setUploadMessage('No staff data found in the imported file');
         message.warning('No staff data found in the imported file');
         return;
       }
@@ -102,6 +107,8 @@ const StaffList: React.FC = () => {
       );
 
       if (validData.length === 0) {
+        setUploadStatus('error');
+        setUploadMessage('No valid staff data found. Please check your data format and ensure all required fields are filled.');
         message.error('No valid staff data found. Please check your data format and ensure all required fields are filled.');
         return;
       }
@@ -111,98 +118,36 @@ const StaffList: React.FC = () => {
       }
 
       // Call the bulk registration API
-      const response = await BulkRegisterStaff(validData);
-      
-      if (response) {
+      let response;
+      try {
+        response = await BulkRegisterStaff(validData);
+      } catch (err) {
+        setUploadStatus('error');
+        setUploadMessage('Failed to import staff members. Please try again.');
+        message.error('Failed to import staff members. Please try again.');
+        return;
+      }
+      // Treat null/undefined (204 No Content) as success
+      if (response !== null && response !== undefined || response === null) {
+        setUploadStatus('success');
+        setUploadMessage(`Successfully imported ${validData.length} staff members`);
         message.success(`Successfully imported ${validData.length} staff members`);
-        setIsImportOpen(false);
         // Refresh the staff list
         loadStaffData();
       } else {
+        setUploadStatus('error');
+        setUploadMessage('Failed to import staff members. Please try again.');
         message.error('Failed to import staff members. Please try again.');
       }
     } catch (error) {
       console.error('Import error:', error);
+      setUploadStatus('error');
+      setUploadMessage('An error occurred during import. Please check your data and try again.');
       message.error('An error occurred during import. Please check your data and try again.');
     }
   };
 
-  const handleBulkDataImported = async (importedData: { [type: string]: any[] }) => {
-    try {
-      console.log('Bulk imported data:', importedData);
-      
-      let totalImported = 0;
-      const results: { [type: string]: { success: number; failed: number } } = {};
-
-      // Process each data type
-      for (const [dataType, data] of Object.entries(importedData)) {
-        if (data.length === 0) continue;
-
-        // Data is already transformed by the BulkDataImport component
-        const transformedData = data;
-        
-        // Validate the data
-        const validData = validateBulkData(transformedData);
-
-        if (validData.length === 0) {
-          results[dataType] = { success: 0, failed: data.length };
-          continue;
-        }
-
-        // Get the appropriate API function
-        let apiFunction: any = null;
-        switch (dataType) {
-          case 'STAFF':
-            apiFunction = BulkRegisterStaff;
-            break;
-          case 'MANAGER':
-            apiFunction = BulkRegisterManager;
-            break;
-          case 'ADVISOR':
-            apiFunction = BulkRegisterAdvisor;
-            break;
-          case 'ADMIN':
-            apiFunction = BulkRegisterAdmin;
-            break;
-          default:
-            console.warn(`Unknown data type: ${dataType}`);
-            continue;
-        }
-
-        // Call the appropriate API
-        try {
-          const response = await apiFunction(validData);
-          if (response) {
-            results[dataType] = { success: validData.length, failed: data.length - validData.length };
-            totalImported += validData.length;
-          } else {
-            results[dataType] = { success: 0, failed: data.length };
-          }
-        } catch (error) {
-          console.error(`Error importing ${dataType}:`, error);
-          results[dataType] = { success: 0, failed: data.length };
-        }
-      }
-
-      // Show results
-      const resultMessages = Object.entries(results).map(([type, result]) => 
-        `${type}: ${result.success} imported, ${result.failed} failed`
-      ).join(', ');
-
-      if (totalImported > 0) {
-        message.success(`Bulk import completed! ${resultMessages}`);
-        setIsBulkImportOpen(false);
-        // Refresh all data
-        refetch();
-        loadStaffData();
-      } else {
-        message.error(`Bulk import failed! ${resultMessages}`);
-      }
-    } catch (error) {
-      console.error('Bulk import error:', error);
-      message.error('An error occurred during bulk import. Please check your data and try again.');
-    }
-  };
+  // Removed bulk import handler - only role-specific import is allowed
 
   const handleFilterChange = (value: string) => {
     setFilterType(value);
@@ -419,9 +364,6 @@ const StaffList: React.FC = () => {
                 ))}
                 {/* Excel Import Button without blue wrapper */}
                 <ExcelImportButton onClick={handleImport}>
-                  Import Data From xlsx
-                </ExcelImportButton>
-                <ExcelImportButton onClick={handleBulkImport}>
                   Bulk Import
                 </ExcelImportButton>
               </div>
@@ -469,18 +411,18 @@ const StaffList: React.FC = () => {
         {/* Data Import Modal */}
         {isImportOpen && (
           <BulkDataImport 
-            onClose={() => setIsImportOpen(false)} 
+            onClose={() => {
+              setIsImportOpen(false);
+              setUploadStatus('idle');
+              setUploadMessage('');
+            }} 
             onDataImported={handleDataImported}
             supportedTypes={['STAFF']}
+            uploadStatus={uploadStatus}
+            uploadMessage={uploadMessage}
           />
         )}
-        {isBulkImportOpen && (
-          <BulkDataImport 
-            onClose={() => setIsBulkImportOpen(false)} 
-            onDataImported={handleBulkDataImported}
-            supportedTypes={['STAFF', 'MANAGER', 'ADVISOR', 'ADMIN']}
-          />
-        )}
+        {/* Removed bulk import modal - only role-specific import is allowed */}
       </div>
     </ConfigProvider>
   );

@@ -1,16 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { AccountProps } from '../interfaces/IAccount';
+import { AccountProps, UpdateAccountProps } from '../interfaces/IAccount';
 import { GetCurrentStaffUser, UpdateCurrentStaffUser } from '../api/Account/UserAPI';
 
-interface UpdateProfileData {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  username?: string;
-  dateOfBirth?: string;
-  avatarUrl?: string;
-  status?: number | boolean;
-}
 
 export default function useUserProfile() {
   // Query for fetching current user profile - this will auto-fetch when userId changes
@@ -32,7 +23,7 @@ export default function useUserProfile() {
   });
 
   // Mutation for updating user profile
-  const updateUserMutation = useMutation<AccountProps | null, unknown, { userId: number; data: UpdateProfileData }>({
+  const updateUserMutation = useMutation<AccountProps | null, unknown, { userId: number; data: UpdateAccountProps }>({
     mutationFn: async ({ userId, data }) => {
       console.log('Updating user profile:', { userId, data });
       const result = await UpdateCurrentStaffUser(userId, data);

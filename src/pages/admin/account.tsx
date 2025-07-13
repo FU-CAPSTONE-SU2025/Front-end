@@ -195,7 +195,12 @@ const Profile: React.FC = () => {
         lastName: lastName.trim(),
         email: email.trim(),
         username: username.trim(),
-        dateOfBirth: selectedDate ? dayjs(selectedDate).format('YYYY-MM-DD') : undefined,
+        dateOfBirth: selectedDate ? dayjs(selectedDate).format('YYYY-MM-DD') : new Date(),
+        avatarUrl: currentUserData?.avatarUrl || '',
+        roleId: 1, // Default admin role ID
+        status: 1,
+        staffDataUpdateRequest: null,
+        studentDataUpdateRequest: null
       };
 
       console.log('Saving profile with data:', updateData);
@@ -386,9 +391,6 @@ const Profile: React.FC = () => {
               </motion.div>
             ))}
             {/* Excel Import Button without blue wrapper */}
-            <ExcelImportButton onClick={handleImport} size="large">
-              Import Data From xlsx
-            </ExcelImportButton>
           </div>
         </motion.div>
 

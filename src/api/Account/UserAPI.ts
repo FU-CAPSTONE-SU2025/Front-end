@@ -11,8 +11,6 @@ export const GetActiveUser = async ():Promise<ActiveAccountProps|null> => {
         data: null,
         url: userURL+`/active`,
     }
-    const header = GetHeader()
-    console.log("Header: ",header) 
     const result = await axiosRead(props)
     if (result.success) {
         //console.log(result.data)
@@ -41,7 +39,7 @@ export const GetCurrentStaffUser = async (userId:number):Promise<AccountProps|nu
         return null
     }
 }
-export const UpdateCurrentStaffUser = async (userId:number,data:AccountPropsCreate):Promise<AccountProps|null> => {
+export const UpdateCurrentStaffUser = async (userId:number,data:UpdateAccountProps):Promise<AccountProps|null> => {
     const props = {
         data: data,
         url: userURL+`/staff/`+userId,

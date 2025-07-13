@@ -10,6 +10,7 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDManager from '../../hooks/useCRUDManager';
 import { ManagerBase } from '../../interfaces/IManager';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
+import { BulkRegisterManager } from '../../api/Account/UserAPI';
 
 const { Option } = Select;
 
@@ -22,6 +23,8 @@ const ManagerList: React.FC = () => {
   const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadMessage, setUploadMessage] = useState<string>('');
   
   const { categorizedData, refetch } = useActiveUserData();
   const { getAllManager, managerList, pagination, isLoading } = useCRUDManager();
@@ -57,15 +60,64 @@ const ManagerList: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    // Extract manager data from the imported data
-    const managerData = importedData['MANAGER'] || [];
-    message.success(`Successfully imported ${managerData.length} managers`);
-    // TODO: Implement actual manager import logic
-    setIsImportOpen(false);
-    // Refresh the manager list
-    refetch();
-    loadManagerData();
+  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    try {
+      setUploadStatus('uploading');
+      setUploadMessage('Processing import...');
+      // Extract manager data from the imported data
+      const managerData = importedData['MANAGER'] || [];
+      if (managerData.length === 0) {
+        setUploadStatus('error');
+        setUploadMessage('No manager data found in the imported file');
+        message.warning('No manager data found in the imported file');
+        return;
+      }
+      // Transform the imported data to match BulkAccountPropsCreate interface
+      const transformedData = managerData.map(item => ({
+        email: item.email || '',
+        username: item.username || item.email?.split('@')[0] || '',
+        password: item.password || 'defaultPassword123',
+        firstName: item.firstName || '',
+        lastName: item.lastName || '',
+        dateOfBirth: item.dateOfBirth || new Date().toISOString(),
+        studentProfileData: null,
+        staffProfileData: {
+          campus: item.campus || '',
+          department: item.department || '',
+          position: item.position || '',
+          startWorkAt: item.startWorkAt ? new Date(item.startWorkAt) : new Date(),
+          endWorkAt: item.endWorkAt ? new Date(item.endWorkAt) : new Date()
+        }
+      }));
+      // Call the bulk registration API
+      let response;
+      try {
+        response = await BulkRegisterManager(transformedData);
+      } catch (err) {
+        setUploadStatus('error');
+        setUploadMessage('Failed to import managers. Please try again.');
+        message.error('Failed to import managers. Please try again.');
+        return;
+      }
+      // Treat null/undefined (204 No Content) as success
+      if (response !== null && response !== undefined || response === null) {
+        setUploadStatus('success');
+        setUploadMessage(`Successfully imported ${managerData.length} managers`);
+        message.success(`Successfully imported ${managerData.length} managers`);
+        // Refresh the manager list
+        refetch();
+        loadManagerData();
+      } else {
+        setUploadStatus('error');
+        setUploadMessage('Failed to import managers. Please try again.');
+        message.error('Failed to import managers. Please try again.');
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      setUploadStatus('error');
+      setUploadMessage('An error occurred during import. Please check your data and try again.');
+      message.error('An error occurred during import. Please check your data and try again.');
+    }
   };
 
   const handleFilterChange = (value: string) => {
@@ -284,7 +336,7 @@ const ManagerList: React.FC = () => {
                 ))}
                 {/* Excel Import Button without blue wrapper */}
                 <ExcelImportButton onClick={handleImport}>
-                  Import Data From xlsx
+                  Bulk Import
                 </ExcelImportButton>
               </div>
             </div>
@@ -330,10 +382,16 @@ const ManagerList: React.FC = () => {
         </motion.div>
         {/* Data Import Modal */}
         {isImportOpen && (
-          <BulkDataImport 
-            onClose={() => setIsImportOpen(false)} 
+          <BulkDataImport
+            onClose={() => {
+              setIsImportOpen(false);
+              setUploadStatus('idle');
+              setUploadMessage('');
+            }}
             onDataImported={handleDataImported}
             supportedTypes={['MANAGER']}
+            uploadStatus={uploadStatus}
+            uploadMessage={uploadMessage}
           />
         )}
       </div>

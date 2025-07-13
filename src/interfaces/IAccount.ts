@@ -42,12 +42,12 @@ export interface UpdateAccountProps{
   email: string,
   firstName: string,
   lastName: string,
-  dateOfBirth: "2025-07-11T13:58:26.421Z" | Date,
+  dateOfBirth: string | Date,
   avatarUrl: string,
-  roleId: 0,
-  status: 0,
-  staffDataUpdateRequest: StaffDataUpdateRequest
-  studentDataUpdateRequest: StudentDataUpdateRequest
+  roleId: number,
+  status: number | boolean,
+  staffDataUpdateRequest: StaffDataUpdateRequest | null,
+  studentDataUpdateRequest: StudentDataUpdateRequest | null
 }
 
 export interface JWTAccountProps{

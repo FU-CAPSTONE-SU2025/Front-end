@@ -269,26 +269,6 @@
   margin-top: 32px;
 }
 
-.actionButtons .ant-btn {
-  border-radius: 10px;
-  font-size: 1.1rem;
-  padding: 8px 28px;
-  font-weight: 600;
-  min-width: 140px;
-  box-shadow: 0 2px 8px rgba(16,185,129,0.06);
-  transition: background 0.18s, color 0.18s;
-}
-
-.actionButtons .ant-btn-primary {
-  background: linear-gradient(90deg, #22C55E 0%, #fb923c 100%);
-  border: none;
-}
-
-.actionButtons .ant-btn-primary:disabled {
-  background: #bbf7d0;
-  color: #a7f3d0;
-}
-
 /* Complete Section */
 .completeCard {
   box-shadow: 0 4px 16px -2px rgba(34,197,94,0.10);
@@ -401,34 +381,77 @@
   gap: 8px;
 }
 
-.tableSelectAll {
-  /* Inherits Ant Design switch styles */
-}
-
 .tableCell {
   font-size: 12px;
 }
 
-.tableActionButton {
-  /* Inherits Ant Design button styles */
+/* Removed old conflicting styles - using more specific selectors above */
+
+/* Simplified table styling - single color background with higher specificity */
+.bulkImportModal .ant-table-thead > tr > th {
+  background: #f97316 !important;
+  color: #fff !important;
+  border-color: #ea580c !important;
+  font-weight: 600 !important;
 }
 
-.ant-table-tbody > tr:nth-child(odd) {
-  background: #f0fdf4;
+.bulkImportModal .ant-table-tbody > tr:nth-child(odd) {
+  background: #fef3c7 !important;
 }
-.ant-table-tbody > tr:nth-child(even) {
-  background: #fef3c7;
+
+.bulkImportModal .ant-table-tbody > tr:nth-child(even) {
+  background: #fff !important;
 }
-.ant-table-tbody > tr:hover > td {
-  background: #bbf7d0 !important;
+
+.bulkImportModal .ant-table-tbody > tr:hover > td {
+  background: #fed7aa !important;
 }
-.tableActionButton {
+
+.bulkImportModal .tableActionButton {
   color: #22C55E !important;
   border-radius: 6px;
   transition: background 0.15s;
 }
-.tableActionButton:hover {
+
+.bulkImportModal .tableActionButton:hover {
   background: #bbf7d0 !important;
+}
+
+/* Enhanced button styling for better visibility with higher specificity */
+.bulkImportModal .actionButtons .ant-btn {
+  border-radius: 10px !important;
+  font-size: 1.1rem !important;
+  padding: 8px 28px !important;
+  font-weight: 600 !important;
+  min-width: 140px !important;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.06) !important;
+  transition: all 0.18s ease !important;
+  
+}
+
+/* Orange outline for "Start Over" button with higher specificity */
+.bulkImportModal .actionButtons .ant-btn:not(.ant-btn-primary) {
+  background: #fff !important;
+  border: 2px solid #f97316 !important;
+  color: #f97316 !important;
+}
+
+.bulkImportModal .actionButtons .ant-btn:not(.ant-btn-primary):hover {
+  background: #f97316 !important;
+  color: #fff !important;
+  border-color: #f97316 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3) !important;
+}
+
+.bulkImportModal .actionButtons .ant-btn-primary {
+  background: linear-gradient(90deg, #22C55E 0%, #fb923c 100%) !important;
+  border: none !important;
+}
+
+.bulkImportModal .actionButtons .ant-btn-primary:disabled {
+  background: #bbf7d0 !important;
+  color: #a7f3d0 !important;
 }
 
 /* Responsive Design */
@@ -539,6 +562,53 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+/* Additional utility classes for inline style replacement */
+.expectedHeadersContainer {
+  margin-top: 24px;
+}
+
+.expectedHeadersTitle {
+  color: #22C55E;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.expectedHeadersTag {
+  margin: 4px 8px 4px 0;
+}
+
+.previewDescription {
+  margin: 0;
+  color: #16a34a;
+  font-size: 13px;
+}
+
+.previewDescriptionIcon {
+  color: #1890ff;
+  margin-right: 8px;
+}
+
+.successContent {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.successIcon {
+  font-size: 64px;
+  color: #52c41a;
+  margin-bottom: 16px;
+}
+
+.successTitle {
+  color: #52c41a;
+  margin-bottom: 8px;
+}
+
+.successSubtitle {
+  color: #666;
+  margin-bottom: 24px;
+}
+
 /* Status Colors */
 .success {
   color: #10B981;
@@ -574,4 +644,43 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Table container class */
+.bulkImportTable {
+  /* Specific table styling */
+}
+
+/* Simplified table styling - single color background with maximum specificity */
+.bulkImportModal .bulkImportTable .ant-table-thead > tr > th,
+.bulkImportModal .ant-table-thead > tr > th {
+  background: #f97316 !important;
+  color: #fff !important;
+  border-color: #ea580c !important;
+  font-weight: 600 !important;
+}
+
+.bulkImportModal .bulkImportTable .ant-table-tbody > tr:nth-child(odd),
+.bulkImportModal .ant-table-tbody > tr:nth-child(odd) {
+  background: #fef3c7 !important;
+}
+
+.bulkImportModal .bulkImportTable .ant-table-tbody > tr:nth-child(even),
+.bulkImportModal .ant-table-tbody > tr:nth-child(even) {
+  background: #fff !important;
+}
+
+.bulkImportModal .bulkImportTable .ant-table-tbody > tr:hover > td,
+.bulkImportModal .ant-table-tbody > tr:hover > td {
+  background: #fed7aa !important;
+}
+
+.bulkImportModal .tableActionButton {
+  color: #22C55E !important;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.bulkImportModal .tableActionButton:hover {
+  background: #bbf7d0 !important;
 }

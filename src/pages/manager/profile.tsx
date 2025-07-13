@@ -1,30 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Descriptions, Avatar, Button, ConfigProvider } from 'antd';
+import { Descriptions, Avatar, Button, ConfigProvider, message } from 'antd';
 import { LogOut, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffProfile.module.css';
 import { ManagerBase } from '../../interfaces/IManager';
 import { getAuthState } from '../../hooks/useAuths';
-
-// Mock manager data (replace with API call in production)
-const mockManager: ManagerBase = {
-  username: 'managerUser123',
-  password: 'securePass123',
-  email: 'manager@example.com',
-  avatarUrl: '/img/avatar-placeholder.png',
-  firstName: 'John',
-  lastName: 'Smith',
-  dateOfBirth: new Date('1985-03-20'),
-  address: '456 Executive Ave, Business District, Country',
-  department: 'Academic Management',
-  position: 'Program Manager',
-  id: 1,
-  roleId: 4,
-  phone: '+1-555-0123',
-  startWorkAt: new Date('2020-01-15'),
-  endWorkAt: undefined
-};
+import { jwtDecode } from 'jwt-decode';
+import { JWTAccountProps } from '../../interfaces/IAccount';
+import useUserProfile from '../../hooks/useUserProfile';
 
 // Animation variants
 const containerVariants = {
@@ -54,12 +38,95 @@ const buttonVariants = {
 const ManagerProfile: React.FC = () => {
   const navigate = useNavigate();
   const { logout } = getAuthState();
+  const [userId, setUserId] = useState<number | null>(null);
+  const { accessToken } = getAuthState();
+  
+  // Use the user profile hook
+  const {
+    getCurrentUserQuery,
+    updateProfileAsync,
+    isUpdatingProfile,
+    isUpdateSuccess,
+    updateError,
+  } = useUserProfile();
+
+  // Get the user query using the current userId
+  const userQuery = getCurrentUserQuery(userId);
+  const { data: currentUserData, isLoading: isLoadingCurrentUser, error: currentUserError, refetch: refetchUser } = userQuery;
+
+  // Get user ID from JWT token
+  const getUserIdFromToken = () => {
+    try {
+      const data: JWTAccountProps = jwtDecode(accessToken ?? "N/A");
+      console.log('Decoded JWT data:', data);
+      return data?.UserId ?? null;
+    } catch (error) {
+      console.error("Failed to decode token:", error);
+      return null;
+    }
+  };
+
+  // Set userId on component mount
+  useEffect(() => {
+    const id = getUserIdFromToken();
+    console.log('Setting user ID:', id);
+    setUserId(id);
+  }, [accessToken]);
+
+  // Handle successful profile update
+  useEffect(() => {
+    if (isUpdateSuccess) {
+      message.success('Profile updated successfully!');
+      // Refresh the profile data
+      refetchUser();
+    }
+  }, [isUpdateSuccess, refetchUser]);
+
+  // Handle update errors
+  useEffect(() => {
+    if (updateError) {
+      message.error('Failed to update profile. Please try again.');
+      console.error('Update error:', updateError);
+    }
+  }, [updateError]);
+
+  // Handle current user fetch errors
+  useEffect(() => {
+    if (currentUserError) {
+      console.error('Failed to fetch user data:', currentUserError);
+      message.error('Failed to load user profile.');
+    }
+  }, [currentUserError]);
 
   // Debug animation states
   useEffect(() => {
     console.log('ManagerProfile animation triggered');
     return () => console.log('ManagerProfile animation cleanup');
   }, []);
+
+  // Helper function to get display value with loading state
+  const getDisplayValue = (value: any, placeholder: string) => {
+    if (isLoadingCurrentUser) return "Loading...";
+    return value && String(value).trim() !== "" ? String(value) : placeholder;
+  };
+
+  // Helper function to get avatar URL
+  const getAvatarUrl = () => {
+    if (currentUserData?.avatarUrl) return currentUserData.avatarUrl;
+    if (isLoadingCurrentUser) return "https://ui-avatars.com/api/?name=Loading&background=64748B&color=ffffff&size=120";
+    return "https://ui-avatars.com/api/?name=Manager+User&background=1E40AF&color=ffffff&size=120";
+  };
+
+  // Helper function to format date
+  const formatDate = (date: any) => {
+    if (isLoadingCurrentUser) return "Loading...";
+    if (!date) return "Not specified";
+    try {
+      return new Date(date).toLocaleDateString('en-GB');
+    } catch {
+      return "Invalid date";
+    }
+  };
 
   // Mock logout function (replace with actual auth logic)
   const handleLogout = () => {
@@ -103,18 +170,15 @@ const ManagerProfile: React.FC = () => {
           >
             <h2 className={styles.title}>Profile Information</h2>
             <div className={styles.avatarWrapper}>
-              <Avatar src={mockManager.avatarUrl} size={100} className={styles.avatar} />
+              <Avatar src={getAvatarUrl()} size={100} className={styles.avatar} />
             </div>
             <Descriptions column={1} bordered className={styles.description}>
-              <Descriptions.Item label="Username">{mockManager.username}</Descriptions.Item>
-              <Descriptions.Item label="Email">{mockManager.email}</Descriptions.Item>
-              <Descriptions.Item label="First Name">{mockManager.firstName}</Descriptions.Item>
-              <Descriptions.Item label="Last Name">{mockManager.lastName}</Descriptions.Item>
-              <Descriptions.Item label="Phone">{mockManager.phone}</Descriptions.Item>
-              <Descriptions.Item label="Date of Birth">
-                {mockManager.dateOfBirth.toLocaleDateString('en-GB')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Address">{mockManager.address}</Descriptions.Item>
+              <Descriptions.Item label="Username">{getDisplayValue(currentUserData?.username, "Not specified")}</Descriptions.Item>
+              <Descriptions.Item label="Email">{getDisplayValue(currentUserData?.email, "Not specified")}</Descriptions.Item>
+              <Descriptions.Item label="First Name">{getDisplayValue(currentUserData?.firstName, "Not specified")}</Descriptions.Item>
+              <Descriptions.Item label="Last Name">{getDisplayValue(currentUserData?.lastName, "Not specified")}</Descriptions.Item>
+              <Descriptions.Item label="Date of Birth">{formatDate(currentUserData?.dateOfBirth)}</Descriptions.Item>
+              <Descriptions.Item label="Role">{getDisplayValue(currentUserData?.roleName, "Manager")}</Descriptions.Item>
             </Descriptions>
           </motion.div>
 
@@ -129,14 +193,11 @@ const ManagerProfile: React.FC = () => {
             >
               <h2 className={styles.title}>Management Details</h2>
               <Descriptions column={1} bordered className={styles.description}>
-                <Descriptions.Item label="Department">{mockManager.department}</Descriptions.Item>
-                <Descriptions.Item label="Position">{mockManager.position}</Descriptions.Item>
-                <Descriptions.Item label="Start Work Date">
-                  {mockManager.startWorkAt.toLocaleDateString('en-GB')}
-                </Descriptions.Item>
-                <Descriptions.Item label="End Work Date">
-                  {mockManager.endWorkAt ? mockManager.endWorkAt.toLocaleDateString('en-GB') : 'Current'}
-                </Descriptions.Item>
+                <Descriptions.Item label="Department">{getDisplayValue(currentUserData?.staffDataDetailResponse?.department, "Not specified")}</Descriptions.Item>
+                <Descriptions.Item label="Position">{getDisplayValue(currentUserData?.staffDataDetailResponse?.position, "Not specified")}</Descriptions.Item>
+                <Descriptions.Item label="Campus">{getDisplayValue(currentUserData?.staffDataDetailResponse?.campus, "Not specified")}</Descriptions.Item>
+                <Descriptions.Item label="Start Work Date">{formatDate(currentUserData?.staffDataDetailResponse?.startWorkAt)}</Descriptions.Item>
+                <Descriptions.Item label="End Work Date">{formatDate(currentUserData?.staffDataDetailResponse?.endWorkAt)}</Descriptions.Item>
               </Descriptions>
             </motion.div>
 

@@ -11,14 +11,14 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDStudent from '../../hooks/useCRUDStudent';
 import { StudentBase } from '../../interfaces/IStudent';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { BulkRegisterStudent, BulkRegisterStaff, BulkRegisterManager, BulkRegisterAdvisor, BulkRegisterAdmin } from '../../api/Account/UserAPI';
+import { BulkRegisterStudent, BulkRegisterStaff, BulkRegisterManager, BulkRegisterAdvisor, BulkRegisterAdmin, DisableUser } from '../../api/Account/UserAPI';
 import {validateBulkData } from '../../utils/bulkImportTransformers';
 
 const { Option } = Select;
 
 const StudentList: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
-  const [isBulkImportOpen, setIsBulkImportOpen] = useState<boolean>(false);
+  // Removed bulk import state - only role-specific import is allowed
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
   const [filterValue, setFilterValue] = useState<string>('');
@@ -26,6 +26,8 @@ const StudentList: React.FC = () => {
   const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadMessage, setUploadMessage] = useState<string>('');
   
   const { categorizedData, refetch } = useActiveUserData();
   const { studentList, getAllStudent, pagination, isLoading } = useCRUDStudent();
@@ -73,16 +75,19 @@ const StudentList: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleBulkImport = () => {
-    setIsBulkImportOpen(true);
-  };
+  // Removed bulk import - only role-specific import is allowed
 
   const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
+      setUploadStatus('uploading');
+      setUploadMessage('Processing import...');
+      
       // Extract student data from the imported data
       const studentData = importedData['STUDENT'] || [];
       
       if (studentData.length === 0) {
+        setUploadStatus('error');
+        setUploadMessage('No student data found in the imported file');
         message.warning('No student data found in the imported file');
         return;
       }
@@ -110,6 +115,8 @@ const StudentList: React.FC = () => {
       );
 
       if (validData.length === 0) {
+        setUploadStatus('error');
+        setUploadMessage('No valid student data found. Please check your data format and ensure all required fields are filled.');
         message.error('No valid student data found. Please check your data format and ensure all required fields are filled.');
         return;
       }
@@ -119,101 +126,36 @@ const StudentList: React.FC = () => {
       }
 
       // Call the bulk registration API
-      const response = await BulkRegisterStudent(validData);
-      
-      if (response) {
+      let response;
+      try {
+        response = await BulkRegisterStudent(validData);
+      } catch (err) {
+        setUploadStatus('error');
+        setUploadMessage('Failed to import students. Please try again.');
+        message.error('Failed to import students. Please try again.');
+        return;
+      }
+      // Treat null/undefined (204 No Content) as success
+      if (response !== null && response !== undefined || response === null) {
+        setUploadStatus('success');
+        setUploadMessage(`Successfully imported ${validData.length} students`);
         message.success(`Successfully imported ${validData.length} students`);
-        setIsImportOpen(false);
         // Refresh the student list
         loadStudentData();
       } else {
+        setUploadStatus('error');
+        setUploadMessage('Failed to import students. Please try again.');
         message.error('Failed to import students. Please try again.');
       }
     } catch (error) {
       console.error('Import error:', error);
+      setUploadStatus('error');
+      setUploadMessage('An error occurred during import. Please check your data and try again.');
       message.error('An error occurred during import. Please check your data and try again.');
     }
   };
 
-  const handleBulkDataImported = async (importedData: { [type: string]: any[] }) => {
-    try {
-      console.log('Bulk imported data:', importedData);
-      
-      let totalImported = 0;
-      const results: { [type: string]: { success: number; failed: number } } = {};
-
-      // Process each data type
-      for (const [dataType, data] of Object.entries(importedData)) {
-        if (data.length === 0) continue;
-
-        // Data is already transformed by the DataImport component
-        const transformedData = data;
-        
-        // Validate the data
-        const validData = validateBulkData(transformedData);
-
-        if (validData.length === 0) {
-          results[dataType] = { success: 0, failed: data.length };
-          continue;
-        }
-
-        // Get the appropriate API function
-        let apiFunction: any = null;
-        switch (dataType) {
-          case 'STUDENT':
-            apiFunction = BulkRegisterStudent;
-            break;
-          case 'STAFF':
-            apiFunction = BulkRegisterStaff;
-            break;
-          case 'MANAGER':
-            apiFunction = BulkRegisterManager;
-            break;
-          case 'ADVISOR':
-            apiFunction = BulkRegisterAdvisor;
-            break;
-          case 'ADMIN':
-            apiFunction = BulkRegisterAdmin;
-            break;
-          default:
-            console.warn(`Unknown data type: ${dataType}`);
-            continue;
-        }
-
-        // Call the appropriate API
-        try {
-          const response = await apiFunction(validData);
-          if (response) {
-            results[dataType] = { success: validData.length, failed: data.length - validData.length };
-            totalImported += validData.length;
-          } else {
-            results[dataType] = { success: 0, failed: data.length };
-          }
-        } catch (error) {
-          console.error(`Error importing ${dataType}:`, error);
-          results[dataType] = { success: 0, failed: data.length };
-        }
-      }
-
-      // Show results
-      const resultMessages = Object.entries(results).map(([type, result]) => 
-        `${type}: ${result.success} imported, ${result.failed} failed`
-      ).join(', ');
-
-      if (totalImported > 0) {
-        message.success(`Bulk import completed! ${resultMessages}`);
-        setIsBulkImportOpen(false);
-        // Refresh all data
-        refetch();
-        loadStudentData();
-      } else {
-        message.error(`Bulk import failed! ${resultMessages}`);
-      }
-    } catch (error) {
-      console.error('Bulk import error:', error);
-      message.error('An error occurred during bulk import. Please check your data and try again.');
-    }
-  };
+  // Removed bulk import handler - only role-specific import is allowed
 
   const handleFilterChange = (value: string) => {
     setFilterType(value);
@@ -242,19 +184,25 @@ const StudentList: React.FC = () => {
     setSelectedStudents([]);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
+    if (selectedStudents.length === 0) return;
+    const studentId = selectedStudents[0];
     Modal.confirm({
       title: `Confirm Deletion`,
-      content: `Are you sure you want to delete ${selectedStudents.length} student account(s)?`,
+      content: `Are you sure you want to delete this student account?`,
       okText: 'Delete',
       okType: 'danger',
       cancelText: 'Cancel',
-      onOk: () => {
-        // Here you would typically call the API to delete the selected students
-        // For now, we'll just refresh the data
-        loadStudentData();
-        setSelectedStudents([]);
-        setIsDeleteMode(false);
+      onOk: async () => {
+        try {
+          await DisableUser(studentId);
+          message.success('Student account deleted successfully');
+          loadStudentData();
+          setSelectedStudents([]);
+          setIsDeleteMode(false);
+        } catch (error) {
+          message.error('Failed to delete student account');
+        }
       },
       maskStyle: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
       centered: true,
@@ -292,6 +240,7 @@ const StudentList: React.FC = () => {
   // Row selection for delete mode
   const rowSelection = isDeleteMode
     ? {
+        type: 'radio',
         selectedRowKeys: selectedStudents,
         onChange: (selectedRowKeys: React.Key[]) => {
           setSelectedStudents(selectedRowKeys as number[]);
@@ -428,9 +377,6 @@ const StudentList: React.FC = () => {
                 ))}
                 {/* Excel Import Buttons without blue wrapper */}
                 <ExcelImportButton onClick={handleImport}>
-                  Import Data From xlsx
-                </ExcelImportButton>
-                <ExcelImportButton onClick={handleBulkImport}>
                   Bulk Import
                 </ExcelImportButton>
               </div>
@@ -478,18 +424,18 @@ const StudentList: React.FC = () => {
         {/* Data Import Modal */}
         {isImportOpen && (
           <BulkDataImport 
-            onClose={() => setIsImportOpen(false)} 
+            onClose={() => {
+              setIsImportOpen(false);
+              setUploadStatus('idle');
+              setUploadMessage('');
+            }} 
             onDataImported={handleDataImported}
             supportedTypes={['STUDENT']}
+            uploadStatus={uploadStatus}
+            uploadMessage={uploadMessage}
           />
         )}
-        {isBulkImportOpen && (
-          <BulkDataImport 
-            onClose={() => setIsBulkImportOpen(false)} 
-            onDataImported={handleBulkDataImported}
-            supportedTypes={['STUDENT', 'STAFF', 'MANAGER', 'ADVISOR', 'ADMIN']}
-          />
-        )}
+        {/* Removed bulk import modal - only role-specific import is allowed */}
       </div>
     </ConfigProvider>
   );

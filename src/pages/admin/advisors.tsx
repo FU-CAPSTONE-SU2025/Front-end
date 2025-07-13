@@ -10,6 +10,7 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDAdvisor from '../../hooks/useCRUDAdvisor';
 import { AdvisorBase } from '../../interfaces/IAdvisor';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
+import { BulkRegisterAdvisor } from '../../api/Account/UserAPI';
 
 const { Option } = Select;
 
@@ -22,6 +23,8 @@ const AdvisorList: React.FC = () => {
   const [selectedAdvisors, setSelectedAdvisors] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadMessage, setUploadMessage] = useState<string>('');
   
   const { categorizedData, refetch } = useActiveUserData();
   const { getAllAdvisor, advisorList, pagination, isLoading } = useCRUDAdvisor();
@@ -57,15 +60,64 @@ const AdvisorList: React.FC = () => {
     setIsImportOpen(true);
   };
 
-  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    // Extract advisor data from the imported data
-    const advisorData = importedData['ADVISOR'] || [];
-    message.success(`Successfully imported ${advisorData.length} advisors`);
-    // TODO: Implement actual advisor import logic
-    setIsImportOpen(false);
-    // Refresh the advisor list
-    refetch();
-    loadAdvisorData();
+  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    try {
+      setUploadStatus('uploading');
+      setUploadMessage('Processing import...');
+      // Extract advisor data from the imported data
+      const advisorData = importedData['ADVISOR'] || [];
+      if (advisorData.length === 0) {
+        setUploadStatus('error');
+        setUploadMessage('No advisor data found in the imported file');
+        message.warning('No advisor data found in the imported file');
+        return;
+      }
+      // Transform the imported data to match BulkAccountPropsCreate interface
+      const transformedData = advisorData.map(item => ({
+        email: item.email || '',
+        username: item.username || item.email?.split('@')[0] || '',
+        password: item.password || 'defaultPassword123',
+        firstName: item.firstName || '',
+        lastName: item.lastName || '',
+        dateOfBirth: item.dateOfBirth || new Date().toISOString(),
+        studentProfileData: null,
+        staffProfileData: {
+          campus: item.campus || '',
+          department: item.department || '',
+          position: item.position || '',
+          startWorkAt: item.startWorkAt ? new Date(item.startWorkAt) : new Date(),
+          endWorkAt: item.endWorkAt ? new Date(item.endWorkAt) : new Date()
+        }
+      }));
+      // Call the bulk registration API
+      let response;
+      try {
+        response = await BulkRegisterAdvisor(transformedData);
+      } catch (err) {
+        setUploadStatus('error');
+        setUploadMessage('Failed to import advisors. Please try again.');
+        message.error('Failed to import advisors. Please try again.');
+        return;
+      }
+      // Treat null/undefined (204 No Content) as success
+      if (response !== null && response !== undefined || response === null) {
+        setUploadStatus('success');
+        setUploadMessage(`Successfully imported ${advisorData.length} advisors`);
+        message.success(`Successfully imported ${advisorData.length} advisors`);
+        // Refresh the advisor list
+        refetch();
+        loadAdvisorData();
+      } else {
+        setUploadStatus('error');
+        setUploadMessage('Failed to import advisors. Please try again.');
+        message.error('Failed to import advisors. Please try again.');
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      setUploadStatus('error');
+      setUploadMessage('An error occurred during import. Please check your data and try again.');
+      message.error('An error occurred during import. Please check your data and try again.');
+    }
   };
 
   const handleFilterChange = (value: string) => {
@@ -269,7 +321,7 @@ const AdvisorList: React.FC = () => {
                 ))}
                 {/* Excel Import Button without blue wrapper */}
                 <ExcelImportButton onClick={handleImport}>
-                  Import Data From xlsx
+                  Bulk Import
                 </ExcelImportButton>
               </div>
             </div>
@@ -315,10 +367,16 @@ const AdvisorList: React.FC = () => {
         </motion.div>
         {/* Data Import Modal */}
         {isImportOpen && (
-          <BulkDataImport 
-            onClose={() => setIsImportOpen(false)} 
+          <BulkDataImport
+            onClose={() => {
+              setIsImportOpen(false);
+              setUploadStatus('idle');
+              setUploadMessage('');
+            }}
             onDataImported={handleDataImported}
             supportedTypes={['ADVISOR']}
+            uploadStatus={uploadStatus}
+            uploadMessage={uploadMessage}
           />
         )}
       </div>
