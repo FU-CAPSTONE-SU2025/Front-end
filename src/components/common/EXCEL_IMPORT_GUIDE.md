@@ -1,206 +1,182 @@
-# Excel Import Guide
+# Excel Import Guide for Bulk Account Creation
 
-This guide explains how to prepare Excel files for bulk import into the system.
+This guide explains how to prepare Excel files for bulk importing different types of accounts (Students, Staff, Managers, Advisors, and Admins) into the system.
 
-## 📋 Supported Data Types
+## Overview
 
-The system supports importing the following data types:
-- **STUDENT** - Student accounts and profiles
-- **STAFF** - Staff member accounts and profiles  
-- **ADVISOR** - Academic advisor accounts and profiles
-- **MANAGER** - Manager accounts and profiles
-- **SUBJECT** - Course subjects and curriculum data
-- **PROGRAM** - Academic programs
-- **COMBO** - Subject combinations/packages
-- **CURRICULUM** - Curriculum structures
-- **ASSESSMENT** - Assessment configurations
-- **MATERIAL** - Learning materials and resources
-- **OUTCOME** - Learning outcomes
-- **SESSION** - Class sessions and schedules
+The bulk import feature supports creating multiple accounts at once from Excel files. The system automatically detects the account type based on the headers in your Excel file and transforms the data into the proper nested structure required by the backend.
 
-## 🔀 Flexible Header System
+## Supported Account Types
 
-Our import system uses **flexible header matching** that automatically recognizes different header formats:
+### 1. Student Accounts
+**File Headers Required:**
+- `firstName` - Student's first name
+- `lastName` - Student's last name  
+- `email` - Student's email address
+- `password` - Account password (optional, defaults to 'defaultPassword123')
+- `dateOfBirth` - Date of birth (YYYY-MM-DD format)
+- `enrolledAt` - Enrollment date (YYYY-MM-DD format)
+- `careerGoal` - Student's career goal (optional, defaults to 'Not specified')
 
-### ✅ Supported Header Variations
+**Example Excel Row:**
+```
+firstName | lastName | email | password | dateOfBirth | enrolledAt | careerGoal
+John      | Doe      | john.doe@email.com | pass123 | 2000-01-15 | 2024-09-01 | Software Engineer
+```
 
-The system accepts headers in multiple formats for each field:
+**Data Structure:**
+- Main account data goes into the base account object
+- Student-specific data (`enrolledAt`, `careerGoal`) goes into `studentProfileData`
+- `staffProfileData` is set to `null`
 
-#### Examples for "firstName":
-- `firstName` (camelCase)
-- `FirstName` (PascalCase) 
-- `first_name` (snake_case)
-- `first-name` (kebab-case)
-- `first name` (space separated)
-- `First Name` (Title Case)
-- `FIRST NAME` (UPPER CASE)
-- `FIRST_NAME` (UPPER_SNAKE_CASE)
+### 2. Staff Accounts (Academic Staff)
+**File Headers Required:**
+- `firstName` - Staff member's first name
+- `lastName` - Staff member's last name
+- `email` - Staff member's email address
+- `password` - Account password (optional, defaults to 'defaultPassword123')
+- `dateOfBirth` - Date of birth (YYYY-MM-DD format)
+- `campus` - Campus location
+- `department` - Department name
+- `position` - Job position/title
+- `startWorkAt` - Start date (YYYY-MM-DD format)
 
-#### Examples for "dateOfBirth":
-- `dateOfBirth`
-- `DateOfBirth`
-- `date_of_birth`
-- `date-of-birth`
-- `date of birth`
-- `Date Of Birth`
-- `DATE OF BIRTH`
-- `DATE_OF_BIRTH`
+**Example Excel Row:**
+```
+firstName | lastName | email | password | dateOfBirth | campus | department | position | startWorkAt
+Jane      | Smith    | jane.smith@email.com | pass456 | 1985-05-20 | Main Campus | Computer Science | Lecturer | 2020-08-01
+```
 
-### 🎯 Header Recognition
+**Data Structure:**
+- Main account data goes into the base account object
+- Staff-specific data (`campus`, `department`, `position`, `startWorkAt`) goes into `staffProfileData`
+- `studentProfileData` is set to `null`
 
-The system automatically:
-1. **Normalizes** your headers by removing spaces, underscores, hyphens
-2. **Converts** to lowercase for comparison
-3. **Matches** against all possible variations
-4. **Identifies** the correct data type based on header patterns
+### 3. Manager Accounts
+**File Headers Required:**
+- `firstName` - Manager's first name
+- `lastName` - Manager's last name
+- `email` - Manager's email address
+- `password` - Account password (optional, defaults to 'defaultPassword123')
+- `dateOfBirth` - Date of birth (YYYY-MM-DD format)
+- `campus` - Campus location
+- `department` - Department name
+- `position` - Job position/title
+- `startWorkAt` - Start date (YYYY-MM-DD format)
 
-## 📊 Required Headers by Data Type
+**Data Structure:**
+- Same as Staff accounts, but with role set to 'Manager'
 
-### STUDENT Import
-**Required Fields:**
-- First Name: `firstName`, `FirstName`, `first_name`, `First Name`, etc.
-- Last Name: `lastName`, `LastName`, `last_name`, `Last Name`, etc.
-- Email: `email`, `Email`, `EMAIL`, etc.
-- Password: `password`, `Password`, `PASSWORD`, etc.
-- Address: `address`, `Address`, `ADDRESS`, etc.
-- Phone: `phone`, `Phone`, `PHONE`, etc.
-- Date of Birth: `dateOfBirth`, `DateOfBirth`, `date_of_birth`, `Date Of Birth`, etc.
-- Student Code: `studentCode`, `StudentCode`, `student_code`, `Student Code`, etc.
-- Enroll Date: `enrollDate`, `EnrollDate`, `enroll_date`, `Enroll Date`, etc.
+### 4. Advisor Accounts
+**File Headers Required:**
+- `firstName` - Advisor's first name
+- `lastName` - Advisor's last name
+- `email` - Advisor's email address
+- `password` - Account password (optional, defaults to 'defaultPassword123')
+- `dateOfBirth` - Date of birth (YYYY-MM-DD format)
+- `campus` - Campus location
+- `department` - Department name
+- `position` - Job position/title
+- `startWorkAt` - Start date (YYYY-MM-DD format)
 
-### STAFF Import
-**Required Fields:**
-- First Name, Last Name, Email, Password, Address, Phone, Date of Birth (same as Student)
-- Campus: `campus`, `Campus`, `CAMPUS`, etc.
-- Department: `department`, `Department`, `DEPARTMENT`, etc.
-- Position: `position`, `Position`, `POSITION`, etc.
-- Start Work Date: `startWorkAt`, `StartWorkAt`, `start_work_at`, `Start Work At`, etc.
+**Data Structure:**
+- Same as Staff accounts, but with role set to 'Advisor'
 
-### PROGRAM Import
-**Required Fields:**
-- Program Code: `programCode`, `ProgramCode`, `program_code`, `Program Code`, etc.
-- Program Name: `programName`, `ProgramName`, `program_name`, `Program Name`, etc.
+### 5. Admin Accounts
+**File Headers Required:**
+- `firstName` - Admin's first name
+- `lastName` - Admin's last name
+- `email` - Admin's email address
+- `password` - Account password (optional, defaults to 'defaultPassword123')
+- `dateOfBirth` - Date of birth (YYYY-MM-DD format)
 
-### CURRICULUM Import
-**Required Fields:**
-- Program ID: `programId`, `ProgramId`, `program_id`, `Program ID`, etc.
-- Curriculum Code: `curriculumCode`, `CurriculumCode`, `curriculum_code`, `Curriculum Code`, etc.
-- Curriculum Name: `curriculumName`, `CurriculumName`, `curriculum_name`, `Curriculum Name`, etc.
-- Effective Date: `effectiveDate`, `EffectiveDate`, `effective_date`, `Effective Date`, etc.
+**Example Excel Row:**
+```
+firstName | lastName | email | password | dateOfBirth
+Admin     | User     | admin@email.com | adminpass | 1990-12-25
+```
 
-### SUBJECT Import
-**Required Fields:**
-- Subject Code: `subjectCode`, `SubjectCode`, `subject_code`, `Subject Code`, etc.
-- Subject Name: `subjectName`, `SubjectName`, `subject_name`, `Subject Name`, etc.
-- Credits: `credits`, `Credits`, `CREDITS`, etc.
-- Description: `description`, `Description`, `DESCRIPTION`, etc.
+**Data Structure:**
+- Main account data goes into the base account object
+- Both `studentProfileData` and `staffProfileData` are set to `null`
 
-**💡 Note:** Subject bulk import is fully implemented and supports comprehensive validation including credit parsing and required field validation.
+## Data Transformation Process
 
-*[Continue with other data types...]*
+### 1. Excel Import
+- Upload Excel file with appropriate headers
+- System automatically detects account type based on headers
+- Data is processed row by row
 
-## ✨ Key Benefits
+### 2. Preview & Edit
+- System shows flattened data for easy editing
+- You can edit individual cells, delete rows, or select multiple rows
+- Changes are applied to the preview data
 
-### 🔄 Automatic Recognition
-- No need to worry about exact header formatting
-- System automatically detects your data type
-- Supports common Excel naming conventions
+### 3. Data Transformation
+- System transforms flat Excel data into nested structure:
+  - **Students**: `studentProfileData` contains `enrolledAt` and `careerGoal`
+  - **Staff/Managers/Advisors**: `staffProfileData` contains `campus`, `department`, `position`, `startWorkAt`
+  - **Admins**: No profile data (both set to null)
 
-### 🛡️ Error Prevention
-- Flexible matching reduces import errors
-- Clear error messages if headers don't match
-- Preview step allows verification before import
+### 4. API Submission
+- Transformed data is sent to appropriate bulk registration API
+- Each account type uses its specific API endpoint
+- System provides feedback on success/failure
 
-### 📈 User Friendly
-- Works with existing Excel templates
-- No need to rename headers manually
-- Supports various naming conventions
+## Important Notes
 
-## 🚀 Import Process
+### Header Flexibility
+The system supports flexible header matching:
+- Case-insensitive matching
+- Spaces, underscores, and hyphens are ignored
+- Common variations are automatically recognized
 
-### Step 1: Prepare Your Excel File
-1. **Create** an Excel file (.xlsx or .xls)
-2. **Add headers** in row 1 using any supported format
-3. **Enter data** starting from row 2
-4. **Save** the file
+**Examples of accepted headers:**
+- `firstName`, `FirstName`, `first_name`, `first-name`, `First Name`
+- `dateOfBirth`, `DateOfBirth`, `date_of_birth`, `date-of-birth`, `Date Of Birth`
 
-### Step 2: Upload and Verify
-1. **Upload** your Excel file
-2. **Review** the automatically detected data type
-3. **Preview** the parsed data
-4. **Edit** any incorrect values if needed
+### Required Fields
+All account types require:
+- `firstName` (non-empty)
+- `lastName` (non-empty)
+- `email` (non-empty)
 
-### Step 3: Import to System
-1. **Confirm** the data looks correct
-2. **Click** "Upload to Server"
-3. **Verify** successful import message
-
-## ⚠️ Important Notes
+### Optional Fields
+- `password`: If not provided, defaults to 'defaultPassword123'
+- `username`: If not provided, defaults to email prefix (before @)
+- `dateOfBirth`: If not provided, defaults to current date
+- Role-specific fields: Have sensible defaults if not provided
 
 ### Data Validation
-- All required fields must have values
 - Empty rows are automatically skipped
-- Invalid data formats will be highlighted
+- Rows with missing required fields are filtered out
+- Date fields are validated and converted to proper Date objects
+- Email format is validated
 
-### File Requirements
-- **Format**: Excel (.xlsx, .xls)
-- **Size**: Maximum 10MB recommended
-- **Encoding**: UTF-8 preferred
-- **Headers**: Must be in row 1
+### Error Handling
+- Detailed error messages for validation failures
+- Progress tracking during bulk operations
+- Summary report showing success/failure counts by account type
+
+## Best Practices
+
+1. **Use consistent date formats** (YYYY-MM-DD recommended)
+2. **Ensure email addresses are valid** and unique
+3. **Test with small datasets** before large imports
+4. **Review preview data** before final import
+5. **Keep backup of original Excel files**
+6. **Use descriptive headers** for better data identification
+
+## Troubleshooting
 
 ### Common Issues
-1. **Mixed Data Types**: Each file should contain only one data type
-2. **Missing Required Fields**: All required headers must be present
-3. **Data Format**: Dates should be in recognizable format (YYYY-MM-DD, MM/DD/YYYY, etc.)
-4. **Duplicate Headers**: Each header should appear only once
+1. **"Missing required headers"** - Check that all required headers are present
+2. **"No valid data found"** - Ensure at least one row has data in required fields
+3. **"Unknown data type"** - Verify headers match one of the supported account types
+4. **Import failures** - Check for duplicate emails or invalid data formats
 
-## 💡 Tips for Success
-
-### Header Formatting
-- ✅ Use consistent naming within your file
-- ✅ Any common format works (camelCase, Title Case, snake_case, etc.)
-- ✅ Spaces, underscores, and hyphens are all supported
-- ❌ Don't mix different formats for the same field type
-
-### Data Entry
-- ✅ Use consistent date formats
-- ✅ Keep text data clean (no extra spaces)
-- ✅ Use valid email formats
-- ✅ Phone numbers can include formatting (123-456-7890 or 1234567890)
-
-### File Organization
-- ✅ One data type per file
-- ✅ Clear, descriptive filenames
-- ✅ Remove empty rows at the end
-- ✅ Check for merged cells (not recommended)
-
-## 🆘 Troubleshooting
-
-### "Could not identify data type"
-- **Check** that you have all required headers
-- **Verify** header names match supported variations
-- **Ensure** headers are in row 1
-- **Remove** any merged cells or formatting
-
-### "No valid data found"
-- **Check** that you have data rows below headers
-- **Verify** required fields are not empty
-- **Remove** completely empty rows
-
-### Import Errors
-- **Review** the preview step carefully
-- **Edit** any highlighted errors
-- **Check** data formats (especially dates)
-- **Verify** all required fields have values
-
-## 📞 Support
-
-If you continue to experience issues:
-1. **Check** this guide for common solutions
-2. **Verify** your file format and headers
-3. **Contact** system administrator for assistance
-4. **Include** sample data and error messages when reporting issues
-
----
-
-*This guide covers the flexible import system. The system automatically handles various header formats, making your import process smooth and error-free.* 
+### Getting Help
+- Review the preview data carefully before importing
+- Check the console for detailed error messages
+- Ensure your Excel file follows the format guidelines above
+- Contact system administrator for persistent issues 

@@ -75,17 +75,6 @@ const EditAccount: React.FC = () => {
             position: values.position,
             startWorkAt: values.startWorkAt.format('YYYY-MM-DD'),
             endWorkAt: values.endWorkAt ? values.endWorkAt.format('YYYY-MM-DD') : null,
-            id: 0,
-            username: '',
-            password: '',
-            email: '',
-            avatarUrl: '',
-            firstName: '',
-            lastName: '',
-            dateOfBirth: new Date(),
-            address: '',
-            phone: '',
-            roleId: 0
           },
         };
         console.log("staff: ",payload)

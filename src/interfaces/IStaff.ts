@@ -6,7 +6,7 @@ export interface CreateStaff {
   department:string
   position:string
 }
-export interface StaffProfileData extends AccountProps{
+export interface StaffProfileData{
     campus: string,
     department: string,
     position:string,

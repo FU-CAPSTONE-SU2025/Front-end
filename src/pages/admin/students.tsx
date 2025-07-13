@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ConfigProvider, Input, Select, Table, Modal, message } from 'antd';
 import styles from '../../css/admin/students.module.css';
-import DataImport from '../../components/common/dataImport';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
@@ -12,6 +11,8 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDStudent from '../../hooks/useCRUDStudent';
 import { StudentBase } from '../../interfaces/IStudent';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
+import { BulkRegisterStudent, BulkRegisterStaff, BulkRegisterManager, BulkRegisterAdvisor, BulkRegisterAdmin } from '../../api/Account/UserAPI';
+import {validateBulkData } from '../../utils/bulkImportTransformers';
 
 const { Option } = Select;
 
@@ -76,22 +77,142 @@ const StudentList: React.FC = () => {
     setIsBulkImportOpen(true);
   };
 
-  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    // Extract student data from the imported data
-    const studentData = importedData['STUDENT'] || [];
-    message.success(`Successfully imported ${studentData.length} students`);
-    // TODO: Implement actual student import logic
-    // Refresh the student list
-    loadStudentData();
+  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    try {
+      // Extract student data from the imported data
+      const studentData = importedData['STUDENT'] || [];
+      
+      if (studentData.length === 0) {
+        message.warning('No student data found in the imported file');
+        return;
+      }
+
+      // Transform the imported data to match BulkAccountPropsCreate interface
+      const transformedData = studentData.map(item => ({
+        email: item.email || '',
+        username: item.username || item.email?.split('@')[0] || '',
+        password: item.password || 'defaultPassword123',
+        firstName: item.firstName || '',
+        lastName: item.lastName || '',
+        dateOfBirth: item.dateOfBirth || new Date().toISOString(),
+        studentProfileData: {
+          enrolledAt: item.enrolledAt ? new Date(item.enrolledAt) : (item.enrollDate ? new Date(item.enrollDate) : new Date()),
+          careerGoal: item.careerGoal || 'Not specified'
+        },
+        staffProfileData: null
+      }));
+
+      // Validate the data
+      const validData = transformedData.filter(item => 
+        item.email.trim() !== '' && 
+        item.firstName.trim() !== '' && 
+        item.lastName.trim() !== ''
+      );
+
+      if (validData.length === 0) {
+        message.error('No valid student data found. Please check your data format and ensure all required fields are filled.');
+        return;
+      }
+
+      if (validData.length !== transformedData.length) {
+        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+      }
+
+      // Call the bulk registration API
+      const response = await BulkRegisterStudent(validData);
+      
+      if (response) {
+        message.success(`Successfully imported ${validData.length} students`);
+        setIsImportOpen(false);
+        // Refresh the student list
+        loadStudentData();
+      } else {
+        message.error('Failed to import students. Please try again.');
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      message.error('An error occurred during import. Please check your data and try again.');
+    }
   };
 
-  const handleBulkDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    console.log('Bulk imported data:', importedData);
-    setIsBulkImportOpen(false);
-    
-    // Refresh all data
-    refetch();
-    loadStudentData();
+  const handleBulkDataImported = async (importedData: { [type: string]: any[] }) => {
+    try {
+      console.log('Bulk imported data:', importedData);
+      
+      let totalImported = 0;
+      const results: { [type: string]: { success: number; failed: number } } = {};
+
+      // Process each data type
+      for (const [dataType, data] of Object.entries(importedData)) {
+        if (data.length === 0) continue;
+
+        // Data is already transformed by the DataImport component
+        const transformedData = data;
+        
+        // Validate the data
+        const validData = validateBulkData(transformedData);
+
+        if (validData.length === 0) {
+          results[dataType] = { success: 0, failed: data.length };
+          continue;
+        }
+
+        // Get the appropriate API function
+        let apiFunction: any = null;
+        switch (dataType) {
+          case 'STUDENT':
+            apiFunction = BulkRegisterStudent;
+            break;
+          case 'STAFF':
+            apiFunction = BulkRegisterStaff;
+            break;
+          case 'MANAGER':
+            apiFunction = BulkRegisterManager;
+            break;
+          case 'ADVISOR':
+            apiFunction = BulkRegisterAdvisor;
+            break;
+          case 'ADMIN':
+            apiFunction = BulkRegisterAdmin;
+            break;
+          default:
+            console.warn(`Unknown data type: ${dataType}`);
+            continue;
+        }
+
+        // Call the appropriate API
+        try {
+          const response = await apiFunction(validData);
+          if (response) {
+            results[dataType] = { success: validData.length, failed: data.length - validData.length };
+            totalImported += validData.length;
+          } else {
+            results[dataType] = { success: 0, failed: data.length };
+          }
+        } catch (error) {
+          console.error(`Error importing ${dataType}:`, error);
+          results[dataType] = { success: 0, failed: data.length };
+        }
+      }
+
+      // Show results
+      const resultMessages = Object.entries(results).map(([type, result]) => 
+        `${type}: ${result.success} imported, ${result.failed} failed`
+      ).join(', ');
+
+      if (totalImported > 0) {
+        message.success(`Bulk import completed! ${resultMessages}`);
+        setIsBulkImportOpen(false);
+        // Refresh all data
+        refetch();
+        loadStudentData();
+      } else {
+        message.error(`Bulk import failed! ${resultMessages}`);
+      }
+    } catch (error) {
+      console.error('Bulk import error:', error);
+      message.error('An error occurred during bulk import. Please check your data and try again.');
+    }
   };
 
   const handleFilterChange = (value: string) => {
@@ -366,7 +487,7 @@ const StudentList: React.FC = () => {
           <BulkDataImport 
             onClose={() => setIsBulkImportOpen(false)} 
             onDataImported={handleBulkDataImported}
-            supportedTypes={['STUDENT', 'STAFF', 'MANAGER', 'ADVISOR']}
+            supportedTypes={['STUDENT', 'STAFF', 'MANAGER', 'ADVISOR', 'ADMIN']}
           />
         )}
       </div>

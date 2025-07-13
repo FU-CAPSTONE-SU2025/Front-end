@@ -4,6 +4,7 @@ import { UploadOutlined, FileExcelOutlined, CheckCircleOutlined, LoadingOutlined
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import { getHeaderConfig, HeaderConfiguration, matchesConfiguration, findFieldMapping } from '../../data/importConfigurations';
+import { transformBulkImportData, createPreviewData } from '../../utils/bulkImportTransformers';
 import styles from '../../css/bulkImport.module.css';
 
 const { Dragger } = Upload;
@@ -18,7 +19,7 @@ interface ProcessedData {
 
 interface BulkDataImportProps {
   onClose: () => void;
-  onDataImported: (importedData: { [type: string]: { [key: string]: string }[] }) => void;
+  onDataImported: (importedData: { [type: string]: any[] }) => void;
   supportedTypes?: HeaderConfiguration[];
   uploadStatus?: 'idle' | 'uploading' | 'success' | 'error';
   uploadMessage?: string;
@@ -139,15 +140,28 @@ ${supportedTypes.map(type => {
           return;
         }
 
+        // Transform data to proper nested structure for account types
+        let transformedData: any = processedRows;
+        if (typeof identifiedType === 'string' && ['STUDENT', 'STAFF', 'MANAGER', 'ADVISOR', 'ADMIN'].includes(identifiedType)) {
+          transformedData = transformBulkImportData(processedRows, identifiedType);
+        }
+
         const processed: ProcessedData = {
           type: identifiedType,
-          data: processedRows,
+          data: transformedData,
           fileName: file.name,
           originalHeaders: headers
         };
 
         setProcessedData(processed);
-        setEditableData([...processedRows]); // Create editable copy
+        
+        // Create preview data for display
+        let previewData: any = processedRows;
+        if (typeof identifiedType === 'string' && ['STUDENT', 'STAFF', 'MANAGER', 'ADVISOR', 'ADMIN'].includes(identifiedType)) {
+          previewData = createPreviewData(transformedData, identifiedType);
+        }
+        
+        setEditableData([...previewData]); // Create editable copy
         message.success(`Successfully processed ${file.name} - ${processedRows.length} records identified as ${getTypeDisplayName(identifiedType)} data`);
         setIsProcessing(false);
         setCurrentStep(1); // Move to preview step
@@ -178,9 +192,19 @@ ${supportedTypes.map(type => {
     
     // Prepare data for upload
     const dataType = processedData.type as string;
-    const uploadData = {
-      [dataType]: editableData
-    };
+    
+    // For account types, we need to transform the edited preview data back to the proper structure
+    let uploadData;
+    if (['STUDENT', 'STAFF', 'MANAGER', 'ADVISOR', 'ADMIN'].includes(dataType)) {
+      const transformedData = transformBulkImportData(editableData, dataType);
+      uploadData = {
+        [dataType]: transformedData
+      };
+    } else {
+      uploadData = {
+        [dataType]: editableData
+      };
+    }
     
     // Call the parent's onDataImported function
     // The parent will handle the async mutation and update uploadStatus accordingly

@@ -10,11 +10,15 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDStaff from '../../hooks/useCRUDStaff';
 import { StaffProfileData } from '../../interfaces/IStaff';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
+import { BulkRegisterStaff, BulkRegisterManager, BulkRegisterAdvisor, BulkRegisterAdmin } from '../../api/Account/UserAPI';
+import { transformBulkImportData, validateBulkData, getApiFunctionName } from '../../utils/bulkImportTransformers';
+import { AccountProps } from '../../interfaces/IAccount';
 
 const { Option } = Select;
 
 const StaffList: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
   const [filterValue, setFilterValue] = useState<string>('');
@@ -57,14 +61,147 @@ const StaffList: React.FC = () => {
     setIsImportOpen(true);
   };
 
+  const handleBulkImport = () => {
+    setIsBulkImportOpen(true);
+  };
+
   // Handle imported staff data
-  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    // Extract staff data from the imported data
-    const staffData = importedData['STAFF'] || [];
-    message.success(`Successfully imported ${staffData.length} staff members`);
-    // TODO: Implement actual staff import logic
-    // Refresh the staff list
-    getAllStaff({ pageNumber: currentPage, pageSize, filterValue: searchQuery });
+  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
+    try {
+      // Extract staff data from the imported data
+      const staffData = importedData['STAFF'] || [];
+      
+      if (staffData.length === 0) {
+        message.warning('No staff data found in the imported file');
+        return;
+      }
+
+      // Transform the imported data to match BulkAccountPropsCreate interface
+      const transformedData = staffData.map(item => ({
+        email: item.email || '',
+        username: item.username || item.email?.split('@')[0] || '',
+        password: item.password || 'defaultPassword123',
+        firstName: item.firstName || '',
+        lastName: item.lastName || '',
+        dateOfBirth: item.dateOfBirth || new Date().toISOString(),
+        studentProfileData: null,
+        staffProfileData: {
+          campus: item.campus || '',
+          department: item.department || '',
+          position: item.position || '',
+          startWorkAt: item.startWorkAt ? new Date(item.startWorkAt) : new Date(),
+          endWorkAt: item.endWorkAt ? new Date(item.endWorkAt) : new Date()
+        }
+      }));
+
+      // Validate the data
+      const validData = transformedData.filter(item => 
+        item.email.trim() !== '' && 
+        item.firstName.trim() !== '' && 
+        item.lastName.trim() !== ''
+      );
+
+      if (validData.length === 0) {
+        message.error('No valid staff data found. Please check your data format and ensure all required fields are filled.');
+        return;
+      }
+
+      if (validData.length !== transformedData.length) {
+        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+      }
+
+      // Call the bulk registration API
+      const response = await BulkRegisterStaff(validData);
+      
+      if (response) {
+        message.success(`Successfully imported ${validData.length} staff members`);
+        setIsImportOpen(false);
+        // Refresh the staff list
+        loadStaffData();
+      } else {
+        message.error('Failed to import staff members. Please try again.');
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      message.error('An error occurred during import. Please check your data and try again.');
+    }
+  };
+
+  const handleBulkDataImported = async (importedData: { [type: string]: any[] }) => {
+    try {
+      console.log('Bulk imported data:', importedData);
+      
+      let totalImported = 0;
+      const results: { [type: string]: { success: number; failed: number } } = {};
+
+      // Process each data type
+      for (const [dataType, data] of Object.entries(importedData)) {
+        if (data.length === 0) continue;
+
+        // Data is already transformed by the BulkDataImport component
+        const transformedData = data;
+        
+        // Validate the data
+        const validData = validateBulkData(transformedData);
+
+        if (validData.length === 0) {
+          results[dataType] = { success: 0, failed: data.length };
+          continue;
+        }
+
+        // Get the appropriate API function
+        let apiFunction: any = null;
+        switch (dataType) {
+          case 'STAFF':
+            apiFunction = BulkRegisterStaff;
+            break;
+          case 'MANAGER':
+            apiFunction = BulkRegisterManager;
+            break;
+          case 'ADVISOR':
+            apiFunction = BulkRegisterAdvisor;
+            break;
+          case 'ADMIN':
+            apiFunction = BulkRegisterAdmin;
+            break;
+          default:
+            console.warn(`Unknown data type: ${dataType}`);
+            continue;
+        }
+
+        // Call the appropriate API
+        try {
+          const response = await apiFunction(validData);
+          if (response) {
+            results[dataType] = { success: validData.length, failed: data.length - validData.length };
+            totalImported += validData.length;
+          } else {
+            results[dataType] = { success: 0, failed: data.length };
+          }
+        } catch (error) {
+          console.error(`Error importing ${dataType}:`, error);
+          results[dataType] = { success: 0, failed: data.length };
+        }
+      }
+
+      // Show results
+      const resultMessages = Object.entries(results).map(([type, result]) => 
+        `${type}: ${result.success} imported, ${result.failed} failed`
+      ).join(', ');
+
+      if (totalImported > 0) {
+        message.success(`Bulk import completed! ${resultMessages}`);
+        setIsBulkImportOpen(false);
+        // Refresh all data
+        refetch();
+        loadStaffData();
+      } else {
+        message.error(`Bulk import failed! ${resultMessages}`);
+      }
+    } catch (error) {
+      console.error('Bulk import error:', error);
+      message.error('An error occurred during bulk import. Please check your data and try again.');
+    }
   };
 
   const handleFilterChange = (value: string) => {
@@ -121,7 +258,7 @@ const StaffList: React.FC = () => {
   };
 
   // Redirect to edit page when a staff row is clicked
-  const handleRowClick = (data: StaffProfileData) => {
+  const handleRowClick = (data: AccountProps) => {
     if (!isDeleteMode) {
       nav(`/admin/edit/staff/${data.id}`);
     }
@@ -136,11 +273,11 @@ const StaffList: React.FC = () => {
   const columns = [
     { title: 'Id', dataIndex: 'id', key: 'id', width: 100 },
     { title: 'Email', dataIndex: 'email', key: 'email', width: 200 },
-    { title: 'Name', key: 'name', width: 150, render: (_: any, record: StaffProfileData) => `${record.firstName} ${record.lastName}` },
+    { title: 'Name', key: 'name', width: 150, render: (_: any, record: AccountProps) => `${record.firstName} ${record.lastName}` },
     { title: 'Phone', dataIndex: 'phone', key: 'phone', width: 120 },
     { title: 'Address', dataIndex: 'address', key: 'address', width: 200 },
     { title: 'Campus', dataIndex: 'campus', key: 'campus', width: 120 },
-    { title: 'Added', key: 'added', width: 100, render: (_: any, record: StaffProfileData) => record.startWorkAt ? new Date(record.startWorkAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '' },
+    { title: 'Added', key: 'added', width: 100, render: (_: any, record: AccountProps) => record.staffDataDetailResponse?.startWorkAt ? new Date(record.staffDataDetailResponse?.startWorkAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '' },
   ];
 
   // Row selection for delete mode
@@ -150,7 +287,7 @@ const StaffList: React.FC = () => {
         onChange: (selectedRowKeys: React.Key[]) => {
           setSelectedStaffs(selectedRowKeys.map(String));
         },
-        getCheckboxProps: (record: StaffProfileData) => ({
+        getCheckboxProps: (record: AccountProps) => ({
           name: String(record.id),
         }),
       }
@@ -284,6 +421,9 @@ const StaffList: React.FC = () => {
                 <ExcelImportButton onClick={handleImport}>
                   Import Data From xlsx
                 </ExcelImportButton>
+                <ExcelImportButton onClick={handleBulkImport}>
+                  Bulk Import
+                </ExcelImportButton>
               </div>
             </div>
             {/* External Table display with server-side pagination and client-side search */}
@@ -293,7 +433,7 @@ const StaffList: React.FC = () => {
               rowSelection={rowSelection}
               pagination={pagination}
               onPageChange={handlePageChange}
-              onRow={(record: StaffProfileData) => ({
+              onRow={(record: AccountProps) => ({
                 onClick: () => handleRowClick(record),
               })}
               loading={isLoading}
@@ -332,6 +472,13 @@ const StaffList: React.FC = () => {
             onClose={() => setIsImportOpen(false)} 
             onDataImported={handleDataImported}
             supportedTypes={['STAFF']}
+          />
+        )}
+        {isBulkImportOpen && (
+          <BulkDataImport 
+            onClose={() => setIsBulkImportOpen(false)} 
+            onDataImported={handleBulkDataImported}
+            supportedTypes={['STAFF', 'MANAGER', 'ADVISOR', 'ADMIN']}
           />
         )}
       </div>

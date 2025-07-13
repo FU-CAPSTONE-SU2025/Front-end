@@ -70,10 +70,22 @@ export interface AccountPropsCreate{
     firstName:string,
     lastName:string,
     dateOfBirth:string|Date,
-    roleId:number
+    roleId:number,
     studentProfileData: StudentProfileData | null,
-    staffProfileData: StaffProfileData | null
+    staffProfileData: StaffProfileData | null,
 }
+
+export interface BulkAccountPropsCreate{
+  email: string,
+  username: string,
+  password: string,
+  firstName:string,
+  lastName:string,
+  dateOfBirth:string|Date,
+  studentProfileData: StudentProfileData | null,
+  staffProfileData: StaffProfileData | null
+}
+
 export interface GoogleAccountRequestProps {
     email: string
     sub: string,

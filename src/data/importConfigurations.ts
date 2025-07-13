@@ -99,28 +99,24 @@ export const findFieldMapping = (excelHeader: string, fieldMap: { readonly [key:
 // Predefined header configurations for different data types
 export const HEADER_CONFIGS = {
   STUDENT: {
-    headers: ['firstName', 'lastName', 'email', 'password', 'address', 'phone', 'dateOfBirth', 'studentCode', 'enrollDate'],
+    headers: ['firstName', 'lastName', 'email', 'password', 'dateOfBirth', 'enrolledAt', 'careerGoal'],
     fieldMap: createFlexibleFieldMap({
       'firstName': 'firstName',
       'lastName': 'lastName', 
       'email': 'email',
       'password': 'password',
-      'address': 'address',
-      'phone': 'phone',
       'dateOfBirth': 'dateOfBirth',
-      'studentCode': 'studentCode',
-      'enrollDate': 'enrollDate'
+      'enrolledAt': 'enrolledAt',
+      'careerGoal': 'careerGoal'
     })
   },
   STAFF: {
-    headers: ['firstName', 'lastName', 'email', 'password', 'address', 'phone', 'dateOfBirth', 'campus', 'department', 'position', 'startWorkAt'],
+    headers: ['firstName', 'lastName', 'email', 'password', 'dateOfBirth', 'campus', 'department', 'position', 'startWorkAt'],
     fieldMap: createFlexibleFieldMap({
       'firstName': 'firstName',
       'lastName': 'lastName',
       'email': 'email', 
       'password': 'password',
-      'address': 'address',
-      'phone': 'phone',
       'dateOfBirth': 'dateOfBirth',
       'campus': 'campus',
       'department': 'department',
@@ -129,29 +125,28 @@ export const HEADER_CONFIGS = {
     })
   },
   ADVISOR: {
-    headers: ['firstName', 'lastName', 'email', 'password', 'address', 'phone', 'dateOfBirth', 'specialization', 'yearsOfExperience'],
+    headers: ['firstName', 'lastName', 'email', 'password', 'dateOfBirth', 'campus', 'department', 'position', 'startWorkAt'],
     fieldMap: createFlexibleFieldMap({
       'firstName': 'firstName',
       'lastName': 'lastName',
       'email': 'email',
       'password': 'password', 
-      'address': 'address',
-      'phone': 'phone',
       'dateOfBirth': 'dateOfBirth',
-      'specialization': 'specialization',
-      'yearsOfExperience': 'yearsOfExperience'
+      'campus': 'campus',
+      'department': 'department',
+      'position': 'position',
+      'startWorkAt': 'startWorkAt'
     })
   },
   MANAGER: {
-    headers: ['firstName', 'lastName', 'email', 'password', 'address', 'phone', 'dateOfBirth', 'department', 'position', 'startWorkAt'],
+    headers: ['firstName', 'lastName', 'email', 'password', 'dateOfBirth', 'campus', 'department', 'position', 'startWorkAt'],
     fieldMap: createFlexibleFieldMap({
       'firstName': 'firstName',
       'lastName': 'lastName',
       'email': 'email',
       'password': 'password',
-      'address': 'address', 
-      'phone': 'phone',
       'dateOfBirth': 'dateOfBirth',
+      'campus': 'campus',
       'department': 'department',
       'position': 'position',
       'startWorkAt': 'startWorkAt'
@@ -231,6 +226,19 @@ export const HEADER_CONFIGS = {
   },
   // Admin profile configuration (commonly used)
   ADMIN_PROFILE: {
+    headers: ['firstName', 'lastName', 'email', 'password', 'address', 'phone', 'dateOfBirth'],
+    fieldMap: createFlexibleFieldMap({
+      'firstName': 'firstName',
+      'lastName': 'lastName',
+      'email': 'email',
+      'password': 'password',
+      'address': 'address',
+      'phone': 'phone',
+      'dateOfBirth': 'dateOfBirth'
+    })
+  },
+  // Admin configuration for bulk creation
+  ADMIN: {
     headers: ['firstName', 'lastName', 'email', 'password', 'address', 'phone', 'dateOfBirth'],
     fieldMap: createFlexibleFieldMap({
       'firstName': 'firstName',

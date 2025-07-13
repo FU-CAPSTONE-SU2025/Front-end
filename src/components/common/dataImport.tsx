@@ -8,13 +8,15 @@ import {
   HeaderConfiguration, 
   getHeaderConfig 
 } from '../../data/importConfigurations';
+import { transformBulkImportData, createPreviewData } from '../../utils/bulkImportTransformers';
 
 type DataImportProps = {
   onClose: () => void;
-  onDataImported: (data: { [key: string]: string }[]) => void;
+  onDataImported: (data: any[]) => void;
   headerConfig: HeaderConfiguration;
   allowMultipleRows?: boolean; // New prop to control single vs multiple row import
   dataType?: string; // Optional data type for better error messages
+  roleType?: string; // Role type for proper data transformation
 };
 
 const DataImport: React.FC<DataImportProps> = ({ 
@@ -22,7 +24,8 @@ const DataImport: React.FC<DataImportProps> = ({
   onDataImported, 
   headerConfig, 
   allowMultipleRows = false,
-  dataType = 'data'
+  dataType = 'data',
+  roleType = 'STUDENT'
 }) => {
   const [dragging, setDragging] = useState<boolean>(false);
   const [file, setFile] = useState<File | null>(null);
@@ -31,6 +34,7 @@ const DataImport: React.FC<DataImportProps> = ({
   const [previewData, setPreviewData] = useState<{ [key: string]: string }[]>([]);
   const [editingData, setEditingData] = useState<{ [key: string]: string }[]>([]);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [transformedData, setTransformedData] = useState<any[]>([]);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -114,8 +118,14 @@ const DataImport: React.FC<DataImportProps> = ({
           return;
         }
 
-        setPreviewData(processedData);
-        setEditingData(JSON.parse(JSON.stringify(processedData))); // Deep copy for editing
+        // Transform data to proper nested structure
+        const transformed = transformBulkImportData(processedData, roleType);
+        setTransformedData(transformed);
+
+        // Create preview data for display
+        const preview = createPreviewData(transformed, roleType);
+        setPreviewData(preview);
+        setEditingData(JSON.parse(JSON.stringify(preview))); // Deep copy for editing
         setShowPreview(true);
       };
       reader.readAsBinaryString(file);
@@ -152,7 +162,12 @@ const DataImport: React.FC<DataImportProps> = ({
   };
 
   const handleImportData = () => {
-    onDataImported(editingData);
+    // Update the transformed data with any edits made in the preview
+    const updatedTransformed = transformBulkImportData(editingData, roleType);
+    setTransformedData(updatedTransformed);
+    
+    // Pass the transformed data to the parent component
+    onDataImported(updatedTransformed);
     onClose();
   };
 

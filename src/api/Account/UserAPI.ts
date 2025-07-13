@@ -1,6 +1,8 @@
  import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { AccountProps, AccountPropsCreate, ActiveAccountProps, LoginProps } from "../../interfaces/IAccount";
+import {BulkAccountPropsCreate, AccountProps, AccountPropsCreate, ActiveAccountProps, UpdateAccountProps } from "../../interfaces/IAccount";
+
+
 
 const userURL = baseUrl+"/User"
 
@@ -188,3 +190,92 @@ export const DisableUser = async (userId:number):Promise<AccountProps|null> => {
         return null
     }
 }
+
+export const BulkRegisterStudent = async (data: BulkAccountPropsCreate[]):Promise<any> => {
+    const props = {
+        data: data,
+        url: userURL+`/student-bulk`,
+        headers: GetHeader()
+    }
+    const result = await axiosCreate(props)
+    if (result.success) {
+        //console.log(result.data)
+        return result.data
+    }
+    else {
+        console.log(result.error)
+        return null
+    }
+}
+
+
+export const BulkRegisterStaff = async (data: BulkAccountPropsCreate[]):Promise<any> => {
+    const props = {
+        data: data,
+        url: userURL+`/academic-staff-bulk`,
+        headers: GetHeader()
+    }
+    const result = await axiosCreate(props)
+    if (result.success) {
+        //console.log(result.data)
+        return result.data
+    }
+    else {
+        console.log(result.error)
+        return null
+    }
+}
+
+
+export const BulkRegisterAdvisor = async (data: BulkAccountPropsCreate[]):Promise<any> => {
+    const props = {
+        data: data,
+        url: userURL+`/advisor-bulk`,
+        headers: GetHeader()
+    }
+    const result = await axiosCreate(props)
+    if (result.success) {
+        //console.log(result.data)
+        return result.data
+    }
+    else {
+        console.log(result.error)
+        return null
+    }
+}
+
+export const BulkRegisterManager = async (data: BulkAccountPropsCreate[]):Promise<any> => {
+    const props = {
+        data: data,
+        url: userURL+`/manager-bulk`,
+        headers: GetHeader()
+    }
+    const result = await axiosCreate(props)
+    if (result.success) {
+        //console.log(result.data)
+        return result.data
+    }
+    else {
+        console.log(result.error)
+        return null
+    }
+}
+
+export const BulkRegisterAdmin = async (data: BulkAccountPropsCreate[]):Promise<any> => {
+    const props = {
+        data: data,
+        url: userURL+`/admin-bulk`,
+        headers: GetHeader()
+    }
+    const result = await axiosCreate(props)
+    if (result.success) {
+        //console.log(result.data)
+        return result.data
+    }
+    else {
+        console.log(result.error)
+        return null
+    }
+}
+
+
