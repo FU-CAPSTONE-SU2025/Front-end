@@ -84,7 +84,7 @@ const WorkSchedule: React.FC = () => {
 
   const getDayName = (dayInWeek: number): string => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[dayInWeek - 1] || 'Unknown';
+    return days[dayInWeek] || 'Unknown';
   };
 
   const formatTime = (time: string): string => {
@@ -93,13 +93,13 @@ const WorkSchedule: React.FC = () => {
 
   const getDayColor = (dayInWeek: number): string => {
     const colors = {
+      0: 'magenta', // Sunday
       1: 'blue',    // Monday
       2: 'green',   // Tuesday
       3: 'orange',  // Wednesday
       4: 'purple',  // Thursday
       5: 'red',     // Friday
-      6: 'cyan',    // Saturday
-      7: 'magenta'  // Sunday
+      6: 'cyan'     // Saturday
     };
     return colors[dayInWeek as keyof typeof colors] || 'default';
   };
@@ -110,13 +110,16 @@ const WorkSchedule: React.FC = () => {
       dataIndex: 'id',
       key: 'id',
       width: 80,
-      render: (value: number) => <Text strong>#{value}</Text>
+      align: 'center' as const,
+      render: (value: number, record: BookingAvailability, index: number) => (
+        <Text strong>{index + 1}</Text>)
     },
     {
       title: 'Day of Week',
       dataIndex: 'dayInWeek',
       key: 'dayInWeek',
       width: 120,
+      align: 'center' as const,
       render: (value: number) => (
         <Tag color={getDayColor(value)} icon={<CalendarOutlined />}>
           {getDayName(value)}
@@ -128,6 +131,7 @@ const WorkSchedule: React.FC = () => {
       dataIndex: 'startTime',
       key: 'startTime',
       width: 120,
+      align: 'center' as const,
       render: (value: string) => (
         <Space>
           <ClockCircleOutlined />
@@ -140,6 +144,7 @@ const WorkSchedule: React.FC = () => {
       dataIndex: 'endTime',
       key: 'endTime',
       width: 120,
+      align: 'center' as const,
       render: (value: string) => (
         <Space>
           <ClockCircleOutlined />
@@ -151,6 +156,7 @@ const WorkSchedule: React.FC = () => {
       title: 'Duration',
       key: 'duration',
       width: 120,
+      align: 'center' as const,
       render: (_: any, record: BookingAvailability) => {
         const start = new Date(`2000-01-01T${record.startTime}`);
         const end = new Date(`2000-01-01T${record.endTime}`);
@@ -166,30 +172,12 @@ const WorkSchedule: React.FC = () => {
       }
     },
     {
-      title: 'Staff Profile ID',
-      dataIndex: 'staffProfileId',
-      key: 'staffProfileId',
-      width: 120,
-      render: (value: number) => (
-        <Space>
-          <UserOutlined />
-          <Text>{value}</Text>
-        </Space>
-      )
-    },
-    {
       title: 'Actions',
       key: 'actions',
       width: 150,
+      align: 'center' as const,
       render: (_: any, record: BookingAvailability) => (
         <Space>
-          <Button 
-            type="primary" 
-            size="small"
-            onClick={() => message.info(`Viewing details for schedule #${record.id}`)}
-          >
-            View
-          </Button>
           <Button 
             size="small"
             onClick={() => handleEditSchedule(record)}

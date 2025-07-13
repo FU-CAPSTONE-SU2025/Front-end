@@ -24,18 +24,23 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
   const updateBookingAvailability = useUpdateBookingAvailability();
   const { data: schedule, isLoading: isLoadingSchedule } = useGetBookingAvailabilityById(scheduleId);
 
+  // Log scheduleId for debugging
+  console.log('EditWorkSchedule - scheduleId:', scheduleId);
+
   const dayOptions = [
+    { value: 0, label: 'Sunday' },
     { value: 1, label: 'Monday' },
     { value: 2, label: 'Tuesday' },
     { value: 3, label: 'Wednesday' },
     { value: 4, label: 'Thursday' },
     { value: 5, label: 'Friday' },
     { value: 6, label: 'Saturday' },
-    { value: 7, label: 'Sunday' },
+   
   ];
 
   // Set form values when schedule changes or modal opens
   useEffect(() => {
+    console.log('EditWorkSchedule useEffect - scheduleId:', scheduleId, 'visible:', visible, 'schedule:', schedule);
     if (schedule && visible && !isLoadingSchedule) {
       console.log('Setting form values for schedule:', schedule);
       // Use setTimeout to ensure the form is ready
@@ -47,7 +52,16 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
         });
       }, 100);
     }
-  }, [schedule, visible, form, isLoadingSchedule]);
+  }, [schedule, visible, form, isLoadingSchedule, scheduleId]);
+
+  // Show loading message when fetching schedule details
+  useEffect(() => {
+    if (visible && scheduleId && isLoadingSchedule) {
+      message.loading('Loading schedule details...', 0);
+    } else {
+      message.destroy();
+    }
+  }, [visible, scheduleId, isLoadingSchedule]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -74,7 +88,7 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
 
   const handleSubmit = async (values: any) => {
     if (!schedule || !scheduleId) {
-      message.error('No schedule selected for editing');
+      message.error('Schedule details not loaded. Please try again.');
       return;
     }
 
@@ -109,8 +123,16 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
 
   const isLoading = updateBookingAvailability.isPending || isLoadingSchedule;
 
+  // Show error if schedule failed to load
+  useEffect(() => {
+    if (visible && scheduleId && !isLoadingSchedule && !schedule) {
+      message.error('Failed to load schedule details. Please try again.');
+    }
+  }, [visible, scheduleId, isLoadingSchedule, schedule]);
+
   const getDayName = (dayInWeek: number): string => {
-    return dayOptions.find(day => day.value === dayInWeek)?.label || 'Unknown';
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[dayInWeek] || 'Unknown';
   };
 
   const formatTime = (time: string | undefined): string => {
@@ -124,7 +146,18 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
         <Space>
           <EditOutlined />
           Edit Work Schedule
-          {schedule && <span style={{ color: '#666', fontSize: '14px' }}>#{schedule.id}</span>}
+          {schedule && (
+            <span style={{ 
+              background: '#1890ff', 
+              color: 'white', 
+              padding: '2px 8px', 
+              borderRadius: '12px', 
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}>
+              ID: {schedule.id}
+            </span>
+          )}
         </Space>
       }
       open={visible}
@@ -135,19 +168,26 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
     >
       {schedule && (
         <div style={{ 
-          background: '#f5f5f5', 
-          padding: '12px', 
-          borderRadius: '6px', 
-          marginBottom: '16px',
-          border: '1px solid #d9d9d9'
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+          padding: '16px', 
+          borderRadius: '8px', 
+          marginBottom: '20px',
+          border: '1px solid #d9d9d9',
+          color: 'white'
         }}>
-          <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: '#1890ff' }}>
-            Current Schedule Details:
+          <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px', color: 'white' }}>
+            📅 Schedule Details (ID: #{schedule.id})
           </div>
-          <div style={{ fontSize: '13px', color: '#666' }}>
-            <div>Day: <strong>{getDayName(schedule.dayInWeek)}</strong></div>
-            <div>Time: <strong>{formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}</strong></div>
-            <div>Staff ID: <strong>{schedule.staffProfileId}</strong></div>
+          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)' }}>
+            <div style={{ marginBottom: '6px' }}>
+              <strong>Day:</strong> {getDayName(schedule.dayInWeek)}
+            </div>
+            <div style={{ marginBottom: '6px' }}>
+              <strong>Time:</strong> {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
+            </div>
+            <div>
+              <strong>Staff Profile ID:</strong> {schedule.staffProfileId}
+            </div>
           </div>
         </div>
       )}

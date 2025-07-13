@@ -234,7 +234,7 @@ export const DeleteBookingAvailability = async (id: number): Promise<boolean> =>
 export const GetBookingAvailabilityById = async (id: number): Promise<BookingAvailability | null> => {
   const props = {
     data: null,
-    url: baseUrl + `/BookingAvailability/${id}`,
+    url: baseUrl + `/BookingAvailability/detail/${id}`,
     headers: GetHeader(),
   };
   const result = await axiosRead(props);
