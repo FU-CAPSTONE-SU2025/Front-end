@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import { BellOutlined } from '@ant-design/icons';
 import { Avatar, Button, Modal, Badge } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNotificationHub, NotificationItem } from '../../hooks/useNotificationHub';
+import { useNotificationHub } from '../../hooks/useNotificationHub';
+import { NotificationItem } from '../../interfaces/INotification';
 
 function timeAgo(dateString?: string) {
   if (!dateString) return '';
@@ -18,7 +19,7 @@ function timeAgo(dateString?: string) {
 const Notification: React.FC = () => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { notifications, loading, markAsRead } = useNotificationHub();
+  const { notifications, loading, markAsRead, unreadCount } = useNotificationHub();
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [localRead, setLocalRead] = useState<{ [id: number]: boolean }>({});
 
@@ -36,7 +37,6 @@ const Notification: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 
-  const unreadCount = notifications.filter((n) => !(n.isRead || localRead[n.id])).length;
   const badgeCount = unreadCount > 10 ? '10+' : unreadCount;
 
   const handleNotificationClick = async (n: NotificationItem) => {

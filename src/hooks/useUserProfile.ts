@@ -1,6 +1,8 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { AccountProps, UpdateAccountProps } from '../interfaces/IAccount';
 import { GetCurrentStaffUser, UpdateCurrentStaffUser } from '../api/Account/UserAPI';
+import { StaffDataUpdateRequest } from '../interfaces/IStaff';
+import { StudentDataUpdateRequest } from '../interfaces/IStudent';
 
 
 export default function useUserProfile() {
@@ -26,7 +28,22 @@ export default function useUserProfile() {
   const updateUserMutation = useMutation<AccountProps | null, unknown, { userId: number; data: UpdateAccountProps }>({
     mutationFn: async ({ userId, data }) => {
       console.log('Updating user profile:', { userId, data });
-      const result = await UpdateCurrentStaffUser(userId, data);
+      
+      // Convert UpdateProfileData to UpdateAccountProps
+      const updateData: UpdateAccountProps = {
+        username: data.username || '',
+        email: data.email || '',
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : new Date(),
+        avatarUrl: data.avatarUrl || '',
+        roleId: 0,
+        status: 0,
+        staffDataUpdateRequest: {} as StaffDataUpdateRequest, // Empty object for now
+        studentDataUpdateRequest: {} as StudentDataUpdateRequest // Empty object for now
+      };
+      
+      const result = await UpdateCurrentStaffUser(userId, updateData);
       console.log('Update result:', result);
       return result;
     },
