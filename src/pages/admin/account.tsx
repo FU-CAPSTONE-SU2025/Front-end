@@ -1,34 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import styles from '../../css/admin/account.module.css';
-import AccountCounter from '../../components/admin/accountCounter';
-import { DatePicker } from 'antd';
+import { ConfigProvider, Input, DatePicker, message } from 'antd';
 import dayjs from 'dayjs';
-import { validateEmail } from '../../components/common/validation';
-import BulkDataImport from '../../components/common/bulkDataImport';
 import { jwtDecode } from 'jwt-decode';
+import styles from '../../css/admin/account.module.css';
+import BulkDataImport from '../../components/common/bulkDataImport';
+import AccountCounter from '../../components/admin/accountCounter';
+import AvatarUpload from '../../components/common/AvatarUpload';
 import { getAuthState } from '../../hooks/useAuths';
-import { JWTAccountProps } from '../../interfaces/IAccount';
 import useActiveUserData from '../../hooks/useActiveUserData';
-import { message } from 'antd';
-import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { EditOutlined, LogoutOutlined } from '@ant-design/icons';
 import useUserProfile from '../../hooks/useUserProfile';
+import { AccountProps, JWTAccountProps } from '../../interfaces/IAccount';
+import { validateEmail } from '../../components/common/validation';
 
-// Animation variants for the profile card and action panel
+const { TextArea } = Input;
+
 const cardVariants = {
-  hidden: { opacity: 0, x: -50 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.5 } },
-};
-
-const actionPanelVariants = {
-  hidden: { opacity: 0, x: 50 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.5, delay: 0.2 } },
-};
-
-// Button hover animation
-const buttonVariants = {
-  hover: { scale: 1.05, opacity: 0.9, transition: { duration: 0.2 } },
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
 
 const Profile: React.FC = () => {
@@ -80,12 +69,6 @@ const Profile: React.FC = () => {
   const getDisplayValue = (value: any, placeholder: string) => {
     if (isLoadingCurrentUser) return "Loading...";
     return value && String(value).trim() !== "" ? String(value) : placeholder;
-  };
-
-  const getPlaceholderAvatar = () => {
-    if (currentUserData?.avatarUrl) return currentUserData.avatarUrl;
-    if (isLoadingCurrentUser) return "https://ui-avatars.com/api/?name=Loading&background=64748B&color=ffffff&size=120";
-    return "https://ui-avatars.com/api/?name=Admin+User&background=1E40AF&color=ffffff&size=120";
   };
 
   const getDateValue = () => {
@@ -227,6 +210,11 @@ const Profile: React.FC = () => {
     refetch();
   };
 
+  const handleAvatarUpdate = (newAvatarUrl: string) => {
+    // This will be handled by the AvatarUpload component automatically
+    console.log('Avatar updated:', newAvatarUrl);
+  };
+
   const hasErrors = Object.values(errors).some((error) => error !== null);
 
   return (
@@ -241,12 +229,15 @@ const Profile: React.FC = () => {
       <div className={styles.container}>
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
           <div className={styles.userInfo}>
-            <motion.img 
-              src={getPlaceholderAvatar()} 
-              alt="User Avatar" 
+            <AvatarUpload
+              userId={userId || 0}
+              currentAvatarUrl={currentUserData?.avatarUrl}
+              userRole="admin"
+              currentUserData={currentUserData}
+              size={120}
+              onAvatarUpdate={handleAvatarUpdate}
+              disabled={isLoadingCurrentUser}
               className={styles.avatar}
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
             />
             <div className={styles.profileHeader}>
               <h1 className={`${styles.name} ${isLoadingCurrentUser ? styles.loadingText : ''}`}>
@@ -261,14 +252,14 @@ const Profile: React.FC = () => {
               </div>
             </div>
           </div>
-
-          <div className={styles.formFields}>
+          
+          <div className={styles.profileContent}>
             <div className={styles.fieldRow}>
               <div className={styles.fieldColumn}>
                 <label className={styles.fieldLabel}>First Name</label>
                 <input
                   className={`${styles.fieldContent} ${isLoadingCurrentUser ? styles.loading : ''}`}
-                  value={isEditing ? firstName : getDisplayValue(currentUserData?.firstName, "John")}
+                  value={isEditing ? firstName : getDisplayValue(currentUserData?.firstName, "Admin")}
                   onChange={(e) => setFirstName(e.target.value)}
                   readOnly={!isEditing}
                   placeholder="Enter first name"
@@ -278,7 +269,7 @@ const Profile: React.FC = () => {
                 <label className={styles.fieldLabel}>Last Name</label>
                 <input
                   className={`${styles.fieldContent} ${isLoadingCurrentUser ? styles.loading : ''}`}
-                  value={isEditing ? lastName : getDisplayValue(currentUserData?.lastName, "Administrator")}
+                  value={isEditing ? lastName : getDisplayValue(currentUserData?.lastName, "User")}
                   onChange={(e) => setLastName(e.target.value)}
                   readOnly={!isEditing}
                   placeholder="Enter last name"
@@ -338,71 +329,49 @@ const Profile: React.FC = () => {
               </motion.div>
             )}
 
-            {isEditing && (
-              <motion.div 
-                className={styles.editActions}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-              >
+            <div className={styles.actionButtons}>
+              {!isEditing ? (
                 <motion.button
-                  className={styles.saveButton}
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  onClick={handleSave}
-                  disabled={isUpdatingProfile}
+                  className={styles.editButton}
+                  onClick={handleEdit}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <div className={styles.buttonContent}>
+                  Edit Profile
+                </motion.button>
+              ) : (
+                <>
+                  <motion.button
+                    className={styles.saveButton}
+                    onClick={handleSave}
+                    disabled={isUpdatingProfile}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
                     {isUpdatingProfile ? 'Saving...' : 'Save Changes'}
-                  </div>
-                </motion.button>
-                <motion.button
-                  className={styles.cancelButton}
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  onClick={handleCancel}
-                  disabled={isUpdatingProfile}
-                >
-                  <div className={styles.buttonContent}>Cancel</div>
-                </motion.button>
-              </motion.div>
-            )}
+                  </motion.button>
+                  <motion.button
+                    className={styles.cancelButton}
+                    onClick={handleCancel}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Cancel
+                  </motion.button>
+                </>
+              )}
+            </div>
           </div>
         </motion.div>
-
-        <motion.div className={styles.actionPanel} variants={actionPanelVariants} initial="hidden" animate="visible">
-          <h2 className={styles.actionTitle}>Account Actions</h2>
-          <div className={styles.actions}>
-            {[
-              { action: 'Edit Account', icon: <EditOutlined className={styles.actionIcon} /> },
-              { action: 'Logout', icon: <LogoutOutlined className={styles.actionIcon} /> }
-            ].map(({ action, icon }, index) => (
-              <motion.div
-                key={index}
-                className={`${styles.actionButton} ${action === 'Edit Account' && isEditing ? styles.editActive : ''} ${action === 'Logout' ? styles.logoutButton : ''} ${isUpdatingProfile ? styles.disabled : ''}`}
-                variants={buttonVariants}
-                whileHover={isUpdatingProfile ? {} : "hover"}
-                onClick={isUpdatingProfile ? undefined : (action === 'Edit Account' ? handleEdit : undefined)}
-              >
-                {icon}
-                <div className={`${styles.buttonContent} ${action === 'Edit Account' && isEditing ? styles.textEditActive : ''}`}>
-                  {action === 'Edit Account' && isEditing ? 'Editing...' : action}
-                </div>
-              </motion.div>
-            ))}
-            {/* Excel Import Button without blue wrapper */}
-          </div>
-        </motion.div>
-
-        {/* Data Import Modal */}
-        {isImportOpen && (
-          <BulkDataImport 
-            onClose={() => setIsImportOpen(false)} 
-            onDataImported={handleDataImported}
-            supportedTypes={['ADMIN_PROFILE']}
-          />
-        )}
       </div>
+
+      {isImportOpen && (
+        <BulkDataImport
+          onClose={() => setIsImportOpen(false)}
+          onDataImported={handleDataImported}
+          supportedTypes={['ADMIN_PROFILE']}
+        />
+      )}
     </>
   );
 };

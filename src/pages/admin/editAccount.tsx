@@ -9,6 +9,7 @@ import { AccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
 import { jwtDecode } from 'jwt-decode';
 import { getAuthState } from '../../hooks/useAuths';
 import { JWTAccountProps } from '../../interfaces/IAccount';
+import AvatarUpload from '../../components/common/AvatarUpload';
 
 const { Option } = Select;
 
@@ -43,6 +44,7 @@ const EditAccount: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<AccountProps | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string>('');
   const { accessToken } = getAuthState();
 
   // Role checks
@@ -60,12 +62,17 @@ const EditAccount: React.FC = () => {
     }
   };
 
+  // Get the user ID being edited
+  const getEditUserId = () => {
+    return id ? parseInt(id) : getCurrentUserId();
+  };
+
   // Load user data
   useEffect(() => {
     const loadUserData = async () => {
       setIsLoadingUser(true);
       try {
-        const userId = id ? parseInt(id) : getCurrentUserId();
+        const userId = getEditUserId();
         if (!userId) {
           message.error('Unable to identify user');
           nav(-1);
@@ -82,6 +89,7 @@ const EditAccount: React.FC = () => {
 
         if (userData) {
           setCurrentUser(userData);
+          setCurrentAvatarUrl(userData.avatarUrl || '');
           // Set form values
           form.setFieldsValue({
             email: userData.email,
@@ -121,7 +129,7 @@ const EditAccount: React.FC = () => {
       const values = await form.validateFields();
       setLoading(true);
 
-      const userId = id ? parseInt(id) : getCurrentUserId();
+      const userId = getEditUserId();
       if (!userId) {
         message.error('Unable to identify user');
         return;
@@ -134,7 +142,7 @@ const EditAccount: React.FC = () => {
         firstName: values.firstName,
         lastName: values.lastName,
         dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : new Date(),
-        avatarUrl: currentUser?.avatarUrl || '',
+        avatarUrl: currentAvatarUrl, // Use the updated avatar URL
         roleId: isStudent ? 5 : 1, // Student roleId is 5, Staff roleId is 1
         status: currentUser?.status || 1,
         staffDataUpdateRequest: null,
@@ -182,6 +190,17 @@ const EditAccount: React.FC = () => {
 
   const handleCancel = () => {
     nav(-1);
+  };
+
+  const handleAvatarUpdate = (newAvatarUrl: string) => {
+    setCurrentAvatarUrl(newAvatarUrl);
+  };
+
+  const getUserRole = () => {
+    if (isStudent) return 'student';
+    if (role === 'manager') return 'manager';
+    if (role === 'advisor') return 'advisor';
+    return 'staff';
   };
 
   if (isLoadingUser) {
@@ -234,6 +253,17 @@ const EditAccount: React.FC = () => {
       <div className={styles.container}>
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
           <div className={styles.userInfo}>
+            <div className={styles.avatarSection}>
+              <AvatarUpload
+                userId={getEditUserId() || 0}
+                currentAvatarUrl={currentAvatarUrl}
+                userRole={getUserRole()}
+                size={120}
+                onAvatarUpdate={handleAvatarUpdate}
+                disabled={isLoadingUser}
+                className={styles.avatar}
+              />
+            </div>
             <h1 className={styles.name}>
               {isStudent ? 'Edit Student Account' : 'Edit Staff Account'}
             </h1>
