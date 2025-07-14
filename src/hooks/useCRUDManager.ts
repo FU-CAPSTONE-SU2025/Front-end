@@ -13,10 +13,10 @@ export default function useCRUDManager() {
   const getManagerMutation = useMutation<pagedManagerData | null, unknown, PaginationParams>({
     mutationFn: async (params: PaginationParams) => {
       const data = await FetchManagerList(
-        params.pageNumber,
-        params.pageSize,
+        params.pageNumber, 
+        params.pageSize, 
         undefined, // searchQuery removed - will be handled client-side
-        params.filterType,
+        params.filterType, 
         params.filterValue
       );
       return data;
@@ -25,23 +25,21 @@ export default function useCRUDManager() {
       console.error(error);
     },
   });
-
+  
   const metaData = getManagerMutation.data || null;
   const managerList = metaData?.items || [];
-  const pagination = metaData
-    ? {
-        current: metaData.pageNumber,
-        pageSize: metaData.pageSize,
-        total: metaData.totalCount,
-        totalPages: Math.ceil(metaData.totalCount / metaData.pageSize),
-      }
-    : null;
-
+  const pagination = metaData ? {
+    current: metaData.pageNumber,
+    pageSize: metaData.pageSize,
+    total: metaData.totalCount,
+    totalPages: Math.ceil(metaData.totalCount / metaData.pageSize)
+  } : null;
+  
   return {
     ...getManagerMutation,
     getAllManager: getManagerMutation.mutate,
     managerList,
     pagination,
     isLoading: getManagerMutation.isPending
-  };
+  }
 } 

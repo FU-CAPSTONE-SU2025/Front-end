@@ -54,39 +54,8 @@ export const RegisterStudent = async (data: AccountPropsCreate):Promise<any> => 
         return result.error
     }
 }
-export const RegisterMultipleStudent = async (data: AccountPropsCreate[]):Promise<any> => {
-    const props = {
-        data: data,
-        url: userURL,
-        headers: GetHeader()
-    }
-    const result = await axiosCreate(props)
-    if (result.success) {
-        //console.log(result.data)
-        return result.data
-    }
-    else {
-        console.log(result.error)
-        return null
-    }
-}
 
-export const FetchStudentList = async ():Promise<AccountProps[]> => {
-    const props = {
-        data: null,
-        url: userURL,
-        headers: GetHeader()
-    }
-    const result = await axiosRead(props)
-    if (result.success) {
-        //console.log(result.data)
-        return result.data
-    }
-    else {
-        console.log(result.error)
-        return []
-    }
-}
+
 export const FetchStudentById = async (userId:number):Promise<AccountProps|null> => {
     const props = {
         data: null,
