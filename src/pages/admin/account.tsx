@@ -218,7 +218,7 @@ const Profile: React.FC = () => {
   const hasErrors = Object.values(errors).some((error) => error !== null);
 
   return (
-    <>  
+    <>
       <AccountCounter 
         label={["Student", "Academic Staff", "Advisor", "Manager"]}
         student={categorizedData?.student}
@@ -226,9 +226,11 @@ const Profile: React.FC = () => {
         advisor={categorizedData?.advisor}
         manager={categorizedData?.manager}
       />
-      <div className={styles.container}>
-        <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
-          <div className={styles.userInfo}>
+      <div className={styles.twoCardContainer}>
+        {/* Left Card: Profile Data */}
+        <motion.div className={styles.leftCard} variants={cardVariants} initial="hidden" animate="visible">
+          {/* Centered Avatar, Name, Role, Email */}
+          <div className={styles.profileAvatar}>
             <AvatarUpload
               userId={userId || 0}
               currentAvatarUrl={currentUserData?.avatarUrl}
@@ -239,132 +241,86 @@ const Profile: React.FC = () => {
               disabled={isLoadingCurrentUser}
               className={styles.avatar}
             />
-            <div className={styles.profileHeader}>
-              <h1 className={`${styles.name} ${isLoadingCurrentUser ? styles.loadingText : ''}`}>
-                {getDisplayName()}
-              </h1>
-              <div className={styles.profileInfo}>
-                <div className={styles.role}>{getRoleDisplayName()}</div>
-                <div className={styles.divider}>•</div>
-                <div className={`${styles.email} ${isLoadingCurrentUser ? styles.loadingText : ''}`}>
-                  {isLoadingCurrentUser ? "Loading..." : getDisplayValue(currentUserData?.email, "admin@company.com")}
-                </div>
-              </div>
+          </div>
+          <div className={styles.profileName}>{getDisplayName()}</div>
+          <div className={styles.profileRole}>{getRoleDisplayName()}</div>
+          <div className={styles.profileEmail}>{isLoadingCurrentUser ? "Loading..." : getDisplayValue(currentUserData?.email, "admin@company.com")}</div>
+          <hr className={styles.infoDivider} />
+          {/* Info List */}
+          <div className={styles.infoList}>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>First Name</span>
+              <span className={styles.infoValue}>{isEditing ? <input className={styles.fieldContent} value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Enter first name" /> : getDisplayValue(currentUserData?.firstName, "Admin")}</span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>Last Name</span>
+              <span className={styles.infoValue}>{isEditing ? <input className={styles.fieldContent} value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Enter last name" /> : getDisplayValue(currentUserData?.lastName, "User")}</span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>Username</span>
+              <span className={styles.infoValue}>{isEditing ? <input className={styles.fieldContent} value={username} onChange={e => setUsername(e.target.value)} placeholder="Enter username" /> : getDisplayValue(currentUserData?.username, "admin_user")}</span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>Email Address</span>
+              <span className={styles.infoValue}>{isEditing ? <input className={styles.fieldContent} value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter email address" type="email" /> : getDisplayValue(currentUserData?.email, "admin@company.com")}</span>
+              {errors.email && <div className={styles.error}>{errors.email}</div>}
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>Date of Birth</span>
+              <span className={styles.infoValue}>{isEditing ? <DatePicker className={styles.datePicker} onChange={date => handleDateChange(date ? date.toDate() : null)} value={getDateValue()} placeholder="Select date of birth" format="YYYY-MM-DD" allowClear disabled={isLoadingCurrentUser} size="large" /> : getDisplayValue(currentUserData?.dateOfBirth ? dayjs(currentUserData.dateOfBirth).format('YYYY-MM-DD') : '', "N/A")}</span>
             </div>
           </div>
-          
-          <div className={styles.profileContent}>
-            <div className={styles.fieldRow}>
-              <div className={styles.fieldColumn}>
-                <label className={styles.fieldLabel}>First Name</label>
-                <input
-                  className={`${styles.fieldContent} ${isLoadingCurrentUser ? styles.loading : ''}`}
-                  value={isEditing ? firstName : getDisplayValue(currentUserData?.firstName, "Admin")}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  readOnly={!isEditing}
-                  placeholder="Enter first name"
-                />
-              </div>
-              <div className={styles.fieldColumn}>
-                <label className={styles.fieldLabel}>Last Name</label>
-                <input
-                  className={`${styles.fieldContent} ${isLoadingCurrentUser ? styles.loading : ''}`}
-                  value={isEditing ? lastName : getDisplayValue(currentUserData?.lastName, "User")}
-                  onChange={(e) => setLastName(e.target.value)}
-                  readOnly={!isEditing}
-                  placeholder="Enter last name"
-                />
-              </div>
-            </div>
-            
-            <div className={styles.fieldRow}>
-              <div className={styles.fieldColumn}>
-                <label className={styles.fieldLabel}>Username</label>
-                <input
-                  className={`${styles.fieldContent} ${isLoadingCurrentUser ? styles.loading : ''}`}
-                  value={isEditing ? username : getDisplayValue(currentUserData?.username, "admin_user")}
-                  onChange={(e) => setUsername(e.target.value)}
-                  readOnly={!isEditing}
-                  placeholder="Enter username"
-                />
-              </div>
-              <div className={styles.fieldColumn}>
-                <label className={styles.fieldLabel}>Email Address</label>
-                <input
-                  className={`${styles.fieldContent} ${isLoadingCurrentUser ? styles.loading : ''}`}
-                  value={isEditing ? email : getDisplayValue(currentUserData?.email, "admin@company.com")}
-                  onChange={(e) => setEmail(e.target.value)}
-                  readOnly={!isEditing}
-                  placeholder="Enter email address"
-                  type="email"
-                />
-                {errors.email && <div className={styles.error}>{errors.email}</div>}
-              </div>
-            </div>
-            
-            <div className={styles.fieldRow}>
-              <div className={styles.datefield}>
-                <label className={styles.fieldLabel}>Date of Birth</label>
-                <DatePicker
-                  className={`${styles.datePicker} ${isLoadingCurrentUser ? styles.loading : ''}`}
-                  onChange={(date) => handleDateChange(date ? date.toDate() : null)}
-                  value={getDateValue()}
-                  placeholder={isLoadingCurrentUser ? "Loading..." : "Select date of birth"}
-                  format="YYYY-MM-DD"
-                  allowClear
-                  disabled={!isEditing || isLoadingCurrentUser}
-                  size="large"
-                />
-              </div>
-            </div>
-
-            {hasErrors && (
-              <motion.div 
-                className={styles.errorContainer}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
+          {hasErrors && (
+            <motion.div className={styles.errorContainer} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
+              {errors.email && <div className={styles.error}>Email: {errors.email}</div>}
+            </motion.div>
+          )}
+        </motion.div>
+        {/* Right Card: Actions */}
+        <motion.div className={styles.rightCard} variants={cardVariants} initial="hidden" animate="visible">
+          <div className={styles.actionTitle}>ACTION</div>
+          <div className={styles.actionCardContent}>
+            {!isEditing ? (
+              <motion.button
+                className={styles.editButton}
+                onClick={handleEdit}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {errors.email && <div className={styles.error}>Email: {errors.email}</div>}
-              </motion.div>
-            )}
-
-            <div className={styles.actionButtons}>
-              {!isEditing ? (
+                Edit Profile
+              </motion.button>
+            ) : (
+              <>
                 <motion.button
-                  className={styles.editButton}
-                  onClick={handleEdit}
+                  className={styles.saveButton}
+                  onClick={handleSave}
+                  disabled={isUpdatingProfile}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  Edit Profile
+                  {isUpdatingProfile ? 'Saving...' : 'Save Changes'}
                 </motion.button>
-              ) : (
-                <>
-                  <motion.button
-                    className={styles.saveButton}
-                    onClick={handleSave}
-                    disabled={isUpdatingProfile}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {isUpdatingProfile ? 'Saving...' : 'Save Changes'}
-                  </motion.button>
-                  <motion.button
-                    className={styles.cancelButton}
-                    onClick={handleCancel}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Cancel
-                  </motion.button>
-                </>
-              )}
-            </div>
+                <motion.button
+                  className={styles.cancelButton}
+                  onClick={handleCancel}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Cancel
+                </motion.button>
+              </>
+            )}
+            <motion.button
+              className={styles.logoutButton}
+              onClick={() => { window.location.href = '/logout'; }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Log Out
+            </motion.button>
           </div>
         </motion.div>
       </div>
-
       {isImportOpen && (
         <BulkDataImport
           onClose={() => setIsImportOpen(false)}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, Input, Select, Table, Modal, message } from 'antd';
+import { ConfigProvider, Input, Select, Modal, message } from 'antd';
 import styles from '../../css/admin/students.module.css';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import AccountCounter from '../../components/admin/accountCounter';
@@ -11,8 +11,7 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDStudent from '../../hooks/useCRUDStudent';
 import { StudentBase } from '../../interfaces/IStudent';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { BulkRegisterStudent, BulkRegisterStaff, BulkRegisterManager, BulkRegisterAdvisor, BulkRegisterAdmin, DisableUser } from '../../api/Account/UserAPI';
-import {validateBulkData } from '../../utils/bulkImportTransformers';
+import { BulkRegisterStudent, DisableUser } from '../../api/Account/UserAPI';
 
 const { Option } = Select;
 

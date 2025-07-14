@@ -128,14 +128,18 @@
 }
 
 .table :global(.ant-pagination-item-active) {
-  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%) !important;
+  background: #fff !important;
   border-color: #1E40AF !important;
-  color: #ffffff !important;
+  color: #1E293B !important;
   font-weight: 700;
-  box-shadow: 
-    0 4px 12px rgba(30, 64, 175, 0.3),
-    0 2px 8px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15), 0 0 0 2px #1E40AF;
+  z-index: 1;
+}
+
+.table :global(.ant-pagination-item-active):hover {
+  background: #f1f5f9 !important;
+  border-color: #1E40AF !important;
+  color: #1E293B !important;
 }
 
 .table :global(.ant-pagination-prev button, .ant-pagination-next button) {
