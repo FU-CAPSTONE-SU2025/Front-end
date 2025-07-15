@@ -3,7 +3,7 @@ import * as signalR from '@microsoft/signalr';
 import { useAuths } from './useAuths';
 import { NOTI_HUB_METHODS, NotificationItem } from '../interfaces/INotification';
 
-const NOTI_HUB_URL = `${import.meta.env.VITE_API_AISEA_API_BASEURL}/notificationHub`;
+const NOTI_HUB_URL = `${import.meta.env.VITE_API_AISEA_API_HUBURL}/notificationHub`;
 
 
 enum ConnectionState {

@@ -1,353 +1,206 @@
-import React, { useState, useEffect } from 'react';
-import { Avatar, Input, Button, Spin, Empty } from 'antd';
-import { motion, AnimatePresence } from 'framer-motion';
-import { SearchOutlined, ReloadOutlined, UserOutlined } from '@ant-design/icons';
+import React, { useState, useRef, useEffect } from 'react';
+import { Collapse, List, Avatar, Badge, Input, Button, Spin, Empty, Typography } from 'antd';
+import { UserOutlined, CloseOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ChatSession, useAdvisorChatHub } from '../../hooks/useAdvisorChatHub';
-import AdvisorChatBox from './advisorChatBox';
+import ChatBoxAdvisor from './chatBoxAdvisor';
+import { sendMessageToAdvisor, sendMessageToSession } from '../../api/advisor/AdvisorAPI';
 
-interface AdvisorChatTabProps {
-  searchTerm: string;
-  setSearchTerm: (v: string) => void;
-  handleUserClick: (user: any) => void;
-}
+const { Panel } = Collapse;
+const { Text } = Typography;
 
-const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ 
-  searchTerm, 
-  setSearchTerm, 
-  handleUserClick 
-}) => {
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [showChatBox, setShowChatBox] = useState(false);
-  const [showAvailableAdvisors, setShowAvailableAdvisors] = useState(false);
-
-  // Use SignalR hook directly
+const AdvisorChatTab = () => {
   const {
-    sessions,
-    availableAdvisors,
-    loading,
-    isConnected,
-    error,
-    listSessions,
-    getAvailableAdvisors,
+    sessions, messages, currentSessionId, loading, error, isConnected,
+    listSessions, joinSession, sendMessage, availableAdvisors = [], createHumanSession,
+    setMessages, refreshMessages
   } = useAdvisorChatHub();
 
+  // Chatbox state
+  const [openChat, setOpenChat] = useState<{
+    sessionId: number;
+    staffName: string;
+    avatar: string;
+    isOnline: boolean;
+  } | null>(null);
+  const [messageInput, setMessageInput] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [refreshingMessages, setRefreshingMessages] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Get online advisors (assume availableAdvisors is an array of online advisors)
+  const onlineAdvisors = (availableAdvisors || []).filter(a => a.isOnline);
 
-  // Load sessions when component mounts or connection changes
+  // Recent session list
+  const sessionList = sessions.map(session => ({
+    ...session,
+    staffName: session.staffName || 'Advisor',
+    avatar: '/img/Logo.svg',
+    isOnline: session.isActive
+  }));
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, openChat]);
+
+  // Load sessions on mount
   useEffect(() => {
     if (isConnected) {
       listSessions();
     }
   }, [isConnected, listSessions]);
 
-  // Filter sessions based on search term
-  const filteredSessions = (sessions || []).filter((session: ChatSession) =>
-    session.staffName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    session.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // When selecting a new session
+  useEffect(() => {
+    if (openChat?.sessionId) {
+      joinSession(openChat.sessionId);
+    }
+  }, [openChat, joinSession]);
 
-  // Get unique advisors from sessions
-  const uniqueAdvisors = filteredSessions.reduce((acc: any[], session: ChatSession) => {
-    const existingAdvisor = acc.find(advisor => advisor.id === session.staffId);
-    if (!existingAdvisor) {
-      acc.push({
-        id: session.staffId,
-        name: session.staffName,
-        avatarUrl: '/img/Logo.svg', // Default avatar
-        isOnline: session.isActive,
-        lastSeen: session.lastMessageTime || 'Offline',
-        role: 'Advisor',
-        email: `${session.staffName.toLowerCase().replace(/\s+/g, '.')}@aisea.edu.vn`,
-        sessions: [session]
+  // Start chat with online advisor (create new session if not exists)
+  const handleStartChatWithAdvisor = async (advisor: any) => {
+    // Find existing session with this advisor
+    const existingSession = sessions.find(s => s.staffId === advisor.id);
+    if (existingSession) {
+      setOpenChat({
+        sessionId: existingSession.id,
+        staffName: existingSession.staffName || 'Advisor',
+        avatar: '/img/Logo.svg',
+        isOnline: existingSession.isActive
       });
     } else {
-      existingAdvisor.sessions.push(session);
+      await createHumanSession(`Hello ${advisor.firstName || advisor.name || ''}`);
+      setTimeout(() => listSessions(), 500);
     }
-    return acc;
-  }, []);
+  };
 
-  // Create available advisors from sessions if no advisor list is available
-  const availableAdvisorsFromSessions = sessions.reduce((acc: any[], session: ChatSession) => {
-    const existingAdvisor = acc.find(advisor => advisor.id === session.staffId);
-    if (!existingAdvisor) {
-      acc.push({
-        id: session.staffId,
-        firstName: session.staffName.split(' ')[0] || session.staffName,
-        lastName: session.staffName.split(' ').slice(1).join(' ') || '',
-        email: `${session.staffName.toLowerCase().replace(/\s+/g, '.')}@aisea.edu.vn`,
-        specialization: 'Academic Advisor',
-        yearsOfExperience: '5+',
-        department: 'Student Services'
-      });
-    }
-    return acc;
-  }, []);
+  // When clicking a session, open chatbox
+  const handleOpenSession = (session: any) => {
+    console.log('[DEBUG] Clicked session:', session);
+    setOpenChat({
+      sessionId: session.id,
+      staffName: session.staffName || 'Advisor',
+      avatar: '/img/Logo.svg',
+      isOnline: session.isOnline
+    });
+  };
 
-  // Use available advisors from hub if available, otherwise use from sessions
-  const effectiveAdvisors = (availableAdvisors && availableAdvisors.length > 0) 
-    ? availableAdvisors 
-    : availableAdvisorsFromSessions;
-
-  // Filter available advisors based on search term
-  const filteredAvailableAdvisors = effectiveAdvisors.filter((advisor: any) => {
-    const fullName = `${advisor.firstName || ''} ${advisor.lastName || ''}`.toLowerCase();
-    const email = (advisor.email || '').toLowerCase();
-    const searchLower = searchTerm.toLowerCase();
+  // Send message handler for chatBox (use API for sending, SignalR for receiving)
+  const handleSendMessage = async (msg: string) => {
+    if (!openChat?.sessionId || sendingMessage) return;
     
-    return fullName.includes(searchLower) || email.includes(searchLower);
-  });
-
-
-
-  const handleUserSelect = (advisor: any) => {
-    setSelectedUser(advisor);
-    setShowChatBox(true);
-    handleUserClick(advisor);
+    setSendingMessage(true);
+    try {
+      // Use API to send message to existing session
+      await sendMessageToSession(openChat.sessionId, msg);
+      
+      // Don't update messages here - let SignalR handle the broadcast
+      // The message will appear when SignalR broadcasts it back
+    } catch (err) {
+      console.error('Failed to send message:', err);
+      // Optionally show error to user
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
-  const handleCloseChatBox = () => {
-    setShowChatBox(false);
-    setSelectedUser(null);
-  };
-
-  const handleStartNewChat = (advisor: any) => {
-    const advisorData = {
-      id: advisor.id,
-      name: `${advisor.firstName} ${advisor.lastName}`,
-      avatarUrl: '/img/Logo.svg',
-      isOnline: true,
-      lastSeen: 'Available',
-      role: 'Advisor',
-      email: advisor.email,
-      specialization: advisor.specialization,
-      yearsOfExperience: advisor.yearsOfExperience,
-      department: advisor.department
-    };
-    setSelectedUser(advisorData);
-    setShowChatBox(true);
-    setShowAvailableAdvisors(false);
-    handleUserClick(advisorData);
+  // Refresh messages manually
+  const handleRefreshMessages = async () => {
+    if (!openChat?.sessionId || refreshingMessages) return;
+    
+    setRefreshingMessages(true);
+    try {
+      await refreshMessages();
+    } catch (err) {
+      console.error('Failed to refresh messages:', err);
+    } finally {
+      setRefreshingMessages(false);
+    }
   };
 
   return (
-    <>
-      <div className="flex flex-col h-full bg-gray-50">
-        {/* Search Bar and Actions */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex gap-2 mb-3">
-            <Input
-              placeholder="Search advisors..."
-              prefix={<SearchOutlined className="text-gray-400" />}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 rounded-full"
-            />
-            <Button
-              type="primary"
-              onClick={() => {
-                const newValue = !showAvailableAdvisors;
-                if (newValue) {
-                  getAvailableAdvisors();
-                }
-                setShowAvailableAdvisors(newValue);
-              }}
-              icon={<UserOutlined />}
-            >
-              {showAvailableAdvisors ? 'My Chats' : 'Find Advisors'}
-            </Button>
-            <Button
-              onClick={() => {
-                listSessions();
-              }}
-              icon={<ReloadOutlined />}
-            />
-            {showAvailableAdvisors && (
-              <Button
-                onClick={() => {
-                  getAvailableAdvisors();
-                }}
-                size="small"
-                loading={loading}
-              >
-                Load Advisors
-              </Button>
+    <div className="flex h-[600px] rounded-[18px] bg-[#f4f6fb] shadow-[0_4px_24px_rgba(0,0,0,0.07)] overflow-hidden border-none relative">
+  
+      <div className="w-full bg-white flex flex-col border-r border-[#f0f0f0] shadow-[2px_0_8px_rgba(0,0,0,0.02)]">
+        <div className="w-full min-w-0 bg-white px-5 pt-6 pb-3 font-bold text-[20px] border-b border-[#f0f0f0] text-[#222] box-border">
+          Chat Sessions
+        </div>
+        
+        {/* Connection Status */}
+        <div className="px-5 py-2 bg-gray-50 border-b border-[#f0f0f0]">
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+            <span className="text-sm text-gray-600">
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </span>
+            {error && (
+              <span className="text-sm text-red-500 ml-2">{error}</span>
             )}
           </div>
         </div>
         
-        {/* Connection Status */}
-        {!isConnected && (
-          <div className="p-3 bg-yellow-50 border-b border-yellow-200">
-            <div className="text-sm text-yellow-700">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                Connecting to chat server...
-              </div>
+        <div className="flex-1 overflow-y-auto bg-white p-0">
+          {loading && sessions.length === 0 ? (
+            <div className="flex items-center justify-center h-32">
+              <Spin size="large" />
             </div>
-          </div>
-        )}
-        
-        {/* Error Status */}
-        {error && (
-          <div className="p-3 bg-red-50 border-b border-red-200">
-            <div className="text-sm text-red-700">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                Connection error: {error}
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Advisors List */}
-        <div className="flex-1 overflow-y-auto">
-          {showAvailableAdvisors ? (
-            // Available Advisors List
-            <>
-              {loading ? (
-                <div className="flex justify-center items-center h-40">
-                  <Spin size="large" />
-                </div>
-              ) : (
-                <AnimatePresence>
-                  {filteredAvailableAdvisors.map((advisor) => (
-                    <motion.div
-                      key={advisor.id}
-                      initial={{ opacity: 0, x: 30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 30 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
-                      onClick={() => handleStartNewChat(advisor)}
-                    >
-                      <div className="relative">
-                        <Avatar src="/img/Logo.svg" size={40} />
-                        <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white bg-green-500" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold text-gray-800">
-                            {advisor.firstName} {advisor.lastName}
-                          </span>
-                          <span className="text-xs text-green-500">Available</span>
-                        </div>
-                        <div className="text-sm text-gray-600">Advisor</div>
-                        <div className="text-xs text-gray-500">{advisor.email}</div>
-                        {advisor.specialization && (
-                          <div className="text-xs text-blue-500 mt-1">
-                            {advisor.specialization}
-                            {advisor.yearsOfExperience && ` • ${advisor.yearsOfExperience} years exp.`}
-                          </div>
-                        )}
-                        {advisor.department && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            {advisor.department}
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              )}
-              
-              {!loading && filteredAvailableAdvisors.length === 0 && (
-                <Empty
-                  description={
-                    <span className="text-gray-500">
-                      {searchTerm ? 'No advisors found matching your search' : 'No advisors available at the moment'}
-                    </span>
-                  }
-                  className="py-8"
-                />
-              )}
-              
-              {!loading && filteredAvailableAdvisors.length > 0 && availableAdvisorsFromSessions.length > 0 && availableAdvisors.length === 0 && (
-                <div className="p-3 bg-blue-50 border-t border-blue-200">
-                  <div className="text-xs text-blue-600 text-center">
-                    Showing advisors from your chat sessions
-                  </div>
-                </div>
-              )}
-            </>
+          ) : sessionList.length === 0 ? (
+            <div className="text-[#bbb] p-8 text-center text-[16px]">No chat sessions yet</div>
           ) : (
-            // Existing Chat Sessions
-            <>
-              {loading ? (
-                <div className="flex justify-center items-center h-40">
-                  <Spin size="large" />
-                </div>
-              ) : (
-                <AnimatePresence>
-                  {uniqueAdvisors.map((advisor) => (
-                    <motion.div
-                      key={advisor.id}
-                      initial={{ opacity: 0, x: 30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 30 }}
-                      transition={{ duration: 0.2 }}
-                      className={`flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200 cursor-pointer`}
-                      onClick={() => handleUserSelect(advisor)}
-                    >
-                      <div className="relative">
-                        <Avatar src={advisor.avatarUrl} size={40} />
-                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
-                          advisor.isOnline ? 'bg-green-500' : 'bg-gray-400'
-                        }`} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold text-gray-800">{advisor.name}</span>
-                          <span className={`text-xs ml-2 ${
-                            advisor.isOnline ? 'text-green-500' : 'text-gray-500'
-                          }`}>
-                            {advisor.isOnline ? 'Online' : advisor.lastSeen}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-600">{advisor.role}</div>
-                        <div className="text-xs text-gray-500">{advisor.email}</div>
-                        {advisor.sessions.length > 0 && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <div className="text-xs text-blue-500">
-                              {advisor.sessions.length} session{advisor.sessions.length > 1 ? 's' : ''}
-                            </div>
-                            {advisor.sessions[0].type && (
-                              <span className={`text-xs px-2 py-1 rounded ${
-                                advisor.sessions[0].type === 'HUMAN' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
-                              }`}>
-                                {advisor.sessions[0].type}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              )}
-              
-              {!loading && uniqueAdvisors.length === 0 && (
-                <Empty
-                  description={
-                    <span className="text-gray-500">
-                      {searchTerm ? 'No chat sessions found' : 'No chat sessions yet. Start a conversation with an advisor!'}
+            <List
+              itemLayout="horizontal"
+              dataSource={sessionList}
+              renderItem={item => (
+                <List.Item
+                  className={`cursor-pointer mb-1 rounded-lg px-3 py-2 flex items-center gap-3 transition-colors
+                    ${openChat?.sessionId === item.id ? 'bg-blue-50 border border-blue-400' : 'hover:bg-gray-100 border border-transparent'}
+                  `}
+                  style={{ minHeight: 64, boxShadow: 'none' }}
+                  onClick={() => handleOpenSession(item)}
+                >
+                  <Badge
+                    color={item.isOnline ? 'green' : 'gray'}
+                    offset={[-2, 2]}
+                    dot
+                  >
+                    <Avatar src={item.avatar} icon={<UserOutlined />} size={44} />
+                  </Badge>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-[16px] text-ellipsis overflow-hidden whitespace-nowrap">{item.staffName}</div>
+                    <div className="text-[13px] text-[#888] mt-[2px] text-ellipsis overflow-hidden whitespace-nowrap">
+                      {item.lastMessage ? item.lastMessage.slice(0, 40) : <span className="text-[#bbb]">No messages yet</span>}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end min-w-[70px]">
+                    <span className="text-[11px] text-[#bbb]">
+                      {item.lastMessageTime ? new Date(item.lastMessageTime).toLocaleTimeString() : ''}
                     </span>
-                  }
-                  className="py-8"
-                />
+                    <span className={`text-[10px] mt-1 ${item.isOnline ? 'text-green-500' : 'text-gray-400'}`}>{item.isOnline ? 'Online' : 'Offline'}</span>
+                  </div>
+                </List.Item>
               )}
-            </>
+            />
           )}
         </div>
       </div>
 
-      {/* Chat Box */}
-      {showChatBox && selectedUser && (
-        <AdvisorChatBox 
-          onClose={handleCloseChatBox}
-          selectedUser={selectedUser}
+      {/* Floating chatbox */}
+      {openChat && (
+        <ChatBoxAdvisor
+          openChat={openChat}
+          messages={messages}
+          loading={loading || sendingMessage}
+          error={error}
+          messageInput={messageInput}
+          setMessageInput={setMessageInput}
+          sendMessage={handleSendMessage}
+          onClose={() => setOpenChat(null)}
+          messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
+          onRefresh={handleRefreshMessages}
+          refreshing={refreshingMessages}
         />
       )}
-    </>
+    </div>
   );
 };
 

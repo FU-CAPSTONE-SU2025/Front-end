@@ -9,6 +9,7 @@ import {
   CreateBulkBookingAvailabilityRequest,
   UpdateBookingAvailabilityRequest
 } from "../../interfaces/IBookingAvailability";
+import { LeaveSchedule, PagedLeaveScheduleData, CreateLeaveScheduleRequest, UpdateLeaveScheduleRequest } from '../../interfaces/ILeaveSchedule';
 
 const userURL = baseUrl + "/User/advisor";
 
@@ -234,7 +235,137 @@ export const DeleteBookingAvailability = async (id: number): Promise<boolean> =>
 export const GetBookingAvailabilityById = async (id: number): Promise<BookingAvailability | null> => {
   const props = {
     data: null,
-    url: baseUrl + `/BookingAvailability/detail/${id}`,
+    url: baseUrl + `/BookingAvailability/simply-single/${id}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    console.log(result.error);
+    return null;
+  }
+}; 
+
+// Send message to advisor (create new session)
+const CHAT_WITH_ADVISOR_URL = `${import.meta.env.VITE_API_AISEA_API_URL}/AdvisorySession1to1/human`;
+
+export const sendMessageToAdvisor = async (message: string): Promise<any> => {
+  try {
+    // Get headers from GetHeader() and add Content-Type if not present
+    const baseHeaders = GetHeader();
+    const headers = { ...baseHeaders, 'Content-Type': 'application/json' };
+    const response = await fetch(CHAT_WITH_ADVISOR_URL, {
+      method: 'POST',
+      headers: headers as HeadersInit,
+      body: JSON.stringify({ message }),
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || 'Failed to send message to advisor');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('sendMessageToAdvisor error:', error);
+    throw error;
+  }
+};
+
+// Send message to existing session
+export const sendMessageToSession = async (sessionId: number, message: string): Promise<any> => {
+  try {
+    const baseHeaders = GetHeader();
+    const headers = { ...baseHeaders, 'Content-Type': 'application/json' };
+    const response = await fetch(`${import.meta.env.VITE_API_AISEA_API_URL}/AdvisorySession1to1/${sessionId}/send-message`, {
+      method: 'POST',
+      headers: headers as HeadersInit,
+      body: JSON.stringify({ message }),
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || 'Failed to send message to session');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('sendMessageToSession error:', error);
+    throw error;
+  }
+}; 
+
+// LeaveSchedule API
+const leaveScheduleURL = baseUrl + '/LeaveSche';
+
+export const FetchLeaveScheduleList = async (
+  pageNumber: number = 1,
+  pageSize: number = 10
+): Promise<PagedLeaveScheduleData | null> => {
+  const params = new URLSearchParams({
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString(),
+  });
+  const props = {
+    data: null,
+    url: leaveScheduleURL + '?' + params.toString(),
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    console.log(result.error);
+    return null;
+  }
+};
+
+export const CreateLeaveSchedule = async (data: CreateLeaveScheduleRequest): Promise<LeaveSchedule | null> => {
+  const props = {
+    data: data,
+    url: leaveScheduleURL,
+    headers: GetHeader(),
+  };
+  const result = await axiosCreate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    console.log(result.error);
+    throw new Error('Failed to create leave schedule');
+  }
+};
+
+export const UpdateLeaveSchedule = async (id: number, data: UpdateLeaveScheduleRequest): Promise<LeaveSchedule | null> => {
+  const props = {
+    data: data,
+    url: leaveScheduleURL + `/${id}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosUpdate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    console.log(result.error);
+    throw new Error('Failed to update leave schedule');
+  }
+};
+
+export const DeleteLeaveSchedule = async (id: number): Promise<boolean> => {
+  const props = {
+    data: null,
+    url: leaveScheduleURL + `/${id}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosDelete(props);
+  if (result.success) {
+    return true;
+  } else {
+    console.log(result.error);
+    throw new Error('Failed to delete leave schedule');
+  }
+};
+
+export const GetLeaveScheduleById = async (id: number): Promise<LeaveSchedule | null> => {
+  const props = {
+    data: null,
+    url: leaveScheduleURL + `/simply-single/${id}`,
     headers: GetHeader(),
   };
   const result = await axiosRead(props);
