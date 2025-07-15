@@ -21,6 +21,7 @@ import { SyllabusSession, CreateSyllabusSession, SyllabusOutcome } from '../../i
 import BulkDataImport from '../common/bulkDataImport';
 import { getHeaderConfig } from '../../data/importConfigurations';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
+import { useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -56,6 +57,8 @@ const SessionTable: React.FC<SessionTableProps> = ({
   const [selectedOutcomeId, setSelectedOutcomeId] = useState<number | null>(null);
 
   const [addOutcomeSessionId, setAddOutcomeSessionId] = useState<number | null>(null);
+
+  const { addSyllabusSessionsBulkMutation } = useCRUDSyllabus();
 
   const handleAddSession = async (values: any) => {
     try {
@@ -113,17 +116,14 @@ const SessionTable: React.FC<SessionTableProps> = ({
     try {
       // Extract session data from the imported data
       const sessionData = importedData['SESSION'] || [];
-      
-      for (const row of sessionData) {
-        const session: CreateSyllabusSession = {
-          syllabusId: parseInt(row.syllabusId),
-          sessionNumber: parseInt(row.sessionNumber) || 1,
-          topic: row.topic || '',
-          mission: row.mission || ''
-        };
-        await onAddSession(session);
-      }
-      message.success(`Successfully imported ${sessionData.length} session(s)`);
+      const sessions = sessionData.map(row => ({
+        syllabusId: parseInt(row.syllabusId),
+        sessionNumber: parseInt(row.sessionNumber) || 1,
+        topic: row.topic || '',
+        mission: row.mission || ''
+      }));
+      await addSyllabusSessionsBulkMutation.mutateAsync(sessions);
+      message.success(`Successfully imported ${sessions.length} session(s)`);
       setSessionImportVisible(false);
     } catch (error) {
       message.error('Failed to import session data');

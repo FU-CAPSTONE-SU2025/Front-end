@@ -12,13 +12,12 @@ import {
   EditOutlined,
   DeleteOutlined,
   SaveOutlined,
-  FileExcelOutlined,
   UploadOutlined
 } from '@ant-design/icons';
 import { SyllabusOutcome, CreateSyllabusOutcome } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../common/bulkDataImport';
-import { getHeaderConfig } from '../../data/importConfigurations';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
+import { useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
 
 const { TextArea } = Input;
 
@@ -42,6 +41,7 @@ const OutcomeTable: React.FC<OutcomeTableProps> = ({
   const [outcomeImportVisible, setOutcomeImportVisible] = useState(false);
   const [editingOutcomeId, setEditingOutcomeId] = useState<number | null>(null);
   const [outcomeEdit, setOutcomeEdit] = useState<Partial<SyllabusOutcome>>({});
+  const { addSyllabusOutcomesBulkMutation } = useCRUDSyllabus();
 
   const handleAddOutcome = async (values: any) => {
     try {
@@ -80,16 +80,13 @@ const OutcomeTable: React.FC<OutcomeTableProps> = ({
     try {
       // Extract outcome data from the imported data
       const outcomeData = importedData['OUTCOME'] || [];
-      
-      for (const row of outcomeData) {
-        const outcome: CreateSyllabusOutcome = {
-          syllabusId: parseInt(row.syllabusId),
-          outcomeCode: row.outcomeCode || '',
-          description: row.description || ''
-        };
-        await onAddOutcome(outcome);
-      }
-      message.success(`Successfully imported ${outcomeData.length} outcome(s)`);
+      const outcomes = outcomeData.map(row => ({
+        syllabusId: parseInt(row.syllabusId),
+        outcomeCode: row.outcomeCode || '',
+        description: row.description || ''
+      }));
+      await addSyllabusOutcomesBulkMutation.mutateAsync(outcomes);
+      message.success(`Successfully imported ${outcomes.length} outcome(s)`);
       setOutcomeImportVisible(false);
     } catch (error) {
       message.error('Failed to import outcome data');

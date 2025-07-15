@@ -21,6 +21,7 @@ import BulkDataImport from '../common/bulkDataImport';
 import { getHeaderConfig } from '../../data/importConfigurations';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 import dayjs from 'dayjs';
+import { useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
 
 const { TextArea } = Input;
 
@@ -44,6 +45,7 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
   const [materialImportVisible, setMaterialImportVisible] = useState(false);
   const [editingMaterialId, setEditingMaterialId] = useState<number | null>(null);
   const [materialEdit, setMaterialEdit] = useState<Partial<SyllabusMaterial>>({});
+  const { addSyllabusMaterialsBulkMutation } = useCRUDSyllabus();
 
   const handleAddMaterial = async (values: any) => {
     try {
@@ -82,19 +84,16 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
     try {
       // Extract material data from the imported data
       const materialData = importedData['MATERIAL'] || [];
-      
-      for (const row of materialData) {
-        const material: CreateSyllabusMaterial = {
-          syllabusId: parseInt(row.syllabusId),
-          materialName: row.materialName || 'Untitled',
-          authorName: row.authorName || 'Unknown',
-          publishedDate: new Date(row.publishedDate || Date.now()),
-          description: row.description || '',
-          filepathOrUrl: row.filepathOrUrl || ''
-        };
-        await onAddMaterial(material);
-      }
-      message.success(`Successfully imported ${materialData.length} material(s)`);
+      const materials = materialData.map(row => ({
+        syllabusId: parseInt(row.syllabusId),
+        materialName: row.materialName || 'Untitled',
+        authorName: row.authorName || 'Unknown',
+        publishedDate: new Date(row.publishedDate || Date.now()),
+        description: row.description || '',
+        filepathOrUrl: row.filepathOrUrl || ''
+      }));
+      await addSyllabusMaterialsBulkMutation.mutateAsync(materials);
+      message.success(`Successfully imported ${materials.length} material(s)`);
       setMaterialImportVisible(false);
     } catch (error) {
       message.error('Failed to import material data');

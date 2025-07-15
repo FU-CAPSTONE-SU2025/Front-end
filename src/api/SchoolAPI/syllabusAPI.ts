@@ -95,6 +95,47 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus outcomes to session');
     }
   };
+  export const AddSyllabusMaterialsBulk = async (data: CreateSyllabusMaterial[]): Promise<any | null> => {
+    const props = {
+      data: data,
+      url: syllabusURL + "/materials/bulk",
+      headers: GetHeader(),
+    };
+    const result = await axiosCreate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus materials');
+    }
+  };
+
+  export const AddSyllabusOutcomesBulk = async (data: CreateSyllabusOutcome[]): Promise<any | null> => {
+    const props = {
+      data: data,
+      url: syllabusURL + "/outcomes/bulk",
+      headers: GetHeader(),
+    };
+    const result = await axiosCreate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus outcomes');
+    }
+  };
+
+  export const AddSyllabusSessionsBulk = async (data: CreateSyllabusSession[]): Promise<any | null> => {
+    const props = {
+      data: data,
+      url: syllabusURL + "/sessions/bulk",
+      headers: GetHeader(),
+    };
+    const result = await axiosCreate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus sessions');
+    }
+  };
   
 
 export const FetchSyllabusBySubject = async (subjectId: number): Promise<Subject[] | null> => {

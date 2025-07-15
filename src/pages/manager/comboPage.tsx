@@ -9,6 +9,7 @@ import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { GetSubjectsInCombo } from '../../api/SchoolAPI/comboAPI';
 import { isErrorResponse } from '../../api/AxiosCRUD';
+import SubjectSelect from '../../components/common/SubjectSelect';
 
 const ComboManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -63,7 +64,6 @@ const ComboManagerPage: React.FC = () => {
   const handleOpenSubjectModal = async (combo: any) => {
     setSelectedCombo(combo);
     setAddSubjectId(null);
-    getAllSubjects({ pageNumber: 1, pageSize: 100 });
     setSubjectModalOpen(true);
     setModalLoading(true);
     try {
@@ -428,22 +428,13 @@ const ComboManagerPage: React.FC = () => {
             </div>
           </div>
           <Space>
-            <Select
-              showSearch
+            <SubjectSelect
               placeholder="Add subject to combo"
-              value={addSubjectId}
-              onChange={setAddSubjectId}
+              value={addSubjectId === null ? undefined : addSubjectId}
+              onChange={val => setAddSubjectId(val === undefined ? null : (val as number))}
               style={{ width: 260 }}
-              optionFilterProp="children"
-            >
-              {subjectList
-                .filter(s => !comboSubjects.some(cs => cs.subjectId === s.id))
-                .map(subject => (
-                  <Select.Option key={subject.id} value={subject.id}>
-                    {subject.subjectName} ({subject.subjectCode})
-                  </Select.Option>
-                ))}
-            </Select>
+              disabledIds={comboSubjects.map(cs => cs.subjectId)}
+            />
             <Button
               type="primary"
               icon={<PlusOutlined style={{ fontSize: 14, marginRight: 4 }} />}

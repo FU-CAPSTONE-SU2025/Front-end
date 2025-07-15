@@ -10,9 +10,13 @@ import { useState } from 'react';
 import { 
   AddSyllabus, 
   AddSyllabusAssessments, 
+  AddSyllabusAssessmentsBulk, 
   AddSyllabusMaterial, 
+  AddSyllabusMaterialsBulk, 
   AddSyllabusOutcomes, 
+  AddSyllabusOutcomesBulk, 
   AddSyllabusSessions, 
+  AddSyllabusSessionsBulk, 
   AddSyllabusOutcomesToSession, 
   FetchSyllabusBySubject, 
   UpdateSyllabusById, 
@@ -459,6 +463,39 @@ export function useCRUDSyllabus() {
     },
   });
 
+  // Bulk add syllabus materials
+  const addSyllabusMaterialsBulkMutation = useMutation<any | null, unknown, CreateSyllabusMaterial[]>({
+    mutationFn: async (data: CreateSyllabusMaterial[]) => {
+      const result = await AddSyllabusMaterialsBulk(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Bulk add syllabus outcomes
+  const addSyllabusOutcomesBulkMutation = useMutation<any | null, unknown, CreateSyllabusOutcome[]>({
+    mutationFn: async (data: CreateSyllabusOutcome[]) => {
+      const result = await AddSyllabusOutcomesBulk(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Bulk add syllabus sessions
+  const addSyllabusSessionsBulkMutation = useMutation<any | null, unknown, CreateSyllabusSession[]>({
+    mutationFn: async (data: CreateSyllabusSession[]) => {
+      const result = await AddSyllabusSessionsBulk(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
   return {
     fetchSyllabusBySubjectMutation,
     addSyllabusMutation,
@@ -468,7 +505,10 @@ export function useCRUDSyllabus() {
     addSyllabusMaterialMutation,
     addSyllabusOutcomeMutation,
     addSyllabusSessionMutation,
-    addSyllabusOutcomesToSessionMutation
+    addSyllabusOutcomesToSessionMutation,
+    addSyllabusMaterialsBulkMutation,
+    addSyllabusOutcomesBulkMutation,
+    addSyllabusSessionsBulkMutation
   };
 }
 
