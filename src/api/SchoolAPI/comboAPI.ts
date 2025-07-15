@@ -1,7 +1,7 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps } from "../../interfaces/IAccount";
-import { CreateCombo, Combo, UpdateCombo, Subject, SubjectInCombo } from "../../interfaces/ISchoolProgram";
+import { CreateCombo, Combo, SubjectInCombo, Subject } from "../../interfaces/ISchoolProgram";
 import { PagedData } from "../../interfaces/ISchoolProgram";
 
 const comboURL = baseUrl + "/Combo";
@@ -147,6 +147,21 @@ export const DisableCombo = async (comboId: number): Promise<AccountProps | null
     headers: GetHeader(),
   };
   const result = await axiosDelete(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
+  }
+}; 
+
+export const FetchComboSubjects = async (comboId: number): Promise<Subject[] | null> => {
+  const props = {
+    data: null,
+    url: comboURL + `/${comboId}/subjects`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
   if (result.success) {
     return result.data;
   } else {

@@ -1,34 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import styles from '../../css/admin/account.module.css';
-import AccountCounter from '../../components/admin/accountCounter';
-import { DatePicker } from 'antd';
+import { ConfigProvider, Input, DatePicker, message } from 'antd';
 import dayjs from 'dayjs';
-import { validateEmail } from '../../components/common/validation';
-import BulkDataImport from '../../components/common/bulkDataImport';
 import { jwtDecode } from 'jwt-decode';
+import styles from '../../css/admin/account.module.css';
+import BulkDataImport from '../../components/common/bulkDataImport';
+import AccountCounter from '../../components/admin/accountCounter';
+import AvatarUpload from '../../components/common/AvatarUpload';
 import { getAuthState } from '../../hooks/useAuths';
-import { JWTAccountProps } from '../../interfaces/IAccount';
 import useActiveUserData from '../../hooks/useActiveUserData';
-import { message } from 'antd';
-import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { EditOutlined, LogoutOutlined } from '@ant-design/icons';
 import useUserProfile from '../../hooks/useUserProfile';
+import { AccountProps, JWTAccountProps } from '../../interfaces/IAccount';
+import { validateEmail } from '../../components/common/validation';
 
-// Animation variants for the profile card and action panel
+const { TextArea } = Input;
+
 const cardVariants = {
-  hidden: { opacity: 0, x: -50 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.5 } },
-};
-
-const actionPanelVariants = {
-  hidden: { opacity: 0, x: 50 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.5, delay: 0.2 } },
-};
-
-// Button hover animation
-const buttonVariants = {
-  hover: { scale: 1.05, opacity: 0.9, transition: { duration: 0.2 } },
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
 
 const Profile: React.FC = () => {
@@ -80,12 +69,6 @@ const Profile: React.FC = () => {
   const getDisplayValue = (value: any, placeholder: string) => {
     if (isLoadingCurrentUser) return "Loading...";
     return value && String(value).trim() !== "" ? String(value) : placeholder;
-  };
-
-  const getPlaceholderAvatar = () => {
-    if (currentUserData?.avatarUrl) return currentUserData.avatarUrl;
-    if (isLoadingCurrentUser) return "https://ui-avatars.com/api/?name=Loading&background=64748B&color=ffffff&size=120";
-    return "https://ui-avatars.com/api/?name=Admin+User&background=1E40AF&color=ffffff&size=120";
   };
 
   const getDateValue = () => {
@@ -227,10 +210,15 @@ const Profile: React.FC = () => {
     refetch();
   };
 
+  const handleAvatarUpdate = (newAvatarUrl: string) => {
+    // This will be handled by the AvatarUpload component automatically
+    console.log('Avatar updated:', newAvatarUrl);
+  };
+
   const hasErrors = Object.values(errors).some((error) => error !== null);
 
   return (
-    <>  
+    <>
       <AccountCounter 
         label={["Student", "Academic Staff", "Advisor", "Manager"]}
         student={categorizedData?.student}
@@ -238,171 +226,108 @@ const Profile: React.FC = () => {
         advisor={categorizedData?.advisor}
         manager={categorizedData?.manager}
       />
-      <div className={styles.container}>
-        <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
-          <div className={styles.userInfo}>
-            <motion.img 
-              src={getPlaceholderAvatar()} 
-              alt="User Avatar" 
+      <div className={styles.twoCardContainer}>
+        {/* Left Card: Profile Data */}
+        <motion.div className={styles.leftCard} variants={cardVariants} initial="hidden" animate="visible">
+          {/* Centered Avatar, Name, Role, Email */}
+          <div className={styles.profileAvatar}>
+            <AvatarUpload
+              userId={userId || 0}
+              currentAvatarUrl={currentUserData?.avatarUrl}
+              userRole="admin"
+              currentUserData={currentUserData}
+              size={120}
+              onAvatarUpdate={handleAvatarUpdate}
+              disabled={isLoadingCurrentUser}
               className={styles.avatar}
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
             />
-            <div className={styles.profileHeader}>
-              <h1 className={`${styles.name} ${isLoadingCurrentUser ? styles.loadingText : ''}`}>
-                {getDisplayName()}
-              </h1>
-              <div className={styles.profileInfo}>
-                <div className={styles.role}>{getRoleDisplayName()}</div>
-                <div className={styles.divider}>•</div>
-                <div className={`${styles.email} ${isLoadingCurrentUser ? styles.loadingText : ''}`}>
-                  {isLoadingCurrentUser ? "Loading..." : getDisplayValue(currentUserData?.email, "admin@company.com")}
-                </div>
-              </div>
+          </div>
+          <div className={styles.profileName}>{getDisplayName()}</div>
+          <div className={styles.profileRole}>{getRoleDisplayName()}</div>
+          <div className={styles.profileEmail}>{isLoadingCurrentUser ? "Loading..." : getDisplayValue(currentUserData?.email, "admin@company.com")}</div>
+          <hr className={styles.infoDivider} />
+          {/* Info List */}
+          <div className={styles.infoList}>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>First Name</span>
+              <span className={styles.infoValue}>{isEditing ? <input className={styles.fieldContent} value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Enter first name" /> : getDisplayValue(currentUserData?.firstName, "Admin")}</span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>Last Name</span>
+              <span className={styles.infoValue}>{isEditing ? <input className={styles.fieldContent} value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Enter last name" /> : getDisplayValue(currentUserData?.lastName, "User")}</span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>Username</span>
+              <span className={styles.infoValue}>{isEditing ? <input className={styles.fieldContent} value={username} onChange={e => setUsername(e.target.value)} placeholder="Enter username" /> : getDisplayValue(currentUserData?.username, "admin_user")}</span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>Email Address</span>
+              <span className={styles.infoValue}>{isEditing ? <input className={styles.fieldContent} value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter email address" type="email" /> : getDisplayValue(currentUserData?.email, "admin@company.com")}</span>
+              {errors.email && <div className={styles.error}>{errors.email}</div>}
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>Date of Birth</span>
+              <span className={styles.infoValue}>{isEditing ? <DatePicker className={styles.datePicker} onChange={date => handleDateChange(date ? date.toDate() : null)} value={getDateValue()} placeholder="Select date of birth" format="YYYY-MM-DD" allowClear disabled={isLoadingCurrentUser} size="large" /> : getDisplayValue(currentUserData?.dateOfBirth ? dayjs(currentUserData.dateOfBirth).format('YYYY-MM-DD') : '', "N/A")}</span>
             </div>
           </div>
-
-          <div className={styles.formFields}>
-            <div className={styles.fieldRow}>
-              <div className={styles.fieldColumn}>
-                <label className={styles.fieldLabel}>First Name</label>
-                <input
-                  className={`${styles.fieldContent} ${isLoadingCurrentUser ? styles.loading : ''}`}
-                  value={isEditing ? firstName : getDisplayValue(currentUserData?.firstName, "John")}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  readOnly={!isEditing}
-                  placeholder="Enter first name"
-                />
-              </div>
-              <div className={styles.fieldColumn}>
-                <label className={styles.fieldLabel}>Last Name</label>
-                <input
-                  className={`${styles.fieldContent} ${isLoadingCurrentUser ? styles.loading : ''}`}
-                  value={isEditing ? lastName : getDisplayValue(currentUserData?.lastName, "Administrator")}
-                  onChange={(e) => setLastName(e.target.value)}
-                  readOnly={!isEditing}
-                  placeholder="Enter last name"
-                />
-              </div>
-            </div>
-            
-            <div className={styles.fieldRow}>
-              <div className={styles.fieldColumn}>
-                <label className={styles.fieldLabel}>Username</label>
-                <input
-                  className={`${styles.fieldContent} ${isLoadingCurrentUser ? styles.loading : ''}`}
-                  value={isEditing ? username : getDisplayValue(currentUserData?.username, "admin_user")}
-                  onChange={(e) => setUsername(e.target.value)}
-                  readOnly={!isEditing}
-                  placeholder="Enter username"
-                />
-              </div>
-              <div className={styles.fieldColumn}>
-                <label className={styles.fieldLabel}>Email Address</label>
-                <input
-                  className={`${styles.fieldContent} ${isLoadingCurrentUser ? styles.loading : ''}`}
-                  value={isEditing ? email : getDisplayValue(currentUserData?.email, "admin@company.com")}
-                  onChange={(e) => setEmail(e.target.value)}
-                  readOnly={!isEditing}
-                  placeholder="Enter email address"
-                  type="email"
-                />
-                {errors.email && <div className={styles.error}>{errors.email}</div>}
-              </div>
-            </div>
-            
-            <div className={styles.fieldRow}>
-              <div className={styles.datefield}>
-                <label className={styles.fieldLabel}>Date of Birth</label>
-                <DatePicker
-                  className={`${styles.datePicker} ${isLoadingCurrentUser ? styles.loading : ''}`}
-                  onChange={(date) => handleDateChange(date ? date.toDate() : null)}
-                  value={getDateValue()}
-                  placeholder={isLoadingCurrentUser ? "Loading..." : "Select date of birth"}
-                  format="YYYY-MM-DD"
-                  allowClear
-                  disabled={!isEditing || isLoadingCurrentUser}
-                  size="large"
-                />
-              </div>
-            </div>
-
-            {hasErrors && (
-              <motion.div 
-                className={styles.errorContainer}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
+          {hasErrors && (
+            <motion.div className={styles.errorContainer} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
+              {errors.email && <div className={styles.error}>Email: {errors.email}</div>}
+            </motion.div>
+          )}
+        </motion.div>
+        {/* Right Card: Actions */}
+        <motion.div className={styles.rightCard} variants={cardVariants} initial="hidden" animate="visible">
+          <div className={styles.actionTitle}>ACTION</div>
+          <div className={styles.actionCardContent}>
+            {!isEditing ? (
+              <motion.button
+                className={styles.editButton}
+                onClick={handleEdit}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {errors.email && <div className={styles.error}>Email: {errors.email}</div>}
-              </motion.div>
-            )}
-
-            {isEditing && (
-              <motion.div 
-                className={styles.editActions}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-              >
+                Edit Profile
+              </motion.button>
+            ) : (
+              <>
                 <motion.button
                   className={styles.saveButton}
-                  variants={buttonVariants}
-                  whileHover="hover"
                   onClick={handleSave}
                   disabled={isUpdatingProfile}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <div className={styles.buttonContent}>
-                    {isUpdatingProfile ? 'Saving...' : 'Save Changes'}
-                  </div>
+                  {isUpdatingProfile ? 'Saving...' : 'Save Changes'}
                 </motion.button>
                 <motion.button
                   className={styles.cancelButton}
-                  variants={buttonVariants}
-                  whileHover="hover"
                   onClick={handleCancel}
-                  disabled={isUpdatingProfile}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <div className={styles.buttonContent}>Cancel</div>
+                  Cancel
                 </motion.button>
-              </motion.div>
+              </>
             )}
+            <motion.button
+              className={styles.logoutButton}
+              onClick={() => { window.location.href = '/logout'; }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Log Out
+            </motion.button>
           </div>
         </motion.div>
-
-        <motion.div className={styles.actionPanel} variants={actionPanelVariants} initial="hidden" animate="visible">
-          <h2 className={styles.actionTitle}>Account Actions</h2>
-          <div className={styles.actions}>
-            {[
-              { action: 'Edit Account', icon: <EditOutlined className={styles.actionIcon} /> },
-              { action: 'Logout', icon: <LogoutOutlined className={styles.actionIcon} /> }
-            ].map(({ action, icon }, index) => (
-              <motion.div
-                key={index}
-                className={`${styles.actionButton} ${action === 'Edit Account' && isEditing ? styles.editActive : ''} ${action === 'Logout' ? styles.logoutButton : ''} ${isUpdatingProfile ? styles.disabled : ''}`}
-                variants={buttonVariants}
-                whileHover={isUpdatingProfile ? {} : "hover"}
-                onClick={isUpdatingProfile ? undefined : (action === 'Edit Account' ? handleEdit : undefined)}
-              >
-                {icon}
-                <div className={`${styles.buttonContent} ${action === 'Edit Account' && isEditing ? styles.textEditActive : ''}`}>
-                  {action === 'Edit Account' && isEditing ? 'Editing...' : action}
-                </div>
-              </motion.div>
-            ))}
-            {/* Excel Import Button without blue wrapper */}
-          </div>
-        </motion.div>
-
-        {/* Data Import Modal */}
-        {isImportOpen && (
-          <BulkDataImport 
-            onClose={() => setIsImportOpen(false)} 
-            onDataImported={handleDataImported}
-            supportedTypes={['ADMIN_PROFILE']}
-          />
-        )}
       </div>
+      {isImportOpen && (
+        <BulkDataImport
+          onClose={() => setIsImportOpen(false)}
+          onDataImported={handleDataImported}
+          supportedTypes={['ADMIN_PROFILE']}
+        />
+      )}
     </>
   );
 };

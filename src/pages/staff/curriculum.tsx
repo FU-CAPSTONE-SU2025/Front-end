@@ -85,10 +85,6 @@ const CurriculumPage: React.FC = () => {
     navigate(`/staff/editData/curriculum/${curriculumId}`);
   };
 
-  const handleImportCurriculum = () => {
-    setUploadStatus('idle'); // Reset status when opening modal
-    setIsImportOpen(true);
-  };
 
   const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
@@ -288,9 +284,6 @@ const CurriculumPage: React.FC = () => {
                           [{curriculum.curriculumCode}]
                         </span>
                       </span>
-                      <Tag color="blue" style={{ margin: 0 }}>
-                        {subjects.length} subjects
-                      </Tag>
                     </div>
                     <Button
                       type="text"

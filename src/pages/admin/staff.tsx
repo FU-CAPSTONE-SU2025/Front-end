@@ -219,10 +219,22 @@ const StaffList: React.FC = () => {
     { title: 'Id', dataIndex: 'id', key: 'id', width: 100 },
     { title: 'Email', dataIndex: 'email', key: 'email', width: 200 },
     { title: 'Name', key: 'name', width: 150, render: (_: any, record: AccountProps) => `${record.firstName} ${record.lastName}` },
-    { title: 'Phone', dataIndex: 'phone', key: 'phone', width: 120 },
-    { title: 'Address', dataIndex: 'address', key: 'address', width: 200 },
-    { title: 'Campus', dataIndex: 'campus', key: 'campus', width: 120 },
-    { title: 'Added', key: 'added', width: 100, render: (_: any, record: AccountProps) => record.staffDataDetailResponse?.startWorkAt ? new Date(record.staffDataDetailResponse?.startWorkAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '' },
+    { title: 'Campus', key: 'campus', width: 120, render: (_: any, record: AccountProps) => record.staffDataDetailResponse?.campus || '' },
+    { title: 'Department', key: 'department', width: 150, render: (_: any, record: AccountProps) => record.staffDataDetailResponse?.department || '' },
+    { title: 'Position', key: 'position', width: 120, render: (_: any, record: AccountProps) => record.staffDataDetailResponse?.position || '' },
+    { title: 'Added', key: 'added', width: 100, render: (_: any, record: AccountProps) => record.staffDataDetailResponse?.startWorkAt ? new Date(record.staffDataDetailResponse.startWorkAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '' },
+    { title: 'Status', key: 'status', width: 100, render: (_: any, record: AccountProps) => (
+      <span style={{
+        display: 'inline-block',
+        padding: '0 12px',
+        borderRadius: '12px',
+        color: '#fff',
+        background: record.status === 0 ? '#22c55e' : '#ef4444',
+        fontWeight: 500
+      }}>
+        {record.status === 0 ? 'Active' : 'Inactive'}
+      </span>
+    ) },
   ];
 
   // Row selection for delete mode

@@ -9,6 +9,7 @@ import { CreateSubject } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { isErrorResponse } from '../../api/AxiosCRUD';
+import { Subject } from '../../interfaces/ISchoolProgram';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -43,8 +44,37 @@ const SubjectPage: React.FC = () => {
     setComboPageSize,
     comboSearch,
     setComboSearch,
-    isComboLoading
+    isComboLoading,
+    fetchComboSubjectsMutation
   } = useCRUDCombo();
+
+  // State to store subjects for each combo
+  const [expandedCombo, setExpandedCombo] = useState<number | null>(null);
+  const [comboSubjectsMap, setComboSubjectsMap] = useState<{ [comboId: number]: Subject[] }>({});
+  const [loadingComboSubjects, setLoadingComboSubjects] = useState(false);
+
+  // Handler for expanding a combo panel
+  const handleComboPanelChange = async (key: string | string[]) => {
+    if (Array.isArray(key) && key.length > 0) {
+      const comboId = parseInt(key[0]);
+      setExpandedCombo(comboId);
+      if (!comboSubjectsMap[comboId]) {
+        setLoadingComboSubjects(true);
+        try {
+          const subjects = await fetchComboSubjectsMutation.mutateAsync(comboId);
+          if (subjects) {
+            setComboSubjectsMap(prev => ({ ...prev, [comboId]: subjects }));
+          }
+        } catch (error) {
+          message.error('Failed to fetch combo subjects');
+        } finally {
+          setLoadingComboSubjects(false);
+        }
+      }
+    } else {
+      setExpandedCombo(null);
+    }
+  };
 
   useEffect(() => {
     // Backend search: pass search as filterValue
@@ -306,7 +336,7 @@ const SubjectPage: React.FC = () => {
       </Spin>
       {/* Combo List Below Table */}
       <div style={{ marginTop: 48 }}>
-        <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
+        <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}} onChange={handleComboPanelChange}>
           {comboList.map(combo => (
             <Panel
               header={<span style={{fontWeight: 700, fontSize: '1.1rem', color: '#1E40AF'}}>Combo: {combo.comboName}</span>}
@@ -314,15 +344,23 @@ const SubjectPage: React.FC = () => {
               style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF'}}
               extra={<Button icon={<EditOutlined />} size="small" style={{borderRadius: 999, background: '#f97316', color: '#fff', border: 'none'}} onClick={(e) => { e.stopPropagation(); handleEditCombo(combo.id); }}>{'Edit'}</Button>}
             >
-              <ul style={{margin: 0, paddingLeft: 20}}>
-                {comboSubjects.filter(cs => cs.comboId === combo.id).length > 0 ? (
-                  comboSubjects.filter(cs => cs.comboId === combo.id).map(cs => (
-                    <li key={cs.subjectId} style={{color: '#1E40AF'}}>Subject ID: {cs.subjectId}</li>
-                  ))
-                ) : (
-                  <li style={{color: '#aaa'}}>No subjects</li>
-                )}
-              </ul>
+              {loadingComboSubjects && expandedCombo === combo.id ? (
+                <div style={{ textAlign: 'center', padding: 24 }}><Spin /> Loading subjects...</div>
+              ) : (
+                <ul style={{margin: 0, paddingLeft: 20}}>
+                  {comboSubjectsMap[combo.id] && comboSubjectsMap[combo.id].length > 0 ? (
+                    comboSubjectsMap[combo.id].map(subject => (
+                      <li key={subject.id} style={{color: '#1E40AF', display: 'flex', alignItems: 'center', gap: 16, marginBottom: 6}}>
+                        <span style={{fontWeight: 700, color: '#64748b', minWidth: 40, fontSize: 13}} title="Subject ID">#{subject.id}</span>
+                        <span style={{fontWeight: 500, fontSize: 15, flex: 1}}>{subject.subjectName}</span>
+                        <span style={{fontFamily: 'monospace', color: '#2563eb', fontWeight: 600, fontSize: 13, background: '#e0e7ff', borderRadius: 6, padding: '2px 8px'}}>{subject.subjectCode}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li style={{color: '#aaa'}}>No subjects</li>
+                  )}
+                </ul>
+              )}
             </Panel>
           ))}
         </Collapse>

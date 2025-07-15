@@ -372,7 +372,7 @@
 }
 
 .studentTable :global(.ant-pagination-item-active) {
-  background: linear-gradient(135deg, #1E40AF 0%, #1d4ed8 100%) !important;
+
   border-color: #1E40AF !important;
   color: #ffffff !important;
   font-weight: 600;

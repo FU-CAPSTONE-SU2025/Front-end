@@ -195,11 +195,11 @@ export const routes = createBrowserRouter([
     loader: protectedLoader(['4']),
     children:[
       {
-        index: true,
+        path: "curriculum",
         Component: HomePage,
       },
       {
-        path: "profile",
+        index: true,
         Component: ManagerProfile,
       },
       {

@@ -4,6 +4,7 @@ import { CheckCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router';
 import { useCRUDCombo, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import SubjectSelect from '../../components/common/SubjectSelect';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -82,7 +83,7 @@ const EditComboPage: React.FC = () => {
         }
       });
     }
-    getAllSubjects({ pageNumber: 1, pageSize: 100 });
+    // Removed getAllSubjects({ pageNumber: 1, pageSize: 100 });
   }, [id, form, navigate]);
 
   const handleSubmit = (values: any) => {
@@ -175,35 +176,34 @@ const EditComboPage: React.FC = () => {
                       const subject = subjectList.find(s => s.id === subjectId);
                       if (!subject) return null;
                       return (
-                        <Tag
-                          key={subject.id}
-                          color="blue"
-                          closable
-                          onClose={() => handleRemoveSubject(subject.id)}
-                        >
-                          {subject.subjectName} ({subject.subjectCode})
-                        </Tag>
+                        <span key={subject.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Tag
+                            color="blue"
+                            closable
+                            onClose={() => handleRemoveSubject(subject.id)}
+                          >
+                            {subject.subjectName} ({subject.subjectCode})
+                          </Tag>
+                          <Button
+                            type="link"
+                            icon={<span className="anticon" style={{ color: '#f97316' }}><svg width="1em" height="1em" fill="currentColor" viewBox="0 0 1024 1024"><path d="M257 768a32 32 0 0 0 32 32h446a32 32 0 0 0 32-32V320H257v448zm512-544h-96l-34-56a48 48 0 0 0-41-24H426a48 48 0 0 0-41 24l-34 56h-96a32 32 0 0 0-32 32v48a8 8 0 0 0 8 8h672a8 8 0 0 0 8-8v-48a32 32 0 0 0-32-32z"></path></svg></span>}
+                            onClick={() => navigate(`/manager/subject/edit/${subject.id}`)}
+                            style={{ padding: 0, marginLeft: 2 }}
+                            title="Edit Subject"
+                          />
+                        </span>
                       );
                     })}
                   </div>
                 )}
                 <div style={{ marginTop: 16 }}>
-                  <Select
-                    showSearch
+                  <SubjectSelect
+                    value={addSubjectId === null ? undefined : addSubjectId}
+                    onChange={val => setAddSubjectId(val === undefined ? null : (val as number))}
                     placeholder="Add subject to combo"
-                    value={addSubjectId}
-                    onChange={setAddSubjectId}
-                    style={{ width: 240, marginRight: 8 }}
-                    optionFilterProp="children"
-                  >
-                    {subjectList
-                      .filter(s => !comboSubjects.includes(s.id))
-                      .map(subject => (
-                        <Option key={subject.id} value={subject.id}>
-                          {subject.subjectName} ({subject.subjectCode})
-                        </Option>
-                      ))}
-                  </Select>
+                    style={{ width: 320, marginRight: 8 }}
+                    disabledIds={comboSubjects}
+                  />
                   <Button
                     type="primary"
                     icon={<PlusOutlined />}

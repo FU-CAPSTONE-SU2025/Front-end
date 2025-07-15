@@ -40,22 +40,6 @@ export const RegisterStaff = async (data: AccountPropsCreate):Promise<any> => {
         return null
     }
 }
-export const RegisterMultipleStaff = async (data: AccountPropsCreate[]):Promise<any> => {
-    const props = {
-        data: data,
-        url: userURL,
-        headers: GetHeader()
-    }
-    const result = await axiosCreate(props)
-    if (result.success) {
-        //console.log(result.data)
-        return result.data
-    }
-    else {
-        console.log(result.error)
-        return null
-    }
-}
 
 export const FetchStaffList = async (pageNumber: number = 1, pageSize: number = 10, searchQuery?: string, filterType?: string, filterValue?: string):Promise<pagedStaffData|null> => {
     // Build query parameters
@@ -75,7 +59,7 @@ export const FetchStaffList = async (pageNumber: number = 1, pageSize: number = 
     
     const props = {
         data: null,
-        url: userURL+"/paged?" + params.toString(),
+        url: baseUrl+"/User/academic-staffs/paged?" + params.toString(),
         headers: GetHeader()
     }
     const result = await axiosRead(props)
@@ -111,22 +95,6 @@ export const UpdateStaff = async (userId:number,data:any):Promise<AccountProps|n
         headers: GetHeader()
     }
     const result = await axiosUpdate(props)
-    if (result.success) {
-        //console.log(result.data)
-        return result.data
-    }
-    else {
-        console.log(result.error)
-        return null
-    }
-}
-export const DisableUser = async (userId:number):Promise<AccountProps|null> => {
-    const props = {
-        data: null,
-        url: userURL+`/`+userId,
-        headers: GetHeader()
-    }
-    const result = await axiosDelete(props)
     if (result.success) {
         //console.log(result.data)
         return result.data

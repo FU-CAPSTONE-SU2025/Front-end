@@ -76,35 +76,6 @@ const LogsPage: React.FC = () => {
 
   return (
     <ConfigProvider
-      theme={{
-        components: {
-          Table: {
-            headerBg: 'linear-gradient(90deg, #f97316 0%, #1E40AF 100%)',
-            headerColor: '#fff',
-            borderColor: 'rgba(255, 255, 255, 0.3)',
-            colorText: '#1E293B',
-            colorBgContainer: 'rgba(255,255,255,0.6)',
-            colorBgElevated: 'rgba(255,255,255,0.3)',
-            rowHoverBg: 'rgba(249, 115, 22, 0.15)',
-            colorPrimary: '#1E40AF',
-            colorPrimaryHover: '#1d4ed8',
-          },
-          DatePicker: {
-            colorBgContainer: 'rgba(255,255,255,0.8)',
-            colorBorder: 'rgba(30, 64, 175, 0.3)',
-            colorText: '#1E293B',
-            colorPrimary: '#1E40AF',
-            colorPrimaryHover: '#1d4ed8',
-          },
-          Button: {
-            colorPrimary: '#f97316',
-            colorPrimaryHover: '#ea580c',
-            colorText: '#fff',
-            colorTextLightSolid: '#fff',
-            colorTextDisabled: '#bdbdbd',
-          },
-        },
-      }}
     >
       <div className={styles.container}>
         <motion.div className={styles.card} variants={cardVariants} initial="hidden" animate="visible">
@@ -126,15 +97,15 @@ const LogsPage: React.FC = () => {
             <div className={styles.chartContainer}>
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={filteredActivity}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
-                  <XAxis dataKey="date" stroke="#ffffff" />
-                  <YAxis stroke="#ffffff" label={{ value: 'Active Users', angle: -90, position: 'insideLeft', fill: '#ffffff' }} />
-                  <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.3)' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="date" stroke="#64748b" tick={{fontSize: 13}} />
+                  <YAxis stroke="#64748b" tick={{fontSize: 13}} label={{ value: 'Active Users', angle: -90, position: 'insideLeft', fill: '#64748b', fontSize: 13 }} axisLine={{stroke:'#e5e7eb'}} tickLine={{stroke:'#e5e7eb'}} />
+                  <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.98)', border: '1px solid #e5e7eb', color: '#1E293B' }} labelStyle={{ color: '#1E293B' }} />
                   <Legend />
-                  <Line type="monotone" dataKey="student" stroke="rgba(255, 145, 77, 1)" name="Students" />
-                  <Line type="monotone" dataKey="advisor" stroke="rgba(38, 98, 217, 1)" name="Advisors" />
-                  <Line type="monotone" dataKey="manager" stroke="rgba(82, 196, 26, 1)" name="Managers" />
-                  <Line type="monotone" dataKey="staff" stroke="rgba(189, 68, 219, 1)" name="Staff" />
+                  <Line type="monotone" dataKey="student" stroke="#f59e42" name="Students" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="advisor" stroke="#2563eb" name="Advisors" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="manager" stroke="#22c55e" name="Managers" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="staff" stroke="#a21caf" name="Staff" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

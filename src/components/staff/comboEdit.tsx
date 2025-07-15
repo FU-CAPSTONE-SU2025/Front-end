@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, message, Space, Typography, Select, Card, Tag } from 'antd';
-import { SaveOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { Combo, Subject, SubjectInCombo } from '../../interfaces/ISchoolProgram';
+import { SaveOutlined, PlusOutlined } from '@ant-design/icons';
+import { SubjectInCombo } from '../../interfaces/ISchoolProgram';
 import { useCRUDCombo, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { GetSubjectsInCombo } from '../../api/SchoolAPI/comboAPI';
+import SubjectSelect from '../common/SubjectSelect';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -43,7 +44,7 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
   };
 
   useEffect(() => {
-    getAllSubjects({ pageNumber: 1, pageSize: 100 });
+    getAllSubjects('NONE');
     if (isEditMode && id) {
       setLoading(true);
       getComboById.mutate(id, {
@@ -198,22 +199,13 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
               </div>
             )}
             <div style={{ marginTop: 16 }}>
-              <Select
-                showSearch
+              <SubjectSelect
+                value={addSubjectId === null ? undefined : addSubjectId}
+                onChange={val => setAddSubjectId(val === undefined ? null : (val as number))}
                 placeholder="Add subject to combo"
-                value={addSubjectId}
-                onChange={setAddSubjectId}
-                style={{ width: 240, marginRight: 8 }}
-                optionFilterProp="children"
-              >
-                {subjectList
-                  .filter(s => !comboSubjects.some(cs => cs.subjectId === s.id))
-                  .map(subject => (
-                    <Option key={subject.id} value={subject.id}>
-                      {subject.subjectName} ({subject.subjectCode})
-                    </Option>
-                  ))}
-              </Select>
+                style={{ width: 320, marginRight: 8 }}
+                disabledIds={comboSubjects.map(cs => cs.subjectId)}
+              />
               <Button
                 type="primary"
                 icon={<PlusOutlined />}

@@ -5,8 +5,8 @@ import { motion } from 'framer-motion';
 import { getAuthState } from '../../hooks/useAuths';
 
 const navLinks = [
-  { name: 'Home', path: '/manager' },
   { name: 'Programs', path: '/manager/program' },
+  { name: 'Curriculum', path: '/manager/curriculum' },
   { name: 'Combos', path: '/manager/combo' },
   { name: 'Subjects', path: '/manager/subject' },
 ];
@@ -85,7 +85,7 @@ const ManagerHeader = () => {
                       size={40}
                       src="https://via.placeholder.com/150"
                       style={{ border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', cursor: 'pointer' }}
-                      onClick={() => navigate('/manager/profile')}
+                      onClick={() => navigate('/manager')}
                     />
                   </Badge>
                 </Tooltip>

@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Form, Input, Select, Button, DatePicker, ConfigProvider, message } from 'antd';
+import { Form, Input, Select, DatePicker, ConfigProvider, message } from 'antd';
 import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 import styles from '../../css/admin/editAccount.module.css';
-import { GetCurrentStudentUser, GetCurrentStaffUser, UpdateCurrentStaffUser, UpdateCurrentStudentUser } from '../../api/Account/UserAPI';
+import { GetCurrentStudentUser, GetCurrentStaffUser, UpdateCurrentStaffUser, UpdateCurrentStudentUser, RegisterUser } from '../../api/Account/UserAPI';
 import { AccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
-import { jwtDecode } from 'jwt-decode';
-import { getAuthState } from '../../hooks/useAuths';
-import { JWTAccountProps } from '../../interfaces/IAccount';
+
+import AvatarUpload from '../../components/common/AvatarUpload';
 
 const { Option } = Select;
 
@@ -35,6 +34,18 @@ const buttonVariants = {
   hover: { scale: 1.05, opacity: 0.9, transition: { duration: 0.2 } },
 };
 
+// Map role string to roleId
+const getRoleId = (role: string) => {
+  switch (role) {
+    case 'admin': return 1;
+    case 'staff': return 2;
+    case 'advisor': return 3;
+    case 'manager': return 4;
+    case 'student': return 5;
+    default: return 2; // default to staff if unknown
+  }
+};
+
 const EditAccount: React.FC = () => {
   const params = useParams<ParamsProps>();
   const { role, id } = params;
@@ -42,57 +53,50 @@ const EditAccount: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<AccountProps | null>(null);
-  const [isLoadingUser, setIsLoadingUser] = useState(true);
-  const { accessToken } = getAuthState();
+  const [isLoadingUser, setIsLoadingUser] = useState(!!id); // Only loading if editing
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string>('');
 
   // Role checks
   const isStudent = role === 'student';
   const isStaff = role === 'staff' || role === 'manager' || role === 'advisor';
 
-  // Get current user ID from JWT token
-  const getCurrentUserId = () => {
-    try {
-      const data: JWTAccountProps = jwtDecode(accessToken ?? "N/A");
-      return data?.UserId ?? null;
-    } catch (error) {
-      console.error("Failed to decode token:", error);
-      return null;
-    }
-  };
-
-  // Load user data
+  // Only fetch user data if editing (id is present)
   useEffect(() => {
+    if (!id) {
+      // Create mode: clear form and state
+      setCurrentUser(null);
+      setCurrentAvatarUrl('');
+      form.resetFields();
+      setIsLoadingUser(false);
+      return;
+    }
+    // Edit mode: fetch user data
     const loadUserData = async () => {
       setIsLoadingUser(true);
       try {
-        const userId = id ? parseInt(id) : getCurrentUserId();
+        const userId = parseInt(id);
         if (!userId) {
           message.error('Unable to identify user');
           nav(-1);
           return;
         }
-
-        // Use role-specific API calls
         let userData: AccountProps | null = null;
         if (isStudent) {
           userData = await GetCurrentStudentUser(userId);
         } else if (isStaff) {
           userData = await GetCurrentStaffUser(userId);
         }
-
         if (userData) {
           setCurrentUser(userData);
-          // Set form values
+          setCurrentAvatarUrl(userData.avatarUrl || '');
           form.setFieldsValue({
             email: userData.email,
             username: userData.username,
             firstName: userData.firstName,
             lastName: userData.lastName,
             dateOfBirth: userData.dateOfBirth ? dayjs(userData.dateOfBirth) : null,
-            // Student specific fields
             enrolledAt: userData.studentDataDetailResponse?.enrolledAt ? dayjs(userData.studentDataDetailResponse.enrolledAt) : null,
             careerGoal: userData.studentDataDetailResponse?.careerGoal || '',
-            // Staff specific fields
             campus: userData.staffDataDetailResponse?.campus || '',
             department: userData.staffDataDetailResponse?.department || '',
             position: userData.staffDataDetailResponse?.position || '',
@@ -111,9 +115,8 @@ const EditAccount: React.FC = () => {
         setIsLoadingUser(false);
       }
     };
-
     loadUserData();
-  }, [id, role, form, nav, accessToken, isStudent, isStaff]);
+  }, [id, role, form, nav, isStudent, isStaff]);
 
   // Submit handler
   const handleSubmit = async () => {
@@ -121,67 +124,108 @@ const EditAccount: React.FC = () => {
       const values = await form.validateFields();
       setLoading(true);
 
-      const userId = id ? parseInt(id) : getCurrentUserId();
-      if (!userId) {
-        message.error('Unable to identify user');
+      if (!id) {
+        // CREATE MODE: Check password match
+        if (values.password !== values.confirmPassword) {
+          message.error('Passwords do not match');
+          setLoading(false);
+          return;
+        }
+        // Build AccountPropsCreate payload
+        const createData = {
+          email: values.email,
+          username: values.username,
+          password: values.password,
+          firstName: values.firstName,
+          lastName: values.lastName,
+          dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : new Date(),
+          roleId: getRoleId(role || 'staff'),
+          studentProfileData: isStudent ? {
+            enrolledAt: values.enrolledAt ? values.enrolledAt.toDate() : new Date(),
+            doGraduate: true,
+            careerGoal: values.careerGoal || '',
+          } : null,
+          staffProfileData: isStaff ? {
+            campus: values.campus || '',
+            department: values.department || '',
+            position: values.position || '',
+            startWorkAt: values.startWorkAt ? values.startWorkAt.toDate() : new Date(),
+            endWorkAt: values.endWorkAt ? values.endWorkAt.toDate() : new Date(),
+          } : null,
+        };
+        try {
+          await RegisterUser(createData);
+          message.success('Account created successfully!');
+          nav(-1);
+        } catch (err) {
+          message.error('Failed to create account');
+        }
+        setLoading(false);
         return;
       }
 
-      // Prepare update data
+      // EDIT MODE: Update logic as before
+      const userId = parseInt(id);
+      if (!userId) {
+        message.error('Unable to identify user');
+        setLoading(false);
+        return;
+      }
       const updateData: UpdateAccountProps = {
         username: values.username,
         email: values.email,
         firstName: values.firstName,
         lastName: values.lastName,
         dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : new Date(),
-        avatarUrl: currentUser?.avatarUrl || '',
-        roleId: isStudent ? 5 : 1, // Student roleId is 5, Staff roleId is 1
+        avatarUrl: currentAvatarUrl,
+        roleId: isStudent ? 5 : 1,
         status: currentUser?.status || 1,
-        staffDataUpdateRequest: null,
-        studentDataUpdateRequest: null,
-      };
-
-      // Add role-specific data
-      if (isStudent) {
-        updateData.studentDataUpdateRequest = {
-          enrolledAt: values.enrolledAt ? values.enrolledAt.toDate() : new Date(),
-          doGraduate: true, // Required by interface, set to true as default
-          careerGoal: values.careerGoal || '',
-        };
-      } else if (isStaff) {
-        updateData.staffDataUpdateRequest = {
+        staffDataUpdateRequest: isStaff ? {
           campus: values.campus || '',
           department: values.department || '',
           position: values.position || '',
           startWorkAt: values.startWorkAt ? values.startWorkAt.toDate() : new Date(),
           endWorkAt: values.endWorkAt ? values.endWorkAt.toDate() : new Date(),
-        };
-      }
-
-      // Call appropriate update API
+        } : null,
+        studentDataUpdateRequest: isStudent ? {
+          enrolledAt: values.enrolledAt ? values.enrolledAt.toDate() : new Date(),
+          doGraduate: true,
+          careerGoal: values.careerGoal || '',
+        } : null,
+      };
       let response;
       if (isStudent) {
         response = await UpdateCurrentStudentUser(userId, updateData as any);
       } else {
         response = await UpdateCurrentStaffUser(userId, updateData);
       }
-
       if (response) {
         message.success('Account updated successfully!');
         nav(-1);
       } else {
         message.error('Failed to update account');
       }
+      setLoading(false);
     } catch (error) {
-      console.error('Update error:', error);
-      message.error('Failed to update account');
-    } finally {
+      console.error('Submit error:', error);
+      message.error('Failed to submit account');
       setLoading(false);
     }
   };
 
   const handleCancel = () => {
     nav(-1);
+  };
+
+  const handleAvatarUpdate = (newAvatarUrl: string) => {
+    setCurrentAvatarUrl(newAvatarUrl);
+  };
+
+  const getUserRole = () => {
+    if (isStudent) return 'student';
+    if (role === 'manager') return 'manager';
+    if (role === 'advisor') return 'advisor';
+    return 'staff';
   };
 
   if (isLoadingUser) {
@@ -234,6 +278,17 @@ const EditAccount: React.FC = () => {
       <div className={styles.container}>
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
           <div className={styles.userInfo}>
+            <div className={styles.avatarSection}>
+              <AvatarUpload
+                userId={parseInt(id || '0')}
+                currentAvatarUrl={currentAvatarUrl}
+                userRole={getUserRole()}
+                size={120}
+                onAvatarUpdate={handleAvatarUpdate}
+                disabled={isLoadingUser}
+                className={styles.avatar}
+              />
+            </div>
             <h1 className={styles.name}>
               {isStudent ? 'Edit Student Account' : 'Edit Staff Account'}
             </h1>
@@ -299,6 +354,42 @@ const EditAccount: React.FC = () => {
                   </Form.Item>
                 </div>
               </div>
+
+              {!id && (
+                <div className={styles.fieldRow}>
+                  <div className={styles.fieldColumn}>
+                    <Form.Item 
+                      label="Password" 
+                      name="password" 
+                      rules={[{ required: true, message: 'Please enter password' }]}
+                      hasFeedback
+                    >
+                      <Input.Password placeholder="Enter password"  autoComplete="new-password" />
+                    </Form.Item>
+                  </div>
+                  <div className={styles.fieldColumn}>
+                    <Form.Item
+                      label="Confirm Password"
+                      name="confirmPassword"
+                      dependencies={["password"]}
+                      hasFeedback
+                      rules={[
+                        { required: true, message: 'Please confirm your password' },
+                        ({ getFieldValue }) => ({
+                          validator(_, value) {
+                            if (!value || getFieldValue('password') === value) {
+                              return Promise.resolve();
+                            }
+                            return Promise.reject(new Error('Passwords do not match'));
+                          },
+                        })
+                      ]}
+                    >
+                      <Input.Password placeholder="Confirm password" autoComplete="new-password" />
+                    </Form.Item>
+                  </div>
+                </div>
+              )}
 
               <div className={styles.fieldRow}>
                 <div className={styles.fieldColumn}>

@@ -11,7 +11,7 @@ import {
 } from "../../interfaces/IBookingAvailability";
 import { LeaveSchedule, PagedLeaveScheduleData, CreateLeaveScheduleRequest, UpdateLeaveScheduleRequest } from '../../interfaces/ILeaveSchedule';
 
-const userURL = baseUrl + "/User/advisor";
+const userURL = baseUrl + "/User/advisors";
 
 export const GetActiveAdvisor = async (): Promise<AccountProps | null> => {
   const props = {
@@ -31,21 +31,6 @@ export const GetActiveAdvisor = async (): Promise<AccountProps | null> => {
 };
 
 export const RegisterAdvisor = async (data: AccountPropsCreate): Promise<any> => {
-  const props = {
-    data: data,
-    url: userURL,
-    headers: GetHeader(),
-  };
-  const result = await axiosCreate(props);
-  if (result.success) {
-    return result.data;
-  } else {
-    console.log(result.error);
-    return null;
-  }
-};
-
-export const RegisterMultipleAdvisor = async (data: AccountPropsCreate[]): Promise<any> => {
   const props = {
     data: data,
     url: userURL,
@@ -111,35 +96,6 @@ export const FetchAdvisorById = async (userId: number): Promise<AccountProps | n
   }
 };
 
-export const UpdateAdvisor = async (userId: number, data: any): Promise<AccountProps | null> => {
-  const props = {
-    data: data,
-    url: userURL + `/${userId}`,
-    headers: GetHeader(),
-  };
-  const result = await axiosUpdate(props);
-  if (result.success) {
-    return result.data;
-  } else {
-    console.log(result.error);
-    return null;
-  }
-};
-
-export const DisableAdvisor = async (userId: number): Promise<AccountProps | null> => {
-  const props = {
-    data: null,
-    url: userURL + `/${userId}`,
-    headers: GetHeader(),
-  };
-  const result = await axiosDelete(props);
-  if (result.success) {
-    return result.data;
-  } else {
-    console.log(result.error);
-    return null;
-  }
-};
 
 export const FetchBookingAvailability = async (
   pageNumber: number = 1,
