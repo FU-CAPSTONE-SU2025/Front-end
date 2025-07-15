@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, message, Space, Typography, Select, Card, Tag } from 'antd';
-import { SaveOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { Combo, Subject, SubjectInCombo } from '../../interfaces/ISchoolProgram';
+import { SaveOutlined, PlusOutlined } from '@ant-design/icons';
+import { SubjectInCombo } from '../../interfaces/ISchoolProgram';
 import { useCRUDCombo, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { GetSubjectsInCombo } from '../../api/SchoolAPI/comboAPI';
 
@@ -43,7 +43,7 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
   };
 
   useEffect(() => {
-    getAllSubjects({ pageNumber: 1, pageSize: 100 });
+    getAllSubjects('NONE');
     if (isEditMode && id) {
       setLoading(true);
       getComboById.mutate(id, {

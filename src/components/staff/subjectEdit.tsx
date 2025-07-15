@@ -27,7 +27,6 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
     addSubjectMutation,
     updateSubjectMutation,
     isLoading,
-    subjectById,
     addPrerequisiteMutation,
     subjectList,
     getAllSubjects
@@ -50,7 +49,7 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
 
   // Fetch all subjects for prerequisites select
   useEffect(() => {
-    getAllSubjects({ pageNumber: 1, pageSize: 100 });
+    getAllSubjects('NONE');
   }, []);
 
   // Fetch current prerequisites for this subject (edit mode)

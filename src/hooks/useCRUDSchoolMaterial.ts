@@ -5,7 +5,7 @@ import { PagedData } from '../interfaces/ISchoolProgram';
 import { AddSubject, FetchSubjectById, FetchSubjectList, UpdateSubjectById, AddPrerequisitesSubject, RegisterMultipleSubject } from '../api/SchoolAPI/subjectAPI';
 import { AddProgram, FetchProgramList, FetchProgramById, UpdateProgramById, DisableProgram, RegisterMultiplePrograms } from '../api/SchoolAPI/programAPI';
 import { Combo, CreateCombo, UpdateCombo } from '../interfaces/ISchoolProgram';
-import { AddCombo, FetchComboList, FetchComboById, UpdateComboById, AddSubjectToCombo, RemoveSubjectToCombo, RegisterMultipleCombo } from '../api/SchoolAPI/comboAPI';
+import { AddCombo, FetchComboList, FetchComboById, UpdateComboById, AddSubjectToCombo, RemoveSubjectToCombo, RegisterMultipleCombo, FetchComboSubjects } from '../api/SchoolAPI/comboAPI';
 import { useState } from 'react';
 import { 
   AddSyllabus, 
@@ -92,7 +92,7 @@ export function useCRUDCurriculum() {
 
   const fetchSubjectsMutation = useMutation<PagedData<Subject> | null, unknown, void>({
     mutationFn: async () => {
-      const result = await FetchSubjectList(1, 100);
+      const result = await FetchSubjectList(1, 10);
       return result;
     },
     onError: (error) => {
@@ -134,16 +134,22 @@ export function useCRUDCurriculum() {
 }
 
 export function useCRUDSubject() {
-  const getSubjectMutation = useMutation<PagedData<Subject> | null, unknown, PaginationParams>({
-    mutationFn: async (params: PaginationParams) => {
-      const data = await FetchSubjectList(
-        params.pageNumber,
-        params.pageSize,
-        params.filterValue,
-        params.filterType,
-        undefined
-      );
-      return data;
+  const getSubjectMutation = useMutation<PagedData<Subject> | null, unknown, PaginationParams | 'NONE' | undefined>({
+    mutationFn: async (params?: PaginationParams | 'NONE') => {
+      if (!params || params === 'NONE') {
+        // Fetch all subjects with no paged
+        const data = await FetchSubjectList();
+        return data;
+      } else {
+        const data = await FetchSubjectList(
+          params.pageNumber,
+          params.pageSize,
+          params.filterValue,
+          params.filterType,
+          undefined
+        );
+        return data;
+      }
     },
     onError: (error) => {
       console.error(error);
@@ -306,6 +312,16 @@ export function useCRUDCombo() {
     },
   });
 
+  const fetchComboSubjectsMutation = useMutation<Subject[] | null, unknown, number>({
+    mutationFn: async (comboId: number) => {
+      const result = await FetchComboSubjects(comboId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
   const isSuccessBulkImport = addMultipleCombosMutation.isSuccess;
 
   const metaData = getComboMutation.data || null;
@@ -337,7 +353,8 @@ export function useCRUDCombo() {
     setComboPageSize,
     comboSearch,
     setComboSearch,
-    isComboLoading
+    isComboLoading,
+    fetchComboSubjectsMutation
   }
 }
 

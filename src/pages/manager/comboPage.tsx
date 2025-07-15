@@ -25,11 +25,13 @@ const ComboManagerPage: React.FC = () => {
     paginationCombo,
     getComboMutation,
     addMultipleCombosMutation,
-    updateComboMutation
+    updateComboMutation,
+    addSubjectToComboMutation,
+    removeSubjectFromComboMutation,
+    fetchComboSubjectsMutation
   } = useCRUDCombo();
 
   const { subjectList, getAllSubjects } = useCRUDSubject();
-  const { addSubjectToComboMutation, removeSubjectFromComboMutation } = useCRUDCombo();
   const [subjectModalOpen, setSubjectModalOpen] = useState(false);
   const [selectedCombo, setSelectedCombo] = useState<any>(null);
   const [comboSubjects, setComboSubjects] = useState<any[]>([]); // Will hold SubjectInCombo[]
@@ -65,7 +67,7 @@ const ComboManagerPage: React.FC = () => {
     setSubjectModalOpen(true);
     setModalLoading(true);
     try {
-      const subjects = await GetSubjectsInCombo(combo.id);
+      const subjects = await fetchComboSubjectsMutation.mutateAsync(combo.id);
       setComboSubjects(subjects || []);
     } finally {
       setModalLoading(false);
@@ -78,7 +80,7 @@ const ComboManagerPage: React.FC = () => {
     setModalLoading(true);
     try {
       await addSubjectToComboMutation.mutateAsync({ comboId: selectedCombo.id, subjectId: addSubjectId });
-      const subjects = await GetSubjectsInCombo(selectedCombo.id);
+      const subjects = await fetchComboSubjectsMutation.mutateAsync(selectedCombo.id);
       setComboSubjects(subjects || []);
       setAddSubjectId(null);
       message.success('Subject added to combo!');
@@ -95,7 +97,7 @@ const ComboManagerPage: React.FC = () => {
     setModalLoading(true);
     try {
       await removeSubjectFromComboMutation.mutateAsync({ comboId: selectedCombo.id, subjectId });
-      const subjects = await GetSubjectsInCombo(selectedCombo.id);
+      const subjects = await fetchComboSubjectsMutation.mutateAsync(selectedCombo.id);
       setComboSubjects(subjects || []);
       message.success('Subject removed from combo!');
     } catch {

@@ -81,17 +81,20 @@ export const RegisterMultipleSubject = async (data: CreateSubject[]): Promise<an
 };
 
 export const FetchSubjectList = async (
-  pageNumber: number = 1,
-  pageSize: number = 10,
+  pageNumber?: number,
+  pageSize?: number,
   search?: string,
   filterType?: string,
   filterValue?: string
 ): Promise<PagedData<Subject> | null> => {
+  let params = new URLSearchParams();
   // Build query parameters
-  const params = new URLSearchParams({
+  if(pageNumber && pageSize){
+   params = new URLSearchParams({
     pageNumber: pageNumber.toString(),
     pageSize: pageSize.toString(),
   });
+  
 
   if (search) {
     params.append("search", search);
@@ -101,7 +104,7 @@ export const FetchSubjectList = async (
     params.append("filterType", filterType);
     params.append("filterValue", filterValue);
   }
-
+  }
   const props = {
     data: null,
     url: subjectURL + "?" + params.toString(),
