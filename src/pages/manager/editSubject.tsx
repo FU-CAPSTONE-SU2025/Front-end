@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router';
 import { GetPrerequisitesSubject } from '../../api/SchoolAPI/subjectAPI';
 import { Subject } from '../../interfaces/ISchoolProgram';
+import SubjectSelect from '../../components/common/SubjectSelect';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -280,6 +281,21 @@ const EditSubjectPage: React.FC = () => {
                   </ul>
                 </div>
               )}
+
+              <Form.Item
+                name="prerequisites"
+                label="Prerequisite Subjects"
+                extra="Select one or more subjects that must be completed before this subject."
+              >
+                <SubjectSelect
+                  multiple
+                  placeholder="Select prerequisite subjects"
+                  value={prerequisites.map(s => s.id)}
+                  onChange={val => setPrerequisites(Array.isArray(val) ? mockSubjects.filter(s => val.includes(s.id)) : [])}
+                  style={{ borderRadius: 8, width: '100%' }}
+                  disabledIds={[Number(id), ...prerequisites.map(s => s.id)].filter(Boolean) as number[]}
+                />
+              </Form.Item>
 
               <Form.Item>
                 <Button 

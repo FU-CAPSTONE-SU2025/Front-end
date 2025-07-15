@@ -4,6 +4,7 @@ import { SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { GetPrerequisitesSubject, DeletePrerequisitesSubject } from '../../api/SchoolAPI/subjectAPI';
 import { CreateSubject, Subject } from '../../interfaces/ISchoolProgram';
+import SubjectSelect from '../common/SubjectSelect';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -233,22 +234,14 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
                 </ul>
               </div>
             )}
-            <Select
-              mode="multiple"
+            <SubjectSelect
+              multiple
               placeholder="Select prerequisite subjects"
               value={prereqIds}
-              onChange={setPrereqIds}
-              style={{ borderRadius: 8 }}
-              optionFilterProp="children"
-              showSearch
-              allowClear
-            >
-              {otherSubjects.map(subject => (
-                <Option key={subject.id} value={subject.id}>
-                  {subject.subjectName} ({subject.subjectCode})
-                </Option>
-              ))}
-            </Select>
+              onChange={val => setPrereqIds(Array.isArray(val) ? val as number[] : val === undefined ? [] : [val as number])}
+              style={{ borderRadius: 8, width: '100%' }}
+              disabledIds={[id, ...prereqIds].filter(Boolean) as number[]}
+            />
           </>
         </Form.Item>
         <Form.Item style={{ marginTop: '2rem', textAlign: 'center' }}>

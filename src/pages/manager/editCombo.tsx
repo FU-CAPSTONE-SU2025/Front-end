@@ -4,6 +4,7 @@ import { CheckCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router';
 import { useCRUDCombo, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import SubjectSelect from '../../components/common/SubjectSelect';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -188,22 +189,13 @@ const EditComboPage: React.FC = () => {
                   </div>
                 )}
                 <div style={{ marginTop: 16 }}>
-                  <Select
-                    showSearch
+                  <SubjectSelect
+                    value={addSubjectId === null ? undefined : addSubjectId}
+                    onChange={val => setAddSubjectId(val === undefined ? null : (val as number))}
                     placeholder="Add subject to combo"
-                    value={addSubjectId}
-                    onChange={setAddSubjectId}
-                    style={{ width: 240, marginRight: 8 }}
-                    optionFilterProp="children"
-                  >
-                    {subjectList
-                      .filter(s => !comboSubjects.includes(s.id))
-                      .map(subject => (
-                        <Option key={subject.id} value={subject.id}>
-                          {subject.subjectName} ({subject.subjectCode})
-                        </Option>
-                      ))}
-                  </Select>
+                    style={{ width: 320, marginRight: 8 }}
+                    disabledIds={comboSubjects}
+                  />
                   <Button
                     type="primary"
                     icon={<PlusOutlined />}
