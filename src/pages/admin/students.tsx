@@ -100,6 +100,7 @@ const StudentList: React.FC = () => {
         lastName: item.lastName || '',
         dateOfBirth: item.dateOfBirth || new Date().toISOString(),
         studentProfileData: {
+          numberOfBan: item.numberOfBan ? parseInt(item.numberOfBan) : 0,
           enrolledAt: item.enrolledAt ? new Date(item.enrolledAt) : (item.enrollDate ? new Date(item.enrollDate) : new Date()),
           careerGoal: item.careerGoal || 'Not specified'
         },

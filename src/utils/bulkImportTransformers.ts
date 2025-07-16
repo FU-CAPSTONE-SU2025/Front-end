@@ -29,6 +29,7 @@ export const transformBulkImportData = (
         return {
           ...baseAccount,
           studentProfileData: {
+            numberOfBan: item.numberOfBan ? parseInt(item.numberOfBan) : 0,
             enrolledAt: item.enrolledAt ? new Date(item.enrolledAt) : new Date(),
             careerGoal: item.careerGoal || 'Not specified'
           },

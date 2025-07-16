@@ -141,6 +141,7 @@ const EditAccount: React.FC = () => {
           dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : new Date(),
           roleId: getRoleId(role || 'staff'),
           studentProfileData: isStudent ? {
+            numberOfBan: 0,
             enrolledAt: values.enrolledAt ? values.enrolledAt.toDate() : new Date(),
             doGraduate: true,
             careerGoal: values.careerGoal || '',
