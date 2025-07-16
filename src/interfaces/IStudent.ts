@@ -26,6 +26,7 @@ export interface CreateStudent {
   currentGpa:number
 }
 export interface StudentProfileData{
+    numberOfBan: number | null
     enrolledAt: Date
     careerGoal: string
 }
