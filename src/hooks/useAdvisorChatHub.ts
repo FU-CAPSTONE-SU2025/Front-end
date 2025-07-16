@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useAuths } from './useAuths';
-import { initHumanChatSession, InitHumanChatSessionRequest } from '../api/student/AdvisorChatAPI';
+import { initHumanChatSession, InitHumanChatSessionRequest, getSessionMessages } from '../api/student/AdvisorChatAPI';
 
-const CHAT_HUB_URL = `${import.meta.env.VITE_API_AISEA_API_BASEURL}/advisoryChat1to1Hub`;
+const CHAT_HUB_URL = `${import.meta.env.VITE_API_AISEA_API_HUBURL}/advisoryChat1to1Hub`;
+const CHAT_WITH_ADVISOR_URL = `${import.meta.env.VITE_API_AISEA_API_URL}/AdvisorySession1to1/human`;
 
 // Chat message interface
 export interface ChatMessage {
@@ -65,6 +66,7 @@ export function useAdvisorChatHub() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [availableAdvisors, setAvailableAdvisors] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [messagesLoadedViaAPI, setMessagesLoadedViaAPI] = useState(false);
   
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const retryCountRef = useRef(0);
@@ -77,13 +79,13 @@ export function useAdvisorChatHub() {
     }
 
     const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl(CHAT_HUB_URL, { 
-        accessTokenFactory: () => accessToken,
-        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
-      })
-      .withAutomaticReconnect([0, 2000, 10000, 30000])
-      .configureLogging(signalR.LogLevel.Debug)
-      .build();
+    .withUrl(CHAT_HUB_URL, {
+      accessTokenFactory: () => accessToken,
+      transport: signalR.HttpTransportType.WebSockets 
+    })
+    .withAutomaticReconnect([0, 2000, 10000, 30000])
+    .configureLogging(signalR.LogLevel.Debug)
+    .build();
 
     return newConnection;
   }, [accessToken]);
@@ -132,10 +134,25 @@ export function useAdvisorChatHub() {
         setError(null);
         retryCountRef.current = 0;
         
-        // Setup event handlers after successful connection (like in demo)
+        // Setup event handlers after successful connection
         newConnection.on('SendADVSSMethod', (message: ChatMessage) => {
           console.log('Received message:', message);
-          setMessages((prev) => [...prev, message]);
+          setMessages((prev) => {
+            // Only add message if it belongs to the current session and doesn't already exist
+            if (message.sessionId === currentSessionId && !prev.find(m => m.id === message.id)) {
+              return [...prev, message];
+            }
+            return prev;
+          });
+          
+          // Update session's last message
+          setSessions((prev) => 
+            prev.map(session => 
+              session.id === message.sessionId 
+                ? { ...session, lastMessage: message.content, lastMessageTime: message.timestamp }
+                : session
+            )
+          );
         });
 
         newConnection.on('JoinSSMethod', (messageData: PagedResult<ChatMessage> | ChatMessage[]) => {
@@ -144,19 +161,34 @@ export function useAdvisorChatHub() {
           setMessages(messages);
         });
 
-        newConnection.on('GetSessionsHUBMethod', (sessionData: PagedResult<ChatSession> | ChatSession[]) => {
-          console.log('Received sessions:', sessionData);
-          if (Array.isArray(sessionData)) {
-            setSessions(sessionData);
-          } else {
-            setSessions(sessionData.items || []);
-          }
-        });
-
         newConnection.on('LoadMoreMessagesMethod', (messageData: PagedResult<ChatMessage> | ChatMessage[]) => {
           console.log('Loaded more messages:', messageData);
           const newMessages = Array.isArray(messageData) ? messageData : messageData.items || [];
-          setMessages((prev) => [...prev, ...newMessages]);
+          setMessages((prev) => [
+            ...newMessages.filter(m => m.sessionId === currentSessionId),
+            ...prev
+          ]);
+        });
+
+        // Session list events
+        newConnection.on('GetSessionsHUBMethod', (sessionData: PagedResult<ChatSession> | ChatSession[]) => {
+          console.log('Received sessions:', sessionData);
+          const sessions = Array.isArray(sessionData) ? sessionData : sessionData.items || [];
+          setSessions(sessions);
+        });
+
+        newConnection.on('SessionCreatedMethod', (newSession: ChatSession) => {
+          console.log('New session created:', newSession);
+          setSessions((prev) => [newSession, ...prev]);
+        });
+
+        newConnection.on('SessionUpdatedMethod', (updatedSession: ChatSession) => {
+          console.log('Session updated:', updatedSession);
+          setSessions((prev) => 
+            prev.map(session => 
+              session.id === updatedSession.id ? updatedSession : session
+            )
+          );
         });
 
         // Advisor list events
@@ -201,6 +233,8 @@ export function useAdvisorChatHub() {
         conn.off('JoinSSMethod');
         conn.off('GetSessionsHUBMethod');
         conn.off('LoadMoreMessagesMethod');
+        conn.off('SessionCreatedMethod');
+        conn.off('SessionUpdatedMethod');
         conn.off('GetAvailableAdvisorsMethod');
         conn.off('GetAdvisorsMethod');
         conn.off('ListAvailableAdvisorsMethod');
@@ -209,11 +243,9 @@ export function useAdvisorChatHub() {
         connectionRef.current = null;
       }
     };
-  }, [accessToken, setupConnection]);
+  }, [accessToken, setupConnection, currentSessionId]);
 
-
-
-  // Join session
+  // Join session with API message loading
   const joinSession = useCallback(async (sessionId: number) => {
     const conn = connectionRef.current;
     if (!conn || conn.state !== signalR.HubConnectionState.Connected) {
@@ -223,12 +255,29 @@ export function useAdvisorChatHub() {
 
     setLoading(true);
     setError(null);
-    
+    setMessagesLoadedViaAPI(false);
     try {
       console.log('Joining session:', sessionId);
-      await conn.invoke('JoinSession', sessionId);
       setCurrentSessionId(sessionId);
-      setMessages([]); // Clear previous messages
+      setMessages([]); // Clear previous messages before joining new session
+      
+      // First, load message history via API
+      try {
+        console.log('Loading message history via API for session:', sessionId);
+        const messageHistory = await getSessionMessages(sessionId, 1, 50); // Load last 50 messages
+        if (messageHistory && messageHistory.items) {
+          console.log('Loaded message history via API:', messageHistory.items);
+          setMessages(messageHistory.items);
+          setMessagesLoadedViaAPI(true);
+        }
+      } catch (apiError) {
+        console.warn('Failed to load message history via API, falling back to SignalR:', apiError);
+        // If API fails, fall back to SignalR
+        await conn.invoke('JoinSession', sessionId);
+      }
+      
+      // Then join SignalR session for real-time updates
+      await conn.invoke('JoinSession', sessionId);
       return true;
     } catch (err) {
       console.error('Failed to join session:', err);
@@ -240,7 +289,7 @@ export function useAdvisorChatHub() {
     }
   }, []);
 
-  // Send message
+  // Send message via SignalR (for real-time communication)
   const sendMessage = useCallback(async (content: string) => {
     const conn = connectionRef.current;
     if (!conn || conn.state !== signalR.HubConnectionState.Connected) {
@@ -318,10 +367,54 @@ export function useAdvisorChatHub() {
     setError(null);
     
     try {
-      await conn.invoke('LoadMoreMessages', currentSessionId, { pageNumber, pageSize });
+      // Try API first for better performance
+      try {
+        console.log('Loading more messages via API for session:', currentSessionId);
+        const messageHistory = await getSessionMessages(currentSessionId, pageNumber, pageSize);
+        if (messageHistory && messageHistory.items) {
+          console.log('Loaded more messages via API:', messageHistory.items);
+          setMessages((prev) => [
+            ...messageHistory.items,
+            ...prev
+          ]);
+          return true;
+        }
+      } catch (apiError) {
+        console.warn('Failed to load more messages via API, falling back to SignalR:', apiError);
+        // If API fails, fall back to SignalR
+        await conn.invoke('LoadMoreMessages', currentSessionId, { pageNumber, pageSize });
+      }
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load more messages';
+      setError(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [currentSessionId]);
+
+  // Load more messages via API only (for manual refresh)
+  const refreshMessages = useCallback(async () => {
+    if (!currentSessionId) {
+      setError('No active session');
+      return false;
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log('Refreshing messages via API for session:', currentSessionId);
+      const messageHistory = await getSessionMessages(currentSessionId, 1, 100); // Load last 100 messages
+      if (messageHistory && messageHistory.items) {
+        console.log('Refreshed messages via API:', messageHistory.items);
+        setMessages(messageHistory.items);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh messages';
       setError(errorMessage);
       return false;
     } finally {
@@ -435,6 +528,8 @@ export function useAdvisorChatHub() {
     availableAdvisors,
     loading,
     isConnected: connectionState === ConnectionState.Connected,
+    setMessages, // Export setMessages for optimistic updates if needed
+    messagesLoadedViaAPI, // Export this flag
     
     // Methods
     joinSession,
@@ -445,6 +540,7 @@ export function useAdvisorChatHub() {
     loadMoreSessions,
     createHumanSession,
     getAvailableAdvisors,
+    refreshMessages, // Add refresh function
     
     // Utility
     retry: () => {

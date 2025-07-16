@@ -65,11 +65,7 @@ const Messenger: React.FC = () => {
           <Badge count={sessions?.length || 0} size="small" />
         </div>
       ),
-      children: <AdvisorChatTab 
-        searchTerm={searchTerm} 
-        setSearchTerm={setSearchTerm} 
-        handleUserClick={handleUserClick} 
-      />,
+      children: <AdvisorChatTab />,
     },
   ];
 
