@@ -46,7 +46,7 @@ const Profile: React.FC = () => {
   // Get the user query using the current userId
   const userQuery = getCurrentUserQuery(userId);
   const { data: currentUserData, isLoading: isLoadingCurrentUser, error: currentUserError, refetch: refetchUser } = userQuery;
-  const { logout } = useAuth();
+  const {logout} = getAuthState()
   const navigate = useNavigate();
   // Get user ID from JWT token
   const getUserIdFromToken = () => {
@@ -340,8 +340,3 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
-
-function useAuth(): { logout: any; } {
-  throw new Error('Function not implemented.');
-}
-

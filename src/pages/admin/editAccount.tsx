@@ -180,7 +180,7 @@ const EditAccount: React.FC = () => {
         dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : new Date(),
         avatarUrl: currentAvatarUrl,
         roleId: isStudent ? 5 : 1,
-        status: currentUser?.status || 1,
+        status: currentUser?.status || 0,
         staffDataUpdateRequest: isStaff ? {
           campus: values.campus || '',
           department: values.department || '',

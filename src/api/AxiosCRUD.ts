@@ -80,11 +80,18 @@ export const makeRequest = async (
             params: method === "GET" || method === "DELETE" ? data : undefined,
         };
         const response = await axios(config);
+        // Fallback for 204 No Content, or 200/201 with empty body
+        if (
+            response.status === 204 ||
+            ((response.status === 200 || response.status === 201) && (typeof response.data === 'undefined' || response.data === null || (typeof response.data === 'object' && Object.keys(response.data).length === 0)))
+        ) {
+            return { success: true, data: true };
+        }
         return { success: true, data: response.data };
     } catch (error) {
         if (axios.isAxiosError(error)) {
             console.error("Axios error:", error);
-            console.error("Axios error response:", error.response);
+            //console.error("Axios error response:", error.response);
             const errorResponse: AxiosErrorResponse | undefined = error.response;
             
             if (errorResponse && errorResponse.status === 401) {

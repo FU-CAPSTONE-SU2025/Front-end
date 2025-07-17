@@ -39,7 +39,7 @@ export const GetCurrentStaffUser = async (userId:number):Promise<AccountProps|nu
         return null
     }
 }
-export const UpdateCurrentStaffUser = async (userId:number,data:UpdateAccountProps):Promise<AccountProps|null> => {
+export const UpdateCurrentStaffUser = async (userId:number,data:UpdateAccountProps):Promise<AccountProps|null|true> => {
     const props = {
         data: data,
         url: userURL+`/staff/`+userId,
@@ -48,7 +48,8 @@ export const UpdateCurrentStaffUser = async (userId:number,data:UpdateAccountPro
     console.log("Header: ",header) 
     const result = await axiosUpdate(props)
     if (result.success) {
-        //console.log(result.data)
+        // If backend returns 204 No Content, result.data will be undefined
+        if (typeof result.data === 'undefined') return true;
         return result.data
     }
     else {
@@ -73,7 +74,7 @@ export const GetCurrentStudentUser = async (userId:number):Promise<AccountProps|
         return null
     }
 }
-export const UpdateCurrentStudentUser = async (userId:number,data:AccountPropsCreate):Promise<AccountProps|null> => {
+export const UpdateCurrentStudentUser = async (userId:number,data:AccountPropsCreate):Promise<AccountProps|null|true> => {
     const props = {
         data: data,
         url: userURL+`/student/`+userId,
@@ -82,7 +83,7 @@ export const UpdateCurrentStudentUser = async (userId:number,data:AccountPropsCr
     console.log("Header: ",header) 
     const result = await axiosUpdate(props)
     if (result.success) {
-        //console.log(result.data)
+        if (typeof result.data === 'undefined') return true;
         return result.data
     }
     else {
@@ -156,7 +157,7 @@ export const FetchUserById = async (userId:number):Promise<AccountProps|null> =>
         return null
     }
 }
-export const UpdateUser = async (userId:number,data:any):Promise<AccountProps|null> => {
+export const UpdateUser = async (userId:number,data:any):Promise<AccountProps|null|true> => {
     const props = {
         data: data,
         url: userURL+`/`+userId,
@@ -164,7 +165,7 @@ export const UpdateUser = async (userId:number,data:any):Promise<AccountProps|nu
     }
     const result = await axiosUpdate(props)
     if (result.success) {
-        //console.log(result.data)
+        if (typeof result.data === 'undefined') return true;
         return result.data
     }
     else {

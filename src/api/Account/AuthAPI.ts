@@ -23,7 +23,6 @@ export const LoginGoogleAccount = async (data: string) => {
         return result.data
     }
     else {
-        throwApiError(result);
         return null; // This will never be reached, but TypeScript needs it
     }
 } // TODO change to use axiosCreate
@@ -38,8 +37,8 @@ export const LoginAccount = async (data: LoginProps) => {
         return result.data
     }
     else {
-        throwApiError(result);
-        return null; // This will never be reached, but TypeScript needs it
+        //throwApiError(result);
+        return null; 
     }
 }
 

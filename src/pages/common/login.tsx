@@ -37,7 +37,6 @@ const Login: React.FC = () => {
       }else{
          nav('/404')
       }
-      // ADD ROUTE HERE
 }
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -75,8 +74,9 @@ const Login: React.FC = () => {
   const onNormalLogin = async(values: LoginProps) => {
     //console.log('Login values:', values);
     setIsEmailLoading(true);
-    const userAccount:GoogleAccountRequestProps|null = await LoginAccount(values)
-    if (userAccount!=null) {
+    const userAccount:GoogleAccountRequestProps = await LoginAccount(values)
+    console.log('User Account:', userAccount);
+    if (userAccount) {
       alert('Login successful');
           setAccessToken(userAccount.accessToken);
           setRefreshToken(userAccount.refreshToken);
