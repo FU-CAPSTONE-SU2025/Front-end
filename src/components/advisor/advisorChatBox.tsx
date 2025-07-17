@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Avatar, Button, Input, Modal } from 'antd';
 import { CloseOutlined, ExpandOutlined, SendOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSendMessageToAdvisor } from '../../hooks/useSendMessageToAdvisor';
 
 interface Student {
   id: string;
@@ -19,15 +20,19 @@ interface ChatMessage {
   timestamp: string;
   isRead: boolean;
   messageType: string;
+  senderName?: string; // Added for new logic
 }
 
 interface AdvisorChatBoxProps {
   onClose: () => void;
   selectedStudent: Student;
+  messages: ChatMessage[];
+  loading: boolean;
+  error: string | null;
+  onSendMessage: (msg: string) => Promise<void>;
 }
 
-const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStudent }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStudent, messages, loading, error, onSendMessage }) => {
   const [input, setInput] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -53,35 +58,10 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
     });
   };
 
-  const handleSend = () => {
-    if (input.trim()) {
-      const newMessage: ChatMessage = {
-        id: Date.now().toString(),
-        senderId: currentAdvisor.id,
-        receiverId: selectedStudent.id,
-        content: input,
-        timestamp: formatTime(),
-        isRead: false,
-        messageType: "text"
-      };
-      
-      setMessages(prev => [...prev, newMessage]);
-      setInput('');
-      
-      // Simulate student reply after 1-3 seconds
-      setTimeout(() => {
-        const replyMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          senderId: selectedStudent.id,
-          receiverId: currentAdvisor.id,
-          content: `Thank you for your response! I understand now.`,
-          timestamp: formatTime(),
-          isRead: true,
-          messageType: "text"
-        };
-        setMessages(prev => [...prev, replyMessage]);
-      }, Math.random() * 2000 + 1000);
-    }
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    await onSendMessage(input);
+    setInput('');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -89,6 +69,21 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
       e.preventDefault();
       handleSend();
     }
+  };
+
+  // Mock current advisor (in real app, this would come from auth context)
+  const currentUserId = currentAdvisor.id; // id của người dùng hiện tại
+
+  // Helper: xác định có phải là tin nhắn đầu cụm không
+  const isFirstOfGroup = (idx: number) => {
+    if (idx === 0) return true;
+    return messages[idx].senderId !== messages[idx - 1].senderId;
+  };
+
+  // Helper: xác định có phải là tin nhắn cuối cụm không
+  const isLastOfGroup = (idx: number) => {
+    if (idx === messages.length - 1) return true;
+    return messages[idx].senderId !== messages[idx + 1].senderId;
   };
 
   return (
@@ -134,29 +129,47 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 space-y-1">
               {messages.length === 0 && (
                 <div className="text-center text-gray-500 text-sm py-8">
                   Start a conversation with {selectedStudent.name}
                 </div>
               )}
-              
-              {messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.senderId === currentAdvisor.id ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`px-3 py-2 rounded-2xl max-w-[70%] text-sm shadow-sm ${
-                    msg.senderId === currentAdvisor.id 
-                      ? 'bg-blue-500 text-white rounded-br-md' 
-                      : 'bg-gray-100 text-gray-800 rounded-bl-md'
-                  }`}>
-                    {msg.content}
-                    <div className={`text-[10px] mt-1 opacity-60 ${
-                      msg.senderId === currentAdvisor.id ? 'text-right' : 'text-left'
-                    }`}>
-                      {msg.timestamp}
+              {messages.map((msg, idx) => {
+                const isMine = msg.senderId === currentUserId;
+                return (
+                  <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
+                    {/* Avatar và tên người gửi */}
+                    {!isMine && isFirstOfGroup(idx) && (
+                      <div className="flex flex-col items-center mr-2">
+                        <Avatar src={selectedStudent.avatar} size={28} />
+                        <span className="text-xs text-gray-400 mt-1">{msg.senderName || selectedStudent.name}</span>
+                      </div>
+                    )}
+                    <div className="flex flex-col items-end max-w-[75%]">
+                      {/* Bong bóng chat */}
+                      <div className={`px-3 py-2 rounded-2xl text-sm shadow-sm ${
+                        isMine
+                          ? 'bg-blue-500 text-white rounded-br-md'
+                          : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                      }`}>
+                        {msg.content}
+                      </div>
+                      {/* Thời gian gửi */}
+                      {isLastOfGroup(idx) && (
+                        <div className={`text-[10px] mt-1 opacity-60 ${isMine ? 'text-right text-blue-400' : 'text-left text-gray-500'}`}>{msg.timestamp}</div>
+                      )}
                     </div>
+                    {/* Avatar user bên phải nếu muốn */}
+                    {isMine && isFirstOfGroup(idx) && (
+                      <div className="flex flex-col items-center ml-2">
+                        <Avatar src={currentAdvisor.avatar} size={28} />
+                        <span className="text-xs text-gray-400 mt-1">You</span>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
 
@@ -169,15 +182,19 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
                 placeholder="Type a message..."
                 className="rounded-full bg-white"
                 maxLength={1000}
+                disabled={loading}
               />
               <Button 
                 type="primary" 
                 shape="circle" 
                 onClick={handleSend} 
-                disabled={!input.trim()}
+                disabled={!input.trim() || loading}
                 icon={<SendOutlined />}
               />
             </div>
+            {error && (
+              <div className="text-red-500 text-xs mt-2 text-center">{error}</div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -212,7 +229,7 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-2">
               {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-gray-500">
                   <Avatar src={selectedStudent.avatar} size={64} />
@@ -220,26 +237,38 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
                   <p className="text-sm mt-2">Start a conversation</p>
                 </div>
               )}
-              
-              {messages.map((msg) => (
-                <div key={msg.id} className={`flex items-start gap-3 ${msg.senderId === currentAdvisor.id ? 'justify-end' : ''}`}>
-                  {msg.senderId !== currentAdvisor.id && (
-                    <Avatar src={selectedStudent.avatar} size={32} />
-                  )}
-                  <div className={`px-4 py-2 rounded-xl max-w-[70%] ${
-                    msg.senderId === currentAdvisor.id 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {msg.content}
-                    <div className={`text-xs mt-2 opacity-60 ${
-                      msg.senderId === currentAdvisor.id ? 'text-right' : 'text-left'
-                    }`}>
-                      {msg.timestamp}
+              {messages.map((msg, idx) => {
+                const isMine = msg.senderId === currentUserId;
+                return (
+                  <div key={msg.id} className={`flex items-end gap-2 ${isMine ? 'justify-end' : ''} mb-1`}>
+                    {/* Avatar và tên người gửi */}
+                    {!isMine && isFirstOfGroup(idx) && (
+                      <div className="flex flex-col items-center mr-2">
+                        <Avatar src={selectedStudent.avatar} size={32} />
+                        <span className="text-xs text-gray-400 mt-1">{msg.senderName || selectedStudent.name}</span>
+                      </div>
+                    )}
+                    <div className="flex flex-col items-end max-w-[75%]">
+                      <div className={`px-4 py-2 rounded-xl text-sm ${
+                        isMine
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {msg.content}
+                      </div>
+                      {isLastOfGroup(idx) && (
+                        <div className={`text-xs mt-1 opacity-60 ${isMine ? 'text-right text-blue-400' : 'text-left text-gray-500'}`}>{msg.timestamp}</div>
+                      )}
                     </div>
+                    {isMine && isFirstOfGroup(idx) && (
+                      <div className="flex flex-col items-center ml-2">
+                        <Avatar src={currentAdvisor.avatar} size={32} />
+                        <span className="text-xs text-gray-400 mt-1">You</span>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
 
@@ -258,16 +287,20 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
                   placeholder="Type a message..."
                   autoSize={{ minRows: 1, maxRows: 4 }}
                   className="flex-1"
+                  disabled={loading}
                 />
                 <Button 
                   type="primary" 
                   onClick={handleSend} 
-                  disabled={!input.trim()}
+                  disabled={!input.trim() || loading}
                   icon={<SendOutlined />}
                 >
                   Send
                 </Button>
               </div>
+              {error && (
+                <div className="text-red-500 text-xs mt-2 text-center">{error}</div>
+              )}
             </div>
           </div>
         </div>

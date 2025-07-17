@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Avatar, Button, Input, Spin, Modal, Popconfirm, Tooltip, ConfigProvider, message } from 'antd';
-import { SendOutlined, UserOutlined, PlusOutlined, DeleteOutlined, MessageOutlined, RobotOutlined, DownOutlined } from '@ant-design/icons';
+import { Avatar, Button, Input, Spin, ConfigProvider, message } from 'antd';
+import { SendOutlined, UserOutlined, RobotOutlined} from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router';
 import { useChatSessions, useChatSessionMessages, useInitChatSession, useSendChatMessage, useDeleteChatSession, useRenameChatSession, usePrefetchChatSessions, usePrefetchChatMessages } from '../../hooks/useChatApi';
@@ -16,7 +16,7 @@ const AI_BOT = {
   description: 'Your intelligent academic assistant'
 };
 
-const getDefaultTitle = () => `New Chat - ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
 
 // Typing indicator component - Enhanced
 const TypingIndicator: React.FC = () => (
@@ -134,23 +134,7 @@ const MessageBubble: React.FC<{ message: IChatMessage; isUser: boolean; formatTi
 );
 
 // Scroll to bottom button - Enhanced
-const ScrollToBottomButton: React.FC<{ onClick: () => void; visible: boolean }> = ({ onClick, visible }) => (
-  <motion.button
-    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-    animate={{ 
-      opacity: visible ? 1 : 0, 
-      scale: visible ? 1 : 0.8,
-      y: visible ? 0 : 20
-    }}
-    onClick={onClick}
-    className="fixed bottom-24 right-8 z-50 w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center border-2 border-white"
-    style={{ pointerEvents: visible ? 'auto' : 'none' }}
-    whileHover={{ scale: 1.1 }}
-    whileTap={{ scale: 0.95 }}
-  >
-    <DownOutlined className="text-lg" />
-  </motion.button>
-);
+
 
 const ChatAI: React.FC = () => {
   const queryClient = useQueryClient();
@@ -720,7 +704,7 @@ const ChatAI: React.FC = () => {
         </main>
         
         {/* Scroll to Bottom Button */}
-        <ScrollToBottomButton onClick={scrollToBottom} visible={showScrollButton} />
+       
         
         {/* History Modal */}
         <HistoryModal

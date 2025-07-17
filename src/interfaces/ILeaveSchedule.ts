@@ -3,7 +3,7 @@ export interface LeaveSchedule {
   staffProfileId: number;
   startDateTime: string;
   endDateTime: string;
-  note?: string | null;
+  note?: string;
   createdAt?: string;
 }
 
@@ -17,11 +17,11 @@ export interface PagedLeaveScheduleData {
 export interface CreateLeaveScheduleRequest {
   startDateTime: string;
   endDateTime: string;
-  note?: string | null;
+  note?: string;
 }
 
 export interface UpdateLeaveScheduleRequest {
   startDateTime: string;
   endDateTime: string;
-  note?: string | null;
+  note?: string;
 } 
