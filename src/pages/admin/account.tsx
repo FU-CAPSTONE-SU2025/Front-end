@@ -12,6 +12,7 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useUserProfile from '../../hooks/useUserProfile';
 import { AccountProps, JWTAccountProps } from '../../interfaces/IAccount';
 import { validateEmail } from '../../components/common/validation';
+import { useNavigate } from 'react-router';
 
 const { TextArea } = Input;
 
@@ -45,7 +46,8 @@ const Profile: React.FC = () => {
   // Get the user query using the current userId
   const userQuery = getCurrentUserQuery(userId);
   const { data: currentUserData, isLoading: isLoadingCurrentUser, error: currentUserError, refetch: refetchUser } = userQuery;
-
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   // Get user ID from JWT token
   const getUserIdFromToken = () => {
     try {
@@ -56,6 +58,11 @@ const Profile: React.FC = () => {
       console.error("Failed to decode token:", error);
       return null;
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   // Set userId on component mount
@@ -312,7 +319,7 @@ const Profile: React.FC = () => {
             )}
             <motion.button
               className={styles.logoutButton}
-              onClick={() => { window.location.href = '/logout'; }}
+              onClick={() => handleLogout()}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -333,4 +340,8 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
+
+function useAuth(): { logout: any; } {
+  throw new Error('Function not implemented.');
+}
 

@@ -18,8 +18,6 @@ export interface ActiveAccountProps{
   firstName :string
   lastName :string
   dateOfBirth :Date
-  address :string
-  phone:string
   roleName : "Admin" | "Academic Staff" |"Advisor"|"Manager"|"Student"
 }
 

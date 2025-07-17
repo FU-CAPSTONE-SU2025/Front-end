@@ -406,19 +406,6 @@ const EditAccount: React.FC = () => {
                     />
                   </Form.Item>
                 </div>
-                <div className={styles.fieldColumn}>
-                  <Form.Item label="Phone" name="phone">
-                    <Input placeholder="Enter phone number" />
-                  </Form.Item>
-                </div>
-              </div>
-
-              <div className={styles.fieldRow}>
-                <div className={styles.fieldColumn}>
-                  <Form.Item label="Address" name="address">
-                    <Input placeholder="Enter address" />
-                  </Form.Item>
-                </div>
               </div>
 
               {/* Role-specific Information */}

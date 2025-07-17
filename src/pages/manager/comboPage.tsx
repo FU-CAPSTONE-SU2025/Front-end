@@ -212,42 +212,23 @@ const ComboManagerPage: React.FC = () => {
       ),
     },
     {
-      title: 'Subjects',
-      key: 'subjects',
+      title: 'View Subjects',
+      key: 'viewSubjects',
       align: 'center' as const,
+      width: 120,
       render: (_: any, record: any) => (
         <Button
-          size="small"
+          type="primary"
+          icon={<PlusOutlined />} // You may want to use a book icon for consistency
           onClick={() => handleOpenSubjectModal(record)}
-          style={{
-            background: 'linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #22c55e 0%, #16a34a 100%) border-box',
-            border: '2px solid transparent',
-            color: '#16a34a',
-            fontWeight: 700,
-            borderRadius: 999,
-            boxShadow: '0 2px 12px #22c55e22',
-            padding: '0 20px',
-            fontSize: 15,
-            letterSpacing: 0.5,
-            height: 36,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            transition: 'background 0.2s, color 0.2s, box-shadow 0.2s',
-            outline: 'none',
+          style={{ 
+            backgroundColor: '#f97316',
+            borderColor: '#f97316',
+            borderRadius: 6
           }}
-          onMouseOver={e => {
-            e.currentTarget.style.background = 'linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #16a34a 0%, #22c55e 100%) border-box';
-            e.currentTarget.style.color = '#22c55e';
-            e.currentTarget.style.boxShadow = '0 4px 16px #16a34a33';
-          }}
-          onMouseOut={e => {
-            e.currentTarget.style.background = 'linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #22c55e 0%, #16a34a 100%) border-box';
-            e.currentTarget.style.color = '#16a34a';
-            e.currentTarget.style.boxShadow = '0 2px 12px #22c55e22';
-          }}
+          size="small"
         >
-          Add Subject
+          View Subjects
         </Button>
       ),
     },
@@ -257,31 +238,15 @@ const ComboManagerPage: React.FC = () => {
       align: 'center' as const,
       width: 200,
       render: (_: any, record: any) => (
-        <div className={styles.sttActionButtons}>
-          <Button
-            type="link"
-            icon={<EditOutlined style={{ color: '#f97316' }} />}
-            onClick={() => handleEditCombo(record.id)}
-            style={{ color: '#f97316' }}
-            title="Edit Combo"
-          />
-          <Button
-            type="link"
-            icon={<DeleteOutlined style={{ color: '#e53e3e' }} />}
-            onClick={() => handleDeleteCombo(record.id)}
-            style={{ color: '#e53e3e' }}
-            title="Delete Combo"
-          />
-          <Button
-            type={approvalStatus[record.id] === 'approved' ? 'default' : 'primary'}
-            icon={<CheckOutlined />}
-            disabled={approvalStatus[record.id] === 'approved'}
-            onClick={() => handleApprove(record.id)}
-            style={{borderRadius: 8, height: 28, padding: '0 8px', marginLeft: 8}}
-          >
-            {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Approve'}
-          </Button>
-        </div>
+        <Button
+          type={approvalStatus[record.id] === 'approved' ? 'default' : 'primary'}
+          icon={<CheckOutlined />}
+          disabled={approvalStatus[record.id] === 'approved'}
+          onClick={() => handleApprove(record.id)}
+          style={{borderRadius: 8, height: 28, padding: '0 8px', marginLeft: 8}}
+        >
+          {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Approve'}
+        </Button>
       ),
     },
   ];
@@ -299,24 +264,6 @@ const ComboManagerPage: React.FC = () => {
             style={{maxWidth: 240, borderRadius: 999}}
             size="large"
           />
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            size="large" 
-            style={{borderRadius: 999}}
-            onClick={handleAddCombo}
-          >
-            Add Combo
-          </Button>
-          <Button 
-            type="default" 
-            icon={<UploadOutlined />} 
-            size="large" 
-            style={{borderRadius: 999, borderColor: '#10B981', color: '#10B981'}} 
-            onClick={() => setIsImportOpen(true)}
-          >
-            Import Combos
-          </Button>
         </div>
       </Affix>
       {/* Combo Table */}
@@ -373,9 +320,9 @@ const ComboManagerPage: React.FC = () => {
             display: 'block',
             maxWidth: 480,
           }}>
-            Manage Subjects for {selectedCombo.comboName}
+            View Subjects for {selectedCombo.comboName}
           </span>
-        ) : 'Manage Subjects'}
+        ) : 'View Subjects'}
         destroyOnClose
         width={540}
         confirmLoading={modalLoading}
@@ -402,8 +349,6 @@ const ComboManagerPage: React.FC = () => {
                   <Tag
                     key={subject.subjectId}
                     color="blue"
-                    closable
-                    onClose={() => handleRemoveSubject(subject.subjectId)}
                     style={{
                       fontSize: 15,
                       padding: '6px 18px',
@@ -427,50 +372,6 @@ const ComboManagerPage: React.FC = () => {
               )}
             </div>
           </div>
-          <Space>
-            <SubjectSelect
-              placeholder="Add subject to combo"
-              value={addSubjectId === null ? undefined : addSubjectId}
-              onChange={val => setAddSubjectId(val === undefined ? null : (val as number))}
-              style={{ width: 260 }}
-              disabledIds={comboSubjects.map(cs => cs.subjectId)}
-            />
-            <Button
-              type="primary"
-              icon={<PlusOutlined style={{ fontSize: 14, marginRight: 4 }} />}
-              onClick={handleAddSubject}
-              disabled={!addSubjectId}
-              style={{
-                background: 'linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #22c55e 0%, #16a34a 100%) border-box',
-                border: '2px solid transparent',
-                color: '#16a34a',
-                fontWeight: 700,
-                borderRadius: 999,
-                boxShadow: '0 2px 12px #22c55e22',
-                padding: '0 20px',
-                fontSize: 14,
-                letterSpacing: 0.5,
-                height: 32,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                transition: 'background 0.2s, color 0.2s, box-shadow 0.2s',
-                outline: 'none',
-              }}
-              onMouseOver={e => {
-                e.currentTarget.style.background = 'linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #16a34a 0%, #22c55e 100%) border-box';
-                e.currentTarget.style.color = '#22c55e';
-                e.currentTarget.style.boxShadow = '0 4px 16px #16a34a33';
-              }}
-              onMouseOut={e => {
-                e.currentTarget.style.background = 'linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #22c55e 0%, #16a34a 100%) border-box';
-                e.currentTarget.style.color = '#16a34a';
-                e.currentTarget.style.boxShadow = '0 2px 12px #22c55e22';
-              }}
-            >
-              Add Subject
-            </Button>
-          </Space>
         </Spin>
       </Modal>
     </div>

@@ -19,7 +19,6 @@ const SubjectManagerPage: React.FC = () => {
   const [approvalStatus, setApprovalStatus] = useState<{ [id: number]: 'pending' | 'approved' }>({});
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -65,80 +64,6 @@ const SubjectManagerPage: React.FC = () => {
     message.success('Subject approved!');
   };
 
-  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    try {
-      // Extract subject data from the imported data
-      const subjectData = importedData['SUBJECT'] || [];
-      
-      if (subjectData.length === 0) {
-        message.warning('No subject data found in the imported file');
-        return;
-      }
-
-      // Transform the imported data to match CreateSubject interface
-      const transformedData: CreateSubject[] = subjectData.map(item => ({
-        subjectCode: item.subjectCode || '',
-        subjectName: item.subjectName || '',
-        credits: parseInt(item.credits) || 0,
-        description: item.description || ''
-      }));
-
-      // Validate the data
-      const validData = transformedData.filter(item => 
-        item.subjectCode.trim() !== '' && 
-        item.subjectName.trim() !== '' && 
-        item.credits > 0
-      );
-
-      if (validData.length === 0) {
-        message.error('No valid subject data found. Please check your data format and ensure all required fields are filled.');
-        return;
-      }
-
-      if (validData.length !== transformedData.length) {
-        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
-      }
-
-      // Call the bulk import mutation
-      addMultipleSubjectsMutation.mutate(validData, {
-        onSuccess: () => {
-          message.success(`Successfully imported ${validData.length} subjects`);
-          setIsImportOpen(false);
-          // Refresh the subject list
-          getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
-        },
-        onError: (error: any) => {
-          console.error('Import error:', error);
-          
-          // Extract ErrorResponse details if available
-          let errorMessage = 'Unknown error occurred';
-          let errorStatus = '';
-          
-          // Check if the error has an attached ErrorResponse
-          if (error.errorResponse && isErrorResponse(error.errorResponse)) {
-            errorMessage = error.errorResponse.message;
-            errorStatus = ` (Status: ${error.errorResponse.status})`;
-          } 
-          // Check if the error itself is an ErrorResponse
-          else if (isErrorResponse(error)) {
-            errorMessage = error.message;
-            errorStatus = ` (Status: ${error.status})`;
-          }
-          // Fallback to error message
-          else if (error?.message) {
-            errorMessage = error.message;
-          }
-          
-          message.error(`Error importing subjects: ${errorMessage}${errorStatus}`);
-        }
-      });
-
-    } catch (error) {
-      console.error('Import error:', error);
-      message.error('Error processing imported data. Please check your data format.');
-    }
-  };
-
   const columns = [
     { title: 'Title', dataIndex: 'subjectName', key: 'subjectName', align: 'left' as 'left', width: 260 },
     { title: 'Subject Code', dataIndex: 'subjectCode', key: 'subjectCode', align: 'left' as 'left', width: 140 },
@@ -162,33 +87,6 @@ const SubjectManagerPage: React.FC = () => {
             style={{borderRadius: 6, height: 22, padding: '0 6px', fontSize: 12, marginBottom: 0}}
           >
             {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Approve'}
-          </Button>
-        </div>
-      ),
-    },
-    {
-      title: 'Action',
-      key: 'actions',
-      align: 'center' as 'center',
-      width: 160,
-      render: (_: any, record: any) => (
-        <div className={styles.sttActionButtons}>
-          <Button
-            type="link"
-            icon={<EditOutlined style={{ color: '#f97316', fontSize: 16 }} />}
-            onClick={() => handleEditSubject(record.id)}
-            className={styles.sttFreshEditButton}
-            style={{ color: '#f97316', padding: 0, fontSize: 12 }}
-            title="Edit Subject"
-          />
-          <Button
-            type="link"
-            icon={<PlusOutlined style={{ color: '#1E40AF', fontSize: 16 }} />}
-            onClick={() => handleCreateSyllabus(record.id)}
-            style={{ color: '#1E40AF', padding: 0, fontSize: 12 }}
-            title="Create Syllabus"
-          >
-            Syllabus
           </Button>
         </div>
       ),
@@ -233,21 +131,7 @@ const SubjectManagerPage: React.FC = () => {
                 <Option key={cb.id} value={cb.id}>{cb.comboName}</Option>
               ))}
             </Select>
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />} 
-              size="large" 
-              style={{borderRadius: 999}}
-              onClick={handleAddSubject}
-            >
-              Add Subject
-            </Button>
-            <ExcelImportButton
-              style={{ borderRadius: 999 }}
-              onClick={() => setIsImportOpen(true)}
-            >
-              Import Subjects
-            </ExcelImportButton>
+            {/* Remove the Add Subject button and bulk import logic from the toolbar and page. */}
           </div>
         </Affix>
         {/* Subject Table */}
@@ -278,14 +162,6 @@ const SubjectManagerPage: React.FC = () => {
           )}
         </Spin>
         
-        {/* Data Import Modal */}
-        {isImportOpen && (
-          <BulkDataImport 
-            onClose={() => setIsImportOpen(false)} 
-            onDataImported={handleDataImported}
-            supportedTypes={['SUBJECT']}
-          />
-        )}
       </div>
     </div>
   );

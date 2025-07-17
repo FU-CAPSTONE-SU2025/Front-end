@@ -105,31 +105,7 @@ const HomePage: React.FC = () => {
       align: 'left' as const,
     },
     {
-      title: 'Actions',
-      key: 'actions',
-      align: 'center' as const,
-      width: 120,
-      render: (_: any, record: any) => (
-        <div className={styles.sttActionButtons}>
-          <Button
-            type="link"
-            icon={<EditOutlined style={{ color: '#3b82f6' }} />}
-            onClick={() => onEdit(record)}
-            style={{ color: '#3b82f6' }}
-            title="Edit Curriculum"
-          />
-          <Button
-            type="link"
-            icon={<DeleteOutlined style={{ color: '#ef4444' }} />}
-            onClick={() => onDelete(record.id)}
-            style={{ color: '#ef4444' }}
-            title="Delete Curriculum"
-          />
-        </div>
-      ),
-    },
-    {
-      title: 'Add Subjects',
+      title: 'View Subjects',
       key: 'addSubjects',
       align: 'center' as const,
       width: 120,
@@ -145,7 +121,7 @@ const HomePage: React.FC = () => {
           }}
           size="small"
         >
-          Manage Subjects
+          View Subjects
         </Button>
       ),
     },
@@ -315,15 +291,6 @@ const HomePage: React.FC = () => {
             style={{maxWidth: 240, borderRadius: 999}}
             size="large"
           />
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            size="large" 
-            style={{borderRadius: 999}}
-            onClick={onAdd}
-          >
-            Add Curriculum
-          </Button>
         </div>
       </Affix>
       {/* Curriculum Table */}
@@ -457,7 +424,7 @@ const HomePage: React.FC = () => {
             fontWeight: '600'
           }}>
             <BookOutlined style={{ fontSize: '18px' }} />
-            Manage Subjects - {selectedCurriculum?.curriculumName || 'Curriculum'}
+            View Subjects - {selectedCurriculum?.curriculumName || 'Curriculum'}
           </div>
         }
         onCancel={() => setSubjectsModalOpen(false)}
@@ -498,21 +465,7 @@ const HomePage: React.FC = () => {
                 Curriculum Subjects ({curriculumSubjects.length})
               </span>
             </div>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={onAddSubject}
-              style={{ 
-                backgroundColor: '#10b981',
-                borderColor: '#10b981',
-                borderRadius: 6
-              }}
-              size="small"
-            >
-              Add Subject
-            </Button>
           </div>
-          
           {/* Filtering Information */}
           <div style={{ 
             background: 'rgba(59,130,246,0.05)', 
@@ -543,15 +496,7 @@ const HomePage: React.FC = () => {
               </span>
               subjects in curriculum
             </div>
-            <span style={{ color: '#94a3b8' }}>•</span>
-            <div style={{ 
-              fontSize: '12px', 
-              color: '#64748b'
-            }}>
-              {availableSubjects.length} subjects available to add
-            </div>
           </div>
-          
           {isLoadingSubjects ? (
             <div style={{ textAlign: 'center', padding: '40px' }}>
               <Spin tip="Loading subjects..." />
@@ -584,7 +529,7 @@ const HomePage: React.FC = () => {
                 No subjects assigned to this curriculum yet.
               </div>
               <div style={{ fontSize: '14px', opacity: 0.7, color: '#64748b' }}>
-                Click "Add Subject" to start building your curriculum.
+                No subjects to display.
               </div>
             </div>
           )}

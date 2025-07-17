@@ -226,27 +226,23 @@ export const HEADER_CONFIGS = {
   },
   // Admin profile configuration (commonly used)
   ADMIN_PROFILE: {
-    headers: ['firstName', 'lastName', 'email', 'password', 'address', 'phone', 'dateOfBirth'],
+    headers: ['firstName', 'lastName', 'email', 'password', 'dateOfBirth'],
     fieldMap: createFlexibleFieldMap({
       'firstName': 'firstName',
       'lastName': 'lastName',
       'email': 'email',
       'password': 'password',
-      'address': 'address',
-      'phone': 'phone',
       'dateOfBirth': 'dateOfBirth'
     })
   },
   // Admin configuration for bulk creation
   ADMIN: {
-    headers: ['firstName', 'lastName', 'email', 'password', 'address', 'phone', 'dateOfBirth'],
+    headers: ['firstName', 'lastName', 'email', 'password', 'dateOfBirth'],
     fieldMap: createFlexibleFieldMap({
       'firstName': 'firstName',
       'lastName': 'lastName',
       'email': 'email',
       'password': 'password',
-      'address': 'address',
-      'phone': 'phone',
       'dateOfBirth': 'dateOfBirth'
     })
   }

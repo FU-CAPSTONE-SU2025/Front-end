@@ -5,8 +5,6 @@ export interface ManagerBase extends AccountProps {
   position: string;
   startWorkAt: Date;
   endWorkAt?: Date;
-  address: string;
-  phone: string;
 }
 
 export interface pagedManagerData {

@@ -47,14 +47,12 @@ fieldMap: {
 
 ### STAFF
 ```typescript
-headers: ['First Name', 'Last Name', 'Email', 'Password', 'Address', 'Phone', 'Date of Birth', 'Campus', 'Department', 'Position', 'Start Work Date']
+headers: ['First Name', 'Last Name', 'Email', 'Password', 'Date of Birth', 'Campus', 'Department', 'Position', 'Start Work Date']
 fieldMap: {
   'First Name': 'firstName',
   'Last Name': 'lastName',
   'Email': 'email',
   'Password': 'password',
-  'Address': 'address',
-  'Phone': 'phone',
   'Date of Birth': 'dateOfBirth',
   'Campus': 'campus',
   'Department': 'department',
@@ -105,14 +103,12 @@ fieldMap: {
 
 ### ADMIN_PROFILE
 ```typescript
-headers: ['First Name', 'Last Name', 'Email', 'Password', 'Address', 'Phone', 'Date of Birth']
+headers: ['First Name', 'Last Name', 'Email', 'Password', 'Date of Birth']
 fieldMap: {
   'First Name': 'firstName',
   'Last Name': 'lastName',
   'Email': 'email',
   'Password': 'password',
-  'Address': 'address',
-  'Phone': 'phone',
   'Date of Birth': 'dateOfBirth'
 }
 ```
