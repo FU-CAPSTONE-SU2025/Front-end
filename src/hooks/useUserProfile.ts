@@ -25,7 +25,7 @@ export default function useUserProfile() {
   });
 
   // Mutation for updating user profile
-  const updateUserMutation = useMutation<AccountProps | null, unknown, { userId: number; data: UpdateAccountProps }>({
+  const updateUserMutation = useMutation<AccountProps | true | null, unknown, { userId: number; data: UpdateAccountProps }>({
     mutationFn: async ({ userId, data }) => {
       console.log('Updating user profile:', { userId, data });
       
