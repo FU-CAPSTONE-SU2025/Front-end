@@ -16,6 +16,17 @@ interface Student {
   unreadCount?: number;
 }
 
+interface ChatMessage {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  timestamp: string;
+  isRead: boolean;
+  messageType: string;
+  senderName?: string;
+}
+
 const Messenger: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [studentChatBoxOpen, setStudentChatBoxOpen] = useState(false);
@@ -91,6 +102,36 @@ const Messenger: React.FC = () => {
     student.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Mock chat data and handlers
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSendMessage = async (msg: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Mock sending message
+      const newMessage: ChatMessage = {
+        id: Date.now().toString(),
+        senderId: 'current_advisor',
+        receiverId: selectedStudent?.id || '',
+        content: msg,
+        timestamp: new Date().toLocaleTimeString(),
+        isRead: false,
+        messageType: 'text',
+        senderName: 'Dr. Sarah Johnson'
+      };
+      setMessages(prev => [...prev, newMessage]);
+      // Here you would call the actual API
+      await new Promise(resolve => setTimeout(resolve, 500)); // Mock delay
+    } catch (err) {
+      setError('Failed to send message');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Render AdvisorChatBox outside root
   const advisorChatBoxPortal = studentChatBoxOpen && selectedStudent
     ? ReactDOM.createPortal(
@@ -99,7 +140,11 @@ const Messenger: React.FC = () => {
             setStudentChatBoxOpen(false);
             setSelectedStudent(null);
           }} 
-          selectedStudent={selectedStudent} 
+          selectedStudent={selectedStudent}
+          messages={messages}
+          loading={loading}
+          error={error}
+          onSendMessage={handleSendMessage}
         />,
         document.body
       )

@@ -19,7 +19,7 @@ const EditLeaveScheduleModal: React.FC<EditLeaveScheduleModalProps> = ({ visible
     if (data && visible) {
       form.setFieldsValue({
         range: [dayjs(data.startDateTime), dayjs(data.endDateTime)],
-        note: data.note || '',
+      
       });
     } else if (!visible) {
       form.resetFields();
@@ -35,7 +35,7 @@ const EditLeaveScheduleModal: React.FC<EditLeaveScheduleModalProps> = ({ visible
         data: {
           startDateTime: values.range[0].toISOString(),
           endDateTime: values.range[1].toISOString(),
-          note: values.note || null,
+        
         },
       });
       form.resetFields();
@@ -64,9 +64,6 @@ const EditLeaveScheduleModal: React.FC<EditLeaveScheduleModalProps> = ({ visible
             rules={[{ required: true, message: 'Please select the leave period!' }]}
           >
             <DatePicker.RangePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item label="Note" name="note">
-            <Input.TextArea placeholder="Enter note (optional)" maxLength={255} />
           </Form.Item>
         </Form>
       )}

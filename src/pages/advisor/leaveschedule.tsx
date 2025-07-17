@@ -75,14 +75,7 @@ const LeaveSchedulePage: React.FC = () => {
         </Space>
       ),
     },
-    {
-      title: 'Note',
-      dataIndex: 'note',
-      key: 'note',
-      width: 200,
-      align: 'center' as const,
-      render: (value: string | null) => value ? <Tag color="blue">{value}</Tag> : <Tag color="default">-</Tag>,
-    },
+  
     {
       title: 'Actions',
       key: 'actions',

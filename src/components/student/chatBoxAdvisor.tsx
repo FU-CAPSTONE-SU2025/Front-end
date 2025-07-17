@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Avatar, Badge, Button, Input, Spin, Empty, List } from 'antd';
-import { CloseOutlined, UserOutlined, ReloadOutlined } from '@ant-design/icons';
+import { CloseOutlined, ReloadOutlined } from '@ant-design/icons';
 import { Typography } from 'antd';
 import type { InputRef } from 'antd/es/input';
 
@@ -38,12 +38,10 @@ const ChatBoxAdvisor = ({
 }) => {
   const inputRef = useRef<InputRef>(null);
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, openChat, messagesEndRef]);
 
-  // Focus input when chatBox opens
   useEffect(() => {
     if (openChat) {
       setTimeout(() => inputRef.current?.focus(), 200);
@@ -51,7 +49,15 @@ const ChatBoxAdvisor = ({
   }, [openChat]);
 
   if (!openChat) return null;
-  
+
+  // Gửi tin nhắn khi bấm Send hoặc nhấn Enter
+  const handleSend = async () => {
+    if (messageInput.trim() && !loading) {
+      await sendMessage(messageInput.trim());
+      setMessageInput('');
+    }
+  };
+
   return (
     <div className="fixed bottom-8 right-8 w-[400px] bg-white rounded-[18px] shadow-[0_8px_32px_rgba(0,0,0,0.18)] z-[9999] flex flex-col overflow-hidden min-h-[480px] max-h-[600px]">
       {/* Header */}
@@ -59,8 +65,7 @@ const ChatBoxAdvisor = ({
         <Avatar src={openChat.avatar} size={44} />
         <span className="font-bold text-[17px]">{openChat.staffName}</span>
         <Badge color={openChat.isOnline ? 'green' : 'gray'} dot />
-        
-        {/* Refresh Button */}
+        <div className="text-xs text-gray-500 ml-auto">Session: {openChat.sessionId}</div>
         {onRefresh && (
           <Button
             type="text"
@@ -71,15 +76,13 @@ const ChatBoxAdvisor = ({
             title="Refresh messages"
           />
         )}
-        
         <Button
           type="text"
           icon={<CloseOutlined />}
-          className="ml-auto text-[#888]"
+          className="text-[#888]"
           onClick={onClose}
         />
       </div>
-      
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 pt-6 pb-3 bg-[#f7f9fb] flex flex-col justify-end">
         {loading && messages.length === 0 && (
@@ -88,37 +91,30 @@ const ChatBoxAdvisor = ({
             <span className="ml-2 text-gray-500">Loading messages...</span>
           </div>
         )}
-        
         {refreshing && messages.length > 0 && (
           <div className="flex items-center justify-center py-2 mb-2">
             <Spin size="small" />
             <span className="ml-2 text-xs text-gray-500">Refreshing messages...</span>
           </div>
         )}
-        
         {error && (
-          <div className="text-red-500 mb-3 p-2 bg-red-50 rounded-lg text-sm">
-            {error}
-          </div>
+          <div className="text-red-500 mb-3 p-2 bg-red-50 rounded-lg text-sm">{error}</div>
         )}
-        
         {!loading && messages.length === 0 && (
           <Empty description="No messages yet" className="mt-10" />
         )}
-        
         {messages.length > 0 && (
           <div className="text-xs text-gray-400 text-center mb-2">
             {messages.length} message{messages.length !== 1 ? 's' : ''}
           </div>
         )}
-        
         <List
           dataSource={messages}
           renderItem={msg => {
-            const key = msg.id;
-            const content = msg.content;
-            const senderId = msg.senderId;
-            const createdAt = msg.createdAt || msg.timestamp;
+            const key = msg.id || `msg-${Math.random()}`;
+            const content = msg.content || msg.message || 'No content';
+            const senderId = msg.senderId || msg.sender_id || 1;
+            const createdAt = msg.createdAt || msg.timestamp || msg.created_at || new Date().toISOString();
             return (
               <List.Item
                 key={key}
@@ -136,31 +132,20 @@ const ChatBoxAdvisor = ({
         />
         <div ref={messagesEndRef} />
       </div>
-      
       {/* Input */}
       <div className="p-[18px] border-t border-[#f0f0f0] bg-white flex gap-2.5 items-center shadow-[0_-2px_8px_rgba(0,0,0,0.02)]">
         <Input
           ref={inputRef}
           value={messageInput}
           onChange={e => setMessageInput(e.target.value)}
-          onPressEnter={async () => {
-            if (messageInput.trim() && !loading) {
-              await sendMessage(messageInput.trim());
-              setMessageInput('');
-            }
-          }}
+          onPressEnter={handleSend}
           placeholder="Type a message..."
           disabled={!openChat?.sessionId || loading}
           className="rounded-[22px] text-[16px] px-[18px] py-[10px]"
         />
         <Button
           type="primary"
-          onClick={async () => {
-            if (messageInput.trim() && !loading) {
-              await sendMessage(messageInput.trim());
-              setMessageInput('');
-            }
-          }}
+          onClick={handleSend}
           disabled={!messageInput.trim() || !openChat?.sessionId || loading}
           loading={loading}
           className="rounded-[22px] font-semibold text-[16px] min-w-[80px] h-[44px]"
