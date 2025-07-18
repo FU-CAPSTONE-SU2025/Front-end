@@ -23,33 +23,34 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push container to Github Regitry
+      - name: Create .env file for frontend build
+        run: |
+          cat <<EOF > .env
+          VITE_API_AISEA_API_BASEURL=${{ secrets.VITE_API_AISEA_API_BASEURL }}
+          VITE_API_GOOGLE_CLIENT_ID=${{ secrets.VITE_API_GOOGLE_CLIENT_ID }}
+          VITE_API_GOOGLE_CLIENT_SECRET=${{ secrets.VITE_API_GOOGLE_CLIENT_SECRET }}
+          VITE_THERE_IS_AN_EGG=${{ secrets.VITE_THERE_IS_AN_EGG }}
+          VITE_GITHUB_CLIENTID=${{ secrets.VITE_GITHUB_CLIENTID }}
+          VITE_GITHUB_CLIENTSECRET=${{ secrets.VITE_GITHUB_CLIENTSECRET }}
+          VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_DATABASE_URL=${{ secrets.VITE_FIREBASE_DATABASE_URL }}
+          VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID=${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+          VITE_CLOUDFLARE_SITE_KEY=${{ secrets.VITE_CLOUDFLARE_SITE_KEY }}
+          VITE_CLOUDFLARE_SECRET_KEY=${{ secrets.VITE_CLOUDFLARE_SECRET_KEY }}
+          VITE_CLOUDFLARE_VERIFICATION_URL=${{ secrets.VITE_CLOUDFLARE_VERIFICATION_URL }}
+          EOF
+      - name: Push container to Github Registry
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           push: true
           tags: ghcr.io/${{ secrets.RESPOSITORY_URL }}:latest
-          build-args: |
-            VITE_API_AISEA_API_BASEURL=${{secrets.VITE_API_AISEA_API_BASEURL}}
-            VITE_API_GOOGLE_CLIENT_ID=${{secrets.VITE_API_GOOGLE_CLIENT_ID}}
-            VITE_API_GOOGLE_CLIENT_SECRET=${{secrets.VITE_API_GOOGLE_CLIENT_SECRET}}
-            VITE_THERE_IS_AN_EGG=${{secrets.VITE_THERE_IS_AN_EGG}}
-            VITE_GITHUB_CLIENTID=${{secrets.VITE_GITHUB_CLIENTID}}
-            VITE_GITHUB_CLIENTSECRET=${{secrets.VITE_GITHUB_CLIENTSECRET}}
-            VITE_FIREBASE_STORAGE_BUCKET=${{secrets.VITE_FIREBASE_STORAGE_BUCKET}}
-            VITE_FIREBASE_API_KEY=${{secrets.VITE_FIREBASE_API_KEY}}
-            VITE_FIREBASE_AUTH_DOMAIN=${{secrets.VITE_FIREBASE_AUTH_DOMAIN}}
-            VITE_FIREBASE_DATABASE_URL=${{secrets.VITE_FIREBASE_DATABASE_URL}}
-            VITE_FIREBASE_PROJECT_ID=${{secrets.VITE_FIREBASE_PROJECT_ID}}
-            VITE_FIREBASE_MESSAGING_SENDER_ID=${{secrets.VITE_FIREBASE_MESSAGING_SENDER_ID}}
-            VITE_FIREBASE_APP_ID=${{secrets.VITE_FIREBASE_APP_ID}}
-            VITE_FIREBASE_MEASUREMENT_ID=${{secrets.VITE_FIREBASE_MEASUREMENT_ID}}
-            VITE_CLOUDFLARE_SITE_KEY=${{secrets.VITE_CLOUDFLARE_SITE_KEY}}
-            VITE_CLOUDFLARE_SECRET_KEY=${{secrets.VITE_CLOUDFLARE_SECRET_KEY}}
-
-        # The account is store in the ball, github secret key - only I know it, lol
-        # Push to containerize by running the script Dockerfile, check the code folder to see that file, also the Nginx config
 
       - name: Connect and Deploy to the DigitalOcean Droplet Ubuntu VM
         uses: appleboy/ssh-action@v1.0.3
@@ -63,26 +64,6 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             # Pull latest image from Github registry
             docker pull ghcr.io/${{ secrets.RESPOSITORY_URL }}:latest
-            # Create an .env file in the container
-            cat <<EOF > .env
-            VITE_API_AISEA_API_BASEURL=${{secrets.VITE_API_AISEA_API_BASEURL}}
-            VITE_API_GOOGLE_CLIENT_ID=${{secrets.VITE_API_GOOGLE_CLIENT_ID}}
-            VITE_API_GOOGLE_CLIENT_SECRET=${{secrets.VITE_API_GOOGLE_CLIENT_SECRET}}
-            VITE_THERE_IS_AN_EGG=${{secrets.VITE_THERE_IS_AN_EGG}}
-            VITE_GITHUB_CLIENTID=${{secrets.VITE_GITHUB_CLIENTID}}
-            VITE_GITHUB_CLIENTSECRET=${{secrets.VITE_GITHUB_CLIENTSECRET}}
-            VITE_FIREBASE_STORAGE_BUCKET=${{secrets.VITE_FIREBASE_STORAGE_BUCKET}}
-            VITE_FIREBASE_API_KEY=${{secrets.VITE_FIREBASE_API_KEY}}
-            VITE_FIREBASE_AUTH_DOMAIN=${{secrets.VITE_FIREBASE_AUTH_DOMAIN}}
-            VITE_FIREBASE_DATABASE_URL=${{secrets.VITE_FIREBASE_DATABASE_URL}}
-            VITE_FIREBASE_PROJECT_ID=${{secrets.VITE_FIREBASE_PROJECT_ID}}
-            VITE_FIREBASE_MESSAGING_SENDER_ID=${{secrets.VITE_FIREBASE_MESSAGING_SENDER_ID}}
-            VITE_FIREBASE_APP_ID=${{secrets.VITE_FIREBASE_APP_ID}}
-            VITE_FIREBASE_MEASUREMENT_ID=${{secrets.VITE_FIREBASE_MEASUREMENT_ID}}
-            VITE_CLOUDFLARE_SITE_KEY=${{secrets.VITE_CLOUDFLARE_SITE_KEY}}
-            VITE_CLOUDFLARE_SECRET_KEY=${{secrets.VITE_CLOUDFLARE_SECRET_KEY}}
-            VITE_CLOUDFLARE_VERIFICATION_URL=${{secrets.VITE_CLOUDFLARE_VERIFICATION_URL}}
-            EOF
             # Run the container
             docker stop ai-sea || true
             docker rm ai-sea || true
