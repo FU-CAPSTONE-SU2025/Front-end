@@ -47,7 +47,7 @@ export const uploadAvatar = async (file: File, userId: number, role: string): Pr
 // Delete avatar service with role-based storage
 export const deleteAvatar = async (avatarUrl: string, role: string): Promise<void> => {
   try {
-    console.log('Attempting to delete avatar with URL:', avatarUrl);
+    //console.log('Attempting to delete avatar with URL:', avatarUrl);
     
     let filePath: string;
     
@@ -88,14 +88,13 @@ export const deleteAvatar = async (avatarUrl: string, role: string): Promise<voi
       }
     }
     
-    console.log('Extracted file path:', filePath);
+
     
     // Create a reference to the file
     const storageRef = ref(storage, filePath);
     
     // Delete the file
     await deleteObject(storageRef);
-    console.log('Successfully deleted avatar:', filePath);
   } catch (error) {
     console.error('Error deleting avatar:', error);
     console.error('Avatar URL was:', avatarUrl);

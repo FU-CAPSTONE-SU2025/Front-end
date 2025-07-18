@@ -109,7 +109,7 @@ const StaffTranscript: React.FC = () => {
 
   // Simulate fetching students
   useEffect(() => {
-    console.log('Fetching students...');
+ 
     setStudents(mockStudents);
     // Replace with API call:
     // fetch('/api/students').then(res => res.json()).then(setStudents);

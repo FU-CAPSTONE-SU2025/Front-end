@@ -68,10 +68,9 @@ const ManagerSubjectSyllabus: React.FC = () => {
       try {
         // Try to fetch syllabus for this subject
         const result = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
-        console.log(result);
+
         if(result === null){
             // Check for 404 error (syllabus not found)
-            console.log("create a syllabus");
           const content = subject ? `${subject.subjectCode} - ${subject.subjectName}'s syllabus` : `Syllabus for subject ${subjectId}`;
             await addSyllabusMutation.mutateAsync({ subjectId: Number(subjectId), content });
             // Refetch syllabus after creation
@@ -106,12 +105,11 @@ const ManagerSubjectSyllabus: React.FC = () => {
   const handleAddAssessment = async (assessment: CreateSyllabusAssessment) => {
     if (!syllabus) return;
     try {
-      console.log('Adding assessment:', assessment);
       await addSyllabusAssessmentMutation.mutateAsync({
         ...assessment,
         syllabusId: syllabus.id
       });
-      console.log('Assessment added successfully');
+    
       // Refetch syllabus to update UI
       const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
@@ -124,12 +122,12 @@ const ManagerSubjectSyllabus: React.FC = () => {
   const handleAddMaterial = async (material: CreateSyllabusMaterial) => {
     if (!syllabus) return;
     try {
-      console.log('Adding material:', material);
+
       await addSyllabusMaterialMutation.mutateAsync({
         ...material,
         syllabusId: syllabus.id
       });
-      console.log('Material added successfully');
+
       const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
@@ -141,12 +139,12 @@ const ManagerSubjectSyllabus: React.FC = () => {
   const handleAddOutcome = async (outcome: CreateSyllabusOutcome) => {
     if (!syllabus) return;
     try {
-      console.log('Adding outcome:', outcome);
+
       await addSyllabusOutcomeMutation.mutateAsync({
         ...outcome,
         syllabusId: syllabus.id
       });
-      console.log('Outcome added successfully');
+    
       const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
@@ -158,12 +156,12 @@ const ManagerSubjectSyllabus: React.FC = () => {
   const handleAddSession = async (session: CreateSyllabusSession) => {
     if (!syllabus) return;
     try {
-      console.log('Adding session:', session);
+  
       await addSyllabusSessionMutation.mutateAsync({
         ...session,
         syllabusId: syllabus.id
       });
-      console.log('Session added successfully');
+  
       const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {

@@ -4,7 +4,6 @@ import { Descriptions, Avatar, Button, ConfigProvider, message } from 'antd';
 import { LogOut, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffProfile.module.css';
-import { ManagerBase } from '../../interfaces/IManager';
 import { getAuthState } from '../../hooks/useAuths';
 import { jwtDecode } from 'jwt-decode';
 import { JWTAccountProps } from '../../interfaces/IAccount';
@@ -44,8 +43,6 @@ const ManagerProfile: React.FC = () => {
   // Use the user profile hook
   const {
     getCurrentUserQuery,
-    updateProfileAsync,
-    isUpdatingProfile,
     isUpdateSuccess,
     updateError,
   } = useUserProfile();
@@ -58,7 +55,6 @@ const ManagerProfile: React.FC = () => {
   const getUserIdFromToken = () => {
     try {
       const data: JWTAccountProps = jwtDecode(accessToken ?? "N/A");
-      console.log('Decoded JWT data:', data);
       return data?.UserId ?? null;
     } catch (error) {
       console.error("Failed to decode token:", error);
@@ -69,7 +65,7 @@ const ManagerProfile: React.FC = () => {
   // Set userId on component mount
   useEffect(() => {
     const id = getUserIdFromToken();
-    console.log('Setting user ID:', id);
+
     setUserId(id);
   }, [accessToken]);
 
@@ -98,12 +94,7 @@ const ManagerProfile: React.FC = () => {
     }
   }, [currentUserError]);
 
-  // Debug animation states
-  useEffect(() => {
-    console.log('ManagerProfile animation triggered');
-    return () => console.log('ManagerProfile animation cleanup');
-  }, []);
-
+  
   // Helper function to get display value with loading state
   const getDisplayValue = (value: any, placeholder: string) => {
     if (isLoadingCurrentUser) return "Loading...";
@@ -166,7 +157,7 @@ const ManagerProfile: React.FC = () => {
             variants={leftCardVariants}
             initial="hidden"
             animate="visible"
-            onAnimationComplete={() => console.log('Left card animation complete')}
+         
           >
             <h2 className={styles.title}>Profile Information</h2>
             <div className={styles.avatarWrapper}>
@@ -189,7 +180,7 @@ const ManagerProfile: React.FC = () => {
               variants={rightCardVariants}
               initial="hidden"
               animate="visible"
-              onAnimationComplete={() => console.log('Right card animation complete')}
+          
             >
               <h2 className={styles.title}>Management Details</h2>
               <Descriptions column={1} bordered className={styles.description}>
@@ -207,7 +198,6 @@ const ManagerProfile: React.FC = () => {
               variants={actionCardVariants}
               initial="hidden"
               animate="visible"
-              onAnimationComplete={() => console.log('Action card animation complete')}
             >
               <h2 className={styles.title}>Actions</h2>
               <div className={styles.actionButtons}>

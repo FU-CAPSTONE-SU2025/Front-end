@@ -50,8 +50,6 @@ const ForgetPassword: React.FC = () => {
   const navigate = useNavigate();
   const [emailSent, setEmailSent] = useState<string | null>(null);
 
-  // Debug render
-  //console.log('ForgetPassword rendered:', { currentPage });
 
   // Handle email submission
   const handleClickReset = async () => {
@@ -90,7 +88,6 @@ const ForgetPassword: React.FC = () => {
         verificationCode: values.verificationCode,
         newPassword: values.newPassword,
       };
-      console.log('Confirm reset props:', props); // Debug log
       const response = await ResetPassword(props);
       if (response) {
         Modal.success({

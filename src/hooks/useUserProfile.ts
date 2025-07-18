@@ -14,9 +14,7 @@ export default function useUserProfile() {
         console.log('No valid user ID provided');
         return null;
       }
-      console.log('Fetching user profile for ID:', userId);
       const data = await GetCurrentStaffUser(userId);
-      console.log('Fetched user data:', data);
       return data;
     },
     enabled: !!userId && userId !== 0, // Only run if we have a valid userId
@@ -44,7 +42,7 @@ export default function useUserProfile() {
       };
       
       const result = await UpdateCurrentStaffUser(userId, updateData);
-      console.log('Update result:', result);
+
       return result;
     },
     onError: (error) => {

@@ -13,7 +13,7 @@ export const GetActiveUser = async ():Promise<ActiveAccountProps|null> => {
     }
     const result = await axiosRead(props)
     if (result.success) {
-        //console.log(result.data)
+    
         return result.data
     }
     else {
@@ -27,8 +27,6 @@ export const GetCurrentStaffUser = async (userId:number):Promise<AccountProps|nu
         data: null,
         url: userURL+`/staff/`+userId,
     }
-    const header = GetHeader()
-    console.log("Header: ",header) 
     const result = await axiosRead(props)
     if (result.success) {
         //console.log(result.data)
@@ -44,8 +42,6 @@ export const UpdateCurrentStaffUser = async (userId:number,data:UpdateAccountPro
         data: data,
         url: userURL+`/staff/`+userId,
     }
-    const header = GetHeader()
-    console.log("Header: ",header) 
     const result = await axiosUpdate(props)
     if (result.success) {
         // If backend returns 204 No Content, result.data will be undefined
@@ -62,8 +58,6 @@ export const GetCurrentStudentUser = async (userId:number):Promise<AccountProps|
         data: null,
         url: userURL+`/student/`+userId,
     }
-    const header = GetHeader()
-    console.log("Header: ",header) 
     const result = await axiosRead(props)
     if (result.success) {
         //console.log(result.data)
@@ -79,8 +73,6 @@ export const UpdateCurrentStudentUser = async (userId:number,data:AccountPropsCr
         data: data,
         url: userURL+`/student/`+userId,
     }
-    const header = GetHeader()
-    console.log("Header: ",header) 
     const result = await axiosUpdate(props)
     if (result.success) {
         if (typeof result.data === 'undefined') return true;

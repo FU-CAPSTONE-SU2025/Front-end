@@ -36,7 +36,6 @@ export const GetSubjectsInCombo = async (comboId:number): Promise<SubjectInCombo
   };
 
 export const AddSubjectToCombo = async (comboId:number,subjectId:number): Promise<Combo | null> => {
-    console.log(comboId,subjectId);
   const props = {
     data: null,
     url: comboURL+"/"+comboId+"/subjects/"+subjectId,

@@ -10,11 +10,9 @@ export const GetActiveManager = async (): Promise<AccountProps | null> => {
     data: null,
     url: userURL + `/active`,
   };
-  const header = GetHeader();
-  console.log("Header: ", header);
+
   const result = await axiosRead(props);
   if (result.success) {
-    console.log(result.data);
     return result.data;
   } else {
     console.log(result.error);

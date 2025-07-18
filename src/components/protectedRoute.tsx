@@ -14,7 +14,6 @@ export const protectedLoader = (allowedRoles: string[]) => {
        return redirect('/404');
     }
     // NOTE: Uncommment these code above in production, they are for protection, duh
-      console.log("Protected Route Check: ", userRole);
     return true; // Proceed to render the route
   };
 };

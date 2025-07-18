@@ -52,7 +52,6 @@ const Profile: React.FC = () => {
   const getUserIdFromToken = () => {
     try {
       const data: JWTAccountProps = jwtDecode(accessToken ?? "N/A");
-      console.log('Decoded JWT data:', data);
       return data?.UserId ?? null;
     } catch (error) {
       console.error("Failed to decode token:", error);
@@ -68,7 +67,6 @@ const Profile: React.FC = () => {
   // Set userId on component mount
   useEffect(() => {
     const id = getUserIdFromToken();
-    console.log('Setting user ID:', id);
     setUserId(id);
   }, [accessToken]);
 
@@ -101,7 +99,6 @@ const Profile: React.FC = () => {
   // Update form values when API data changes
   useEffect(() => {
     if (currentUserData) {
-      console.log('Setting form values from API data:', currentUserData);
       setFirstName(currentUserData.firstName || "");
       setLastName(currentUserData.lastName || "");
       setEmail(currentUserData.email || "");
@@ -193,8 +190,6 @@ const Profile: React.FC = () => {
         studentDataUpdateRequest: null
       };
 
-      console.log('Saving profile with data:', updateData);
-
       try {
         await updateProfileAsync({ userId, data: updateData });
       } catch (error) {
@@ -202,12 +197,6 @@ const Profile: React.FC = () => {
       }
     }
   };
-
-  const handleImport = () => {
-    setIsImportOpen(true);
-    setIsEditing(true);
-  };
-
   const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
     // Extract admin profile data from the imported data
     const adminProfileData = importedData['ADMIN_PROFILE'] || [];
@@ -215,11 +204,6 @@ const Profile: React.FC = () => {
     setIsImportOpen(false);
     // Refresh the account list
     refetch();
-  };
-
-  const handleAvatarUpdate = (newAvatarUrl: string) => {
-    // This will be handled by the AvatarUpload component automatically
-    console.log('Avatar updated:', newAvatarUrl);
   };
 
   const hasErrors = Object.values(errors).some((error) => error !== null);
@@ -244,7 +228,7 @@ const Profile: React.FC = () => {
               userRole="admin"
               currentUserData={currentUserData}
               size={120}
-              onAvatarUpdate={handleAvatarUpdate}
+    
               disabled={isLoadingCurrentUser}
               className={styles.avatar}
             />

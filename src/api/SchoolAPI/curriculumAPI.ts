@@ -42,7 +42,6 @@ export const AddSubjectToCurriculum = async (id: number, data: CreateSubjectToCu
       url: curriculumURL+"/"+id+"/subjects",
       headers: GetHeader(),
     };
-    console.log(data);
     const result = await axiosCreate(props);
     if (result.success) {
       return result.data;

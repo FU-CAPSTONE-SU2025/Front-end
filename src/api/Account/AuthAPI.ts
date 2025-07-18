@@ -79,15 +79,15 @@ export const RefreshToken = async () => {
     const newAccessToken = await axiosCreate(props)
     if (newAccessToken.success) {
         const {setAccessToken,setRefreshToken} = getAuthState()
-        //console.log(newAccessToken.data)
+  
         const tokens:TokenProps = newAccessToken.data
-        //console.log("New token: ",newAccessToken.data)
+
           setAccessToken(tokens.accessToken);
           setRefreshToken(tokens.refreshToken);
         return true
     }
     else {
-        console.log(newAccessToken.error)
+        //console.log(newAccessToken.error)
         return false
     }
 }
@@ -117,7 +117,7 @@ export const ResetPassword = async (data:any) => {
     }
     const result = await axiosCreate(props)
     if (result.success) {
-        console.log("Code?",result.data)
+       //console.log("Code?",result.data)
         return result.data
     }
     else {

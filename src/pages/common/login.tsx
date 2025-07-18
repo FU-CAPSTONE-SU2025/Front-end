@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Card, Form, Input, Typography } from 'antd';
+import { Button, Card, Form, Input, Typography, message } from 'antd';
 import { useGoogleLogin } from '@react-oauth/google';
 import { LoginGoogleAccount, LoginAccount } from '../../api/Account/AuthAPI';
 import { GoogleAccountRequestProps, LoginProps } from '../../interfaces/IAccount';
@@ -44,46 +44,44 @@ const Login: React.FC = () => {
       try {
         
         const { access_token } = tokenResponse;
-        //console.log('Google Account:', access_token);
+    
         const userAccount: GoogleAccountRequestProps = await LoginGoogleAccount(access_token);
         if (userAccount!=null) {
-          alert('Login successful');
-          //console.log("User: ",userAccount),
+          message.success('Login successful');
+
           setAccessToken(userAccount.accessToken);
           setRefreshToken(userAccount.refreshToken);
           login(userAccount.roleId)
           RoleNavigation(userAccount.roleId)
          
         }else{
-          alert('Login failed. Please try again.');
+          message.error('Login failed. Please try again.');
         }
 
       } catch (error) {
         console.error('Google Login Error:', error);
-        alert('Google Login failed. Please try again.');
+        message.error('Google Login failed. Please try again.');
       } finally {
         setIsGoogleLoading(false);
       }
     },
     onError: (error) => {
       console.error('Google Login Failed:', error);
-      alert('Google Login failed. Please try again.');
+      message.error('Google Login failed. Please try again.');
     },
   });
   // Login with username and password - with the added authentication check
   const onNormalLogin = async(values: LoginProps) => {
-    //console.log('Login values:', values);
     setIsEmailLoading(true);
     const userAccount:GoogleAccountRequestProps = await LoginAccount(values)
-    console.log('User Account:', userAccount);
     if (userAccount) {
-      alert('Login successful');
+      message.success('Login successful');
           setAccessToken(userAccount.accessToken);
           setRefreshToken(userAccount.refreshToken);
           login(userAccount.roleId)
           RoleNavigation(userAccount.roleId)
     }else{
-      alert('Login failed. Please try again.');
+      message.error('Login failed. Please try again.');
     }
     setIsEmailLoading(false);
   };
@@ -140,7 +138,7 @@ const Login: React.FC = () => {
               Login
             </Button>
             <Typography className={styles.comment}>
-                * Note: Login using your FPTU account. Via '@fpt.edu.vn' or FEID email
+                * Note: Login using your FPTU account. Via '@fpt.edu.vn' or FEID account
               </Typography>
           </Form.Item>
           <Form.Item>

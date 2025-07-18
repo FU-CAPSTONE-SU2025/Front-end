@@ -11,8 +11,7 @@ export const GetActiveUser = async ():Promise<TokenProps|null> => {
         data: null,
         url: userURL+`/active`,
     }
-    const header = GetHeader()
-    console.log("Header: ",header) 
+
     const result = await axiosRead(props)
     if (result.success) {
         console.log(result.data)

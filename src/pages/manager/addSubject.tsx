@@ -114,13 +114,6 @@ const AddSubjectPage: React.FC = () => {
 
   // Handle final confirmation
   const handleConfirm = () => {
-    // Here you would typically send the data to your API
-    console.log('Final subject data:', previewData);
-    console.log('Final material data:', materialsData);
-    console.log('Final outcome data:', outcomesData);
-    console.log('Final session data:', sessionsData);
-    console.log('Final assessment data:', assessmentsData);
-    
     message.success('All data created successfully!');
     navigate('/manager/subject');
   };

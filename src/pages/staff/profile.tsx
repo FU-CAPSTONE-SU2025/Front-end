@@ -58,7 +58,6 @@ const StaffProfile: React.FC = () => {
   const getUserIdFromToken = () => {
     try {
       const data: JWTAccountProps = jwtDecode(accessToken ?? "N/A");
-      console.log('Decoded JWT data:', data);
       return data?.UserId ?? null;
     } catch (error) {
       console.error("Failed to decode token:", error);
@@ -69,7 +68,7 @@ const StaffProfile: React.FC = () => {
   // Set userId on component mount
   useEffect(() => {
     const id = getUserIdFromToken();
-    console.log('Setting user ID:', id);
+
     setUserId(id);
   }, [accessToken]);
 
@@ -98,11 +97,6 @@ const StaffProfile: React.FC = () => {
     }
   }, [currentUserError]);
 
-  // Debug animation states
-  useEffect(() => {
-    console.log('StaffProfile animation triggered');
-    return () => console.log('StaffProfile animation cleanup');
-  }, []);
 
   // Helper function to get display value with loading state
   const getDisplayValue = (value: any, placeholder: string) => {
@@ -166,7 +160,7 @@ const StaffProfile: React.FC = () => {
             variants={leftCardVariants}
             initial="hidden"
             animate="visible"
-            onAnimationComplete={() => console.log('Left card animation complete')}
+         
           >
             <h2 className={styles.title}>Profile Information</h2>
             <div className={styles.avatarWrapper}>
@@ -189,7 +183,6 @@ const StaffProfile: React.FC = () => {
               variants={rightCardVariants}
               initial="hidden"
               animate="visible"
-              onAnimationComplete={() => console.log('Right card animation complete')}
             >
               <h2 className={styles.title}>Staff's Details</h2>
               <Descriptions column={1} bordered className={styles.description}>
@@ -207,7 +200,6 @@ const StaffProfile: React.FC = () => {
               variants={actionCardVariants}
               initial="hidden"
               animate="visible"
-              onAnimationComplete={() => console.log('Action card animation complete')}
             >
               <h2 className={styles.title}>Actions</h2>
               <div className={styles.actionButtons}>
