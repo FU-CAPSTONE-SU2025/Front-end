@@ -1,12 +1,12 @@
-import { axiosCreate, axiosRead, throwApiError } from "../AxiosCRUD";
-import { baseUrl, GetHeader } from "../template";
+import { axiosCreate, throwApiError } from "../AxiosCRUD";
+import { baseUrl } from "../template";
 import { LoginProps } from "../../interfaces/IAccount";
 import { TokenProps } from "../../interfaces/IAuthen";
-import { getAuthState, useAuths } from "../../hooks/useAuths";
+import { getAuthState } from "../../hooks/useAuths";
 // const accountUrl = baseUrl+"/account"
 const accountUrl = baseUrl+"/Auth"
 const googleLoginURL = baseUrl+"/Auth/google"
-
+const cloudflareVerificationURL = import.meta.env.VITE_CLOUDFLARE_VERIFICATION_URL
 
 export const LoginGoogleAccount = async (data: string) => {
     const googleHeader = {
@@ -39,6 +39,20 @@ export const LoginAccount = async (data: LoginProps) => {
     else {
         //throwApiError(result);
         return null; 
+    }
+}
+
+export const CloudflareVerification = async (data:any) => {
+    const props = {
+        data: data,
+        url: cloudflareVerificationURL,
+    }
+    const result = await axiosCreate(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        return null;
     }
 }
 
