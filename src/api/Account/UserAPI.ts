@@ -1,6 +1,6 @@
  import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import {BulkAccountPropsCreate, AccountProps, AccountPropsCreate, ActiveAccountProps, UpdateAccountProps } from "../../interfaces/IAccount";
+import {BulkAccountPropsCreate, AccountProps, AccountPropsCreate, ActiveAccountProps, UpdateAccountProps, UpdateAvatarProps } from "../../interfaces/IAccount";
 
 
 
@@ -165,6 +165,24 @@ export const UpdateUser = async (userId:number,data:any):Promise<AccountProps|nu
         return null
     }
 }
+
+export const UpdateUserAvatar = async (userId:number,data:UpdateAvatarProps):Promise<AccountProps|null|true> => {
+    const props = {
+        data: data,
+        url: userURL+`/`+userId+`/update-avatar`,
+        headers: GetHeader()
+    }
+    const result = await axiosUpdate(props)
+    if (result.success) {
+        if (typeof result.data === 'undefined') return true;
+        return result.data
+    }
+    else {
+        console.log(result.error)
+        return null
+    }
+}
+
 export const DisableUser = async (userId:number):Promise<AccountProps|null> => {
     const props = {
         data: null,
@@ -174,7 +192,9 @@ export const DisableUser = async (userId:number):Promise<AccountProps|null> => {
     const result = await axiosDelete(props)
     if (result.success) {
         //console.log(result.data)
+        
         return result.data
+
     }
     else {
         console.log(result.error)

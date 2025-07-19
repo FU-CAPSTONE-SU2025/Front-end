@@ -96,3 +96,7 @@ export interface GoogleAccountRequestProps {
     refreshToken: string
     username: string
   }
+
+export interface UpdateAvatarProps{
+  url: string
+}
