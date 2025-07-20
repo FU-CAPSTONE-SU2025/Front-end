@@ -910,7 +910,7 @@
   opacity: 0.85;
 }
 
-@media (max-width: 1400px) {
+@media (max-width: 1200px) {
   .twoCardContainer {
     grid-template-columns: 0.5fr 1fr 340px;
     max-width: 100vw;
@@ -920,7 +920,7 @@
   }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1000px) {
   .twoCardContainer {
     grid-template-columns: 1fr;
     gap: 1.2rem;
@@ -937,7 +937,7 @@
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .twoCardContainer {
     grid-template-columns: 1fr;
     flex-direction: column;
