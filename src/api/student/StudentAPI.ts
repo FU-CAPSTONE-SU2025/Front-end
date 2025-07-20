@@ -104,3 +104,137 @@ export const DisableUser = async (userId:number):Promise<AccountProps|null> => {
         return null
     }
 }
+
+// Interface for advisor data
+export interface AdvisorData {
+    id: number;
+    username: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
+    avatarUrl: string | null;
+    roleName: string;
+    status: number;
+    staffDataDetailResponse: {
+        id: number;
+        campus: string;
+        position: string;
+        department: string;
+        startWorkAt: string;
+        endWorkAt: string | null;
+    } | null;
+}
+
+export interface PagedAdvisorData {
+    items: AdvisorData[];
+    totalCount: number;
+    pageNumber: number;
+    pageSize: number;
+}
+
+export const GetActiveAdvisors = async (pageNumber: number = 1, pageSize: number = 10): Promise<PagedAdvisorData | null> => {
+    const params = new URLSearchParams({
+        pageNumber: pageNumber.toString(),
+        pageSize: pageSize.toString()
+    });
+    
+    const props = {
+        data: null,
+        url: baseUrl + `/User/advisors/active/paged?` + params.toString(),
+        headers: GetHeader()
+    }
+    
+    const result = await axiosRead(props)
+    if (result.success) {
+        console.log("Advisors data:", result.data)
+        return result.data
+    }
+    else {
+        console.log("Error fetching advisors:", result.error)
+        return null
+    }
+}
+
+// Interface for leave schedule data
+export interface LeaveScheduleData {
+    id: number;
+    staffProfileId: number;
+    startDateTime: string;
+    endDateTime: string;
+    staffProfile: {
+        id: number;
+        campus: string;
+        department: string;
+        position: string;
+        startWorkAt: string;
+        endWorkAt: string | null;
+        userId: number;
+        user: any;
+        advisorySessions1to1: any[];
+        bookingAvailabilities: any[];
+        leaveSchedules: any[];
+        bookedMeetings: any[];
+        createdAt: string;
+        updatedAt: string | null;
+        deletedAt: string | null;
+        isDeleted: boolean;
+    };
+    createdAt: string;
+}
+
+export interface PagedLeaveScheduleData {
+    items: LeaveScheduleData[];
+    totalCount: number;
+    pageNumber: number;
+    pageSize: number;
+}
+
+// Interface for booking availability data
+export interface BookingAvailabilityData {
+    id: number;
+    startTime: string;
+    endTime: string;
+    dayInWeek: number;
+    staffProfileId: number;
+    staffProfile: any;
+    createdAt: string;
+}
+
+// Get upcoming leave schedules for an advisor
+export const GetUpcomingLeaveSchedules = async (staffProfileId: number): Promise<PagedLeaveScheduleData | null> => {
+    const props = {
+        data: null,
+        url: baseUrl + `/LeaveSche/upcoming/${staffProfileId}`,
+        headers: GetHeader()
+    }
+    
+    const result = await axiosRead(props)
+    if (result.success) {
+        console.log("Leave schedules data:", result.data)
+        return result.data
+    }
+    else {
+        console.log("Error fetching leave schedules:", result.error)
+        return null
+    }
+}
+
+// Get booking availability for an advisor
+export const GetBookingAvailability = async (staffProfileId: number): Promise<BookingAvailabilityData[] | null> => {
+    const props = {
+        data: null,
+        url: baseUrl + `/BookingAvailability/${staffProfileId}`,
+        headers: GetHeader()
+    }
+    
+    const result = await axiosRead(props)
+    if (result.success) {
+        console.log("Booking availability data:", result.data)
+        return result.data
+    }
+    else {
+        console.log("Error fetching booking availability:", result.error)
+        return null
+    }
+}
