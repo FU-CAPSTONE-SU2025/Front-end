@@ -23,3 +23,75 @@ export const mockApiLogs = [
   { id: 'log9', userId: 'SE789012', role: 'Student', apiType: 'GET /grades', timestamp: '2025-06-03 12:00:00' },
   { id: 'log10', userId: 'AD345678', role: 'Advisor', apiType: 'POST /meeting', timestamp: '2025-06-03 12:30:00' },
 ];
+
+// Mock SubjectVersion data
+export const mockSubjectVersions = [
+  // Subject 1 has 3 versions
+  { id: 1, subjectId: 1, isActive: true, isApproved: true, versionNumber: 1, decisionNoDate: new Date('2022-01-01') },
+  { id: 2, subjectId: 1, isActive: false, isApproved: true, versionNumber: 2, decisionNoDate: new Date('2022-06-01') },
+  { id: 3, subjectId: 1, isActive: true, isApproved: false, versionNumber: 3, decisionNoDate: new Date('2023-01-01') },
+  // Subject 2 has 2 versions
+  { id: 4, subjectId: 2, isActive: true, isApproved: true, versionNumber: 1, decisionNoDate: new Date('2022-02-01') },
+  { id: 5, subjectId: 2, isActive: true, isApproved: true, versionNumber: 2, decisionNoDate: new Date('2023-02-01') },
+  // Subject 3 has 1 version
+  { id: 6, subjectId: 3, isActive: true, isApproved: true, versionNumber: 1, decisionNoDate: new Date('2022-03-01') },
+];
+
+// Add mock syllabuses for all subject/version combinations for subjectId 1 and 2, two versions each
+export const mockSyllabuses = [
+  // Subject 1, Version 1
+  {
+    id: 1,
+    subjectId: 1,
+    versionId: 1,
+    content: 'Syllabus for Advanced Calculus v1',
+    assessments: [],
+    learningMaterials: [],
+    learningOutcomes: [],
+    sessions: [],
+  },
+  // Subject 1, Version 2
+  {
+    id: 2,
+    subjectId: 1,
+    versionId: 2,
+    content: 'Syllabus for Advanced Calculus v2',
+    assessments: [],
+    learningMaterials: [],
+    learningOutcomes: [],
+    sessions: [],
+  },
+  // Subject 2, Version 1
+  {
+    id: 3,
+    subjectId: 2,
+    versionId: 21,
+    content: 'Syllabus for Modern Physics v1',
+    assessments: [],
+    learningMaterials: [],
+    learningOutcomes: [],
+    sessions: [],
+  },
+  // Subject 2, Version 2
+  {
+    id: 4,
+    subjectId: 2,
+    versionId: 22,
+    content: 'Syllabus for Modern Physics v2',
+    assessments: [],
+    learningMaterials: [],
+    learningOutcomes: [],
+    sessions: [],
+  },
+];
+
+// Update mockSubjectPrerequisites to include version_id
+export const mockSubjectPrerequisites = [
+  // For version 1 of subject 1
+  { subject_id: 1, version_id: 1, prerequisite_subject_id: 101, subjectCode: 'MATH101', subjectName: 'Calculus I' },
+  { subject_id: 1, version_id: 1, prerequisite_subject_id: 102, subjectCode: 'PHYS101', subjectName: 'Physics I' },
+  // For version 2 of subject 1
+  { subject_id: 1, version_id: 2, prerequisite_subject_id: 103, subjectCode: 'CHEM101', subjectName: 'Chemistry I' },
+  // For version 1 of subject 2
+  { subject_id: 2, version_id: 4, prerequisite_subject_id: 104, subjectCode: 'BIO101', subjectName: 'Biology I' },
+];

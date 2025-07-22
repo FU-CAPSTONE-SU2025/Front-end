@@ -1,14 +1,13 @@
-import React, { useRef, useState } from 'react';
-import { Avatar, Progress, message } from 'antd';
+import React, { useRef, useState, useEffect } from 'react';
+import { Avatar, Progress } from 'antd';
 import { UserOutlined, EditOutlined, DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { useAvatarUpload } from '../../hooks/useAvatarUpload';
+import useUserProfile from '../../hooks/useUserProfile';
 
 interface AvatarUploadProps {
   userId: number;
   currentAvatarUrl?: string;
   userRole: 'student' | 'staff' | 'manager' | 'advisor' | 'admin';
-  currentUserData?: any; // Current user data to preserve during updates
   size?: number | { [key: string]: number };
   onAvatarUpdate?: (newAvatarUrl: string) => void;
   showDeleteButton?: boolean;
@@ -20,7 +19,6 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   userId,
   currentAvatarUrl,
   userRole,
-  currentUserData,
   size = 100,
   onAvatarUpdate,
   showDeleteButton = true,
@@ -29,12 +27,17 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localAvatarUrl, setLocalAvatarUrl] = useState(currentAvatarUrl);
+  
+  // Update localAvatarUrl when currentAvatarUrl prop changes
+  useEffect(() => {
+    setLocalAvatarUrl(currentAvatarUrl);
+  }, [currentAvatarUrl]);
 
-  const { handleAvatarUpload, handleAvatarDelete, isUploading, uploadProgress } = useAvatarUpload({
+  
+  const { handleAvatarUpload, handleAvatarDelete, isAvatarUploading } = useUserProfile({
     userId,
     currentAvatarUrl: localAvatarUrl,
     userRole,
-    currentUserData,
     onAvatarUpdate: (newAvatarUrl) => {
       setLocalAvatarUrl(newAvatarUrl);
       if (onAvatarUpdate) {
@@ -44,7 +47,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   });
 
   const handleEditAvatar = () => {
-    if (!disabled && !isUploading) {
+    if (!disabled && !isAvatarUploading) {
       fileInputRef.current?.click();
     }
   };
@@ -57,21 +60,13 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   };
 
   const handleDeleteAvatar = async () => {
-    if (!disabled && !isUploading) {
+    if (!disabled && !isAvatarUploading) {
       await handleAvatarDelete();
     }
   };
 
   const getPlaceholderAvatar = () => {
-    const roleNames = {
-      student: 'Student',
-      staff: 'Staff',
-      manager: 'Manager',
-      advisor: 'Advisor',
-      admin: 'Admin'
-    };
-    const roleName = roleNames[userRole] || 'User';
-    return `https://ui-avatars.com/api/?name=${roleName}&background=1E40AF&color=ffffff&size=${typeof size === 'number' ? size : 120}`;
+    return `https://ui-avatars.com/api/?name=${userRole}&background=1E40AF&color=ffffff&size=${typeof size === 'number' ? size : 120}`;
   };
 
   return (
@@ -91,7 +86,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         />
         
         {/* Upload Progress Overlay */}
-        {isUploading && (
+        {isAvatarUploading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -99,16 +94,16 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           >
             <Progress 
               type="circle" 
-              percent={uploadProgress} 
+              percent={100} 
               size={typeof size === 'number' ? size * 0.4 : 60}
               strokeColor="#10B981"
-              format={() => `${uploadProgress}%`}
+              format={() => 'Uploading...'}
             />
           </motion.div>
         )}
         
         {/* Loading Overlay */}
-        {isUploading && (
+        {isAvatarUploading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -125,7 +120,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
             className="absolute bottom-2 right-2 w-8 h-8 flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white border-2 border-white rounded-full shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-300"
             style={{ zIndex: 2 }}
             onClick={handleEditAvatar}
-            disabled={isUploading}
+            disabled={isAvatarUploading}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             aria-label="Edit avatar"
@@ -141,7 +136,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
             className="absolute bottom-2 left-2 w-8 h-8 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white border-2 border-white rounded-full shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-300"
             style={{ zIndex: 2 }}
             onClick={handleDeleteAvatar}
-            disabled={isUploading}
+            disabled={isAvatarUploading}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             aria-label="Delete avatar"
@@ -158,11 +153,11 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         ref={fileInputRef}
         style={{ display: 'none' }}
         onChange={handleAvatarChange}
-        disabled={isUploading || disabled}
+        disabled={isAvatarUploading || disabled}
       />
       
       {/* Upload Status Message */}
-      {isUploading && (
+      {isAvatarUploading && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

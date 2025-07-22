@@ -117,7 +117,7 @@
   backdrop-filter: blur(28px) saturate(180%);
   padding: 2rem;
   margin-bottom: 1.5rem;
-  animation: fadeInUp 1s cubic-bezier(.4,1.4,.6,1) 0.2s both;
+  /* animation: fadeInUp 1s cubic-bezier(.4,1.4,.6,1) 0.2s both; */
 }
 
 @keyframes fadeInUp {
@@ -378,6 +378,22 @@
 
 .backButton:active {
   transform: translateY(0);
+}
+
+/* Center Ant Design Tabs buttons */
+.ant-tabs-nav-list {
+  justify-content: center !important;
+}
+
+/* Force the nav to be flex and center the tab list */
+.ant-tabs-nav {
+  display: flex !important;
+  justify-content: center !important;
+}
+.ant-tabs-nav-list {
+  display: flex !important;
+  justify-content: center !important;
+  width: auto !important;
 }
 
 @media (max-width: 1024px) {

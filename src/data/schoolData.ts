@@ -23,6 +23,7 @@ export const syllabuses: Syllabus[] = [
   { 
     id: 1, 
     subjectId: 1, 
+    versionId: 1, // Added to fix TS error
     content: 'Syllabus for CS101',
     assessments: [],
     learningMaterials: [],
@@ -32,6 +33,7 @@ export const syllabuses: Syllabus[] = [
   { 
     id: 2, 
     subjectId: 2, 
+    versionId: 2, // Added to fix TS error
     content: 'Syllabus for CS102',
     assessments: [],
     learningMaterials: [],
@@ -64,9 +66,9 @@ export const comboSubjects: ComboSubject[] = [
 ];
 
 export const subjectPrerequisites: SubjectPrerequisite[] = [
-  { subject_id: 2, prerequisite_subject_id: 1 }, // CS102 requires CS101
-  { subject_id: 4, prerequisite_subject_id: 3 }, // AI202 requires AI201
-  { subject_id: 5, prerequisite_subject_id: 2 }, // CS201 requires CS102
+  { subject_id: 2, prerequisite_subject_id: 1, version_id: 1 }, // CS102 requires CS101
+  { subject_id: 4, prerequisite_subject_id: 3, version_id: 2 }, // AI202 requires AI201
+  { subject_id: 5, prerequisite_subject_id: 2, version_id: 3 }, // CS201 requires CS102
 ];
 
 // Mock fetch functions

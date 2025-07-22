@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, Input, DatePicker, message } from 'antd';
+import {DatePicker, message } from 'antd';
 import dayjs from 'dayjs';
 import { jwtDecode } from 'jwt-decode';
 import styles from '../../css/admin/account.module.css';
@@ -10,11 +10,9 @@ import AvatarUpload from '../../components/common/AvatarUpload';
 import { getAuthState } from '../../hooks/useAuths';
 import useActiveUserData from '../../hooks/useActiveUserData';
 import useUserProfile from '../../hooks/useUserProfile';
-import { AccountProps, JWTAccountProps } from '../../interfaces/IAccount';
+import { JWTAccountProps } from '../../interfaces/IAccount';
 import { validateEmail } from '../../components/common/validation';
 import { useNavigate } from 'react-router';
-
-const { TextArea } = Input;
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -27,27 +25,15 @@ const Profile: React.FC = () => {
   const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [username, setUsername] = useState<string>("");
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [userId, setUserId] = useState<number | null>(null);
   const { accessToken } = getAuthState();
   const { categorizedData, refetch } = useActiveUserData();
-  
-  // Use the new user profile hook
-  const {
-    getCurrentUserQuery,
-    updateProfileAsync,
-    isUpdatingProfile,
-    isUpdateSuccess,
-    updateError,
-  } = useUserProfile();
-
-  // Get the user query using the current userId
-  const userQuery = getCurrentUserQuery(userId);
-  const { data: currentUserData, isLoading: isLoadingCurrentUser, error: currentUserError, refetch: refetchUser } = userQuery;
   const {logout} = getAuthState()
   const navigate = useNavigate();
+  
   // Get user ID from JWT token
   const getUserIdFromToken = () => {
     try {
@@ -59,6 +45,26 @@ const Profile: React.FC = () => {
     }
   };
 
+  // Use the unified user profile hook for both profile and avatar management
+  const {
+    getCurrentUserQuery,
+    updateProfileAsync,
+    isUpdatingProfile,
+    isUpdateSuccess,
+    updateError,
+  } = useUserProfile({
+    userId: userId || 0,
+    userRole: 'admin',
+    onAvatarUpdate: () => {
+      // Refresh user data after avatar update
+      refetchUser();
+    }
+  });
+
+  // Get the user query using the current userId
+  const userQuery = getCurrentUserQuery(userId);
+  const { data: currentUserData, isLoading: isLoadingCurrentUser, error: currentUserError, refetch: refetchUser } = userQuery;
+  //console.log('currentUserData: ',currentUserData)
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -76,13 +82,7 @@ const Profile: React.FC = () => {
     return value && String(value).trim() !== "" ? String(value) : placeholder;
   };
 
-  const getDateValue = () => {
-    if (isLoadingCurrentUser) return null;
-    if (currentUserData && currentUserData.dateOfBirth) {
-      return dayjs(currentUserData.dateOfBirth);
-    }
-    return null; // Will show placeholder in DatePicker
-  };
+
 
   const getDisplayName = () => {
     if (isLoadingCurrentUser) return "Loading...";
@@ -95,6 +95,10 @@ const Profile: React.FC = () => {
     if (isLoadingCurrentUser) return "Loading...";
     return getDisplayValue(currentUserData?.roleName, "AISEA Administrator");
   };
+  const getAvatarUrl = () => {
+    if (isLoadingCurrentUser) return "Loading...";
+    return currentUserData?.avatarUrl;
+  };
 
   // Update form values when API data changes
   useEffect(() => {
@@ -104,8 +108,12 @@ const Profile: React.FC = () => {
       setEmail(currentUserData.email || "");
       setUsername(currentUserData.username || "");
       if (currentUserData.dateOfBirth) {
-        setSelectedDate(new Date(currentUserData.dateOfBirth));
+        const dateObj = dayjs(currentUserData.dateOfBirth);
+        setSelectedDate(dateObj.isValid() ? dateObj : null);
+      } else {
+        setSelectedDate(null);
       }
+
     }
   }, [currentUserData]);
 
@@ -141,7 +149,7 @@ const Profile: React.FC = () => {
     refetch();
   }, [refetch]);
 
-  const handleDateChange = (date: Date | null) => {
+  const handleDateChange = (date: dayjs.Dayjs | null) => {
     setSelectedDate(date);
   };
 
@@ -159,7 +167,10 @@ const Profile: React.FC = () => {
       setEmail(currentUserData.email || "");
       setUsername(currentUserData.username || "");
       if (currentUserData.dateOfBirth) {
-        setSelectedDate(new Date(currentUserData.dateOfBirth));
+        const dateObj = dayjs(currentUserData.dateOfBirth);
+        setSelectedDate(dateObj.isValid() ? dateObj : null);
+      } else {
+        setSelectedDate(null);
       }
     }
   };
@@ -168,7 +179,6 @@ const Profile: React.FC = () => {
     const newErrors: { [key: string]: string | null } = {
       email: validateEmail(email),
     };
-
     setErrors(newErrors);
 
     if (Object.values(newErrors).every((error) => error === null)) {
@@ -182,16 +192,17 @@ const Profile: React.FC = () => {
         lastName: lastName.trim(),
         email: email.trim(),
         username: username.trim(),
-        dateOfBirth: selectedDate ? dayjs(selectedDate).format('YYYY-MM-DD') : new Date(),
+        dateOfBirth: selectedDate ? selectedDate.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
         avatarUrl: currentUserData?.avatarUrl || '',
         roleId: 1, // Default admin role ID
         status: 1,
-        staffDataUpdateRequest: null,
+        staffDataUpdateRequest: currentUserData?.staffDataDetailResponse || null,
         studentDataUpdateRequest: null
       };
-
+      //console.log('updateData: ',updateData)
       try {
         await updateProfileAsync({ userId, data: updateData });
+        refetch();
       } catch (error) {
         console.error("Failed to update profile:", error);
       }
@@ -224,11 +235,9 @@ const Profile: React.FC = () => {
           <div className={styles.profileAvatar}>
             <AvatarUpload
               userId={userId || 0}
-              currentAvatarUrl={currentUserData?.avatarUrl}
+              currentAvatarUrl={getAvatarUrl()} 
               userRole="admin"
-              currentUserData={currentUserData}
               size={120}
-    
               disabled={isLoadingCurrentUser}
               className={styles.avatar}
             />
@@ -258,7 +267,7 @@ const Profile: React.FC = () => {
             </div>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Date of Birth</span>
-              <span className={styles.infoValue}>{isEditing ? <DatePicker className={styles.datePicker} onChange={date => handleDateChange(date ? date.toDate() : null)} value={getDateValue()} placeholder="Select date of birth" format="YYYY-MM-DD" allowClear disabled={isLoadingCurrentUser} size="large" /> : getDisplayValue(currentUserData?.dateOfBirth ? dayjs(currentUserData.dateOfBirth).format('YYYY-MM-DD') : '', "N/A")}</span>
+              <span className={styles.infoValue}>{isEditing ? <DatePicker className={styles.datePicker} onChange={handleDateChange} value={selectedDate && selectedDate.isValid() ? selectedDate : null} placeholder="Select date of birth" format="YYYY-MM-DD" allowClear disabled={isLoadingCurrentUser} size="large" /> : getDisplayValue(currentUserData?.dateOfBirth ? dayjs(currentUserData.dateOfBirth).format('YYYY-MM-DD') : '', "N/A")}</span>
             </div>
           </div>
           {hasErrors && (

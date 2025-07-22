@@ -38,6 +38,7 @@ export interface SubjectInCombo {
 export interface Syllabus {
   id: number; // Primary key
   subjectId: number; // Foreign key referencing Subject.id
+  versionId: number | null; // Foreign key referencing SubjectVersion.id
   content: string; // text
   assessments: SyllabusAssessment[];
   learningMaterials: SyllabusMaterial[];
@@ -75,6 +76,7 @@ export interface SubjectWithCurriculumInfo extends Subject {
 // Interface for Subject_Prerequisites table (junction table)
 export interface SubjectPrerequisite {
   subject_id: number; // The subject that has a prerequisite
+  version_id: number | null; // The version of the subject that has a prerequisite
   prerequisite_subject_id: number; // The subject that is the prerequisite
 }
 
@@ -164,6 +166,30 @@ export interface UpdateCurriculum {
   effectiveDate: Date,
 }
 
+export interface SubjectVersion {
+  id: number,
+  subjectId: number,
+  isActive: boolean,
+  isApproved: boolean,
+  versionNumber: number,
+  decisionNoDate: Date,
+}
+
+export interface CreateSubjectVersion {
+  subjectId: number,
+  isActive: boolean,
+  versionNumber: number,
+  versionCode: string,
+  versionEffectiveDate: Date,
+}
+
+export interface UpdateSubjectVersion {
+  isActive: boolean,
+  versionNumber: number,
+  versionCode: string,
+  versionEffectiveDate: Date,
+}
+
 // ==================== RESPONSE TYPES ====================
 
 // API Response wrapper
@@ -187,12 +213,14 @@ export type SubjectResponse = ApiResponse<Subject>;
 export type SyllabusResponse = ApiResponse<Syllabus>;
 export type ComboResponse = ApiResponse<Combo>;
 export type ProgramResponse = ApiResponse<Program>;
+export type SubjectVersionResponse = ApiResponse<SubjectVersion>;
 
 // Paged response types
 export type PagedSubjectResponse = PagedResponse<Subject>;
 export type PagedSyllabusResponse = PagedResponse<Syllabus>;
 export type PagedComboResponse = PagedResponse<Combo>;
 export type PagedProgramResponse = PagedResponse<Program>;
+export type PagedSubjectVersionResponse = PagedResponse<SubjectVersion>;
 
 // Create operation response types
 export type CreateSubjectResponse = ApiResponse<Subject>;
@@ -202,6 +230,7 @@ export type CreateSyllabusAssessmentsResponse = ApiResponse<SyllabusAssessment>;
 export type CreateSyllabusMaterialsResponse = ApiResponse<SyllabusMaterial>;
 export type CreateSyllabusOutcomesResponse = ApiResponse<SyllabusOutcome>;
 export type CreateSyllabusSessionsResponse = ApiResponse<SyllabusSession>;
+export type CreateSubjectVersionResponse = ApiResponse<SubjectVersion>;
 
 // Additional interfaces for syllabus components
 export interface SyllabusAssessment {
@@ -288,6 +317,7 @@ export interface PagedSubject extends PagedData<Subject> {}
 export interface PagedSyllabus extends PagedData<Syllabus> {}
 export interface PagedCombo extends PagedData<Combo> {}
 export interface PagedProgram extends PagedData<Program> {}
+export interface PagedSubjectVersion extends PagedData<SubjectVersion> {}
 
 // Search parameters for filtering
 export interface SearchParams {
