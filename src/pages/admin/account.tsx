@@ -44,7 +44,7 @@ const Profile: React.FC = () => {
       return null;
     }
   };
-  
+
   // Use the unified user profile hook for both profile and avatar management
   const {
     getCurrentUserQuery,

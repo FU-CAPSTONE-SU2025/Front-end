@@ -2,30 +2,13 @@ import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from 
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps } from "../../interfaces/IAccount";
 import { CreateSubject, PagedData, Subject, UpdateSubject } from "../../interfaces/ISchoolProgram";
-import { mockSubjectVersions } from '../../../data/mockData';
-import { SubjectVersion } from '../../interfaces/ISchoolProgram';
-import { mockSubjectPrerequisites } from '../../../data/mockData';
 
-export function useMockSubjectVersions(subjectId: number): SubjectVersion[] {
-  const found = mockSubjectVersions.filter(v => v.subjectId === subjectId);
-  if (found.length > 0) return found;
-  // If no mock, return two fake versions for any subject
-  return [
-    { id: 1000 + subjectId * 10, subjectId, isActive: true, isApproved: true, versionNumber: 1, decisionNoDate: new Date() },
-    { id: 1000 + subjectId * 10 + 1, subjectId, isActive: false, isApproved: false, versionNumber: 2, decisionNoDate: new Date() },
-  ];
-}
-
-export function useMockPrerequisites(subjectId: number, versionId: number) {
-  return mockSubjectPrerequisites.filter(p => p.subject_id === subjectId && p.version_id === versionId);
-}
-
-const subjectURL = baseUrl + "/Subject";
+const subjectVersionURL = baseUrl + "/SubjectVersion";
 
 export const AddSubject = async (data: CreateSubject): Promise<Subject | null> => {
   const props = {
     data: data,
-    url: subjectURL,
+    url: subjectVersionURL,
     headers: GetHeader(),
   };
   const result = await axiosCreate(props);
@@ -40,7 +23,7 @@ export const AddSubject = async (data: CreateSubject): Promise<Subject | null> =
 export const AddPrerequisitesSubject = async (id:number,prerequisitesId:number): Promise<Subject | null> => {
     const props = {
       data: null,
-      url: subjectURL + `/${id}/prerequisites/${prerequisitesId}`,
+      url: subjectVersionURL + `/${id}/prerequisites/${prerequisitesId}`,
       headers: GetHeader(),
     };
     const result = await axiosCreate(props);
@@ -55,7 +38,7 @@ export const AddPrerequisitesSubject = async (id:number,prerequisitesId:number):
 export const DeletePrerequisitesSubject = async (id:number,prerequisitesId:number): Promise<Subject | null> => {
   const props = {
     data: null,
-    url: subjectURL + `/${id}/prerequisites/${prerequisitesId}`,
+    url: subjectVersionURL + `/${id}/prerequisites/${prerequisitesId}`,
     headers: GetHeader(),
   };
   const result = await axiosDelete(props);
@@ -70,7 +53,7 @@ export const DeletePrerequisitesSubject = async (id:number,prerequisitesId:numbe
 export const GetPrerequisitesSubject = async (id:number): Promise<Subject[] | null> => {
   const props = {
     data: null,
-    url: subjectURL + `/${id}/prerequisites`,
+    url: subjectVersionURL + `/${id}/prerequisites`,
     headers: GetHeader(),
   };
   const result = await axiosRead(props);
@@ -85,7 +68,7 @@ export const GetPrerequisitesSubject = async (id:number): Promise<Subject[] | nu
 export const RegisterMultipleSubject = async (data: CreateSubject[]): Promise<any> => {
   const props = {
     data: data,
-    url: subjectURL+"/bulk",
+    url: subjectVersionURL+"/bulk",
     headers: GetHeader(),
   };
   const result = await axiosCreate(props);
@@ -124,7 +107,7 @@ export const FetchSubjectList = async (
   }
   const props = {
     data: null,
-    url: subjectURL + "?" + params.toString(),
+    url: subjectVersionURL + "?" + params.toString(),
     headers: GetHeader(),
   };
   const result = await axiosRead(props);
@@ -139,7 +122,7 @@ export const FetchSubjectList = async (
 export const FetchSubjectById = async (id: number): Promise<Subject | null> => {
   const props = {
     data: null,
-    url: subjectURL + `/${id}`,
+    url: subjectVersionURL + `/${id}`,
     headers: GetHeader(),
   };
   const result = await axiosRead(props);
@@ -154,7 +137,7 @@ export const FetchSubjectById = async (id: number): Promise<Subject | null> => {
 export const UpdateSubjectById = async (id: number, data: UpdateSubject): Promise<Subject | null> => {
   const props = {
     data: data,
-    url: subjectURL + `/${id}`,
+    url: subjectVersionURL + `/${id}`,
     headers: GetHeader(),
   };
   const result = await axiosUpdate(props);
@@ -166,10 +149,10 @@ export const UpdateSubjectById = async (id: number, data: UpdateSubject): Promis
   }
 };
 
-export const DisableSubject = async (userId: number): Promise<AccountProps | null> => {
+export const DisableSubject = async (id: number): Promise<AccountProps | null> => {
   const props = {
     data: null,
-    url: subjectURL + `/${userId}`,
+    url: subjectVersionURL + `/${id}`,
     headers: GetHeader(),
   };
   const result = await axiosDelete(props);
@@ -180,3 +163,18 @@ export const DisableSubject = async (userId: number): Promise<AccountProps | nul
     return null; // This will never be reached, but TypeScript needs it
   }
 }; 
+
+export const ACtiveSubject = async (id: number): Promise<AccountProps | null> => {
+    const props = {
+      data: null,
+      url: subjectVersionURL + `/${id}`,
+      headers: GetHeader(),
+    };
+    const result = await axiosUpdate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throwApiError(result);
+      return null; // This will never be reached, but TypeScript needs it
+    }
+  }; 

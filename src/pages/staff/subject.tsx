@@ -10,6 +10,7 @@ import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { isErrorResponse } from '../../api/AxiosCRUD';
 import { Subject } from '../../interfaces/ISchoolProgram';
+import { useMockSubjectVersions } from '../../api/SchoolAPI/subjectAPI';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -109,6 +110,10 @@ const SubjectPage: React.FC = () => {
     navigate(`/staff/subject/${subjectId}/syllabus`);
   };
 
+  const handleViewVersion = (subjectId: number) => {
+    navigate(`/staff/subject/${subjectId}/version`);
+  };
+
   const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
       // Extract subject data from the imported data
@@ -189,6 +194,15 @@ const SubjectPage: React.FC = () => {
     { title: 'Subject Code', dataIndex: 'subjectCode', key: 'subjectCode', align: 'left' as 'left', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
     { title: 'Credits', dataIndex: 'credits', key: 'credits', align: 'center' as 'center', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
     {
+      title: 'Version',
+      key: 'version',
+      align: 'center' as 'center',
+      render: (_: any, record: any) => {
+        const versions = useMockSubjectVersions(record.id);
+        return versions.length > 0 ? versions.map(v => v.versionNumber).join(', ') : '-';
+      }
+    },
+    {
       title: 'Actions',
       key: 'actions',
       align: 'center' as 'center',
@@ -205,11 +219,11 @@ const SubjectPage: React.FC = () => {
           <Button
             type="link"
             icon={<PlusOutlined style={{ color: '#1E40AF' }} />}
-            onClick={() => handleCreateSyllabus(record.id)}
+            onClick={() => handleViewVersion(record.id)}
             style={{ color: '#1E40AF' }}
-            title="Create Syllabus"
+            title="View Version"
           >
-            Syllabus
+            View Version
           </Button>
         </div>
       ),
