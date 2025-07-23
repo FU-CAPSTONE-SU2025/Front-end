@@ -49,6 +49,7 @@ import AdvisorDashboard from "../pages/advisor/dashboard";
 import WorkSchedule from "../pages/advisor/workSchedule";
 import LeaveSchedulePage from "../pages/advisor/leaveschedule";
 import SubjectVersionPage from "../pages/staff/subjectVersion";
+import ManagerSubjectVersionPage from "../pages/manager/viewSubjectVersion";
 
 export const routes = createBrowserRouter([
   {
@@ -246,6 +247,10 @@ export const routes = createBrowserRouter([
       {
         path: "subject/:id",
         Component: SubjectDetail,
+      },
+      {
+        path: "subject/:subjectId/version",
+        Component: ManagerSubjectVersionPage,
       },
       {
         path: "subject/:subjectId/syllabus/:syllabusId?",

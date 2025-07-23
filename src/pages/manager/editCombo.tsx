@@ -1,45 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Input, Select, message, Card, Steps, Divider, Tag, Spin, Space } from 'antd';
+import { Button, Form, Input, message, Card, Steps, Tag} from 'antd';
 import { CheckCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router';
 import { useCRUDCombo, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import SubjectSelect from '../../components/common/SubjectSelect';
-
-const { Option } = Select;
-const { TextArea } = Input;
-
-interface ComboData {
-  id?: number;
-  name: string;
-  description?: string;
-  status: 'pending' | 'active' | 'in-active';
-  subjects?: string;
-  credits?: number;
-  semester?: number;
-  year?: number;
-}
-
-const statusOptions = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'active', label: 'Active' },
-  { value: 'in-active', label: 'Inactive' },
-];
-
-// Mock data for combos (same as in comboPage)
-const mockCombos = [
-  { id: 340, name: 'SE_COM5.2: Topic on Japanese Bridge Engineer_Chủ đề Kỹ sư cầu nối Nhật Bản (Định hướng Tiếng Nhật nâng cao cho kỹ sư CNTT) BIT_SE_K15A', status: 'active' as const, description: '', subjects: '', credits: 0, semester: 1, year: 2024 },
-  { id: 402, name: 'SE_COM6: Topic on Information Technology - Korean Language_Chủ đề Công nghệ thông tin - tiếng Hàn BIT_SE_K15C', status: 'pending' as const, description: '', subjects: '', credits: 0, semester: 1, year: 2024 },
-  { id: 1469, name: 'SE_COM5.1.1:Topic on Japanese Bridge Engineer_Chủ đề Kỹ sư cầu nối Nhật Bản (Định hướng Tiếng Nhật CNTT: Lựa chọn JFE301 và 1 trong 2 học phần JIS401, JIT401 để triển khai ở kỳ 8) BIT_SE_K15C', status: 'in-active' as const, description: '', subjects: '', credits: 0, semester: 1, year: 2024 },
-  { id: 2566, name: 'SE_COM7.1:Topic on AI_Chủ đề AI', status: 'active' as const, description: '', subjects: '', credits: 0, semester: 1, year: 2024 },
-  { id: 2497, name: 'SE_COM4.1: Topic on React/NodeJS_Chủ đề React/NodeJS', status: 'pending' as const, description: '', subjects: '', credits: 0, semester: 1, year: 2024 },
-  { id: 2605, name: 'SE_COM11: Topic on IC design_Chủ đề Thiết kế vi mạch', status: 'active' as const, description: '', subjects: '', credits: 0, semester: 1, year: 2024 },
-  { id: 2616, name: 'SE_COM3.2: Topic on .NET Programming_Chủ đề lập trình .NET BIT_SE_From_K18A', status: 'in-active' as const, description: '', subjects: '', credits: 0, semester: 1, year: 2024 },
-  { id: 2640, name: 'SE_COM10.2: Topic on Intensive Java_Chủ đề Java chuyên sâu_K19A', status: 'active' as const, description: '', subjects: '', credits: 0, semester: 1, year: 2024 },
-  { id: 2639, name: 'SE_COM14: Topic on Applied Data Science_Chủ đề Khoa học dữ liệu (KHDL) ứng dụng', status: 'pending' as const, description: '', subjects: '', credits: 0, semester: 1, year: 2024 },
-  { id: 2638, name: 'SE_COM13: Topic on DevSepOps for cloud_Chủ đề Tích hợp DevSepOps cho cloud', status: 'active' as const, description: '', subjects: '', credits: 0, semester: 1, year: 2024 },
-  { id: 2628, name: 'SE_COM12: Topic on Game Development_Phát triển game', status: 'in-active' as const, description: '', subjects: '', credits: 0, semester: 1, year: 2024 },
-];
 
 const EditComboPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -57,7 +22,6 @@ const EditComboPage: React.FC = () => {
   } = useCRUDCombo();
   const {
     subjectList,
-    getAllSubjects
   } = useCRUDSubject();
 
   useEffect(() => {
