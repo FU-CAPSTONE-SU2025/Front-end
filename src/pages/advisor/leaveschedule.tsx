@@ -105,7 +105,7 @@ const LeaveSchedulePage: React.FC = () => {
   // Search logic
   const filteredList = searchQuery
     ? leaveList.filter(item =>
-        item.note?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       
         item.id.toString().includes(searchQuery) ||
         item.startDateTime.includes(searchQuery) ||
         item.endDateTime.includes(searchQuery)
@@ -147,7 +147,7 @@ const LeaveSchedulePage: React.FC = () => {
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search by note, ID, or time..."
+            placeholder="Search by , ID, or time..."
             className={styles.searchBar}
           />
         </div>

@@ -13,7 +13,8 @@ import CalendarHeader from '../../components/student/calendarHeader';
 import SelectedAdvisorInfo from '../../components/student/selectedAdvisorInfo';
 import CalendarView from '../../components/student/calendarView';
 import BookingModal from '../../components/student/bookingModal';
-import { AdvisorData, BookingAvailabilityData } from '../../api/student/StudentAPI';
+import { AdvisorData, BookingAvailabilityData, CreateBookingMeeting, AdvisorMeetingItem, getAdvisorMeetings } from '../../api/student/StudentAPI';
+import { CreateBookingMeetingRequest } from '../../interfaces/IStudent';
 
 interface WorkSlot {
   id: number | string;
@@ -43,6 +44,8 @@ const BookingPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<WorkSlot | null>(null);
   const [searchValue, setSearchValue] = useState('');
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [meetings, setMeetings] = useState<AdvisorMeetingItem[]>([]);
 
   // Fetch advisors using hook
   const { data: advisorsData, isLoading, error } = useAdvisors({ page: 1, pageSize: 20 });
@@ -77,6 +80,19 @@ const BookingPage = () => {
       prefetchAdvisorData(selectedAdvisor.staffDataDetailResponse.id);
     }
   }, [selectedAdvisor, prefetchAdvisorData]);
+
+  // Fetch meetings when advisor changes
+  useEffect(() => {
+    const fetchMeetings = async () => {
+      if (staffProfileId) {
+        const res = await getAdvisorMeetings(staffProfileId);
+        setMeetings(res?.items || []);
+      } else {
+        setMeetings([]);
+      }
+    };
+    fetchMeetings();
+  }, [staffProfileId]);
 
   // Navigation functions
   const goToPrevious = () => {
@@ -133,14 +149,38 @@ const BookingPage = () => {
     setSearchValue(value);
   };
 
-  const handleConfirm = () => {
-    setModalVisible(false);
-    message.success('Booking successful!');
-    setSelectedSlot(null);
-    
-    // Invalidate advisor data to refresh cache
-    if (selectedAdvisor?.staffDataDetailResponse?.id) {
-      invalidateAdvisorData(selectedAdvisor.staffDataDetailResponse.id);
+  // Handle confirm booking
+  const handleConfirm = async (formData: { titleStudentIssue: string; contentIssue: string }) => {
+    if (!selectedAdvisor || !selectedSlot || !selectedDate) return;
+    setBookingLoading(true);
+    try {
+      // Chuẩn bị dữ liệu gửi lên backend
+      const startDateTime = selectedDate.format('YYYY-MM-DD') + 'T' + selectedSlot.startTime.slice(0,5);
+      const endDateTime = selectedDate.format('YYYY-MM-DD') + 'T' + selectedSlot.endTime.slice(0,5);
+      const payload: CreateBookingMeetingRequest = {
+        staffProfileId: selectedSlot.staffProfileId,
+        startDateTime,
+        endDateTime,
+        titleStudentIssue: formData.titleStudentIssue,
+        contentIssue: formData.contentIssue,
+      };
+      console.log("Booking payload:", payload);
+      const result = await CreateBookingMeeting(payload);
+      if (result) {
+        setModalVisible(false);
+        message.success('Đặt lịch thành công!');
+        setSelectedSlot(null);
+        // Invalidate advisor data to refresh cache
+        if (selectedAdvisor?.staffDataDetailResponse?.id) {
+          invalidateAdvisorData(selectedAdvisor.staffDataDetailResponse.id);
+        }
+      } else {
+        message.error('Đặt lịch thất bại. Vui lòng thử lại!');
+      }
+    } catch (err) {
+      message.error('Có lỗi xảy ra khi đặt lịch!');
+    } finally {
+      setBookingLoading(false);
     }
   };
 
@@ -153,7 +193,7 @@ const BookingPage = () => {
     >
       <div className="w-full max-w-8xl mx-auto mt-10 p-12">
         <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 flex overflow-hidden">
-                    {/* Left: Advisor List */}
+          {/* Left: Advisor List */}
           <motion.div
             className="w-96 bg-gray-50 border-r border-gray-200 py-10 px-6 flex flex-col"
             initial={{ x: -50, opacity: 0 }}
@@ -206,6 +246,7 @@ const BookingPage = () => {
               selectedAdvisor={selectedAdvisor}
               mockWorkSlots={workSlots}
               leaveSchedules={leaveSchedulesData?.items || []}
+              meetings={meetings}
               onDateChange={handleDateChange}
               onSlotClick={handleSlotClick}
               onViewModeChange={setViewMode}
@@ -219,6 +260,7 @@ const BookingPage = () => {
           selectedAdvisor={selectedAdvisor}
           selectedSlot={selectedSlot}
           selectedDate={selectedDate}
+          loading={bookingLoading}
           onConfirm={handleConfirm}
           onCancel={() => setModalVisible(false)}
         />

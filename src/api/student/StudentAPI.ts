@@ -1,7 +1,7 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
-import { pagedStudentData, StudentBase } from "../../interfaces/IStudent";
+import { pagedStudentData, StudentBase, CreateBookingMeetingRequest, BookingMeetingResponse, AdvisorMeetingItem, AdvisorMeetingPaged } from "../../interfaces/IStudent";
 
 const userURL = baseUrl+"/User/student"
 
@@ -235,3 +235,35 @@ export const GetBookingAvailability = async (staffProfileId: number): Promise<Bo
         return null
     }
 }
+
+// API tạo booking meeting
+export const CreateBookingMeeting = async (data: CreateBookingMeetingRequest): Promise<BookingMeetingResponse | null> => {
+  const props = {
+    data,
+    url: baseUrl + '/Meeting',
+    headers: GetHeader(),
+  };
+  const result = await axiosCreate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    console.log('Error creating booking meeting:', result.error);
+    return null;
+  }
+};
+
+// API lấy danh sách meeting của advisor
+export const getAdvisorMeetings = async (staffProfileId: number, pageNumber = 1, pageSize = 50): Promise<AdvisorMeetingPaged | null> => {
+  const props = {
+    data: null,
+    url: `${baseUrl}/Meeting/all-of-one-adv/paged/${staffProfileId}?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    console.log('Error fetching advisor meetings:', result.error);
+    return null;
+  }
+};

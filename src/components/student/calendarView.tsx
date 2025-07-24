@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import dayjs, { Dayjs } from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import { AdvisorData, LeaveScheduleData } from '../../api/student/StudentAPI';
+import { AdvisorMeetingItem } from '../../interfaces/IStudent';
 
 // Extend dayjs with isBetween plugin
 dayjs.extend(isBetween);
@@ -23,6 +24,7 @@ interface CalendarViewProps {
   selectedAdvisor: AdvisorData | null;
   mockWorkSlots: WorkSlot[];
   leaveSchedules?: LeaveScheduleData[];
+  meetings?: AdvisorMeetingItem[];
   onDateChange: (date: Dayjs) => void;
   onSlotClick: (slot: WorkSlot, date: Dayjs) => void;
   onViewModeChange?: (mode: 'day' | 'week' | 'month') => void; // Thêm prop này
@@ -36,6 +38,7 @@ const CalendarView = ({
   selectedAdvisor,
   mockWorkSlots,
   leaveSchedules = [],
+  meetings = [],
   onDateChange,
   onSlotClick,
   onViewModeChange
@@ -226,6 +229,21 @@ const CalendarView = ({
     }
   };
 
+  // Kiểm tra slot có bị trùng với meeting không
+  const isSlotBooked = (slot: WorkSlot, date: Dayjs) => {
+    return meetings.some(meeting => {
+      const slotStart = dayjs(date.format('YYYY-MM-DD') + 'T' + slot.startTime.slice(0,5));
+      const slotEnd = dayjs(date.format('YYYY-MM-DD') + 'T' + slot.endTime.slice(0,5));
+      const meetingStart = dayjs(meeting.startDateTime);
+      const meetingEnd = dayjs(meeting.endDateTime);
+      // Check overlap
+      return (
+        slot.staffProfileId === meeting.staffProfileId &&
+        slotEnd.isAfter(meetingStart) && slotStart.isBefore(meetingEnd)
+      );
+    });
+  };
+
   // Khi click slot ở month view, chuyển sang week view
   const handleSlotClick = (slot: WorkSlot, date: Dayjs) => {
     if (viewMode === 'month' && onViewModeChange) {
@@ -279,20 +297,35 @@ const CalendarView = ({
         )}
         
         {/* Available slots - compact version */}
-        {displaySlots.map(slot => (
-          <motion.div
-            key={slot.id}
-            className={`bg-gradient-to-r ${getSlotTypeColor(slot.type)} text-white rounded px-1.5 py-1 text-xs flex items-center justify-center shadow-sm transition-all duration-200 border border-white/20 ${
-              isPast ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'
-            }`}
-            whileHover={isPast ? {} : { scale: 1.02 }}
-            whileTap={isPast ? {} : { scale: 0.98 }}
-            onClick={isPast ? undefined : () => handleSlotClick(slot, date)}
-          >
-            <ClockCircleOutlined className="text-xs mr-1" />
-            <span className="font-medium truncate text-xs">{slot.startTime.slice(0,5)}-{slot.endTime.slice(0,5)}</span>
-          </motion.div>
-        ))}
+        {displaySlots.map(slot => {
+          const booked = isSlotBooked(slot, date);
+          if (booked) {
+            return (
+              <motion.div
+                key={slot.id}
+                className="bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded px-1.5 py-1 text-xs flex items-center justify-center shadow-sm border border-white/20 cursor-not-allowed opacity-80 gap-1"
+                whileHover={{}}
+              >
+                <CloseCircleOutlined className="text-xs" />
+                <span className="font-medium truncate text-xs">Booked</span>
+              </motion.div>
+            );
+          }
+          return (
+            <motion.div
+              key={slot.id}
+              className={`bg-gradient-to-r ${getSlotTypeColor(slot.type)} text-white rounded px-1.5 py-1 text-xs flex items-center justify-center shadow-sm transition-all duration-200 border border-white/20 ${
+                isPast ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'
+              }`}
+              whileHover={isPast ? {} : { scale: 1.02 }}
+              whileTap={isPast ? {} : { scale: 0.98 }}
+              onClick={isPast ? undefined : () => handleSlotClick(slot, date)}
+            >
+              <ClockCircleOutlined className="text-xs mr-1" />
+              <span className="font-medium truncate text-xs">{slot.startTime.slice(0,5)}-{slot.endTime.slice(0,5)}</span>
+            </motion.div>
+          );
+        })}
         
         {/* Show more indicator */}
         {hasMoreSlots && (
@@ -367,7 +400,28 @@ const CalendarView = ({
               {slots.map(slot => {
                 const topPosition = getSlotTopPosition(slot);
                 const height = getSlotHeight(slot);
-                
+                const booked = isSlotBooked(slot, selectedDate);
+                if (booked) {
+                  // Overlay giống leave
+                  return (
+                    <motion.div
+                      key={slot.id}
+                      className="absolute left-4 right-4 bg-gradient-to-r from-gray-400 to-gray-500 rounded-xl shadow-lg opacity-80 border-2 border-gray-400 flex items-center justify-center"
+                      style={{
+                        top: `${topPosition}px`,
+                        height: `${height}px`,
+                        minHeight: '60px',
+                        zIndex: 2
+                      }}
+                    >
+                      <div className="flex flex-col items-center justify-center w-full h-full text-white font-medium">
+                        <CloseCircleOutlined className="mb-1 text-2xl" />
+                        <span className="text-sm font-semibold">This slot has already been booked</span>
+                      </div>
+                    </motion.div>
+                  );
+                }
+                // Slot chưa bị book, render như cũ
                 return (
                   <motion.div
                     key={slot.id}
@@ -491,7 +545,26 @@ const CalendarView = ({
                     {daySlots.map(slot => {
                       const topPosition = getSlotTopPosition(slot);
                       const height = getSlotHeight(slot);
-                      
+                      const booked = isSlotBooked(slot, day);
+                      if (booked) {
+                        return (
+                          <motion.div
+                            key={slot.id}
+                            className="absolute left-1 right-1 bg-gradient-to-r from-gray-400 to-gray-500 rounded-lg shadow-md opacity-80 border-2 border-gray-400 flex items-center justify-center"
+                            style={{
+                              top: `${topPosition}px`,
+                              height: `${height}px`,
+                              minHeight: '30px',
+                              zIndex: 2
+                            }}
+                          >
+                            <div className="flex flex-col items-center justify-center w-full h-full text-white text-xs font-medium">
+                              <CloseCircleOutlined className="mb-1 text-base" />
+                              <span>This slot has already been booked</span>
+                            </div>
+                          </motion.div>
+                        );
+                      }
                       return (
                         <motion.div
                           key={slot.id}
