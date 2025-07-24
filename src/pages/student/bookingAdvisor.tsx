@@ -13,8 +13,8 @@ import CalendarHeader from '../../components/student/calendarHeader';
 import SelectedAdvisorInfo from '../../components/student/selectedAdvisorInfo';
 import CalendarView from '../../components/student/calendarView';
 import BookingModal from '../../components/student/bookingModal';
-import { AdvisorData, BookingAvailabilityData, CreateBookingMeeting, AdvisorMeetingItem, getAdvisorMeetings } from '../../api/student/StudentAPI';
-import { CreateBookingMeetingRequest } from '../../interfaces/IStudent';
+import { AdvisorData, BookingAvailabilityData, CreateBookingMeeting, getAdvisorMeetings } from '../../api/student/StudentAPI';
+import { CreateBookingMeetingRequest, AdvisorMeetingItem } from '../../interfaces/IStudent';
 
 interface WorkSlot {
   id: number | string;
