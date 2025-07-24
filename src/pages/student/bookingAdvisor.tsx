@@ -61,7 +61,9 @@ const BookingPage = () => {
   const { invalidateAdvisorData } = useAdvisorDataManager();
 
   // Convert booking availability to work slots
-  const workSlots = bookingAvailabilityData ? convertBookingAvailabilityToWorkSlots(bookingAvailabilityData) : [];
+  const workSlots = Array.isArray(bookingAvailabilityData)
+    ? convertBookingAvailabilityToWorkSlots(bookingAvailabilityData)
+    : [];
 
   useEffect(() => {
     if (advisorsData?.items && advisorsData.items.length > 0 && !selectedAdvisor) {
@@ -206,6 +208,7 @@ const BookingPage = () => {
               leaveSchedules={leaveSchedulesData?.items || []}
               onDateChange={handleDateChange}
               onSlotClick={handleSlotClick}
+              onViewModeChange={setViewMode}
             />
           </motion.div>
         </div>

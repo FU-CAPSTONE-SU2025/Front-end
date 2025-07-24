@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Form, TimePicker, Select, Button, message, Space, Tabs, Card, Typography, Divider, Row, Col } from 'antd';
-import { PlusOutlined, ClockCircleOutlined, CalendarOutlined, DeleteOutlined, CopyOutlined } from '@ant-design/icons';
+import { PlusOutlined, ClockCircleOutlined, CalendarOutlined, DeleteOutlined, CopyOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { 
   useCreateBookingAvailability, 
   useCreateBulkBookingAvailability,
@@ -38,6 +38,9 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([
     { key: '1', dayInWeek: 1, startTime: dayjs('09:00', 'HH:mm'), endTime: dayjs('17:00', 'HH:mm') }
   ]);
+  const [showSplitModal, setShowSplitModal] = useState(false);
+  const [splitSlots, setSplitSlots] = useState<ScheduleItem[]>([]);
+  const [pendingSingleValues, setPendingSingleValues] = useState<any>(null);
   
   const createBookingAvailability = useCreateBookingAvailability();
   const createBulkBookingAvailability = useCreateBulkBookingAvailability();
@@ -85,19 +88,58 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
     return true;
   };
 
+  // Helper: chia nhỏ slot lớn thành các slot nhỏ 1 tiếng, slot cuối là phần dư
+  const splitLargeSlot = (start: any, end: any, dayInWeek: number) => {
+    const slots: ScheduleItem[] = [];
+    let current = dayjs(start);
+    let idx = 1;
+    while (current.add(1, 'hour').isBefore(end) || current.add(1, 'hour').isSame(end)) {
+      const next = current.add(1, 'hour');
+      slots.push({
+        key: idx.toString(),
+        dayInWeek,
+        startTime: current,
+        endTime: next
+      });
+      current = next;
+      idx++;
+    }
+    // Slot cuối (nếu còn dư)
+    if (current.isBefore(end)) {
+      slots.push({
+        key: idx.toString(),
+        dayInWeek,
+        startTime: current,
+        endTime: end
+      });
+    }
+    return slots;
+  };
+
   const handleSingleSubmit = async (values: any) => {
+    const start = dayjs(values.startTime);
+    const end = dayjs(values.endTime);
+    const duration = end.diff(start, 'minute');
+    if (duration < 30) {
+      message.error('Work slot must be at least 30 minutes.');
+      return;
+    }
+    if (duration > 60) {
+      // Hiển thị modal phụ để chia nhỏ slot
+      setSplitSlots(splitLargeSlot(start, end, values.dayInWeek));
+      setPendingSingleValues(values);
+      setShowSplitModal(true);
+      return;
+    }
     try {
       // Convert dayjs time objects to string format HH:mm:ss
       const startTime = values.startTime.format('HH:mm:ss');
       const endTime = values.endTime.format('HH:mm:ss');
-      
       await createBookingAvailability.mutateAsync({
         startTime,
         endTime,
         dayInWeek: values.dayInWeek
       });
-
-      // If no error is thrown, consider it successful
       message.success('Work schedule created successfully!');
       singleForm.resetFields();
       onSuccess();
@@ -181,237 +223,355 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
 
   const isLoading = createBookingAvailability.isPending || createBulkBookingAvailability.isPending;
 
+  // Xử lý xác nhận submit các slot nhỏ
+  const handleConfirmSplitSlots = async () => {
+    try {
+      const bulkData = splitSlots.map(slot => ({
+        startTime: dayjs(slot.startTime).format('HH:mm:ss'),
+        endTime: dayjs(slot.endTime).format('HH:mm:ss'),
+        dayInWeek: slot.dayInWeek
+      }));
+      await createBulkBookingAvailability.mutateAsync(bulkData);
+      message.success('Work schedule(s) created successfully!');
+      setShowSplitModal(false);
+      setSplitSlots([]);
+      setPendingSingleValues(null);
+      singleForm.resetFields();
+      onSuccess();
+      onCancel();
+    } catch (error) {
+      message.error('An error occurred while creating the work schedules.');
+    }
+  };
+
+  // Xử lý hủy modal phụ
+  const handleCancelSplitSlots = () => {
+    setShowSplitModal(false);
+    setSplitSlots([]);
+    setPendingSingleValues(null);
+  };
+
+  // Cập nhật slot nhỏ
+  const updateSplitSlot = (key: string, field: keyof ScheduleItem, value: any) => {
+    setSplitSlots(slots => slots.map(slot => slot.key === key ? { ...slot, [field]: value } : slot));
+  };
+
+  // Xóa slot nhỏ
+  const removeSplitSlot = (key: string) => {
+    if (splitSlots.length > 1) {
+      setSplitSlots(slots => slots.filter(slot => slot.key !== key));
+    } else {
+      message.warning('At least one slot is required.');
+    }
+  };
+
+  // Thêm slot nhỏ mới
+  const addSplitSlot = () => {
+    const last = splitSlots[splitSlots.length - 1];
+    const newKey = (splitSlots.length + 1).toString();
+    setSplitSlots([...splitSlots, {
+      key: newKey,
+      dayInWeek: last.dayInWeek,
+      startTime: dayjs(last.endTime),
+      endTime: dayjs(last.endTime).add(30, 'minute')
+    }]);
+  };
+
   return (
-    <Modal
-      title={
-        <Space>
-          <PlusOutlined />
-          Add Work Schedule
-        </Space>
-      }
-      open={visible}
-      onCancel={handleCancel}
-      footer={null}
-      width={800}
-      destroyOnClose
-    >
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane tab="Single Schedule" key="single">
-          <Form
-            form={singleForm}
-            layout="vertical"
-            onFinish={handleSingleSubmit}
-            initialValues={{
-              startTime: dayjs('09:00', 'HH:mm'),
-              endTime: dayjs('17:00', 'HH:mm'),
-              dayInWeek: 1
-            }}
-          >
-            <Form.Item
-              label={
-                <Space>
-                  <CalendarOutlined />
-                  Day of Week
-                </Space>
-              }
-              name="dayInWeek"
-              rules={[{ required: true, message: 'Please select a day of the week' }]}
+    <>
+      <Modal
+        title={
+          <Space>
+            <PlusOutlined />
+            Add Work Schedule
+          </Space>
+        }
+        open={visible}
+        onCancel={handleCancel}
+        footer={null}
+        width={800}
+        destroyOnClose
+      >
+        <Tabs activeKey={activeTab} onChange={setActiveTab}>
+          <TabPane tab="Single Schedule" key="single">
+            <Form
+              form={singleForm}
+              layout="vertical"
+              onFinish={handleSingleSubmit}
+              initialValues={{
+                startTime: dayjs('09:00', 'HH:mm'),
+                endTime: dayjs('17:00', 'HH:mm'),
+                dayInWeek: 1
+              }}
             >
-              <Select placeholder="Select day of week">
-                {dayOptions.map(day => (
-                  <Option key={day.value} value={day.value}>
-                    {day.label}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
+              <Form.Item
+                label={
+                  <Space>
+                    <CalendarOutlined />
+                    Day of Week
+                  </Space>
+                }
+                name="dayInWeek"
+                rules={[{ required: true, message: 'Please select a day of the week' }]}
+              >
+                <Select placeholder="Select day of week">
+                  {dayOptions.map(day => (
+                    <Option key={day.value} value={day.value}>
+                      {day.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
 
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  label={
-                    <Space>
-                      <ClockCircleOutlined />
-                      Start Time
-                    </Space>
-                  }
-                  name="startTime"
-                  rules={[{ required: true, message: 'Please select start time' }]}
-                >
-                  <TimePicker
-                    format="HH:mm"
-                    placeholder="Select start time"
-                    style={{ width: '100%' }}
-                    minuteStep={15}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label={
-                    <Space>
-                      <ClockCircleOutlined />
-                      End Time
-                    </Space>
-                  }
-                  name="endTime"
-                  rules={[
-                    { required: true, message: 'Please select end time' },
-                    { validator: validateTimeRange }
-                  ]}
-                >
-                  <TimePicker
-                    format="HH:mm"
-                    placeholder="Select end time"
-                    style={{ width: '100%' }}
-                    minuteStep={15}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Form.Item>
-              <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-                <Button onClick={handleCancel}>
-                  Cancel
-                </Button>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={isLoading}
-                  icon={<PlusOutlined />}
-                >
-                  Create Schedule
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </TabPane>
-
-        <TabPane tab="Multiple Schedules" key="bulk">
-          <div style={{ marginBottom: 16 }}>
-            <Text type="secondary">
-              Create multiple work schedules at once. You can add, remove, or duplicate schedule items.
-            </Text>
-          </div>
-
-          {scheduleItems.map((item, index) => (
-            <Card
-              key={item.key}
-              size="small"
-              style={{ marginBottom: 16 }}
-              title={
-                <Space>
-                  <CalendarOutlined />
-                  Schedule {index + 1}
-                </Space>
-              }
-              extra={
-                <Space>
-                  <Button
-                    type="text"
-                    size="small"
-                    icon={<CopyOutlined />}
-                    onClick={() => duplicateScheduleItem(item.key)}
-                    title="Duplicate"
-                  />
-                  <Button
-                    type="text"
-                    size="small"
-                    danger
-                    icon={<DeleteOutlined />}
-                    onClick={() => removeScheduleItem(item.key)}
-                    title="Remove"
-                  />
-                </Space>
-              }
-            >
               <Row gutter={16}>
-                <Col span={8}>
+                <Col span={12}>
                   <Form.Item
-                    label="Day of Week"
-                    required
-                  >
-                    <Select
-                      value={item.dayInWeek}
-                      onChange={(value) => updateScheduleItem(item.key, 'dayInWeek', value)}
-                      placeholder="Select day"
-                    >
-                      {dayOptions.map(day => (
-                        <Option key={day.value} value={day.value}>
-                          {day.label}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item
-                    label="Start Time"
-                    required
+                    label={
+                      <Space>
+                        <ClockCircleOutlined />
+                        Start Time
+                      </Space>
+                    }
+                    name="startTime"
+                    rules={[{ required: true, message: 'Please select start time' }]}
                   >
                     <TimePicker
-                      value={item.startTime}
-                      onChange={(value) => updateScheduleItem(item.key, 'startTime', value)}
                       format="HH:mm"
-                      placeholder="Start time"
+                      placeholder="Select start time"
                       style={{ width: '100%' }}
                       minuteStep={15}
                     />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col span={12}>
                   <Form.Item
-                    label="End Time"
-                    required
+                    label={
+                      <Space>
+                        <ClockCircleOutlined />
+                        End Time
+                      </Space>
+                    }
+                    name="endTime"
+                    rules={[
+                      { required: true, message: 'Please select end time' },
+                      { validator: validateTimeRange }
+                    ]}
                   >
                     <TimePicker
-                      value={item.endTime}
-                      onChange={(value) => updateScheduleItem(item.key, 'endTime', value)}
                       format="HH:mm"
-                      placeholder="End time"
+                      placeholder="Select end time"
                       style={{ width: '100%' }}
                       minuteStep={15}
                     />
                   </Form.Item>
                 </Col>
               </Row>
-              
-              {!validateBulkTimeRange(index) && (
-                <Text type="danger" style={{ fontSize: '12px' }}>
-                  End time must be after start time
-                </Text>
-              )}
-            </Card>
-          ))}
 
-          <Button
-            type="dashed"
-            onClick={addScheduleItem}
-            style={{ width: '100%', marginBottom: 16 }}
-            icon={<PlusOutlined />}
-          >
-            Add Another Schedule
-          </Button>
+              <Form.Item>
+                <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+                  <Button onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={isLoading}
+                    icon={<PlusOutlined />}
+                  >
+                    Create Schedule
+                  </Button>
+                </Space>
+              </Form.Item>
+            </Form>
+          </TabPane>
 
-          <Divider />
+          <TabPane tab="Multiple Schedules" key="bulk">
+            <div style={{ marginBottom: 16 }}>
+              <Text type="secondary">
+                Create multiple work schedules at once. You can add, remove, or duplicate schedule items.
+              </Text>
+            </div>
 
-          <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-            <Button onClick={handleCancel}>
-              Cancel
-            </Button>
+            {scheduleItems.map((item, index) => (
+              <Card
+                key={item.key}
+                size="small"
+                style={{ marginBottom: 16 }}
+                title={
+                  <Space>
+                    <CalendarOutlined />
+                    Schedule {index + 1}
+                  </Space>
+                }
+                extra={
+                  <Space>
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<CopyOutlined />}
+                      onClick={() => duplicateScheduleItem(item.key)}
+                      title="Duplicate"
+                    />
+                    <Button
+                      type="text"
+                      size="small"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => removeScheduleItem(item.key)}
+                      title="Remove"
+                    />
+                  </Space>
+                }
+              >
+                <Row gutter={16}>
+                  <Col span={8}>
+                    <Form.Item
+                      label="Day of Week"
+                      required
+                    >
+                      <Select
+                        value={item.dayInWeek}
+                        onChange={(value) => updateScheduleItem(item.key, 'dayInWeek', value)}
+                        placeholder="Select day"
+                      >
+                        {dayOptions.map(day => (
+                          <Option key={day.value} value={day.value}>
+                            {day.label}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={8}>
+                    <Form.Item
+                      label="Start Time"
+                      required
+                    >
+                      <TimePicker
+                        value={item.startTime}
+                        onChange={(value) => updateScheduleItem(item.key, 'startTime', value)}
+                        format="HH:mm"
+                        placeholder="Start time"
+                        style={{ width: '100%' }}
+                        minuteStep={15}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={8}>
+                    <Form.Item
+                      label="End Time"
+                      required
+                    >
+                      <TimePicker
+                        value={item.endTime}
+                        onChange={(value) => updateScheduleItem(item.key, 'endTime', value)}
+                        format="HH:mm"
+                        placeholder="End time"
+                        style={{ width: '100%' }}
+                        minuteStep={15}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                
+                {!validateBulkTimeRange(index) && (
+                  <Text type="danger" style={{ fontSize: '12px' }}>
+                    End time must be after start time
+                  </Text>
+                )}
+              </Card>
+            ))}
+
             <Button
-              type="primary"
-              onClick={handleBulkSubmit}
-              loading={isLoading}
+              type="dashed"
+              onClick={addScheduleItem}
+              style={{ width: '100%', marginBottom: 16 }}
               icon={<PlusOutlined />}
             >
-              Create {scheduleItems.length} Schedule{scheduleItems.length > 1 ? 's' : ''}
+              Add Another Schedule
             </Button>
+
+            <Divider />
+
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <Button onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                onClick={handleBulkSubmit}
+                loading={isLoading}
+                icon={<PlusOutlined />}
+              >
+                Create {scheduleItems.length} Schedule{scheduleItems.length > 1 ? 's' : ''}
+              </Button>
+            </Space>
+          </TabPane>
+        </Tabs>
+      </Modal>
+
+      {/* Modal phụ chia nhỏ slot lớn */}
+      <Modal
+        open={showSplitModal}
+        onCancel={handleCancelSplitSlots}
+        onOk={handleConfirmSplitSlots}
+        title={
+          <Space>
+            <ExclamationCircleOutlined style={{ color: '#faad14' }} />
+            Work slot is longer than 1 hour. Please review and edit the split slots below.
           </Space>
-        </TabPane>
-      </Tabs>
-    </Modal>
+        }
+        okText="Confirm"
+        cancelText="Cancel"
+        width={600}
+        destroyOnClose
+      >
+        <div style={{ marginBottom: 16 }}>
+          <span style={{ color: '#faad14' }}>
+            The original slot will be split into multiple slots (each 1 hour, last one may be shorter). You can edit, remove, or add slots as needed before confirming.
+          </span>
+        </div>
+        {splitSlots.map((slot, idx) => (
+          <Row gutter={8} key={slot.key} align="middle" style={{ marginBottom: 8 }}>
+            <Col span={7}>
+              <TimePicker
+                value={dayjs(slot.startTime)}
+                onChange={val => updateSplitSlot(slot.key, 'startTime', val)}
+                format="HH:mm"
+                minuteStep={5}
+                style={{ width: '100%' }}
+              />
+            </Col>
+            <Col span={7}>
+              <TimePicker
+                value={dayjs(slot.endTime)}
+                onChange={val => updateSplitSlot(slot.key, 'endTime', val)}
+                format="HH:mm"
+                minuteStep={5}
+                style={{ width: '100%' }}
+              />
+            </Col>
+            <Col span={6}>
+              <Select
+                value={slot.dayInWeek}
+                onChange={val => updateSplitSlot(slot.key, 'dayInWeek', val)}
+                style={{ width: '100%' }}
+              >
+                {dayOptions.map(day => (
+                  <Option key={day.value} value={day.value}>{day.label}</Option>
+                ))}
+              </Select>
+            </Col>
+            <Col span={2}>
+              <Button danger type="text" icon={<DeleteOutlined />} onClick={() => removeSplitSlot(slot.key)} />
+            </Col>
+          </Row>
+        ))}
+        <Button type="dashed" onClick={addSplitSlot} icon={<PlusOutlined />} style={{ width: '100%', marginTop: 8 }}>
+          Add Another Slot
+        </Button>
+      </Modal>
+    </>
   );
 };
 
