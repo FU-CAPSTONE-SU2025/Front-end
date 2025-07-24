@@ -25,6 +25,7 @@ interface CalendarViewProps {
   leaveSchedules?: LeaveScheduleData[];
   onDateChange: (date: Dayjs) => void;
   onSlotClick: (slot: WorkSlot, date: Dayjs) => void;
+  onViewModeChange?: (mode: 'day' | 'week' | 'month') => void; // Thêm prop này
 }
 
 const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -36,7 +37,8 @@ const CalendarView = ({
   mockWorkSlots,
   leaveSchedules = [],
   onDateChange,
-  onSlotClick
+  onSlotClick,
+  onViewModeChange
 }: CalendarViewProps) => {
   // Generate working hours (8 AM to 6 PM)
   const generateWorkingHours = () => {
@@ -120,11 +122,12 @@ const CalendarView = ({
     const staffProfileId = selectedAdvisor.staffDataDetailResponse?.id;
     if (!staffProfileId) return null;
 
+    // Sửa lại: trả về leave nếu ngày nằm trong khoảng nghỉ
     return leaveSchedules.find(leave => {
       const leaveStart = dayjs(leave.startDateTime);
       const leaveEnd = dayjs(leave.endDateTime);
       return leave.staffProfileId === staffProfileId && 
-             date.isSame(leaveStart, 'day');
+             date.isBetween(leaveStart, leaveEnd, 'day', '[]');
     });
   };
 
@@ -223,6 +226,26 @@ const CalendarView = ({
     }
   };
 
+  // Khi click slot ở month view, chuyển sang week view
+  const handleSlotClick = (slot: WorkSlot, date: Dayjs) => {
+    if (viewMode === 'month' && onViewModeChange) {
+      onViewModeChange('week');
+      onDateChange(date);
+    } else {
+      onSlotClick(slot, date);
+    }
+  };
+
+  // Calendar tháng: click vào ngày cũng chuyển sang week view
+  const handlePanelDateSelect = (date: Dayjs) => {
+    if (viewMode === 'month' && onViewModeChange) {
+      onViewModeChange('week');
+      onDateChange(date);
+    } else {
+      onDateChange(date);
+    }
+  };
+
   // Render work slots on calendar
   const dateCellRender = (date: Dayjs) => {
     if (!selectedAdvisor) return null;
@@ -264,7 +287,7 @@ const CalendarView = ({
             }`}
             whileHover={isPast ? {} : { scale: 1.02 }}
             whileTap={isPast ? {} : { scale: 0.98 }}
-            onClick={isPast ? undefined : () => onSlotClick(slot, date)}
+            onClick={isPast ? undefined : () => handleSlotClick(slot, date)}
           >
             <ClockCircleOutlined className="text-xs mr-1" />
             <span className="font-medium truncate text-xs">{slot.startTime.slice(0,5)}-{slot.endTime.slice(0,5)}</span>
@@ -503,6 +526,19 @@ const CalendarView = ({
       </div>
     );
   };
+
+  // Render calendar tháng nếu viewMode === 'month'
+  if (viewMode === 'month') {
+    return (
+      <Calendar
+        value={selectedDate}
+        dateCellRender={dateCellRender}
+        onSelect={handlePanelDateSelect}
+        fullscreen={true}
+        className="advisor-calendar-enhanced"
+      />
+    );
+  }
 
   return (
     <div className="bg-gray-50 rounded-3xl p-8 border border-gray-100 shadow-sm">
