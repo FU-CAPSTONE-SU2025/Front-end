@@ -49,6 +49,12 @@ const Header: React.FC = () => {
   // Dropdown menu for avatar (chuẩn mới Ant Design v5+)
   const avatarMenuItems = [
     {
+      key: 'history-meeting',
+      label: (
+        <span onClick={() => navigate('/student/historyMeeting')}>History Meeting</span>
+      ),
+    },
+    {
       key: 'change-password',
       label: (
         <span onClick={() => navigate('/student/change-password')}>Đổi mật khẩu</span>

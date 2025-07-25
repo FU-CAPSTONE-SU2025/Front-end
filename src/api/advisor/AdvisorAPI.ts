@@ -273,3 +273,50 @@ export const GetLeaveScheduleById = async (id: number): Promise<LeaveSchedule | 
     return null;
   }
 }; 
+
+// Lấy danh sách meeting của advisor (self)
+export const getAdvisorSelfMeetings = async (pageNumber = 1, pageSize = 50): Promise<any> => {
+  const params = new URLSearchParams({
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString(),
+  });
+  const props = {
+    data: null,
+    url: baseUrl +'/Meeting/all-adv-self/paged?' + params.toString(),
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    return null;
+  }
+}; 
+
+export const confirmMeeting = async (id: number): Promise<any> => {
+  const props = {
+    data: null,
+    url: `${baseUrl}/Meeting/confirm/${id}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosUpdate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to confirm meeting');
+  }
+};
+
+export const cancelPendingMeeting = async (id: number): Promise<any> => {
+  const props = {
+    data: null,
+    url: `${baseUrl}/Meeting/cancel-the-pending/${id}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosUpdate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to cancel meeting');
+  }
+}; 
