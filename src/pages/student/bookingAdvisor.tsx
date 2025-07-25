@@ -173,20 +173,26 @@ const BookingPage = () => {
           invalidateAdvisorData(selectedAdvisor.staffDataDetailResponse.id);
         }
       } else {
-        // Show only StartDateTime error messages from backend
+        // Show only error messages from backend (no key, just content)
         if (result === null && (window as any).lastBookingError) {
           const err = (window as any).lastBookingError;
           console.error('Booking API error:', err); // Debug log
           let errorMsg = '';
-          if (err.errors && err.errors.StartDateTime) {
-            if (Array.isArray(err.errors.StartDateTime)) {
-              errorMsg = err.errors.StartDateTime.join('\n');
-            } else {
-              errorMsg = err.errors.StartDateTime;
+          if (err.errors) {
+            const errorLines: string[] = [];
+            for (const key in err.errors) {
+              if (Array.isArray(err.errors[key])) {
+                errorLines.push(...err.errors[key]);
+              } else {
+                errorLines.push(err.errors[key]);
+              }
             }
-          } else if (err.message) {
+            errorMsg = errorLines.join('\n');
+          }
+          if (!errorMsg && err.message) {
             errorMsg = err.message;
-          } else {
+          }
+          if (!errorMsg) {
             errorMsg = 'Booking failed. Please try again!';
           }
           Modal.error({
@@ -203,15 +209,21 @@ const BookingPage = () => {
         const data = err.response.data;
         console.error('Booking API error:', data); // Debug log
         let errorMsg = '';
-        if (data.errors && data.errors.StartDateTime) {
-          if (Array.isArray(data.errors.StartDateTime)) {
-            errorMsg = data.errors.StartDateTime.join('\n');
-          } else {
-            errorMsg = data.errors.StartDateTime;
+        if (data.errors) {
+          const errorLines: string[] = [];
+          for (const key in data.errors) {
+            if (Array.isArray(data.errors[key])) {
+              errorLines.push(...data.errors[key]);
+            } else {
+              errorLines.push(data.errors[key]);
+            }
           }
-        } else if (data.message) {
+          errorMsg = errorLines.join('\n');
+        }
+        if (!errorMsg && data.message) {
           errorMsg = data.message;
-        } else {
+        }
+        if (!errorMsg) {
           errorMsg = 'Booking failed. Please try again!';
         }
         Modal.error({

@@ -1,13 +1,18 @@
 import React from 'react';
-import { Modal, Spin, Tag, Divider } from 'antd';
+import { Modal, Spin, Tag, Divider, Button, message } from 'antd';
 import { CalendarOutlined, ClockCircleOutlined, UserOutlined, MailOutlined, CheckCircleTwoTone, CloseCircleTwoTone, InfoCircleTwoTone, MessageTwoTone } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { useAuths } from '../../hooks/useAuths';
+import { axiosUpdate } from '../../api/AxiosCRUD';
+import { GetHeader, baseUrl } from '../../api/template';
+import { confirmMeeting, cancelPendingMeeting } from '../../api/advisor/AdvisorAPI';
 
 interface MeetingDetailModalProps {
   open: boolean;
   onClose: () => void;
   detail: any;
   loading: boolean;
+  onActionComplete?: () => void; // Optional callback for parent to refresh data
 }
 
 const statusMap: Record<number, { color: string; text: string; icon: React.ReactNode }> = {
@@ -17,9 +22,46 @@ const statusMap: Record<number, { color: string; text: string; icon: React.React
   4: { color: 'orange', text: 'Advisor Absent', icon: <InfoCircleTwoTone twoToneColor="#faad14" /> },
 };
 
-const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, detail, loading }) => {
+const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, detail, loading, onActionComplete }) => {
   const status = detail?.status;
   const statusInfo = statusMap[status] || { color: 'default', text: 'Unknown', icon: <InfoCircleTwoTone /> };
+  const [actionLoading, setActionLoading] = React.useState(false);
+  const userRole = useAuths(state => state.userRole);
+
+  // Determine if user is Advisor (string or number, adjust as needed)
+  const isAdvisor = userRole === 'advisor' || userRole === 3 || userRole === 'Advisor';
+  // Only show buttons if Advisor and meeting is Upcoming (pending)
+  const showActionButtons = isAdvisor && status === 1;
+
+  const handleConfirm = async () => {
+    if (!detail?.id) return;
+    setActionLoading(true);
+    try {
+      await confirmMeeting(detail.id);
+      message.success('Meeting confirmed successfully!');
+      onClose();
+      if (onActionComplete) onActionComplete();
+    } catch (err) {
+      message.error('Failed to confirm meeting.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!detail?.id) return;
+    setActionLoading(true);
+    try {
+      await cancelPendingMeeting(detail.id);
+      message.success('Meeting cancelled successfully!');
+      onClose();
+      if (onActionComplete) onActionComplete();
+    } catch (err) {
+      message.error('Failed to cancel meeting.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <Modal
@@ -100,6 +142,13 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
                 <div className="text-xs font-medium text-orange-700 mb-1">Note</div>
                 <div className="text-base">{detail.note}</div>
               </div>
+            </div>
+          )}
+          {/* Advisor action buttons */}
+          {showActionButtons && (
+            <div className="flex gap-4 justify-end mt-4">
+              <Button type="primary" loading={actionLoading} onClick={handleConfirm} disabled={actionLoading}>Confirm</Button>
+              <Button danger loading={actionLoading} onClick={handleCancel} disabled={actionLoading}>Cancel</Button>
             </div>
           )}
         </div>

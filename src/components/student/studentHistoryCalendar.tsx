@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Spin, Modal, Segmented, Button } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
-import CalendarView from './calendarView';
+import HistoryCalendarView from './historyCalendarView';
 import { getMeetingDetail } from '../../api/student/StudentAPI';
 import { AdvisorMeetingItem } from '../../interfaces/IStudent';
 import { CloseCircleOutlined, UserOutlined, CalendarOutlined, ClockCircleOutlined, MailOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
@@ -82,12 +82,9 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({ meeting
 
   // Custom calendarView chỉ render slot đã book
   const CustomCalendarView = () => (
-    <CalendarView
+    <HistoryCalendarView
       viewMode={viewMode}
       selectedDate={selectedDate}
-      selectedAdvisor={null}
-      mockWorkSlots={getWorkSlots(selectedDate)}
-      leaveSchedules={[]}
       meetings={meetings}
       onDateChange={setSelectedDate}
       onSlotClick={handleSlotClick}

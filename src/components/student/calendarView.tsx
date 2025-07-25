@@ -16,6 +16,7 @@ interface WorkSlot {
   dayInWeek: number;
   staffProfileId: number;
   type?: string;
+  meeting?: AdvisorMeetingItem | null;
 }
 
 interface CalendarViewProps {
@@ -76,20 +77,7 @@ const CalendarView = ({
     return processedSlots;
   };
 
-  // Check if a date has leave schedule
-  const hasLeaveSchedule = (date: Dayjs) => {
-    if (!selectedAdvisor || !leaveSchedules) return false;
-    const staffProfileId = selectedAdvisor.staffDataDetailResponse?.id;
-    if (!staffProfileId) return false;
 
-    return leaveSchedules.some(leave => {
-      const leaveStart = dayjs(leave.startDateTime);
-      const leaveEnd = dayjs(leave.endDateTime);
-      return leave.staffProfileId === staffProfileId && 
-             date.isSame(leaveStart, 'day') || 
-             date.isBetween(leaveStart, leaveEnd, 'day', '[]');
-    });
-  };
 
   // Check if a date is in the past
   const isDateInPast = (date: Dayjs) => {
@@ -98,26 +86,10 @@ const CalendarView = ({
   };
 
   // Check if a date is today
-  const isDateToday = (date: Dayjs) => {
-    return date.isSame(dayjs(), 'day');
-  };
+ 
 
   // Check if a specific hour is within leave schedule
-  const isHourInLeaveSchedule = (date: Dayjs, hour: string) => {
-    if (!selectedAdvisor || !leaveSchedules) return false;
-    const staffProfileId = selectedAdvisor.staffDataDetailResponse?.id;
-    if (!staffProfileId) return false;
 
-    const currentHour = parseInt(hour.split(':')[0]);
-    const currentDate = date.hour(currentHour);
-
-    return leaveSchedules.some(leave => {
-      const leaveStart = dayjs(leave.startDateTime);
-      const leaveEnd = dayjs(leave.endDateTime);
-      return leave.staffProfileId === staffProfileId && 
-             currentDate.isBetween(leaveStart, leaveEnd, 'hour', '[]');
-    });
-  };
 
   // Get leave schedule for a specific date
   const getLeaveScheduleForDate = (date: Dayjs) => {
@@ -312,18 +284,18 @@ const CalendarView = ({
             );
           }
           return (
-            <motion.div
-              key={slot.id}
-              className={`bg-gradient-to-r ${getSlotTypeColor(slot.type)} text-white rounded px-1.5 py-1 text-xs flex items-center justify-center shadow-sm transition-all duration-200 border border-white/20 ${
-                isPast ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'
-              }`}
-              whileHover={isPast ? {} : { scale: 1.02 }}
-              whileTap={isPast ? {} : { scale: 0.98 }}
-              onClick={isPast ? undefined : () => handleSlotClick(slot, date)}
-            >
-              <ClockCircleOutlined className="text-xs mr-1" />
-              <span className="font-medium truncate text-xs">{slot.startTime.slice(0,5)}-{slot.endTime.slice(0,5)}</span>
-            </motion.div>
+          <motion.div
+            key={slot.id}
+            className={`bg-gradient-to-r ${getSlotTypeColor(slot.type)} text-white rounded px-1.5 py-1 text-xs flex items-center justify-center shadow-sm transition-all duration-200 border border-white/20 ${
+              isPast ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'
+            }`}
+            whileHover={isPast ? {} : { scale: 1.02 }}
+            whileTap={isPast ? {} : { scale: 0.98 }}
+            onClick={isPast ? undefined : () => handleSlotClick(slot, date)}
+          >
+            <ClockCircleOutlined className="text-xs mr-1" />
+            <span className="font-medium truncate text-xs">{slot.startTime.slice(0,5)}-{slot.endTime.slice(0,5)}</span>
+          </motion.div>
           );
         })}
         
@@ -364,7 +336,6 @@ const CalendarView = ({
             }
           </p>
         </div>
-        
         {/* Timeline */}
         <div className="max-h-96 overflow-y-auto">
           <div className="relative">
@@ -376,7 +347,6 @@ const CalendarView = ({
                 </div>
               ))}
             </div>
-            
             {/* Content area with positioned slots */}
             <div className="ml-24 relative" style={{ height: `${hours.length * 60}px` }}>
               {/* Leave schedule overlay */}
@@ -395,33 +365,55 @@ const CalendarView = ({
                   </div>
                 </motion.div>
               )}
-              
-              {/* Available slots */}
+              {/* Booked slots (history view) */}
               {slots.map(slot => {
                 const topPosition = getSlotTopPosition(slot);
                 const height = getSlotHeight(slot);
-                const booked = isSlotBooked(slot, selectedDate);
-                if (booked) {
-                  // Overlay giống leave
+                // Nếu là trang history (selectedAdvisor === null) và slot đã book
+                if (!selectedAdvisor && slot.type === 'booked' && slot.meeting) {
                   return (
                     <motion.div
                       key={slot.id}
-                      className="absolute left-4 right-4 bg-gradient-to-r from-gray-400 to-gray-500 rounded-xl shadow-lg opacity-80 border-2 border-gray-400 flex items-center justify-center"
+                      className="absolute left-4 right-4 bg-gradient-to-r from-orange-400 to-blue-500 rounded-xl shadow-lg border-2 border-blue-400 flex items-center justify-center cursor-pointer"
                       style={{
                         top: `${topPosition}px`,
                         height: `${height}px`,
                         minHeight: '60px',
                         zIndex: 2
                       }}
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      onClick={() => onSlotClick(slot, selectedDate)}
                     >
-                      <div className="flex flex-col items-center justify-center w-full h-full text-white font-medium">
-                        <CloseCircleOutlined className="mb-1 text-2xl" />
-                        <span className="text-sm font-semibold">This slot has already been booked</span>
+                      <div className="flex flex-col items-center justify-center w-full h-full text-white font-bold">
+                        <span className="text-base">{slot.meeting.titleStudentIssue || 'Booked'}</span>
+                        <span className="text-xs font-normal mt-1">{slot.startTime.slice(0,5)} - {slot.endTime.slice(0,5)}</span>
                       </div>
                     </motion.div>
                   );
                 }
-                // Slot chưa bị book, render như cũ
+                // Nếu là booking view cũ hoặc slot chưa book, giữ nguyên
+                if (selectedAdvisor) {
+                  const booked = isSlotBooked(slot, selectedDate);
+                  if (booked) {
+                    return (
+                      <motion.div
+                        key={slot.id}
+                        className="absolute left-4 right-4 bg-gradient-to-r from-gray-400 to-gray-500 rounded-xl shadow-lg opacity-80 border-2 border-gray-400 flex items-center justify-center"
+                        style={{
+                          top: `${topPosition}px`,
+                          height: `${height}px`,
+                          minHeight: '60px',
+                          zIndex: 2
+                        }}
+                      >
+                        <div className="flex flex-col items-center justify-center w-full h-full text-white font-medium">
+                          <CloseCircleOutlined className="mb-1 text-2xl" />
+                          <span className="text-sm font-semibold">This slot has already been booked</span>
+                        </div>
+                      </motion.div>
+                    );
+                  }
+                  // Slot chưa bị book, render như cũ
                 return (
                   <motion.div
                     key={slot.id}
@@ -442,8 +434,10 @@ const CalendarView = ({
                     </div>
                   </motion.div>
                 );
+                }
+                // Nếu không phải slot đã book ở history, không render gì
+                return null;
               })}
-              
               {/* Hour grid lines */}
               {hours.map((hour, index) => (
                 <div
@@ -464,11 +458,9 @@ const CalendarView = ({
     const hours = generateWorkingHours();
     const weekStart = selectedDate.startOf('week');
     const weekDays: Dayjs[] = [];
-    
     for (let i = 0; i < 7; i++) {
       weekDays.push(weekStart.add(i, 'day'));
     }
-
     return (
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         {/* Week header */}
@@ -480,7 +472,6 @@ const CalendarView = ({
             {weekDays.reduce((total, day) => total + getWorkSlotsForDate(day).length, 0)} total slots this week
           </p>
         </div>
-        
         {/* Week grid */}
         <div className="max-h-96 overflow-y-auto">
           {/* Day headers */}
@@ -495,7 +486,6 @@ const CalendarView = ({
               </div>
             ))}
           </div>
-          
           {/* Week timeline with positioned slots */}
           <div className="relative">
             {/* Time labels */}
@@ -506,7 +496,6 @@ const CalendarView = ({
                 </div>
               ))}
             </div>
-            
             {/* Content area */}
             <div className="ml-24 relative" style={{ height: `${hours.length * 60}px` }}>
               {/* Day columns */}
@@ -514,7 +503,6 @@ const CalendarView = ({
                 const daySlots = getWorkSlotsForDate(day);
                 const leaveSchedule = getLeaveScheduleForDate(day);
                 const hasLeave = !!leaveSchedule;
-                
                 return (
                   <div 
                     key={dayIndex} 
@@ -540,31 +528,52 @@ const CalendarView = ({
                         </div>
                       </motion.div>
                     )}
-                    
-                    {/* Available slots */}
+                    {/* Booked slots (history view) */}
                     {daySlots.map(slot => {
                       const topPosition = getSlotTopPosition(slot);
                       const height = getSlotHeight(slot);
-                      const booked = isSlotBooked(slot, day);
-                      if (booked) {
+                      if (!selectedAdvisor && slot.type === 'booked' && slot.meeting) {
                         return (
                           <motion.div
                             key={slot.id}
-                            className="absolute left-1 right-1 bg-gradient-to-r from-gray-400 to-gray-500 rounded-lg shadow-md opacity-80 border-2 border-gray-400 flex items-center justify-center"
+                            className="absolute left-1 right-1 bg-gradient-to-r from-orange-400 to-blue-500 rounded-lg shadow-md border-2 border-blue-400 flex items-center justify-center cursor-pointer"
                             style={{
                               top: `${topPosition}px`,
                               height: `${height}px`,
                               minHeight: '30px',
                               zIndex: 2
                             }}
+                            whileHover={{ scale: 1.02 }}
+                            onClick={() => onSlotClick(slot, day)}
                           >
-                            <div className="flex flex-col items-center justify-center w-full h-full text-white text-xs font-medium">
-                              <CloseCircleOutlined className="mb-1 text-base" />
-                              <span>This slot has already been booked</span>
+                            <div className="flex flex-col items-center justify-center w-full h-full text-white font-bold">
+                              <span className="text-xs">{slot.meeting.titleStudentIssue || 'Booked'}</span>
+                              <span className="text-[10px] font-normal mt-0.5">{slot.startTime.slice(0,5)} - {slot.endTime.slice(0,5)}</span>
                             </div>
                           </motion.div>
                         );
                       }
+                      if (selectedAdvisor) {
+                        const booked = isSlotBooked(slot, day);
+                        if (booked) {
+                          return (
+                            <motion.div
+                              key={slot.id}
+                              className="absolute left-1 right-1 bg-gradient-to-r from-gray-400 to-gray-500 rounded-lg shadow-md opacity-80 border-2 border-gray-400 flex items-center justify-center"
+                              style={{
+                                top: `${topPosition}px`,
+                                height: `${height}px`,
+                                minHeight: '30px',
+                                zIndex: 2
+                              }}
+                            >
+                              <div className="flex flex-col items-center justify-center w-full h-full text-white text-xs font-medium">
+                                <CloseCircleOutlined className="mb-1 text-base" />
+                                <span>This slot has already been booked</span>
+                              </div>
+                            </motion.div>
+                          );
+                        }
                       return (
                         <motion.div
                           key={slot.id}
@@ -580,11 +589,12 @@ const CalendarView = ({
                           onClick={isDateInPast(day) ? undefined : () => onSlotClick(slot, day)}
                         />
                       );
+                      }
+                      return null;
                     })}
                   </div>
                 );
               })}
-              
               {/* Hour grid lines */}
               {hours.map((hour, index) => (
                 <div
