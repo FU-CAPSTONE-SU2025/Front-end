@@ -267,3 +267,35 @@ export const getAdvisorMeetings = async (staffProfileId: number, pageNumber = 1,
     return null;
   }
 };
+
+// API lấy lịch sử meeting của sinh viên
+export const getStudentMeetings = async (pageNumber = 1, pageSize = 20): Promise<AdvisorMeetingPaged | null> => {
+  const props = {
+    data: null,
+    url: `${baseUrl}/Meeting/all-stu-self/paged?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    console.log('Error fetching student meetings:', result.error);
+    return null;
+  }
+};
+
+// API lấy chi tiết meeting
+export const getMeetingDetail = async (meetingId: number): Promise<any> => {
+  const props = {
+    data: null,
+    url: `${baseUrl}/Meeting/detail/${meetingId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    console.log('Error fetching meeting detail:', result.error);
+    return null;
+  }
+};

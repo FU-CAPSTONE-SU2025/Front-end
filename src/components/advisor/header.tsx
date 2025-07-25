@@ -10,9 +10,8 @@ const navItems = [
   { name: 'Dashboard', path: '/advisor' },
   { name: 'Work Schedule', path: '/advisor/workSchedule' },
   { name: 'Leave Schedule', path: '/advisor/leaveSchedule' },
-  { name: 'Appointments', path: '/advisor/appointments' },
-  { name: 'Reports', path: '/advisor/reports' },
-  { name: 'Settings', path: '/advisor/settings' },
+  { name: 'Student Meeting', path: '/advisor/meeting' },
+
 ];
 
 const Header: React.FC = () => {
