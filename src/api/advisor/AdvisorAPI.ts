@@ -332,5 +332,4 @@ export const completeMeeting = async (id: number, checkInCode: string): Promise<
   }
 }; 
 
-}; 
 
