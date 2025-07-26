@@ -26,31 +26,31 @@ const Login: React.FC = () => {
         setTimeout(() => {
           nav('/admin');
           hideLoading();
-        }, 1500);
+        }, 5000);
       }
       else if(roleId === 5){
-        showForNavigation('Navigating to Student Dashboard...');
+        showForNavigation('Welcome to AISEA...');
         setTimeout(() => {
           nav('/student');
           hideLoading();
         }, 1500);
       }
       else if(roleId === 2){
-        showForNavigation('Navigating to Staff Dashboard...');
+        showForNavigation('Navigating to Staff Page...');
         setTimeout(() => {
           nav('/staff');
           hideLoading();
         }, 1500);
       }
       else if(roleId === 3){
-        showForNavigation('Navigating to Advisor Dashboard...');
+        showForNavigation('Navigating to Advisor Page...');
         setTimeout(() => {
           nav('/advisor');
           hideLoading();
         }, 1500);
       }
       else if (roleId === 4){
-        showForNavigation('Navigating to Manager Dashboard...');
+        showForNavigation('Navigating to Manager Page...');
         setTimeout(() => {
           nav('/manager');
           hideLoading();

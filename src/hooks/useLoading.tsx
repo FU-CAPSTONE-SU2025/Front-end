@@ -16,6 +16,12 @@ export const useLoading = create<LoadingState>((set) => ({
   setLoadingMessage: (message: string) => set({ message }),
 }));
 
+// Export hideLoading function
+export const hideLoading = (): void => {
+  const { hideLoading: hide } = useLoading.getState();
+  hide();
+};
+
 // Utility function for async operations
 export const withLoading = async <T,>(
   asyncOperation: () => Promise<T>,
