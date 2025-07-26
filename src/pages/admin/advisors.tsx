@@ -11,6 +11,12 @@ import useCRUDAdvisor from '../../hooks/useCRUDAdvisor';
 import { AdvisorBase } from '../../interfaces/IAdvisor';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { BulkRegisterAdvisor } from '../../api/Account/UserAPI';
+import * as XLSX from 'xlsx';
+import { GetAllMeetingRecordPaged } from '../../api/admin/auditlogAPI';
+import { AdminViewBooking } from '../../interfaces/IBookingAvailability';
+import { showForExport } from '../../hooks/useLoading';
+import { useLoading } from '../../hooks/useLoading';
+
 
 const { Option } = Select;
 
@@ -26,9 +32,18 @@ const AdvisorList: React.FC = () => {
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadMessage, setUploadMessage] = useState<string>('');
   
+  // Meeting Records State
+  const [meetingRecords, setMeetingRecords] = useState<AdminViewBooking[]>([]);
+  const [meetingPage, setMeetingPage] = useState<number>(1);
+  const [meetingPageSize, setMeetingPageSize] = useState<number>(10);
+  const [meetingTotal, setMeetingTotal] = useState<number>(0);
+  const [meetingLoading, setMeetingLoading] = useState<boolean>(false);
+  const [downloadLoading, setDownloadLoading] = useState<boolean>(false);
+
   const { categorizedData, refetch } = useActiveUserData();
   const { getAllAdvisor, advisorList, pagination, isLoading } = useCRUDAdvisor();
   const nav = useNavigate();
+  const { hideLoading } = useLoading();
 
   // Load initial data
   useEffect(() => {
@@ -40,6 +55,24 @@ const AdvisorList: React.FC = () => {
   useEffect(() => {
     loadAdvisorData();
   }, [currentPage, pageSize, filterType, filterValue]);
+
+  // Fetch meeting records
+  const fetchMeetingRecords = async (page = 1, size = 10) => {
+    setMeetingLoading(true);
+    try {
+      const data = await GetAllMeetingRecordPaged(page, size);
+      setMeetingRecords(data.items);
+      setMeetingTotal(data.totalCount);
+    } catch (err) {
+      message.error('Failed to fetch meeting records');
+    } finally {
+      setMeetingLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMeetingRecords(meetingPage, meetingPageSize);
+  }, [meetingPage, meetingPageSize]);
 
   const loadAdvisorData = () => {
     getAllAdvisor({
@@ -185,6 +218,59 @@ const AdvisorList: React.FC = () => {
     nav('/admin/edit/advisor');
   };
 
+  // Meeting Records Table Columns
+  const meetingColumns = [
+    { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
+    { title: 'Start', dataIndex: 'startDateTime', key: 'startDateTime', width: 160, render: (val: string) => new Date(val).toLocaleString() },
+    { title: 'End', dataIndex: 'endDateTime', key: 'endDateTime', width: 160, render: (val: string) => new Date(val).toLocaleString() },
+    { title: 'Status', dataIndex: 'status', key: 'status', width: 100, render: (val: number) => val === 0 ? 'Scheduled' : val === 1 ? 'Completed' : 'Cancelled' },
+    { title: 'Issue', dataIndex: 'titleStudentIssue', key: 'titleStudentIssue', width: 200 },
+    { title: 'Created At', dataIndex: 'createdAt', key: 'createdAt', width: 160, render: (val: string) => new Date(val).toLocaleString() },
+    { title: 'Advisor', key: 'advisor', width: 180, render: (_: any, rec: AdminViewBooking) => `${rec.staffFirstName} ${rec.staffLastName}` },
+    { title: 'Advisor Email', dataIndex: 'staffEmail', key: 'staffEmail', width: 200 },
+    { title: 'Student', key: 'student', width: 180, render: (_: any, rec: AdminViewBooking) => `${rec.studentFirstName} ${rec.studentLastName}` },
+    { title: 'Student Email', dataIndex: 'studentEmail', key: 'studentEmail', width: 200 },
+  ];
+
+  // Download meeting records as Excel
+  const handleDownloadMeetingRecords = async () => {
+    setDownloadLoading(true);
+    showForExport('Exporting meeting records...');
+    try {
+      // Use a very large page size to get all records in one request
+      const data = await GetAllMeetingRecordPaged(1, 10);
+      const allMeetingRecords = data.items;
+      if (!allMeetingRecords.length) {
+        message.warning('No meeting records to download');
+        hideLoading();
+        return;
+      }
+      const dataToExport = allMeetingRecords.map(rec => ({
+        ID: rec.id,
+        'Start': new Date(rec.startDateTime).toLocaleString(),
+        'End': new Date(rec.endDateTime).toLocaleString(),
+        'Status': rec.status === 0 ? 'Scheduled' : rec.status === 1 ? 'Completed' : 'Cancelled',
+        'Issue': rec.titleStudentIssue,
+        'Created At': new Date(rec.createdAt).toLocaleString(),
+        'Advisor': `${rec.staffFirstName} ${rec.staffLastName}`,
+        'Advisor Email': rec.staffEmail,
+        'Student': `${rec.studentFirstName} ${rec.studentLastName}`,
+        'Student Email': rec.studentEmail,
+      }));
+      const ws = XLSX.utils.json_to_sheet(dataToExport);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'MeetingRecords');
+      XLSX.writeFile(wb, `MeetingRecords_All_${new Date().toISOString().split('T')[0]}.xlsx`);
+      message.success(`Successfully downloaded ${allMeetingRecords.length} meeting records`);
+    } catch (error) {
+      message.error('Failed to download meeting records');
+      console.error('Download error:', error);
+    } finally {
+      setDownloadLoading(false);
+      hideLoading();
+    }
+  };
+
   // Table columns
   const columns = [
     { title: 'Id', dataIndex: 'id', key: 'id', width: 100 },
@@ -262,7 +348,13 @@ const AdvisorList: React.FC = () => {
     >
       <div className={styles.container}>
         <AccountCounter label="Advisor" advisor={categorizedData?.advisor} />
-        <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
+        <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible"
+         style={{ 
+          marginTop: '2rem',
+          maxHeight: 'none',
+          height: 'auto'
+        }}
+        >
           <div className={styles.userInfo}>
             <h2>{isDeleteMode ? 'Delete Advisor Account' : 'List Of Advisors On the System'}</h2>
             <div className={styles.controlBar}>
@@ -375,6 +467,55 @@ const AdvisorList: React.FC = () => {
                 </motion.button>
               </motion.div>
             )}
+          </div>
+        </motion.div>
+        {/* Meeting Records Section */}
+        <motion.div 
+          className={styles.profileCard} 
+          variants={cardVariants} 
+          initial="hidden" 
+          animate="visible"
+          style={{ 
+            marginTop: '2rem',
+            maxHeight: 'none',
+            height: 'auto'
+          }}
+        >
+          <div className={styles.userInfo}>
+            <h2>Meeting Records</h2>
+            <div className={styles.controlBar}>
+              <div className={styles.searchBar}>
+                {/* Search bar placeholder for future enhancement */}
+              </div>
+              <div className={styles.actions}>
+                <motion.div
+                  className={styles.actionButton}
+                  whileHover={{ scale: 1.05 }}
+                  onClick={handleDownloadMeetingRecords}
+                  style={{ cursor: downloadLoading ? 'not-allowed' : 'pointer' }}
+                >
+                  <div className={`${styles.buttonContent} ${downloadLoading ? styles.disabledButton : ''}`}>
+                    {downloadLoading ? 'Downloading...' : 'Download All'}
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+            <DataTable
+              columns={meetingColumns}
+              data={meetingRecords}
+              pagination={{
+                current: meetingPage,
+                pageSize: meetingPageSize,
+                total: meetingTotal,
+                totalPages: Math.ceil(meetingTotal / meetingPageSize),
+              }}
+              onPageChange={(page, size) => {
+                setMeetingPage(page);
+                setMeetingPageSize(size);
+              }}
+              loading={meetingLoading}
+              rowSelection={undefined}
+            />
           </div>
         </motion.div>
         {/* Data Import Modal */}
