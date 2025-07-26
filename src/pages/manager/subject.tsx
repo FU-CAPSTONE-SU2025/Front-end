@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Select, Affix, Tag, message, Pagination, Spin, Empty } from 'antd';
-import { PlusOutlined, EditOutlined, SearchOutlined, CheckOutlined, UploadOutlined } from '@ant-design/icons';
+import {SearchOutlined, CheckOutlined, UploadOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { curriculums, combos } from '../../data/schoolData';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
-import { CreateSubject } from '../../interfaces/ISchoolProgram';
-import BulkDataImport from '../../components/common/bulkDataImport';
-import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { isErrorResponse } from '../../api/AxiosCRUD';
 
 const { Option } = Select;
 
@@ -64,6 +60,10 @@ const SubjectManagerPage: React.FC = () => {
     message.success('Subject approved!');
   };
 
+  const handleViewVersion = (subjectId: number) => {
+    navigate(`/manager/subject/${subjectId}/version`);
+  };
+
   const columns = [
     { title: 'Title', dataIndex: 'subjectName', key: 'subjectName', align: 'left' as 'left', width: 260 },
     { title: 'Subject Code', dataIndex: 'subjectCode', key: 'subjectCode', align: 'left' as 'left', width: 140 },
@@ -87,6 +87,14 @@ const SubjectManagerPage: React.FC = () => {
             style={{borderRadius: 6, height: 22, padding: '0 6px', fontSize: 12, marginBottom: 0}}
           >
             {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Approve'}
+          </Button>
+          <Button
+            type="default"
+            size="small"
+            style={{ borderRadius: 6, height: 22, padding: '0 10px', fontSize: 12, marginBottom: 0 }}
+            onClick={() => handleViewVersion(record.id)}
+          >
+            View Version
           </Button>
         </div>
       ),

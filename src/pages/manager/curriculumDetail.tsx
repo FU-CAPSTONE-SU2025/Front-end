@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Affix, message, Pagination, Spin, Empty, Collapse, Modal, Form, Tag, Space, DatePicker, Typography, Progress, Select } from 'antd';
-import { PlusOutlined, EditOutlined, SearchOutlined, CheckOutlined, UploadOutlined, ImportOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import {  Input, Button, Affix, message ,Collapse, Modal, Typography, Progress, Select } from 'antd';
+import { PlusOutlined, EditOutlined, SearchOutlined, CheckOutlined, ImportOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { useNavigate } from 'react-router';
-import { useCRUDCurriculum, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateCurriculum } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
-import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { subjects, combos, comboSubjects, curriculums, curriculumSubjects } from '../../data/schoolData';
 import { AddSubjectToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
-import dayjs from 'dayjs';
 import { isErrorResponse } from '../../api/AxiosCRUD';
 
 const { Panel } = Collapse;

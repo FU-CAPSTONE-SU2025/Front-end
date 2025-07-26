@@ -49,6 +49,9 @@ import AdvisorDashboard from "../pages/advisor/dashboard";
 import WorkSchedule from "../pages/advisor/workSchedule";
 import LeaveSchedulePage from "../pages/advisor/leaveschedule";
 import SubjectVersionPage from "../pages/staff/subjectVersion";
+import ManagerSubjectVersionPage from "../pages/manager/viewSubjectVersion";
+import HistoryMeeting from "../pages/student/historyMeeting";
+import MeetingPage from "../pages/advisor/meetingPage";
 
 export const routes = createBrowserRouter([
   {
@@ -103,6 +106,10 @@ export const routes = createBrowserRouter([
       {
         path: "resourceExplorer",
         Component: ResourceExplorer,
+      },
+      {
+        path: "historyMeeting",
+        Component: HistoryMeeting,
       },
       {
         path: "courseTracking",
@@ -192,6 +199,10 @@ export const routes = createBrowserRouter([
         path: "leaveSchedule",
         Component: LeaveSchedulePage,
       },
+      {
+        path: "meeting",
+        Component: MeetingPage,
+      },
     ]
   },
    {
@@ -246,6 +257,10 @@ export const routes = createBrowserRouter([
       {
         path: "subject/:id",
         Component: SubjectDetail,
+      },
+      {
+        path: "subject/:subjectId/version",
+        Component: ManagerSubjectVersionPage,
       },
       {
         path: "subject/:subjectId/syllabus/:syllabusId?",

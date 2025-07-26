@@ -36,7 +36,6 @@ const TypingIndicator: React.FC = () => (
         />
       </div>
 
-      {/* Typing Bubble */}
       <div className="flex flex-col items-start">
         <div className="text-xs font-medium mb-1 text-gray-600">
           {AI_BOT.name}
