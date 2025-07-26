@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Spin, Modal, Segmented, Button } from 'antd';
+import { Spin, Modal, Segmented, Button, Tag } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import HistoryCalendarView from './historyCalendarView';
 import { getMeetingDetail } from '../../api/student/StudentAPI';
 import { AdvisorMeetingItem } from '../../interfaces/IStudent';
-import { CloseCircleOutlined, UserOutlined, CalendarOutlined, ClockCircleOutlined, MailOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, UserOutlined, CalendarOutlined, ClockCircleOutlined, MailOutlined, LeftOutlined, RightOutlined, CheckCircleTwoTone, InfoCircleTwoTone } from '@ant-design/icons';
 import MeetingDetailModal from './meetingDetailModal';
 
 interface StudentHistoryCalendarProps {
@@ -18,6 +18,18 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({ meeting
   const [selectedMeeting, setSelectedMeeting] = useState<AdvisorMeetingItem | null>(null);
   const [detail, setDetail] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  // Status mapping for display
+  const statusMap: Record<number, { color: string; text: string; icon: React.ReactNode }> = {
+    1: { color: 'blue', text: 'Pending', icon: <InfoCircleTwoTone twoToneColor="#1890ff" /> },
+    2: { color: 'green', text: 'Confirmed', icon: <CheckCircleTwoTone twoToneColor="#52c41a" /> },
+    3: { color: 'red', text: 'Advisor Canceled', icon: <CloseCircleOutlined className="text-red-500" /> },
+    4: { color: 'orange', text: 'Completed', icon: <CheckCircleTwoTone twoToneColor="#52c41a" /> },
+    5: { color: 'red', text: 'Student Missed', icon: <CloseCircleOutlined className="text-red-500" /> },
+    6: { color: 'red', text: 'Advisor Missed', icon: <CloseCircleOutlined className="text-red-500" /> },
+    8: { color: 'red', text: 'Overdue', icon: <CloseCircleOutlined className="text-red-500" /> },
+    9: { color: 'red', text: 'Student Canceled', icon: <CloseCircleOutlined className="text-red-500" /> },
+  };
 
   // Chỉ filter slot hiển thị (slot >= today), không filter selectedDate
   const filteredMeetings = meetings.filter(m => dayjs(m.startDateTime).isSameOrAfter(dayjs(), 'day'));
@@ -94,30 +106,41 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({ meeting
 
   return (
     <div className="mt-12 w-full px-4 sm:px-8 grid grid-cols-1 xl:grid-cols-3 gap-8">
-      {/* Cột trái: Upcoming ở trên cùng */}
+      {/* Cột trái:  ở trên cùng */}
       <div className="col-span-1 flex flex-col items-start">
         <div className="rounded-2xl shadow bg-gradient-to-r from-blue-50 to-orange-50 p-6 flex flex-col gap-4 border border-blue-100 min-h-[180px] w-[350px] sm:w-[400px]">
           <div className="flex items-center gap-3 mb-1">
             <CalendarOutlined className="text-blue-500 text-2xl" />
-            <span className="text-xl font-bold text-blue-900">Upcoming Bookings</span>
+            <span className="text-xl font-bold text-blue-900">Bookings</span>
             <span className="bg-blue-100 text-blue-700 font-semibold rounded-full px-3 py-1 text-xs ml-2">{upcomingBookings.length}</span>
           </div>
           {upcomingBookings.length === 0 ? (
-            <div className="text-gray-400 italic text-sm pl-2">No upcoming bookings</div>
+            <div className="text-gray-400 italic text-sm pl-2">No bookings</div>
           ) : (
-            <div className="flex flex-col gap-2 w-full">
-              {upcomingBookings.slice(0, 5).map(b => (
-                <div key={b.id} className="flex items-center gap-4 bg-white/80 rounded-xl px-4 py-2 shadow-sm border border-blue-100 w-full">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 flex-1">
-                    <span className="font-semibold text-blue-900 text-sm min-w-[90px]">{dayjs(b.startDateTime).format('ddd, MMM D')}</span>
-                    <span className="text-gray-700 text-xs font-medium min-w-[90px]">{dayjs(b.startDateTime).format('HH:mm')} - {dayjs(b.endDateTime).format('HH:mm')}</span>
-                    <span className="text-gray-800 text-sm font-semibold truncate max-w-[120px]">{b.titleStudentIssue}</span>
+            <div className="flex flex-col gap-2 w-full max-h-[400px] overflow-y-auto">
+              {upcomingBookings.map(b => {
+                const statusInfo = statusMap[b.status] || { color: 'default', text: 'Unknown', icon: <InfoCircleTwoTone /> };
+                return (
+                  <div key={b.id} className="flex flex-col bg-white/80 rounded-xl px-4 py-3 shadow-sm border border-blue-100 w-full hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleSlotClick({ meeting: b, id: b.id }, dayjs(b.startDateTime))}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-blue-900 text-sm">{dayjs(b.startDateTime).format('ddd, MMM D')}</span>
+                        <span className="text-gray-700 text-xs font-medium">{dayjs(b.startDateTime).format('HH:mm')} - {dayjs(b.endDateTime).format('HH:mm')}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {statusInfo.icon}
+                        <Tag color={statusInfo.color} className="font-semibold text-xs px-2 py-0.5 rounded-full">
+                          {statusInfo.text}
+                        </Tag>
+                      </div>
+                    </div>
+                    <div className="text-gray-800 text-sm font-semibold truncate">{b.titleStudentIssue}</div>
+                    <div className="text-gray-600 text-xs mt-1">
+                      {b.staffFirstName} {b.staffLastName}
+                    </div>
                   </div>
-                </div>
-              ))}
-              {upcomingBookings.length > 5 && (
-                <div className="text-xs text-gray-500 mt-1 pl-2">...and {upcomingBookings.length - 5} more</div>
-              )}
+                );
+              })}
             </div>
           )}
         </div>
