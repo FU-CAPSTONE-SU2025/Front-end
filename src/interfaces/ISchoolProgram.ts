@@ -171,7 +171,6 @@ export interface SubjectVersion {
   subjectId: number,
   isActive: boolean,
   isApproved: boolean,
-  isSubject: boolean | false,
   versionNumber: number,
   decisionNoDate: Date,
 }
