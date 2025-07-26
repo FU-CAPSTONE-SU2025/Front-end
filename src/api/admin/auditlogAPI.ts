@@ -7,7 +7,7 @@ import { baseUrl, GetHeader } from "../template";
 const auditlogURL = baseUrl + "/AuditLog";
 const meetingURL = baseUrl + "/Meeting";
 
-export const GetAllAuditLog = async (): Promise<any> => {
+export const GetAllAuditLog = async (): Promise<AuditLog[]> => {
   const props = {
     data: null,
     url: auditlogURL+"/all",
@@ -15,6 +15,7 @@ export const GetAllAuditLog = async (): Promise<any> => {
   };
   const result = await axiosRead(props);
   if (result.success) {
+    console.log(result.data)
     return result.data;
   } else {
     throw new Error(extractErrorMessage(result.error) || 'Failed to fetch audit log');

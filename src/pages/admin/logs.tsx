@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, DatePicker, Table, Button } from 'antd';
+import { ConfigProvider, DatePicker, Table, Button, message } from 'antd';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import * as XLSX from 'xlsx';
 import styles from '../../css/admin/logs.module.css';
-import { mockApiLogs, mockUserActivity } from '../../../data/mockData';
+import { mockUserActivity } from '../../../data/mockData';
+import { useAuditLog } from '../../hooks/useAuditLog';
+import { AuditLog } from '../../interfaces/IAuditLog';
 
 interface ActivityData {
   date: string;
@@ -14,16 +16,18 @@ interface ActivityData {
   staff: number;
 }
 
-interface ApiLog {
-  id: string;
-  userId: string;
-  role: string;
-  apiType: string;
-  timestamp: string;
-}
-
 const LogsPage: React.FC = () => {
   const [dateRange, setDateRange] = useState<[Date, Date] | null>(null);
+  const { 
+    auditLogs, 
+    loading, 
+    currentPage, 
+    pageSize, 
+    total, 
+    error, 
+    fetchAuditLogs, 
+    downloadAllAuditLogs 
+  } = useAuditLog();
 
   // Custom date filter function
   const isBetweenDates = (dateStr: string, start: Date, end: Date) => {
@@ -42,30 +46,62 @@ const LogsPage: React.FC = () => {
     return mockUserActivity.filter(item => isBetweenDates(item.date, start, end));
   }, [dateRange]);
 
-  // Table columns
+  // Table columns for audit logs
   const columns = [
-    { title: 'User ID', dataIndex: 'userId', key: 'userId', sorter: (a: ApiLog, b: ApiLog) => a.userId.localeCompare(b.userId) },
-    { title: 'Role', dataIndex: 'role', key: 'role', sorter: (a: ApiLog, b: ApiLog) => a.role.localeCompare(b.role) },
-    { title: 'API Type', dataIndex: 'apiType', key: 'apiType', sorter: (a: ApiLog, b: ApiLog) => a.apiType.localeCompare(b.apiType) },
+    { 
+      title: 'ID', 
+      dataIndex: 'id', 
+      key: 'id', 
+      width: 80,
+      sorter: (a: AuditLog, b: AuditLog) => a.id - b.id 
+    },
+    { 
+      title: 'Tag', 
+      dataIndex: 'tag', 
+      key: 'tag', 
+      width: 150,
+      sorter: (a: AuditLog, b: AuditLog) => a.tag.localeCompare(b.tag) 
+    },
+    { 
+      title: 'Description', 
+      dataIndex: 'description', 
+      key: 'description',
+      ellipsis: true,
+      render: (text: string | null) => text || '-'
+    },
     {
-      title: 'Timestamp',
-      dataIndex: 'timestamp',
-      key: 'timestamp',
-      sorter: (a: ApiLog, b: ApiLog) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+      title: 'Created At',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 180,
+      sorter: (a: AuditLog, b: AuditLog) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: (text: string) => new Date(text).toLocaleString()
     },
   ];
 
   // Export to XLSX
-  const exportToXlsx = () => {
-    const worksheet = XLSX.utils.json_to_sheet(mockApiLogs.map(log => ({
-      'User ID': log.userId,
-      'Role': log.role,
-      'API Type': log.apiType,
-      'Timestamp': log.timestamp,
-    })));
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'API Logs');
-    XLSX.writeFile(workbook, 'api_logs.xlsx');
+  const exportToXlsx = async () => {
+    try {
+      const allLogs = await downloadAllAuditLogs();
+      const worksheet = XLSX.utils.json_to_sheet(allLogs.map((log: AuditLog) => ({
+        'ID': log.id,
+        'Tag': log.tag,
+        'Description': log.description || '',
+        'Created At': new Date(log.createdAt).toLocaleString(),
+      })));
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Audit Logs');
+      XLSX.writeFile(workbook, 'audit_logs.xlsx');
+      message.success('Audit logs exported successfully!');
+    } catch (err) {
+      message.error('Failed to export audit logs');
+      console.error('Export error:', err);
+    }
+  };
+
+  // Handle table pagination
+  const handleTableChange = (pagination: any) => {
+    fetchAuditLogs(pagination.current, pagination.pageSize);
   };
 
   // Animation variants
@@ -75,8 +111,7 @@ const LogsPage: React.FC = () => {
   };
 
   return (
-    <ConfigProvider
-    >
+    <ConfigProvider>
       <div className={styles.container}>
         <motion.div className={styles.card} variants={cardVariants} initial="hidden" animate="visible">
           <h1>System Log & Monitoring</h1>
@@ -112,17 +147,36 @@ const LogsPage: React.FC = () => {
           </div>
           <div className={styles.tableSection}>
             <div className={styles.tableHeader}>
-              <h2>API Call Logs</h2>
-              <Button type="primary" onClick={exportToXlsx} className={styles.exportButton}>
+              <h2>Audit Logs</h2>
+              <Button 
+                type="primary" 
+                onClick={exportToXlsx} 
+                className={styles.exportButton}
+                loading={loading}
+              >
                 Export to XLSX
               </Button>
             </div>
+            {error && (
+              <div style={{ color: 'red', marginBottom: 16, textAlign: 'center' }}>
+                {error}
+              </div>
+            )}
             <Table
               className={styles.table}
               columns={columns}
-              dataSource={mockApiLogs}
+              dataSource={auditLogs}
               rowKey="id"
-              pagination={{ pageSize: 10 }}
+              loading={loading}
+              pagination={{
+                current: currentPage,
+                pageSize: pageSize,
+                total: total,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+              }}
+              onChange={handleTableChange}
               scroll={{ x: 'max-content' }}
             />
           </div>
