@@ -30,3 +30,21 @@ export interface UpdateBookingAvailabilityRequest {
   endTime: string;
   dayInWeek: number;
 } 
+
+export interface AdminViewBooking {
+    id: number;
+    startDateTime: string;
+    endDateTime: string;
+    status: number;
+    titleStudentIssue: string;
+    createdAt: string;
+    staffProfileId: number;
+    staffFirstName: string;
+    staffLastName: string;
+    staffEmail: string;
+    studentProfileId: number;
+    studentFirstName: string;
+    studentLastName: string;
+    studentEmail: string;
+  }
+}
