@@ -47,4 +47,3 @@ export interface AdminViewBooking {
     studentLastName: string;
     studentEmail: string;
   }
-}

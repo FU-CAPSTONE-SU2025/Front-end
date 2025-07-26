@@ -14,8 +14,7 @@ import { BulkRegisterAdvisor } from '../../api/Account/UserAPI';
 import * as XLSX from 'xlsx';
 import { GetAllMeetingRecordPaged } from '../../api/admin/auditlogAPI';
 import { AdminViewBooking } from '../../interfaces/IBookingAvailability';
-import { showForExport } from '../../hooks/useLoading';
-import { useLoading } from '../../hooks/useLoading';
+import { showForExport, hideLoading } from '../../hooks/useLoading';
 
 
 const { Option } = Select;
@@ -43,7 +42,6 @@ const AdvisorList: React.FC = () => {
   const { categorizedData, refetch } = useActiveUserData();
   const { getAllAdvisor, advisorList, pagination, isLoading } = useCRUDAdvisor();
   const nav = useNavigate();
-  const { hideLoading } = useLoading();
 
   // Load initial data
   useEffect(() => {
