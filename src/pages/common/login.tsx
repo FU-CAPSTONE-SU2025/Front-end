@@ -8,6 +8,7 @@ import styles from '../../css/loginform.module.css';
 import { Link, useNavigate } from 'react-router';
 import { getAuthState } from '../../hooks/useAuths';
 import { showForNavigation, hideLoading, showForAuth } from '../../hooks/useLoading';
+import BackgroundWrapper from '../../components/common/backgroundWrapper';
 
 const { Title, Text } = Typography;
 
@@ -125,8 +126,7 @@ const Login: React.FC = () => {
   };
 
   return (
-  <div className={styles.background}>
-    <div className={styles.container}>
+    <BackgroundWrapper variant="animated">
       <Card className={styles.loginCard}>
         <Title level={2} className={styles.title}>
           Login to AISEA
@@ -186,8 +186,7 @@ const Login: React.FC = () => {
             </Form.Item>
         </Form>
       </Card>
-    </div>
-  </div>
+    </BackgroundWrapper>
   );
 };
 
