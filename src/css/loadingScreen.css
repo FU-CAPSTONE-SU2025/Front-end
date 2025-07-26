@@ -1,0 +1,450 @@
+/* Loading Screen Styles */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #1E40AF 0%, #f97316 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+}
+
+.loading-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(255,255,255,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(255,255,255,0.05) 0%, transparent 50%);
+  animation: backgroundShift 8s ease-in-out infinite;
+}
+
+@keyframes backgroundShift {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.1) rotate(180deg); }
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+/* Liquid Glass Spinner */
+.spinner-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 40px;
+  filter: drop-shadow(0 8px 32px rgba(30, 64, 175, 0.2));
+}
+
+.spinner-main {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+  animation: liquidSpin 3s ease-in-out infinite;
+  box-shadow: 
+    inset 0 0 20px rgba(255,255,255,0.12),
+    0 0 20px rgba(255,255,255,0.10);
+}
+
+.spinner-main::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80%;
+  height: 80%;
+  background: linear-gradient(45deg, rgba(255,255,255,0.3), rgba(255,255,255,0.15));
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: liquidMorph 4s ease-in-out infinite;
+}
+
+.spinner-secondary {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  top: 15px;
+  left: 15px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 50%;
+  backdrop-filter: blur(8px);
+  animation: liquidSpin 2.5s ease-in-out infinite reverse;
+  box-shadow: 
+    inset 0 0 15px rgba(255,255,255,0.08),
+    0 0 15px rgba(255,255,255,0.08);
+}
+
+.spinner-secondary::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 70%;
+  height: 70%;
+  background: linear-gradient(-45deg, rgba(255,255,255,0.22), rgba(255,255,255,0.12));
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: liquidMorph 3s ease-in-out infinite reverse;
+}
+
+.spinner-tertiary {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  top: 30px;
+  left: 30px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.20);
+  border-radius: 50%;
+  backdrop-filter: blur(6px);
+  animation: liquidSpin 2s ease-in-out infinite;
+  box-shadow: 
+    inset 0 0 10px rgba(255,255,255,0.10),
+    0 0 10px rgba(255,255,255,0.10);
+}
+
+.spinner-tertiary::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  height: 60%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.25), rgba(255,255,255,0.10));
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: liquidMorph 2.5s ease-in-out infinite;
+}
+
+@keyframes liquidSpin {
+  0%, 100% { 
+    transform: rotate(0deg) scale(1);
+    border-radius: 50%;
+  }
+  25% { 
+    transform: rotate(90deg) scale(1.05);
+    border-radius: 45% 55% 45% 55%;
+  }
+  50% { 
+    transform: rotate(180deg) scale(1.1);
+    border-radius: 55% 45% 55% 45%;
+  }
+  75% { 
+    transform: rotate(270deg) scale(1.05);
+    border-radius: 45% 55% 45% 55%;
+  }
+}
+
+@keyframes liquidMorph {
+  0%, 100% { 
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  25% { 
+    border-radius: 60% 40% 30% 70%;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  50% { 
+    border-radius: 30% 60% 70% 40%;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  75% { 
+    border-radius: 40% 30% 60% 70%;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+}
+
+/* Remove .dots-container layout and scatter dots absolutely */
+.dots-container {
+  display: none;
+}
+
+.dot {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.32);
+  backdrop-filter: blur(5px);
+  animation: liquidPulse 2s ease-in-out infinite;
+  box-shadow: 
+    inset 0 0 8px rgba(255,255,255,0.12),
+    0 0 8px rgba(255,255,255,0.12);
+  z-index: 3;
+}
+
+.dot::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  height: 60%;
+  background: linear-gradient(45deg, #fff, #fff7ed);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: liquidMorph 1.5s ease-in-out infinite;
+}
+
+/* Scatter the dots in unique locations */
+.dot1 { top: 10%; left: 15%; animation-delay: 0s; }
+.dot2 { top: 20%; right: 20%; animation-delay: 0.3s; }
+.dot3 { bottom: 15%; left: 25%; animation-delay: 0.6s; }
+.dot4 { bottom: 10%; right: 10%; animation-delay: 0.9s; }
+.dot5 { top: 50%; left: 5%; animation-delay: 1.2s; }
+.dot6 { top: 60%; right: 8%; animation-delay: 1.5s; }
+.dot7 { bottom: 30%; right: 30%; animation-delay: 1.8s; }
+.dot8 { top: 35%; left: 80%; animation-delay: 2.1s; }
+
+@keyframes liquidPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
+/* Glass Loading Text and Bar */
+.loading-text {
+  text-align: center;
+  color: #fff;
+  background: rgba(255,255,255,0.18);
+  padding: 20px 30px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.22);
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    inset 0 0 20px rgba(255,255,255,0.18),
+    0 8px 32px rgba(255,255,255,0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loading-text h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+  animation: textGlow 2s ease-in-out infinite alternate;
+  text-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+@keyframes textGlow {
+  from {
+    text-shadow: 0 0 10px rgba(255,255,255,0.5);
+  }
+  to {
+    text-shadow: 0 0 20px #fff7ed, 0 0 30px #fff;
+  }
+}
+
+.loading-bar {
+  width: 200px;
+  height: 6px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.22);
+  backdrop-filter: blur(5px);
+  margin: 0 auto;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(255,255,255,0.5), rgba(255,255,255,0.8));
+  border-radius: 10px;
+  animation: liquidProgress 3s ease-in-out infinite;
+  box-shadow: 0 0 10px #fff7ed;
+}
+
+@keyframes liquidProgress {
+  0% {
+    width: 0%;
+    transform: translateX(-100%);
+    border-radius: 10px;
+  }
+  25% {
+    border-radius: 10px 20px 20px 10px;
+  }
+  50% {
+    width: 100%;
+    transform: translateX(0%);
+    border-radius: 20px 10px 10px 20px;
+  }
+  75% {
+    border-radius: 10px 20px 20px 10px;
+  }
+  100% {
+    width: 100%;
+    transform: translateX(100%);
+    border-radius: 10px;
+  }
+}
+
+/* Liquid Floating Particles */
+.particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.32);
+  border-radius: 50%;
+  backdrop-filter: blur(3px);
+  animation: liquidFloat 4s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(255,255,255,0.18);
+}
+
+.particle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  height: 60%;
+  background: linear-gradient(45deg, #fff, #fff7ed);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: liquidMorph 2s ease-in-out infinite;
+}
+
+.particle-1 {
+  top: 20%;
+  left: 10%;
+  animation: liquidFloat 3s ease-in-out infinite;
+}
+
+.particle-2 {
+  top: 80%;
+  left: 20%;
+  animation: liquidFloat 4s ease-in-out infinite reverse;
+}
+
+.particle-3 {
+  top: 30%;
+  right: 15%;
+  animation: liquidFloat 2.5s ease-in-out infinite;
+}
+
+.particle-4 {
+  bottom: 30%;
+  right: 25%;
+  animation: liquidFloat 3.5s ease-in-out infinite reverse;
+}
+
+.particle-5 {
+  top: 60%;
+  left: 5%;
+  animation: liquidFloat 2.8s ease-in-out infinite;
+}
+
+.particle-6 {
+  top: 15%;
+  right: 30%;
+  animation: liquidFloat 4.2s ease-in-out infinite reverse;
+}
+
+.particle-7 {
+  bottom: 20%;
+  left: 30%;
+  animation: liquidFloat 3.1s ease-in-out infinite;
+}
+
+.particle-8 {
+  top: 70%;
+  right: 10%;
+  animation: liquidFloat 2.7s ease-in-out infinite reverse;
+}
+
+@keyframes liquidFloat {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+    opacity: 0.6;
+    border-radius: 50%;
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px) scale(1.2);
+    opacity: 0.8;
+    border-radius: 60% 40% 30% 70%;
+  }
+  50% {
+    transform: translateY(-10px) translateX(-5px) scale(0.8);
+    opacity: 1;
+    border-radius: 30% 60% 70% 40%;
+  }
+  75% {
+    transform: translateY(-15px) translateX(15px) scale(1.1);
+    opacity: 0.7;
+    border-radius: 40% 30% 60% 70%;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .spinner-container {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .spinner-main {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .spinner-secondary {
+    width: 60px;
+    height: 60px;
+    top: 10px;
+    left: 10px;
+  }
+  
+  .spinner-tertiary {
+    width: 40px;
+    height: 40px;
+    top: 20px;
+    left: 20px;
+  }
+  
+  .loading-text h2 {
+    font-size: 1.2rem;
+  }
+  
+  .loading-bar {
+    width: 150px;
+  }
+  
+  .dot {
+    width: 12px;
+    height: 12px;
+  }
+} 

@@ -315,6 +315,7 @@ export const cancelPendingMeeting = async (id: number, note?: string): Promise<a
   } else {
     throw new Error(typeof result.error === 'string' ? result.error : 'Failed to cancel meeting');
   }
+
 };
 
 export const completeMeeting = async (id: number, checkInCode: string): Promise<any> => {
@@ -330,3 +331,6 @@ export const completeMeeting = async (id: number, checkInCode: string): Promise<
     throw new Error(typeof result.error === 'string' ? result.error : 'Failed to complete meeting');
   }
 }; 
+
+}; 
+

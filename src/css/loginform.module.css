@@ -1,123 +1,52 @@
-.background {
+.loginCard {
+  width: 30vw;
+  min-width: 450px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.8); /* semi-transparent white */
+  backdrop-filter: blur(1px); /* blur effect */
+  padding: 24px;
+  text-align: center;
+}
+
+.title {
+  color: #363636 !important;
+  margin-bottom: 16px;
+}
+
+.description {
+  color: #242424 !important;
+  padding: 10px 10px 10px 10px ;
+  font-size: 16px;
+}
+
+.googleButton {
+  background-color: #ff3b3b !important;
+  border-color: #ff3b3b !important;
   width: 100%;
-  position: absolute;
-  height: 100%;
-  background-image: url('/img/login.png');
-  background-repeat: repeat-x;
-  background-size: 150% auto; /* Make background larger for panorama effect */
-  background-position: 0% center;
-  background-attachment: fixed;
-  animation: panorama 30s ease-in-out infinite alternate;
-  z-index: 1;
-  overflow: hidden;
+  margin-bottom: 10px;
 }
-.container {
-    position: absolute;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    align-self: center;
-  }
-  
+
+.googleButton:hover {
+  background-color: #ff2a2a !important;
+  border-color: #ff2a2a !important;
+}
+.registerLink {
+  color: #242424 !important;
+  font-size: 14px;
+}
+
+.registerLink:hover {
+  color: #ff2a2a !important;
+}
+.comment{
+  margin-top: 5%;
+  font-style: italic;
+  color: #484848 !important;
+}
+
+@media (max-width: 768px) {
   .loginCard {
-    width: 30vw;
-    min-width: 450px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    background: rgba(255, 255, 255, 0.8); /* semi-transparent white */
-    backdrop-filter: blur(1px); /* blur effect */
-    padding: 24px;
-    text-align: center;
-  }
-  
-  .title {
-    color: #363636 !important;
-    margin-bottom: 16px;
-  }
-  
-  .description {
-    color: #242424 !important;
-    padding: 10px 10px 10px 10px ;
-    font-size: 16px;
-  }
-  
-  .googleButton {
-    background-color: #ff3b3b !important;
-    border-color: #ff3b3b !important;
-    width: 100%;
-    margin-bottom: 10px;
-  }
-  
-  .googleButton:hover {
-    background-color: #ff2a2a !important;
-    border-color: #ff2a2a !important;
-  }
-  .registerLink {
-    color: #242424 !important;
-    font-size: 14px;
-  }
-  
-  .registerLink:hover {
-    color: #ff2a2a !important;
-  }
-  .comment{
-    margin-top: 5%;
-    font-style: italic;
-    color: #484848 !important;
-  }
-  
-    @media (max-width: 768px) {
-    .container {
-      position: static;
-      min-height: 100vh;
-      width: 100%;
-      left: 0;
-      top: 0;
-      justify-content: center;
-      align-items: center;
-    }
-  
-    .loginCard {
-      width: 90vw;
-    }
-    
-    .background {
-      background-size: 200% auto; /* Larger background for mobile panorama */
-      animation: panoramaMobile 25s ease-in-out infinite alternate;
-    }
-  }
-
-@keyframes panorama {
-  0% {
-    background-position: 0% center;
-  }
-  25% {
-    background-position: 25% center;
-  }
-  50% {
-    background-position: 50% center;
-  }
-  75% {
-    background-position: 75% center;
-  }
-  100% {
-    background-position: 100% center;
-  }
-}
-
-@keyframes panoramaMobile {
-  0% {
-    background-position: 0% center;
-  }
-  50% {
-    background-position: 50% center;
-  }
-  100% {
-    background-position: 100% center;
+    width: 90vw;
   }
 }

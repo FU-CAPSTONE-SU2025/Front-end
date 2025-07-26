@@ -1,0 +1,86 @@
+/* Base background styles */
+.background {
+  width: 100%;
+  position: absolute;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Animated background variant (for login and forgot password) */
+.animated {
+  background-image: url('/img/login.png');
+  background-repeat: repeat-x;
+  background-size: 150% auto; /* Make background larger for panorama effect */
+  background-position: 0% center;
+  background-attachment: fixed;
+  animation: panorama 30s ease-in-out infinite alternate;
+}
+
+/* Transparent background variant (for 404 page) */
+.transparent {
+  background: transparent;
+}
+
+/* Container for centering content */
+.container {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  align-self: center;
+}
+
+/* Panorama animation for animated background */
+@keyframes panorama {
+  0% {
+    background-position: 0% center;
+  }
+  25% {
+    background-position: 25% center;
+  }
+  50% {
+    background-position: 50% center;
+  }
+  75% {
+    background-position: 75% center;
+  }
+  100% {
+    background-position: 100% center;
+  }
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .container {
+    position: static;
+    min-height: 100vh;
+    width: 100%;
+    left: 0;
+    top: 0;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .animated {
+    background-size: 200% auto; /* Larger background for mobile panorama */
+    animation: panoramaMobile 25s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes panoramaMobile {
+  0% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 50% center;
+  }
+  100% {
+    background-position: 100% center;
+  }
+} 

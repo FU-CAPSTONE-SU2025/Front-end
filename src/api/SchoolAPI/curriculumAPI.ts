@@ -1,7 +1,7 @@
-import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, ErrorResponse, isErrorResponse, throwApiError } from "../AxiosCRUD";
+import { axiosCreate, axiosDelete, axiosRead, axiosUpdate,throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps } from "../../interfaces/IAccount";
-import { CreateCurriculum, CreateSubjectToCurriculum, Curriculum, Subject, UpdateCurriculum, CurriculumSubject, SubjectWithCurriculumInfo } from "../../interfaces/ISchoolProgram";
+import { CreateCurriculum, CreateSubjectToCurriculum, Curriculum,SubjectWithCurriculumInfo } from "../../interfaces/ISchoolProgram";
 import { PagedData } from "../../interfaces/ISchoolProgram";
 
 const curriculumURL = baseUrl + "/Curriculum";

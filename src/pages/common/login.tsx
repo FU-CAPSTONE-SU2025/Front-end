@@ -7,6 +7,8 @@ import { GoogleOutlined } from '@ant-design/icons';
 import styles from '../../css/loginform.module.css';
 import { Link, useNavigate } from 'react-router';
 import { getAuthState } from '../../hooks/useAuths';
+import { showForNavigation, hideLoading, showForAuth } from '../../hooks/useLoading';
+import BackgroundWrapper from '../../components/common/backgroundWrapper';
 
 const { Title, Text } = Typography;
 
@@ -21,26 +23,51 @@ const Login: React.FC = () => {
   // 1: Admin, 0: Student, others: Guest -> TOBEADDED
   function RoleNavigation (roleId:number){
      if(roleId === 1){
-        nav('/admin')
+        showForNavigation('Navigating to Admin Dashboard...');
+        setTimeout(() => {
+          nav('/admin');
+          hideLoading();
+        }, 5000);
       }
       else if(roleId === 5){
-        nav('/student')
+        showForNavigation('Welcome to AISEA...');
+        setTimeout(() => {
+          nav('/student');
+          hideLoading();
+        }, 1500);
       }
       else if(roleId === 2){
-        nav('/staff')
+        showForNavigation('Navigating to Staff Page...');
+        setTimeout(() => {
+          nav('/staff');
+          hideLoading();
+        }, 1500);
       }
       else if(roleId === 3){
-        nav('/advisor')
+        showForNavigation('Navigating to Advisor Page...');
+        setTimeout(() => {
+          nav('/advisor');
+          hideLoading();
+        }, 1500);
       }
       else if (roleId === 4){
-        nav('/manager')
+        showForNavigation('Navigating to Manager Page...');
+        setTimeout(() => {
+          nav('/manager');
+          hideLoading();
+        }, 1500);
       }else{
-         nav('/404')
+         showForNavigation('Navigating...');
+         setTimeout(() => {
+           nav('/404');
+           hideLoading();
+         }, 1500);
       }
 }
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setIsGoogleLoading(true);
+      showForAuth('Authenticating with Google...');
       try {
         
         const { access_token } = tokenResponse;
@@ -56,11 +83,13 @@ const Login: React.FC = () => {
          
         }else{
           message.error('Login failed. Please try again.');
+          hideLoading();
         }
 
       } catch (error) {
         console.error('Google Login Error:', error);
         message.error('Google Login failed. Please try again.');
+        hideLoading();
       } finally {
         setIsGoogleLoading(false);
       }
@@ -68,27 +97,36 @@ const Login: React.FC = () => {
     onError: (error) => {
       console.error('Google Login Failed:', error);
       message.error('Google Login failed. Please try again.');
+      hideLoading();
     },
   });
   // Login with username and password - with the added authentication check
   const onNormalLogin = async(values: LoginProps) => {
     setIsEmailLoading(true);
-    const userAccount:GoogleAccountRequestProps = await LoginAccount(values)
-    if (userAccount) {
-      message.success('Login successful');
-          setAccessToken(userAccount.accessToken);
-          setRefreshToken(userAccount.refreshToken);
-          login(userAccount.roleId)
-          RoleNavigation(userAccount.roleId)
-    }else{
+    showForAuth('Authenticating...');
+    try {
+      const userAccount:GoogleAccountRequestProps = await LoginAccount(values)
+      if (userAccount) {
+        message.success('Login successful');
+        setAccessToken(userAccount.accessToken);
+        setRefreshToken(userAccount.refreshToken);
+        login(userAccount.roleId)
+        RoleNavigation(userAccount.roleId)
+      }else{
+        message.error('Login failed. Please try again.');
+        hideLoading();
+      }
+    } catch (error) {
+      console.error('Login Error:', error);
       message.error('Login failed. Please try again.');
+      hideLoading();
+    } finally {
+      setIsEmailLoading(false);
     }
-    setIsEmailLoading(false);
   };
 
   return (
-  <div className={styles.background}>
-    <div className={styles.container}>
+    <BackgroundWrapper variant="animated">
       <Card className={styles.loginCard}>
         <Title level={2} className={styles.title}>
           Login to AISEA
@@ -148,8 +186,7 @@ const Login: React.FC = () => {
             </Form.Item>
         </Form>
       </Card>
-    </div>
-  </div>
+    </BackgroundWrapper>
   );
 };
 
