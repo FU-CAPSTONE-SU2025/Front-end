@@ -88,22 +88,18 @@ export const FetchAdvisorById = async (userId: number): Promise<AccountProps | n
 
 export const FetchBookingAvailability = async (
   pageNumber: number = 1,
-  pageSize: number = 10
-): Promise<PagedBookingAvailabilityData | null> => {
-  const params = new URLSearchParams({
-    pageNumber: pageNumber.toString(),
-    pageSize: pageSize.toString(),
-  });
+  pageSize: number = 50
+): Promise<BookingAvailability[]> => {
   const props = {
     data: null,
-    url: baseUrl + "/BookingAvailability?" + params.toString(),
+    url: baseUrl + "/BookingAvailability/self",
     headers: GetHeader(),
   };
   const result = await axiosRead(props);
   if (result.success) {
-    return result.data;
+    return result.data || [];
   } else {
-    return null;
+    return [];
   }
 };
 
@@ -195,7 +191,7 @@ export const sendMessageToAdvisor = async ({ message }: { message: string }): Pr
 };
 
 
-const leaveScheduleURL = baseUrl + '/LeaveSche';
+
 
 export const FetchLeaveScheduleList = async (
   pageNumber: number = 1,
@@ -207,7 +203,7 @@ export const FetchLeaveScheduleList = async (
   });
   const props = {
     data: null,
-    url: leaveScheduleURL + '?' + params.toString(),
+    url:  baseUrl + '/LeaveSche/self' + params.toString(),
     headers: GetHeader(),
   };
   const result = await axiosRead(props);
@@ -221,7 +217,7 @@ export const FetchLeaveScheduleList = async (
 export const CreateLeaveSchedule = async (data: CreateLeaveScheduleRequest): Promise<LeaveSchedule | null> => {
   const props = {
     data: data,
-    url: leaveScheduleURL,
+    url: baseUrl + '/LeaveSche',
     headers: GetHeader(),
   };
   const result = await axiosCreate(props);
@@ -235,7 +231,7 @@ export const CreateLeaveSchedule = async (data: CreateLeaveScheduleRequest): Pro
 export const UpdateLeaveSchedule = async (id: number, data: UpdateLeaveScheduleRequest): Promise<LeaveSchedule | null> => {
   const props = {
     data: data,
-    url: leaveScheduleURL + `/${id}`,
+    url: baseUrl + '/LeaveSche' + `/${id}`,
     headers: GetHeader(),
   };
   const result = await axiosUpdate(props);
@@ -249,7 +245,7 @@ export const UpdateLeaveSchedule = async (id: number, data: UpdateLeaveScheduleR
 export const DeleteLeaveSchedule = async (id: number): Promise<boolean> => {
   const props = {
     data: null,
-    url: leaveScheduleURL + `/${id}`,
+    url: baseUrl + '/LeaveSche' + `/${id}`,
     headers: GetHeader(),
   };
   const result = await axiosDelete(props);
@@ -263,7 +259,7 @@ export const DeleteLeaveSchedule = async (id: number): Promise<boolean> => {
 export const GetLeaveScheduleById = async (id: number): Promise<LeaveSchedule | null> => {
   const props = {
     data: null,
-    url: leaveScheduleURL + `/simply-single/${id}`,
+    url: baseUrl + '/LeaveSche' + `/simply-single/${id}`,
     headers: GetHeader(),
   };
   const result = await axiosRead(props);
@@ -307,10 +303,10 @@ export const confirmMeeting = async (id: number): Promise<any> => {
   }
 };
 
-export const cancelPendingMeeting = async (id: number): Promise<any> => {
+export const cancelPendingMeeting = async (id: number, note?: string): Promise<any> => {
   const props = {
-    data: null,
-    url: `${baseUrl}/Meeting/cancel-the-pending/${id}`,
+    data: note ? { note } : null,
+    url: `${baseUrl}/Meeting/adv-cancel/${id}`,
     headers: GetHeader(),
   };
   const result = await axiosUpdate(props);
@@ -318,5 +314,19 @@ export const cancelPendingMeeting = async (id: number): Promise<any> => {
     return result.data;
   } else {
     throw new Error(typeof result.error === 'string' ? result.error : 'Failed to cancel meeting');
+  }
+};
+
+export const completeMeeting = async (id: number, checkInCode: string): Promise<any> => {
+  const props = {
+    data: { checkInCode },
+    url: `${baseUrl}/Meeting/complete/${id}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosUpdate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to complete meeting');
   }
 }; 

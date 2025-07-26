@@ -16,8 +16,6 @@ import styles from '../../css/advisor/workSchedule.module.css';
 const { Title, Text } = Typography;
 
 const WorkSchedule: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -28,37 +26,25 @@ const WorkSchedule: React.FC = () => {
     bookingAvailabilityList,
     pagination,
     isLoading,
-    error
+    handlePageChange
   } = useBookingAvailability();
 
   const updateBookingAvailability = useUpdateBookingAvailability();
   const deleteBookingAvailability = useDeleteBookingAvailability();
 
   useEffect(() => {
-    getAllBookingAvailability({
-      pageNumber: currentPage,
-      pageSize: pageSize
-    });
-  }, [currentPage, pageSize, getAllBookingAvailability]);
+    getAllBookingAvailability();
+  }, [getAllBookingAvailability]);
 
-  // Show error message if there's an error
-  useEffect(() => {
-    if (error) {
-      message.error('Failed to load work schedule data. Please try again.');
-    }
-  }, [error]);
 
-  const handlePageChange = (page: number, size: number) => {
-    setCurrentPage(page);
-    setPageSize(size);
+
+  const handlePageChangeWrapper = (page: number, size: number) => {
+    handlePageChange(page, size);
   };
 
   const handleAddSuccess = () => {
     // Refresh the data after adding new schedule
-    getAllBookingAvailability({
-      pageNumber: currentPage,
-      pageSize: pageSize
-    });
+    getAllBookingAvailability();
   };
 
   const handleEditSchedule = (record: BookingAvailability) => {
@@ -72,10 +58,7 @@ const WorkSchedule: React.FC = () => {
       // If no error is thrown, consider it successful
       message.success('Schedule deleted successfully!');
       // Refresh data after deletion
-      getAllBookingAvailability({
-        pageNumber: currentPage,
-        pageSize: pageSize
-      });
+      getAllBookingAvailability();
     } catch (error) {
       console.error('Error deleting schedule:', error);
       message.error('An error occurred while deleting the schedule.');
@@ -267,7 +250,7 @@ const WorkSchedule: React.FC = () => {
           data={bookingAvailabilityList}
           rowSelection={null}
           pagination={pagination}
-          onPageChange={handlePageChange}
+          onPageChange={handlePageChangeWrapper}
           loading={isLoading}
           searchQuery={searchQuery}
           searchFields={searchFields}

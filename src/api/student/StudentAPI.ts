@@ -299,3 +299,62 @@ export const getMeetingDetail = async (meetingId: number): Promise<any> => {
     return null;
   }
 };
+
+export const sendMeetingFeedback = async (meetingId: number, feedback: string, suggestionFromAdvisor: string): Promise<any> => {
+  const props = {
+    data: { feedback, suggestionFromAdvisor },
+    url: `${baseUrl}/Meeting/feedBack/${meetingId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosCreate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to send feedback');
+  }
+};
+
+// API cancel confirmed meeting by student
+export const cancelConfirmedMeeting = async (meetingId: number, note: string): Promise<any> => {
+  const props = {
+    data: { note },
+    url: `${baseUrl}/Meeting/stu-cancel-the-confirmed/${meetingId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosUpdate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to cancel confirmed meeting');
+  }
+};
+
+// API cancel pending meeting by student
+export const cancelPendingMeeting = async (meetingId: number, note: string): Promise<any> => {
+  const props = {
+    data: { note },
+    url: `${baseUrl}/Meeting/stu-cancel-the-pending/${meetingId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosUpdate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to cancel pending meeting');
+  }
+};
+
+// API mark advisor missed by student
+export const markAdvisorMissed = async (meetingId: number, note: string): Promise<any> => {
+  const props = {
+    data: { note },
+    url: `${baseUrl}/Meeting/mark-adv-missed/${meetingId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosUpdate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to mark advisor missed');
+  }
+};
