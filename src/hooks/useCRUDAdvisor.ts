@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { pagedAdvisorData } from '../interfaces/IAdvisor';
 import { 
   BookingAvailability, 
@@ -60,13 +61,10 @@ export default function useCRUDAdvisor() {
 }
 
 export function useBookingAvailability() {
-  const getBookingAvailabilityMutation = useMutation<PagedBookingAvailabilityData | null, unknown, PaginationParams>({
+  const getBookingAvailabilityMutation = useMutation<BookingAvailability[], unknown, void>({
     mutationKey: ['bookingAvailability'],
-    mutationFn: async (params: PaginationParams) => {
-      const data = await FetchBookingAvailability(
-        params.pageNumber,
-        params.pageSize
-      );
+    mutationFn: async () => {
+      const data = await FetchBookingAvailability();
       return data;
     },
     onError: (error) => {
@@ -74,23 +72,35 @@ export function useBookingAvailability() {
     },
   });
 
-  const metaData = getBookingAvailabilityMutation.data || null;
-  const bookingAvailabilityList = metaData?.items || [];
-  const pagination = metaData
-    ? {
-        current: metaData.pageNumber,
-        pageSize: metaData.pageSize,
-        total: metaData.totalCount,
-        totalPages: Math.ceil(metaData.totalCount / metaData.pageSize),
-      }
-    : null;
+  const allBookingAvailability = getBookingAvailabilityMutation.data || [];
+  
+  // Client-side pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const bookingAvailabilityList = allBookingAvailability.slice(startIndex, endIndex);
+  
+  const pagination = {
+    current: currentPage,
+    pageSize: pageSize,
+    total: allBookingAvailability.length,
+    totalPages: Math.ceil(allBookingAvailability.length / pageSize),
+  };
+
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
+  };
 
   return {
     ...getBookingAvailabilityMutation,
     getAllBookingAvailability: getBookingAvailabilityMutation.mutate,
     bookingAvailabilityList,
     pagination,
-    isLoading: getBookingAvailabilityMutation.isPending
+    isLoading: getBookingAvailabilityMutation.isPending,
+    handlePageChange
   };
 }
 
