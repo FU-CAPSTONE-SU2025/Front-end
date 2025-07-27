@@ -50,6 +50,7 @@ import WorkSchedule from "../pages/advisor/workSchedule";
 import LeaveSchedulePage from "../pages/advisor/leaveschedule";
 import SubjectVersionPage from "../pages/staff/subjectVersion";
 import ManagerSubjectVersionPage from "../pages/manager/viewSubjectVersion";
+import StudentInCoursePage from "../pages/manager/studentInCoursePage";
 import HistoryMeeting from "../pages/student/historyMeeting";
 import MeetingPage from "../pages/advisor/meetingPage";
 
@@ -211,6 +212,10 @@ export const routes = createBrowserRouter([
     loader: protectedLoader(['4']),
     children:[
       {
+        path: "studentInCourse",
+        Component: StudentInCoursePage,
+      },
+      {
         path: "curriculum",
         Component: HomePage,
       },
@@ -265,6 +270,10 @@ export const routes = createBrowserRouter([
       {
         path: "subject/:subjectId/syllabus/:syllabusId?",
         Component: ManagerSubjectSyllabus,
+      },
+      {
+        path: "student-monitoring",
+        Component: StudentInCoursePage,
       },
 
     ]

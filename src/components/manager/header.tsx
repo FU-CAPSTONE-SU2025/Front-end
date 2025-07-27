@@ -9,6 +9,7 @@ const navLinks = [
   { name: 'Curriculum', path: '/manager/curriculum' },
   { name: 'Combos', path: '/manager/combo' },
   { name: 'Subjects', path: '/manager/subject' },
+  { name: 'Student Monitoring', path: '/manager/student-monitoring' },
 ];
 
 const ManagerHeader = () => {
