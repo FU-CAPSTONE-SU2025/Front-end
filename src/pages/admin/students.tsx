@@ -12,6 +12,7 @@ import useCRUDStudent from '../../hooks/useCRUDStudent';
 import { StudentBase } from '../../interfaces/IStudent';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { BulkRegisterStudent, DisableUser } from '../../api/Account/UserAPI';
+import { parseExcelDate } from '../../utils/dateUtils';
 
 const { Option } = Select;
 
@@ -98,10 +99,10 @@ const StudentList: React.FC = () => {
         password: item.password || 'defaultPassword123',
         firstName: item.firstName || '',
         lastName: item.lastName || '',
-        dateOfBirth: item.dateOfBirth || new Date().toISOString(),
+        dateOfBirth: parseExcelDate(item.dateOfBirth).toISOString(),
         studentProfileData: {
           numberOfBan: item.numberOfBan ? parseInt(item.numberOfBan) : 0,
-          enrolledAt: item.enrolledAt ? new Date(item.enrolledAt) : (item.enrollDate ? new Date(item.enrollDate) : new Date()),
+          enrolledAt: parseExcelDate(item.enrolledAt || item.enrollDate),
           careerGoal: item.careerGoal || 'Not specified'
         },
         staffProfileData: null

@@ -11,6 +11,7 @@ import useCRUDManager from '../../hooks/useCRUDManager';
 import { ManagerBase } from '../../interfaces/IManager';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { BulkRegisterManager } from '../../api/Account/UserAPI';
+import { parseExcelDate } from '../../utils/dateUtils';
 
 const { Option } = Select;
 
@@ -72,6 +73,7 @@ const ManagerList: React.FC = () => {
         message.warning('No manager data found in the imported file');
         return;
       }
+
       // Transform the imported data to match BulkAccountPropsCreate interface
       const transformedData = managerData.map(item => ({
         email: item.email || '',
@@ -79,14 +81,14 @@ const ManagerList: React.FC = () => {
         password: item.password || 'defaultPassword123',
         firstName: item.firstName || '',
         lastName: item.lastName || '',
-        dateOfBirth: item.dateOfBirth || new Date().toISOString(),
+        dateOfBirth: parseExcelDate(item.dateOfBirth).toISOString(),
         studentProfileData: null,
         staffProfileData: {
           campus: item.campus || '',
           department: item.department || '',
           position: item.position || '',
-          startWorkAt: item.startWorkAt ? new Date(item.startWorkAt) : new Date(),
-          endWorkAt: item.endWorkAt ? new Date(item.endWorkAt) : new Date()
+          startWorkAt: parseExcelDate(item.startWorkAt),
+          endWorkAt: parseExcelDate(item.endWorkAt)
         }
       }));
       // Call the bulk registration API
@@ -102,10 +104,9 @@ const ManagerList: React.FC = () => {
       // Treat null/undefined (204 No Content) as success
       if (response !== null && response !== undefined || response === null) {
         setUploadStatus('success');
-        setUploadMessage(`Successfully imported ${managerData.length} managers`);
-        message.success(`Successfully imported ${managerData.length} managers`);
+        setUploadMessage(`Successfully imported ${transformedData.length} managers`);
+        message.success(`Successfully imported ${transformedData.length} managers`);
         // Refresh the manager list
-        refetch();
         loadManagerData();
       } else {
         setUploadStatus('error');

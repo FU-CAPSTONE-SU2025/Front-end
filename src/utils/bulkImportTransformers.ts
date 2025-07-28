@@ -1,6 +1,7 @@
 import { BulkAccountPropsCreate } from '../interfaces/IAccount';
 import { StudentProfileData } from '../interfaces/IStudent';
 import { StaffProfileData } from '../interfaces/IStaff';
+import { parseExcelDate, formatDateForDisplay } from './dateUtils';
 
 /**
  * Transform flat Excel data into proper nested structure for bulk account creation
@@ -11,14 +12,14 @@ export const transformBulkImportData = (
   dataType: string
 ): BulkAccountPropsCreate[] => {
   return flatData.map(item => {
-    // Main fields
+    // Main fields with safe date parsing
     const baseAccount = {
       email: item.email || '',
       username: item.username || item.email?.split('@')[0] || '',
       password: item.password || 'defaultPassword123',
       firstName: item.firstName || '',
       lastName: item.lastName || '',
-      dateOfBirth: item.dateOfBirth ? new Date(item.dateOfBirth) : new Date(),
+      dateOfBirth: parseExcelDate(item.dateOfBirth),
       studentProfileData: null as StudentProfileData | null,
       staffProfileData: null as StaffProfileData | null
     };
@@ -30,7 +31,7 @@ export const transformBulkImportData = (
           ...baseAccount,
           studentProfileData: {
             numberOfBan: item.numberOfBan ? parseInt(item.numberOfBan) : 0,
-            enrolledAt: item.enrolledAt ? new Date(item.enrolledAt) : new Date(),
+            enrolledAt: parseExcelDate(item.enrolledAt || item.enrollDate),
             careerGoal: item.careerGoal || 'Not specified'
           },
           staffProfileData: null
@@ -45,8 +46,8 @@ export const transformBulkImportData = (
             campus: item.campus || '',
             department: item.department || '',
             position: item.position || '',
-            startWorkAt: item.startWorkAt ? new Date(item.startWorkAt) : new Date(),
-            endWorkAt: item.endWorkAt ? new Date(item.endWorkAt) : new Date()
+            startWorkAt: parseExcelDate(item.startWorkAt),
+            endWorkAt: parseExcelDate(item.endWorkAt)
           }
         };
       case 'ADMIN':
@@ -113,15 +114,13 @@ export const createPreviewData = (
       password: item.password,
       firstName: item.firstName,
       lastName: item.lastName,
-      dateOfBirth: item.dateOfBirth instanceof Date ? item.dateOfBirth.toISOString().split('T')[0] : String(item.dateOfBirth)
+      dateOfBirth: formatDateForDisplay(item.dateOfBirth)
     };
     switch (dataType) {
       case 'STUDENT':
         return {
           ...basePreview,
-          enrolledAt: item.studentProfileData?.enrolledAt instanceof Date
-            ? item.studentProfileData.enrolledAt.toISOString().split('T')[0]
-            : item.studentProfileData?.enrolledAt || '',
+          enrolledAt: formatDateForDisplay(item.studentProfileData?.enrolledAt),
           careerGoal: item.studentProfileData?.careerGoal || ''
         };
       case 'STAFF':
@@ -132,12 +131,8 @@ export const createPreviewData = (
           campus: item.staffProfileData?.campus || '',
           department: item.staffProfileData?.department || '',
           position: item.staffProfileData?.position || '',
-          startWorkAt: item.staffProfileData?.startWorkAt instanceof Date
-            ? item.staffProfileData.startWorkAt.toISOString().split('T')[0]
-            : item.staffProfileData?.startWorkAt || '',
-          endWorkAt: item.staffProfileData?.endWorkAt instanceof Date
-            ? item.staffProfileData.endWorkAt.toISOString().split('T')[0]
-            : item.staffProfileData?.endWorkAt || ''
+          startWorkAt: formatDateForDisplay(item.staffProfileData?.startWorkAt),
+          endWorkAt: formatDateForDisplay(item.staffProfileData?.endWorkAt)
         };
       case 'ADMIN':
         return basePreview;

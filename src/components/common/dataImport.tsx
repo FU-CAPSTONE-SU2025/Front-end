@@ -62,71 +62,92 @@ const DataImport: React.FC<DataImportProps> = ({
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+        try {
+          const data = e.target?.result;
+          
+          // Enhanced error handling for xlsx 0.20.3 compatibility
+          let workbook;
+          try {
+            workbook = XLSX.read(data, { type: 'binary' });
+          } catch (xlsxError) {
+            console.error('XLSX parsing error:', xlsxError);
+            setError('Error reading Excel file. The file format may not be supported or the file may be corrupted.');
+            return;
+          }
+          
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          
+          if (!worksheet) {
+            setError('No worksheet found in the Excel file.');
+            return;
+          }
+          
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
 
-        // Validation logic
-        if (!jsonData || jsonData.length === 0) {
-          setError('The Excel file is empty.');
-          return;
-        }
+          // Validation logic
+          if (!jsonData || jsonData.length === 0) {
+            setError('The Excel file is empty.');
+            return;
+          }
 
-        const config = getHeaderConfig(headerConfig);
-        const headers = jsonData[0] as string[];
-        const expectedHeaders = config.headers;
-        
-        // Check for missing headers
-        const missingHeaders = expectedHeaders.filter(header => !headers.includes(header));
-        if (missingHeaders.length > 0) {
-          setError(`Missing required headers for ${dataType}: ${missingHeaders.join(', ')}.`);
-          return;
-        }
+          const config = getHeaderConfig(headerConfig);
+          const headers = jsonData[0] as string[];
+          const expectedHeaders = config.headers;
+          
+          // Check for missing headers
+          const missingHeaders = expectedHeaders.filter(header => !headers.includes(header));
+          if (missingHeaders.length > 0) {
+            setError(`Missing required headers for ${dataType}: ${missingHeaders.join(', ')}.`);
+            return;
+          }
 
-        const rows = jsonData.slice(1);
-        if (rows.length === 0) {
-          setError('No data rows found after headers.');
-          return;
-        }
+          const rows = jsonData.slice(1);
+          if (rows.length === 0) {
+            setError('No data rows found after headers.');
+            return;
+          }
 
-        // Process data rows
-        const processedData: { [key: string]: string }[] = [];
-        const rowsToProcess = allowMultipleRows ? rows : [rows[0]];
+          // Process data rows
+          const processedData: { [key: string]: string }[] = [];
+          const rowsToProcess = allowMultipleRows ? rows : [rows[0]];
 
-        rowsToProcess.forEach((rowData, rowIndex) => {
-          const mappedData: { [key: string]: string } = {};
-          let hasValidData = false;
+          rowsToProcess.forEach((rowData, rowIndex) => {
+            const mappedData: { [key: string]: string } = {};
+            let hasValidData = false;
 
-          headers.forEach((header, index) => {
-            const fieldKey = config.fieldMap[header];
-            if (fieldKey && rowData[index] !== undefined && rowData[index] !== null && rowData[index] !== '') {
-              mappedData[fieldKey] = String(rowData[index]).trim();
-              hasValidData = true;
+            headers.forEach((header, index) => {
+              const fieldKey = config.fieldMap[header];
+              if (fieldKey && rowData[index] !== undefined && rowData[index] !== null && rowData[index] !== '') {
+                mappedData[fieldKey] = String(rowData[index]).trim();
+                hasValidData = true;
+              }
+            });
+
+            // Only add row if it has at least one valid field
+            if (hasValidData) {
+              processedData.push(mappedData);
             }
           });
 
-          // Only add row if it has at least one valid field
-          if (hasValidData) {
-            processedData.push(mappedData);
+          if (processedData.length === 0) {
+            setError('No valid data found in the Excel file.');
+            return;
           }
-        });
 
-        if (processedData.length === 0) {
-          setError('No valid data found in the Excel file.');
-          return;
+          // Transform data to proper nested structure
+          const transformed = transformBulkImportData(processedData, roleType);
+          setTransformedData(transformed);
+
+          // Create preview data for display
+          const preview = createPreviewData(transformed, roleType);
+          setPreviewData(preview);
+          setEditingData(JSON.parse(JSON.stringify(preview))); // Deep copy for editing
+          setShowPreview(true);
+        } catch (error) {
+          console.error('File processing error:', error);
+          setError('Error processing Excel file. Please check the file format and try again.');
         }
-
-        // Transform data to proper nested structure
-        const transformed = transformBulkImportData(processedData, roleType);
-        setTransformedData(transformed);
-
-        // Create preview data for display
-        const preview = createPreviewData(transformed, roleType);
-        setPreviewData(preview);
-        setEditingData(JSON.parse(JSON.stringify(preview))); // Deep copy for editing
-        setShowPreview(true);
       };
       reader.readAsBinaryString(file);
     }

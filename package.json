@@ -25,6 +25,7 @@
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
     "file-saver": "^2.0.5",
+    "form-data": "^4.0.4",
     "framer-motion": "^12.15.0",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.511.0",
@@ -36,7 +37,7 @@
     "reactflow": "^11.11.4",
     "recharts": "^2.15.3",
     "tailwindcss": "^4.1.8",
-    "xlsx": "^0.18.5",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zustand": "^5.0.4"
   },
   "devDependencies": {

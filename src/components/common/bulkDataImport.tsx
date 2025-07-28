@@ -60,9 +60,27 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
+        
+        // Enhanced error handling for xlsx 0.20.3 compatibility
+        let workbook;
+        try {
+          workbook = XLSX.read(data, { type: 'array' });
+        } catch (xlsxError) {
+          console.error('XLSX parsing error:', xlsxError);
+          message.error('Error reading Excel file. The file format may not be supported or the file may be corrupted.');
+          setIsProcessing(false);
+          return;
+        }
+        
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
+        
+        if (!worksheet) {
+          message.error('No worksheet found in the Excel file.');
+          setIsProcessing(false);
+          return;
+        }
+        
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
 
         if (!jsonData || jsonData.length < 2) {
@@ -184,7 +202,8 @@ Please use the correct file format for ${expectedType} import or go to the appro
         setIsProcessing(false);
         setCurrentStep(1); // Move to preview step
       } catch (error) {
-        message.error('Error processing file. Please check the file format.');
+        console.error('File processing error:', error);
+        message.error('Error processing file. Please check the file format and try again.');
         setIsProcessing(false);
       }
     };

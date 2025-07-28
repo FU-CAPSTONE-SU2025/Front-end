@@ -42,16 +42,41 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
+        
+        // Enhanced error handling for xlsx 0.20.3 compatibility
+        let workbook;
+        try {
+          workbook = XLSX.read(data, { type: 'array' });
+        } catch (xlsxError) {
+          console.error('XLSX parsing error:', xlsxError);
+          message.error('Error reading Excel file. The file format may not be supported or the file may be corrupted.');
+          setIsUploading(false);
+          return;
+        }
+        
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
+        
+        if (!worksheet) {
+          message.error('No worksheet found in the Excel file.');
+          setIsUploading(false);
+          return;
+        }
+        
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        if (!jsonData || jsonData.length === 0) {
+          message.error('No data found in the Excel file.');
+          setIsUploading(false);
+          return;
+        }
         
         const transformedData = transformData(jsonData);
         onDataUploaded(transformedData);
         message.success(`Successfully uploaded ${transformedData.length} items`);
       } catch (error) {
-        message.error('Error reading Excel file. Please check the file format.');
+        console.error('File processing error:', error);
+        message.error('Error reading Excel file. Please check the file format and try again.');
       } finally {
         setIsUploading(false);
       }
