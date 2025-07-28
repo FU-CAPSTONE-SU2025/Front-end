@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Select, Affix, Tag, message, Pagination, Spin, Empty } from 'antd';
 import {SearchOutlined, CheckOutlined, UploadOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { curriculums, combos } from '../../data/schoolData';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
@@ -106,7 +107,7 @@ const SubjectManagerPage: React.FC = () => {
       <div className={styles.sttContainer} style={{ paddingTop: 12 }}>
         {/* Sticky Toolbar */}
         <Affix offsetTop={80} style={{zIndex: 10}}>
-          <div className={styles.sttToolbar}>
+          <div className={`${styles.sttToolbar} ${glassStyles.appleGlassCard}`}>
             <Input
               placeholder="Search by Subject Name or ID"
               prefix={<SearchOutlined />}
@@ -114,6 +115,7 @@ const SubjectManagerPage: React.FC = () => {
               onChange={e => { setSearch(e.target.value); setPage(1); }}
               style={{maxWidth: 240, borderRadius: 999}}
               size="large"
+              className={glassStyles.appleGlassInput}
             />
             <Select
               allowClear
@@ -122,6 +124,7 @@ const SubjectManagerPage: React.FC = () => {
               size="large"
               value={curriculumFilter}
               onChange={setCurriculumFilter}
+              className={glassStyles.appleGlassInput}
             >
               {curriculums.map(c => (
                 <Option key={c.id} value={c.id}>{c.curriculumName}</Option>
@@ -134,6 +137,7 @@ const SubjectManagerPage: React.FC = () => {
               size="large"
               value={comboFilter}
               onChange={setComboFilter}
+              className={glassStyles.appleGlassInput}
             >
               {combos.map(cb => (
                 <Option key={cb.id} value={cb.id}>{cb.comboName}</Option>

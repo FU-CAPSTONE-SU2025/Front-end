@@ -153,6 +153,21 @@ export const FetchSyllabusBySubject = async (subjectId: number): Promise<Subject
   }
 };
 
+export const FetchSyllabusBySubjectVersion = async (subjectVersionId: number): Promise<Syllabus | null> => {
+  const props = {
+    data: null,
+    url: syllabusURL+"/by-version/"+subjectVersionId,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    //throw new Error(result.error || 'Failed to fetch syllabus by subject version');
+    return null;
+  }
+};
+
 export const UpdateSyllabusById = async (id: number, data: UpdateSyllabus): Promise<any | null> => {
   const props = {
     data: data,

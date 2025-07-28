@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Button, Tabs, Typography, message, Table, Card } from 'antd';
-import { PlusOutlined, ArrowLeftOutlined, EditOutlined, SaveOutlined, FileExcelOutlined } from '@ant-design/icons';
+import { Button, Tabs, Typography, message, Table, Card, Tag, Space, Popconfirm, Tooltip } from 'antd';
+import { PlusOutlined, ArrowLeftOutlined, EditOutlined, SaveOutlined, FileExcelOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 
 import AddVersionModal from '../../components/staff/AddVersionModal';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
@@ -14,225 +14,533 @@ import SubjectSelect from '../../components/common/SubjectSelect';
 import { Modal } from 'antd';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { SubjectVersion, Syllabus, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, SubjectPrerequisite } from '../../interfaces/ISchoolProgram';
-import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import { SubjectVersion, Syllabus, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, SubjectPrerequisite, CreateSubjectVersion, CreateSyllabus } from '../../interfaces/ISchoolProgram';
+import { useCRUDSubject, useCRUDSubjectVersion, useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
+import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../data/mockData';
 
-const noopAsync = async () => {};
+// Function to create default version for a subject (moved outside component)
+const createDefaultVersion = async (
+  subjectData: any, 
+  addSubjectVersionMutation: any
+) => {
+  try {
+    const defaultVersionData = generateDefaultVersionData(
+      subjectData.id,
+      subjectData.subjectCode,
+      subjectData.subjectName
+    );
+    
+    const newVersion = await addSubjectVersionMutation.mutateAsync(defaultVersionData);
+    if (newVersion) {
+      message.success('Default version created successfully!');
+      return [newVersion];
+    }
+  } catch (err: any) {
+    message.error('Failed to create default version: ' + err.message);
+  }
+  return [];
+};
 
-// Remove useParams, subjectId, and dynamic subject lookup
-// Use hardcoded mock subject and versions for static UI
-
-// Remove staticMockSubject
-// Mock data using correct interfaces
-const staticMockVersions: SubjectVersion[] = [
-  { id: 1, subjectId: 1, isActive: true, isApproved: true, versionNumber: 1, decisionNoDate: new Date('2022-01-01') },
-  { id: 2, subjectId: 1, isActive: false, isApproved: true, versionNumber: 2, decisionNoDate: new Date('2022-06-01') },
-  { id: 3, subjectId: 1, isActive: true, isApproved: false, versionNumber: 3, decisionNoDate: new Date('2023-01-01') },
-];
-// Mock syllabuses for each version
-const staticMockSyllabuses: Syllabus[] = [
-  { id: 1, subjectId: 1, versionId: 1, content: 'Syllabus content for Version 1: Calculus fundamentals, limits, derivatives, and integrals.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
-  { id: 2, subjectId: 1, versionId: 2, content: 'Syllabus content for Version 2: Advanced topics in Calculus, multivariable calculus, and series.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
-  { id: 3, subjectId: 1, versionId: 3, content: 'Syllabus content for Version 3: Calculus applications, differential equations, and real analysis.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
-];
-// Mock prerequisites for each version
-const staticMockPrerequisites: SubjectPrerequisite[] = [
-  { version_id: 1, subject_id: 1, prerequisite_subject_id: 101, subjectCode: 'MATH101', subjectName: 'Calculus I' } as any,
-  { version_id: 1, subject_id: 1, prerequisite_subject_id: 102, subjectCode: 'PHYS101', subjectName: 'Physics I' } as any,
-  { version_id: 2, subject_id: 1, prerequisite_subject_id: 103, subjectCode: 'CHEM101', subjectName: 'Chemistry I' } as any,
-  { version_id: 3, subject_id: 1, prerequisite_subject_id: 104, subjectCode: 'BIO101', subjectName: 'Biology I' } as any,
-];
-
-// Mock data for all sub-tables (assessments, materials, outcomes, sessions)
-const staticMockAssessments: SyllabusAssessment[] = [
-  { id: 1, syllabusId: 1, category: 'Quiz', quantity: 2, weight: 20, duration: 30, questionType: 'multiple-choice', completionCriteria: 'Score above 50%' },
-  { id: 2, syllabusId: 1, category: 'Assignment', quantity: 1, weight: 30, duration: 60, questionType: 'essay', completionCriteria: 'Submit on time' },
-];
-const staticMockMaterials: SyllabusMaterial[] = [
-  { id: 1, syllabusId: 1, materialName: 'Calculus Textbook', authorName: 'James Stewart', publishedDate: new Date('2020-01-01'), description: 'Main course textbook', filepathOrUrl: 'https://example.com/calculus.pdf' },
-  { id: 2, syllabusId: 1, materialName: 'Lecture Slides', authorName: 'Prof. Smith', publishedDate: new Date('2023-01-01'), description: 'Slides for all lectures', filepathOrUrl: '' },
-];
-const staticMockOutcomes: SyllabusOutcome[] = [
-  { id: 1, syllabusId: 1, outcomeCode: 'LO1', description: 'Understand limits and derivatives' },
-  { id: 2, syllabusId: 1, outcomeCode: 'LO2', description: 'Apply integration techniques' },
-];
-const staticMockSessions: SyllabusSession[] = [
-  { id: 1, syllabusId: 1, sessionNumber: 1, topic: 'Limits', mission: 'Introduction to limits' },
-  { id: 2, syllabusId: 1, sessionNumber: 2, topic: 'Derivatives', mission: 'Basic differentiation' },
-];
+// Function to create default syllabus for a subject version (moved outside component)
+const createDefaultSyllabus = async (
+  subjectVersionId: number,
+  subjectCode: string,
+  subjectName: string,
+  addSyllabusMutation: any
+) => {
+  try {
+    const defaultSyllabusData = generateDefaultSyllabusData(
+      subjectVersionId,
+      subjectCode,
+      subjectName
+    );
+    
+    const newSyllabus = await addSyllabusMutation.mutateAsync(defaultSyllabusData);
+    if (newSyllabus) {
+      message.success('Default syllabus created successfully!');
+      return newSyllabus;
+    }
+  } catch (err: any) {
+    message.error('Failed to create default syllabus: ' + err.message);
+  }
+  return null;
+};
 
 const SubjectVersionPage: React.FC = () => {
   const navigate = useNavigate();
+  const { subjectId } = useParams();
   const [modalVisible, setModalVisible] = useState(false);
   const [adding, setAdding] = useState(false);
-  // Editing state (global for demo, could be per version)
   const [isEditing, setIsEditing] = useState(false);
-  const [activeKey, setActiveKey] = useState(String(staticMockVersions[0].id));
-  useEffect(() => {
-    setActiveKey(String(staticMockVersions[0].id));
-  }, []);
+  const [activeKey, setActiveKey] = useState<string>('');
 
   // State for Add Prerequisite Modal
   const [prereqModalOpen, setPrereqModalOpen] = useState(false);
   const [selectedPrereqSubject, setSelectedPrereqSubject] = useState<any>(null);
   const [editingVersionId, setEditingVersionId] = useState<number | null>(null);
-  // Local state for prerequisites per version (for demo)
-  const [prereqMap, setPrereqMap] = useState(() => {
-    // Map versionId to its prerequisites
-    const map: Record<number, any[]> = {};
-    staticMockVersions.forEach(v => {
-      map[v.id] = staticMockPrerequisites.filter(p => p.version_id === v.id);
-    });
-    return map;
-  });
+  
+  // Local state for prerequisites per version
+  const [prereqMap, setPrereqMap] = useState<Record<number, any[]>>({});
 
-  // Local state for each sub-table (per version for demo)
-  const [assessmentMap, setAssessmentMap] = useState(() => {
-    const map: Record<number, any[]> = {};
-    staticMockVersions.forEach(v => { map[v.id] = [...staticMockAssessments]; });
-    return map;
-  });
-  const [materialMap, setMaterialMap] = useState(() => {
-    const map: Record<number, any[]> = {};
-    staticMockVersions.forEach(v => { map[v.id] = [...staticMockMaterials]; });
-    return map;
-  });
-  const [outcomeMap, setOutcomeMap] = useState(() => {
-    const map: Record<number, any[]> = {};
-    staticMockVersions.forEach(v => { map[v.id] = [...staticMockOutcomes]; });
-    return map;
-  });
-  const [sessionMap, setSessionMap] = useState(() => {
-    const map: Record<number, any[]> = {};
-    staticMockVersions.forEach(v => { map[v.id] = [...staticMockSessions]; });
-    return map;
-  });
+  // Local state for each sub-table (per version)
+  const [assessmentMap, setAssessmentMap] = useState<Record<number, any[]>>({});
+  const [materialMap, setMaterialMap] = useState<Record<number, any[]>>({});
+  const [outcomeMap, setOutcomeMap] = useState<Record<number, any[]>>({});
+  const [sessionMap, setSessionMap] = useState<Record<number, any[]>>({});
+  
   // Bulk import modal state
   const [bulkModal, setBulkModal] = useState<{ type: string, versionId: number } | null>(null);
 
-  // Fetch subject from BE (replace 1 with dynamic subjectId when routing is ready)
+  // API hooks
   const { getSubjectById } = useCRUDSubject();
+  const { 
+    getSubjectVersionsBySubjectId, 
+    addSubjectVersionMutation, 
+    deleteSubjectVersionMutation,
+    toggleActiveSubjectVersionMutation 
+  } = useCRUDSubjectVersion();
+  const {
+    fetchSyllabusBySubjectVersionMutation,
+    addSyllabusMutation
+  } = useCRUDSyllabus();
+
   const [subject, setSubject] = useState<any | null>(null);
+  const [subjectVersions, setSubjectVersions] = useState<SubjectVersion[]>([]);
+  const [syllabusMap, setSyllabusMap] = useState<Record<number, Syllabus | null>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { subjectId } = useParams();
-  useEffect(() => {
-    setLoading(true);
-    getSubjectById.mutateAsync(Number(subjectId))
-      .then(data => {
-        setSubject(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError('Failed to fetch subject:' + err);
-        setLoading(false);
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  // Handler for adding a new version (mocked)
-  const handleAddVersion = (values: any) => {
+  // Handler to fetch or create syllabus for a specific version
+  const fetchOrCreateSyllabus = useCallback(async (versionId: number) => {
+    if (!subject) return;
+    
+    try {
+      // Try to fetch existing syllabus for this version
+      let syllabusData: Syllabus | null = null;
+      try {
+        syllabusData = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      } catch (err) {
+        console.log('No syllabus found for version:', versionId, err);
+        syllabusData = null;
+      }
+      
+      if (!syllabusData) {
+        // No syllabus exists, create default syllabus
+        message.info('No syllabus found. Creating default syllabus...');
+        const newSyllabus = await createDefaultSyllabus(
+          versionId,
+          subject.subjectCode,
+          subject.subjectName,
+          addSyllabusMutation
+        );
+        
+        if (newSyllabus) {
+          setSyllabusMap(prev => ({
+            ...prev,
+            [versionId]: newSyllabus
+          }));
+          
+          // Update the assessment, material, outcome, and session maps with the new syllabus data
+          setAssessmentMap(prev => ({
+            ...prev,
+            [versionId]: newSyllabus.assessments || []
+          }));
+          setMaterialMap(prev => ({
+            ...prev,
+            [versionId]: newSyllabus.learningMaterials || []
+          }));
+          setOutcomeMap(prev => ({
+            ...prev,
+            [versionId]: newSyllabus.learningOutcomes || []
+          }));
+          setSessionMap(prev => ({
+            ...prev,
+            [versionId]: newSyllabus.sessions || []
+          }));
+        }
+      } else {
+        // Syllabus exists, use it
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: syllabusData
+        }));
+        
+        // Update the maps with existing syllabus data
+        setAssessmentMap(prev => ({
+          ...prev,
+          [versionId]: syllabusData?.assessments || []
+        }));
+        setMaterialMap(prev => ({
+          ...prev,
+          [versionId]: syllabusData?.learningMaterials || []
+        }));
+        setOutcomeMap(prev => ({
+          ...prev,
+          [versionId]: syllabusData?.learningOutcomes || []
+        }));
+        setSessionMap(prev => ({
+          ...prev,
+          [versionId]: syllabusData?.sessions || []
+        }));
+      }
+    } catch (err: any) {
+      message.error('Failed to fetch/create syllabus: ' + err.message);
+    }
+  }, [subject, fetchSyllabusBySubjectVersionMutation, addSyllabusMutation]);
+
+  // Fetch subject and versions
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!subjectId) return;
+      
+      setLoading(true);
+      try {
+        // Fetch subject first
+        const subjectData = await getSubjectById.mutateAsync(Number(subjectId));
+        setSubject(subjectData);
+        
+        // Fetch subject versions
+        let versionsData: SubjectVersion[] | null = null;
+        try {
+          versionsData = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+        } catch (err) {
+          // API might return 404 or error when no versions exist
+          console.log('No versions found or API error:', err);
+          versionsData = null;
+        }
+        
+        if (!versionsData || versionsData.length === 0) {
+          // No versions exist, create default version
+          message.info('No versions found. Creating default version...');
+          const defaultVersions = await createDefaultVersion(subjectData, addSubjectVersionMutation);
+          setSubjectVersions(defaultVersions);
+          if (defaultVersions.length > 0) {
+            setActiveKey(String(defaultVersions[0].id));
+            // Fetch syllabus for the first version
+            await fetchOrCreateSyllabus(defaultVersions[0].id);
+          }
+        } else {
+          // Versions exist, use them
+          setSubjectVersions(versionsData);
+          if (versionsData.length > 0) {
+            setActiveKey(String(versionsData[0].id));
+            // Fetch syllabus for the first version
+            await fetchOrCreateSyllabus(versionsData[0].id);
+          }
+        }
+        
+        setLoading(false);
+      } catch (err: any) {
+        setError('Failed to fetch data: ' + err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [subjectId, fetchOrCreateSyllabus]); // Only depend on subjectId and fetchOrCreateSyllabus, not the mutation functions
+
+  // Handler for adding a new version
+  const handleAddVersion = useCallback(async (values: CreateSubjectVersion) => {
     setAdding(true);
-    setTimeout(() => {
-      message.success('Version added (mock)!');
-      setAdding(false);
+    try {
+      await addSubjectVersionMutation.mutateAsync(values);
+      message.success('Version added successfully!');
+      
+      // Refresh versions list
+      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+      if (updatedVersions) {
+        setSubjectVersions(updatedVersions);
+        if (updatedVersions.length > 0) {
+          setActiveKey(String(updatedVersions[updatedVersions.length - 1].id));
+        }
+      }
+      
       setModalVisible(false);
-    }, 1000);
-  };
+    } catch (err: any) {
+      message.error('Failed to add version: ' + err.message);
+    } finally {
+      setAdding(false);
+    }
+  }, [addSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId]);
+
+  // Handler to delete a version
+  const handleDeleteVersion = useCallback(async (versionId: number) => {
+    try {
+      await deleteSubjectVersionMutation.mutateAsync(versionId);
+      message.success('Version deleted successfully!');
+      
+      // Refresh versions list
+      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+      if (updatedVersions) {
+        setSubjectVersions(updatedVersions);
+        if (updatedVersions.length > 0 && activeKey === String(versionId)) {
+          setActiveKey(String(updatedVersions[0].id));
+        }
+      }
+    } catch (err: any) {
+      message.error('Failed to delete version: ' + err.message);
+    }
+  }, [deleteSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, activeKey]);
+
+  // Handler to toggle active status
+  const handleToggleActive = useCallback(async (versionId: number) => {
+    try {
+      await toggleActiveSubjectVersionMutation.mutateAsync(versionId);
+      message.success('Version status updated successfully!');
+      
+      // Refresh versions list
+      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+      if (updatedVersions) {
+        setSubjectVersions(updatedVersions);
+      }
+    } catch (err: any) {
+      message.error('Failed to update version status: ' + err.message);
+    }
+  }, [toggleActiveSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId]);
 
   // Handler to add a prerequisite
   const handleAddPrerequisite = (versionId: number) => {
     setEditingVersionId(versionId);
     setPrereqModalOpen(true);
   };
+
   const handlePrereqModalOk = () => {
     if (selectedPrereqSubject && editingVersionId) {
       setPrereqMap(prev => ({
         ...prev,
         [editingVersionId]: [
-          ...prev[editingVersionId],
+          ...(prev[editingVersionId] || []),
           {
             version_id: editingVersionId,
-            subject_id: 1, // Assuming subject_id is always 1 for mock
+            subject_id: Number(subjectId),
             prerequisite_subject_id: selectedPrereqSubject.id,
             subjectCode: selectedPrereqSubject.subjectCode,
             subjectName: selectedPrereqSubject.subjectName,
           },
         ],
       }));
+      message.success('Prerequisite added successfully!');
     }
     setPrereqModalOpen(false);
     setSelectedPrereqSubject(null);
     setEditingVersionId(null);
   };
+
   const handlePrereqModalCancel = () => {
     setPrereqModalOpen(false);
     setSelectedPrereqSubject(null);
     setEditingVersionId(null);
   };
+
   // Handler to delete a prerequisite
   const handleDeletePrerequisite = (versionId: number, prerequisite_subject_id: number) => {
     setPrereqMap(prev => ({
       ...prev,
-      [versionId]: prev[versionId].filter(p => p.prerequisite_subject_id !== prerequisite_subject_id),
+      [versionId]: (prev[versionId] || []).filter(p => p.prerequisite_subject_id !== prerequisite_subject_id),
     }));
+    message.success('Prerequisite removed successfully!');
   };
 
   // Handlers for AssessmentTable
   const handleAddAssessment = async (versionId: number, assessment: any): Promise<void> => {
-    setAssessmentMap(prev => ({ ...prev, [versionId]: [...prev[versionId], { ...assessment, id: Date.now() }] }));
+    setAssessmentMap(prev => ({ 
+      ...prev, 
+      [versionId]: [...(prev[versionId] || []), { ...assessment, id: Date.now() }] 
+    }));
   };
+
   const handleDeleteAssessment = async (versionId: number, id: number): Promise<void> => {
-    setAssessmentMap(prev => ({ ...prev, [versionId]: prev[versionId].filter(a => a.id !== id) }));
+    setAssessmentMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).filter(a => a.id !== id) 
+    }));
   };
+
   const handleUpdateAssessment = async (versionId: number, id: number, update: any): Promise<void> => {
-    setAssessmentMap(prev => ({ ...prev, [versionId]: prev[versionId].map(a => a.id === id ? { ...a, ...update } : a) }));
+    setAssessmentMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).map(a => a.id === id ? { ...a, ...update } : a) 
+    }));
   };
+
   // Handlers for MaterialTable
   const handleAddMaterial = async (versionId: number, material: any): Promise<void> => {
-    setMaterialMap(prev => ({ ...prev, [versionId]: [...prev[versionId], { ...material, id: Date.now() }] }));
+    setMaterialMap(prev => ({ 
+      ...prev, 
+      [versionId]: [...(prev[versionId] || []), { ...material, id: Date.now() }] 
+    }));
   };
+
   const handleDeleteMaterial = async (versionId: number, id: number): Promise<void> => {
-    setMaterialMap(prev => ({ ...prev, [versionId]: prev[versionId].filter(m => m.id !== id) }));
+    setMaterialMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).filter(m => m.id !== id) 
+    }));
   };
+
   const handleUpdateMaterial = async (versionId: number, id: number, update: any): Promise<void> => {
-    setMaterialMap(prev => ({ ...prev, [versionId]: prev[versionId].map(m => m.id === id ? { ...m, ...update } : m) }));
+    setMaterialMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).map(m => m.id === id ? { ...m, ...update } : m) 
+    }));
   };
+
   // Handlers for OutcomeTable
   const handleAddOutcome = async (versionId: number, outcome: any): Promise<void> => {
-    setOutcomeMap(prev => ({ ...prev, [versionId]: [...prev[versionId], { ...outcome, id: Date.now() }] }));
+    setOutcomeMap(prev => ({ 
+      ...prev, 
+      [versionId]: [...(prev[versionId] || []), { ...outcome, id: Date.now() }] 
+    }));
   };
+
   const handleDeleteOutcome = async (versionId: number, id: number): Promise<void> => {
-    setOutcomeMap(prev => ({ ...prev, [versionId]: prev[versionId].filter(o => o.id !== id) }));
+    setOutcomeMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).filter(o => o.id !== id) 
+    }));
   };
+
   const handleUpdateOutcome = async (versionId: number, id: number, update: any): Promise<void> => {
-    setOutcomeMap(prev => ({ ...prev, [versionId]: prev[versionId].map(o => o.id === id ? { ...o, ...update } : o) }));
+    setOutcomeMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).map(o => o.id === id ? { ...o, ...update } : o) 
+    }));
   };
+
   // Handlers for SessionTable
   const handleAddSession = async (versionId: number, session: any): Promise<void> => {
-    setSessionMap(prev => ({ ...prev, [versionId]: [...prev[versionId], { ...session, id: Date.now() }] }));
+    setSessionMap(prev => ({ 
+      ...prev, 
+      [versionId]: [...(prev[versionId] || []), { ...session, id: Date.now() }] 
+    }));
   };
+
   const handleDeleteSession = async (versionId: number, id: number): Promise<void> => {
-    setSessionMap(prev => ({ ...prev, [versionId]: prev[versionId].filter(s => s.id !== id) }));
+    setSessionMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).filter(s => s.id !== id) 
+    }));
   };
+
   const handleUpdateSession = async (versionId: number, id: number, update: any): Promise<void> => {
-    setSessionMap(prev => ({ ...prev, [versionId]: prev[versionId].map(s => s.id === id ? { ...s, ...update } : s) }));
+    setSessionMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).map(s => s.id === id ? { ...s, ...update } : s) 
+    }));
   };
+
   const handleAddOutcomeToSession = async (versionId: number, sessionId: number, outcomeId: number): Promise<void> => {
     // For demo, no-op or add to session's outcomes array if present
   };
+
   // Bulk import handlers
   const handleBulkImport = (type: string, versionId: number) => {
     setBulkModal({ type, versionId });
   };
+
   const handleBulkDataImported = (type: string, versionId: number, importedData: any[]) => {
     if (type === 'ASSESSMENT') setAssessmentMap(prev => ({ ...prev, [versionId]: importedData }));
     if (type === 'MATERIAL') setMaterialMap(prev => ({ ...prev, [versionId]: importedData }));
     if (type === 'OUTCOME') setOutcomeMap(prev => ({ ...prev, [versionId]: importedData }));
     if (type === 'SESSION') setSessionMap(prev => ({ ...prev, [versionId]: importedData }));
     setBulkModal(null);
+    message.success(`${type} data imported successfully!`);
   };
+
   const handleBulkModalClose = () => setBulkModal(null);
+
+  // Handler for tab change
+  const handleTabChange = useCallback((key: string) => {
+    setActiveKey(key);
+    const versionId = Number(key);
+    if (versionId && !syllabusMap[versionId]) {
+      fetchOrCreateSyllabus(versionId);
+    }
+  }, [syllabusMap, fetchOrCreateSyllabus]);
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <Typography.Text>Loading...</Typography.Text>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <Typography.Text type="danger">{error}</Typography.Text>
+      </div>
+    );
+  }
+
+  if (subjectVersions.length === 0) {
+    return (
+      <div className={styles.syllabusContainer} style={{ width: '100%', maxWidth: 'none', minWidth: 0 }}>
+        {/* Header */}
+        <div className={styles.syllabusHeader}>
+          <div className={styles.syllabusHeaderLeft}>
+            <button className={styles.backButton} onClick={() => navigate(-1)}>
+              <ArrowLeftOutlined /> Back to Subjects
+            </button>
+            <div className={styles.syllabusTitleCard}>
+              <h2 className={styles.syllabusTitle}>
+                {subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Subject'}
+              </h2>
+              <h3 className={styles.syllabusSubtitle}>
+                {subject?.description}
+              </h3>
+              <p className={styles.syllabusSubtitle}>
+                Subject Versions & Learning Management
+              </p>
+            </div>
+          </div>
+          <div className={styles.syllabusHeaderRight}>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              onClick={() => setModalVisible(true)}
+            >
+              Add Version
+            </Button>
+          </div>
+        </div>
+
+        {/* No Versions Message */}
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '50vh',
+          textAlign: 'center'
+        }}>
+          <Typography.Title level={3} style={{ color: '#666', marginBottom: 16 }}>
+            No Versions Found
+          </Typography.Title>
+          <Typography.Text style={{ color: '#999', marginBottom: 24 }}>
+            This subject doesn't have any versions yet. Create the first version to get started.
+          </Typography.Text>
+          <Button 
+            type="primary" 
+            size="large"
+            icon={<PlusOutlined />} 
+            onClick={() => setModalVisible(true)}
+          >
+            Create First Version
+          </Button>
+        </div>
+
+        <AddVersionModal
+          visible={modalVisible}
+          onCancel={() => setModalVisible(false)}
+          onAdd={handleAddVersion}
+          confirmLoading={adding}
+          subjectId={Number(subjectId)}
+        />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -259,13 +567,13 @@ const SubjectVersionPage: React.FC = () => {
             </button>
             <div className={styles.syllabusTitleCard}>
               <h2 className={styles.syllabusTitle}>
-                {loading ? 'Loading...' : error ? error : subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Subject'}
+                {subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Subject'}
               </h2>
               <h3 className={styles.syllabusSubtitle}>
                 {subject?.description}
               </h3>
               <p className={styles.syllabusSubtitle}>
-                Course Syllabus & Learning Management
+                Subject Versions & Learning Management
               </p>
             </div>
           </div>
@@ -276,72 +584,130 @@ const SubjectVersionPage: React.FC = () => {
               onClick={() => setIsEditing(e => !e)}
               className={isEditing ? styles.saveButton : styles.editButton}
             >
-              {isEditing ? 'Finish Editing' : 'Edit Syllabus'}
+              {isEditing ? 'Finish Editing' : 'Edit Versions'}
             </Button>
-            <Button type="primary" icon={<PlusOutlined />} style={{ marginLeft: 16 }} onClick={() => setModalVisible(true)}>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              style={{ marginLeft: 16 }} 
+              onClick={() => setModalVisible(true)}
+            >
               Add Version
             </Button>
           </div>
         </div>
+
         {/* Tabs for Versions */}
-        <div>
+        <div style={{ width: '100%' }}>
           <Tabs
             activeKey={activeKey}
-            onChange={setActiveKey}
+            onChange={handleTabChange}
             type="card"
             tabBarStyle={{ background: 'transparent', borderRadius: 12, boxShadow: 'none', display: 'flex', justifyContent: 'center' }}
-            items={staticMockVersions.map((v) => {
-              const isActive = activeKey === String(v.id);
-              const syllabus = staticMockSyllabuses.find(s => s.versionId === v.id);
-              const prerequisites = staticMockPrerequisites.filter(p => p.version_id === v.id);
+            items={subjectVersions.map((version, index) => {
+              const isActive = activeKey === String(version.id);
               return {
-                key: String(v.id),
+                key: String(version.id),
                 label: (
-                  <span
-                    style={{
-                      color:  isActive ? '#f97316' : '#fff',
-                      fontWeight: isActive ? 700 : 600,
-                      borderRadius: '8px 8px 0 0',
-                      fontSize: '16px',
-                      padding: '8px 16px',
-                      display: 'inline-block',
-                      transition: 'background 0.2s, color 0.2s',
-               
-                    }}
-                  >
-                    {`Version ${v.versionNumber}`}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span
+                      style={{
+                        color: isActive ? '#f97316' : '#fff',
+                        fontWeight: isActive ? 700 : 600,
+                        borderRadius: '8px 8px 0 0',
+                        fontSize: '16px',
+                        padding: '8px 16px',
+                        display: 'inline-block',
+                        transition: 'background 0.2s, color 0.2s',
+                      }}
+                    >
+                      Version {index + 1}
+                    </span>
+                    <Space size={4}>
+                      {version.isActive && <Tag color="green">Active</Tag>}
+                      {version.isDefault && <Tag color="blue">Default</Tag>}
+                      {isEditing && (
+                        <Space>
+                          <Tooltip title="Toggle Active">
+                            <Button
+                              size="small"
+                              type="text"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleActive(version.id);
+                              }}
+                            >
+                              <EyeOutlined />
+                            </Button>
+                          </Tooltip>
+                          <Tooltip title="Delete Version">
+                            <Popconfirm
+                              title="Are you sure you want to delete this version?"
+                              onConfirm={(e) => {
+                                e?.stopPropagation();
+                                handleDeleteVersion(version.id);
+                              }}
+                              onCancel={(e) => e?.stopPropagation()}
+                            >
+                              <Button
+                                size="small"
+                                type="text"
+                                danger
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <DeleteOutlined />
+                              </Button>
+                            </Popconfirm>
+                          </Tooltip>
+                        </Space>
+                      )}
+                    </Space>
+                  </div>
                 ),
                 children: (
                   <div className={styles.syllabusContent} style={{ width: '100%', maxWidth: 'none', minWidth: 0, margin: '0 auto' }}>
-                    {/* Syllabus Section */}
+                    {/* Version Info Section */}
                     <div style={{ marginBottom: 32 }}>
                       <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', marginBottom: 16, letterSpacing: '-0.5px' }}>
-                        📄 Syllabus
+                        📄 Version Information
                       </h3>
-                      <div style={{ fontSize: 16, color: '#334155', lineHeight: 1.7 }}>
-                        {syllabus ? syllabus.content : 'No syllabus data for this version.'}
-                      </div>
+                      <Card>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+                          <div>
+                            <strong>Version Code:</strong> {version.versionCode}
+                          </div>
+                          <div>
+                            <strong>Version Name:</strong> {version.versionName}
+                          </div>
+                          <div>
+                            <strong>Description:</strong> {version.description}
+                          </div>
+                          <div>
+                            <strong>Effective From:</strong> {new Date(version.effectiveFrom).toLocaleDateString()}
+                          </div>
+                          {version.effectiveTo && (
+                            <div>
+                              <strong>Effective To:</strong> {new Date(version.effectiveTo).toLocaleDateString()}
+                            </div>
+                          )}
+                          <div>
+                            <strong>Status:</strong> 
+                            <Space style={{ marginLeft: 8 }}>
+                              {version.isActive && <Tag color="green">Active</Tag>}
+                              {version.isDefault && <Tag color="blue">Default</Tag>}
+                            </Space>
+                          </div>
+                        </div>
+                      </Card>
                     </div>
+
                     {/* Prerequisite Subjects Section */}
                     <div style={{ marginBottom: 32 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                         <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
                           📚 Prerequisite Subjects
                         </h3>
-                        <ExcelImportButton
-                          onClick={() => handleAddPrerequisite(v.id)}
-                          style={{
-                            borderColor: '#1E40AF',
-                            color: '#1E40AF',
-                            borderRadius: 999,
-                            marginLeft: 8,
-                            padding: '0 20px',
-                            fontWeight: 600,
-                            background: '#fff',
-                          }}
-                          size="large"
-                        >
+                        <ExcelImportButton onClick={() => handleAddPrerequisite(version.id)}>
                           Add Prerequisite
                         </ExcelImportButton>
                       </div>
@@ -353,22 +719,101 @@ const SubjectVersionPage: React.FC = () => {
                             title: 'Action',
                             key: 'action',
                             render: (_: any, record: any) => (
-                              <Button type="link" danger onClick={() => handleDeletePrerequisite(v.id, record.prerequisite_subject_id)}>
+                              <Button type="link" danger onClick={() => handleDeletePrerequisite(version.id, record.prerequisite_subject_id)}>
                                 Delete
                               </Button>
                             ),
                           }] : [])
                         ].filter(Boolean)}
-                        dataSource={prereqMap[v.id]}
+                        dataSource={prereqMap[version.id] || []}
                         rowKey={r => r.prerequisite_subject_id}
                         pagination={false}
                         style={{ marginTop: 12 }}
                       />
                     </div>
+
+                    {/* Assessment Table Section */}
+                    <div style={{ marginBottom: 32 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
+                          📊 Assessments
+                        </h3>
+                        <ExcelImportButton onClick={() => handleBulkImport('ASSESSMENT', version.id)}>
+                          Import Excel
+                        </ExcelImportButton>
+                      </div>
+                      <AssessmentTable
+                        assessments={assessmentMap[version.id] || []}
+                        isEditing={isEditing}
+                        onAddAssessment={a => handleAddAssessment(version.id, a)}
+                        onDeleteAssessment={id => handleDeleteAssessment(version.id, id)}
+                        onUpdateAssessment={(id, a) => handleUpdateAssessment(version.id, id, a)}
+                      />
+                    </div>
+
+                    {/* Material Table Section */}
+                    <div style={{ marginBottom: 32 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
+                          📚 Learning Materials
+                        </h3>
+                        <ExcelImportButton onClick={() => handleBulkImport('MATERIAL', version.id)}>
+                          Import Excel
+                        </ExcelImportButton>
+                      </div>
+                      <MaterialTable
+                        materials={materialMap[version.id] || []}
+                        isEditing={isEditing}
+                        onAddMaterial={m => handleAddMaterial(version.id, m)}
+                        onDeleteMaterial={id => handleDeleteMaterial(version.id, id)}
+                        onUpdateMaterial={(id, m) => handleUpdateMaterial(version.id, id, m)}
+                      />
+                    </div>
+
+                    {/* Outcome Table Section */}
+                    <div style={{ marginBottom: 32 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
+                          🎯 Learning Outcomes
+                        </h3>
+                        <ExcelImportButton onClick={() => handleBulkImport('OUTCOME', version.id)}>
+                          Import Excel
+                        </ExcelImportButton>
+                      </div>
+                      <OutcomeTable
+                        outcomes={outcomeMap[version.id] || []}
+                        isEditing={isEditing}
+                        onAddOutcome={o => handleAddOutcome(version.id, o)}
+                        onDeleteOutcome={id => handleDeleteOutcome(version.id, id)}
+                        onUpdateOutcome={(id, o) => handleUpdateOutcome(version.id, id, o)}
+                      />
+                    </div>
+
+                    {/* Session Table Section */}
+                    <div style={{ marginBottom: 32 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
+                          📅 Course Sessions
+                        </h3>
+                        <ExcelImportButton onClick={() => handleBulkImport('SESSION', version.id)}>
+                          Import Excel
+                        </ExcelImportButton>
+                      </div>
+                      <SessionTable
+                        sessions={sessionMap[version.id] || []}
+                        outcomes={outcomeMap[version.id] || []}
+                        isEditing={isEditing}
+                        onAddSession={s => handleAddSession(version.id, s)}
+                        onDeleteSession={id => handleDeleteSession(version.id, id)}
+                        onUpdateSession={(id, s) => handleUpdateSession(version.id, id, s)}
+                        onAddOutcomeToSession={(sessionId, outcomeId) => handleAddOutcomeToSession(version.id, sessionId, outcomeId)}
+                      />
+                    </div>
+
                     {/* Add Prerequisite Modal */}
                     <Modal
                       title="Add Prerequisite Subject"
-                      open={prereqModalOpen && editingVersionId === v.id}
+                      open={prereqModalOpen && editingVersionId === version.id}
                       onOk={handlePrereqModalOk}
                       onCancel={handlePrereqModalCancel}
                       okButtonProps={{ disabled: !selectedPrereqSubject }}
@@ -381,83 +826,10 @@ const SubjectVersionPage: React.FC = () => {
                         style={{ width: '100%' }}
                       />
                     </Modal>
-                    {/* Assessment Table Section */}
-                    <div style={{ marginBottom: 32 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          📊 Assessments
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('ASSESSMENT', v.id)}>
-                          Import Excel
-                        </ExcelImportButton>
-                      </div>
-                      <AssessmentTable
-                        assessments={assessmentMap[v.id]}
-                        isEditing={isEditing}
-                        onAddAssessment={a => handleAddAssessment(v.id, a)}
-                        onDeleteAssessment={id => handleDeleteAssessment(v.id, id)}
-                        onUpdateAssessment={(id, a) => handleUpdateAssessment(v.id, id, a)}
-                      />
-                    </div>
-                    {/* Material Table Section */}
-                    <div style={{ marginBottom: 32 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          📚 Learning Materials
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('MATERIAL', v.id)}>
-                          Import Excel
-                        </ExcelImportButton>
-                      </div>
-                      <MaterialTable
-                        materials={materialMap[v.id]}
-                        isEditing={isEditing}
-                        onAddMaterial={m => handleAddMaterial(v.id, m)}
-                        onDeleteMaterial={id => handleDeleteMaterial(v.id, id)}
-                        onUpdateMaterial={(id, m) => handleUpdateMaterial(v.id, id, m)}
-                      />
-                    </div>
-                    {/* Outcome Table Section */}
-                    <div style={{ marginBottom: 32 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          🎯 Learning Outcomes
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('OUTCOME', v.id)}>
-                          Import Excel
-                        </ExcelImportButton>
-                      </div>
-                      <OutcomeTable
-                        outcomes={outcomeMap[v.id]}
-                        isEditing={isEditing}
-                        onAddOutcome={o => handleAddOutcome(v.id, o)}
-                        onDeleteOutcome={id => handleDeleteOutcome(v.id, id)}
-                        onUpdateOutcome={(id, o) => handleUpdateOutcome(v.id, id, o)}
-                      />
-                    </div>
-                    {/* Session Table Section */}
-                    <div style={{ marginBottom: 32 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          📅 Course Sessions
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('SESSION', v.id)}>
-                          Import Excel
-                        </ExcelImportButton>
-                      </div>
-                      <SessionTable
-                        sessions={sessionMap[v.id]}
-                        outcomes={outcomeMap[v.id]}
-                        isEditing={isEditing}
-                        onAddSession={s => handleAddSession(v.id, s)}
-                        onDeleteSession={id => handleDeleteSession(v.id, id)}
-                        onUpdateSession={(id, s) => handleUpdateSession(v.id, id, s)}
-                        onAddOutcomeToSession={(sessionId, outcomeId) => handleAddOutcomeToSession(v.id, sessionId, outcomeId)}
-                      />
-                    </div>
+
                     {/* Bulk Import Modal */}
                     <Modal
-                      open={!!bulkModal && bulkModal.versionId === v.id}
+                      open={!!bulkModal && bulkModal.versionId === version.id}
                       onCancel={handleBulkModalClose}
                       footer={null}
                       title={`Bulk Import ${bulkModal?.type || ''}`}
@@ -466,7 +838,7 @@ const SubjectVersionPage: React.FC = () => {
                         onClose={handleBulkModalClose}
                         onDataImported={data => {
                           const imported = data[bulkModal?.type || ''] || [];
-                          handleBulkDataImported(bulkModal?.type || '', v.id, imported);
+                          handleBulkDataImported(bulkModal?.type || '', version.id, imported);
                         }}
                         supportedTypes={[bulkModal?.type as any]}
                       />
@@ -477,11 +849,13 @@ const SubjectVersionPage: React.FC = () => {
             })}
           />
         </div>
+
         <AddVersionModal
           visible={modalVisible}
           onCancel={() => setModalVisible(false)}
           onAdd={handleAddVersion}
           confirmLoading={adding}
+          subjectId={Number(subjectId)}
         />
       </div>
     </>

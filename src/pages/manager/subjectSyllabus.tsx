@@ -72,7 +72,7 @@ const ManagerSubjectSyllabus: React.FC = () => {
         if(result === null){
             // Check for 404 error (syllabus not found)
           const content = subject ? `${subject.subjectCode} - ${subject.subjectName}'s syllabus` : `Syllabus for subject ${subjectId}`;
-            await addSyllabusMutation.mutateAsync({ subjectId: Number(subjectId), content });
+            await addSyllabusMutation.mutateAsync({ subjectVersionId: 1, content });
             // Refetch syllabus after creation
             const newResult = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
             setSyllabus(Array.isArray(newResult) ? newResult[0] : newResult);

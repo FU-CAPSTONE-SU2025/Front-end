@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Affix, Tag, message, Pagination, Spin, Empty, Modal, Select, Space, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateCombo } from '../../interfaces/ISchoolProgram';
@@ -255,7 +256,7 @@ const ComboManagerPage: React.FC = () => {
     <div className={styles.sttContainer}>
       {/* Sticky Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
-        <div className={styles.sttToolbar}>
+        <div className={`${styles.sttToolbar} ${glassStyles.appleGlassCard}`}>
           <Input
             placeholder="Search by ID or Combo Name"
             prefix={<SearchOutlined />}
@@ -263,6 +264,7 @@ const ComboManagerPage: React.FC = () => {
             onChange={e => { setSearch(e.target.value); setPage(1); }}
             style={{maxWidth: 240, borderRadius: 999}}
             size="large"
+            className={glassStyles.appleGlassInput}
           />
         </div>
       </Affix>

@@ -1,11 +1,10 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { AccountProps } from "../../interfaces/IAccount";
-import { CreateSubject, PagedData, Subject, UpdateSubject } from "../../interfaces/ISchoolProgram";
+import { CreateSubjectVersion, PagedData, SubjectVersion, UpdateSubjectVersion } from "../../interfaces/ISchoolProgram";
 
 const subjectVersionURL = baseUrl + "/SubjectVersion";
 
-export const AddSubject = async (data: CreateSubject): Promise<Subject | null> => {
+export const AddSubjectVersion = async (data: CreateSubjectVersion): Promise<SubjectVersion | null> => {
   const props = {
     data: data,
     url: subjectVersionURL,
@@ -19,26 +18,11 @@ export const AddSubject = async (data: CreateSubject): Promise<Subject | null> =
     return null; // This will never be reached, but TypeScript needs it
   }
 };
-
-export const AddPrerequisitesSubject = async (id:number,prerequisitesId:number): Promise<Subject | null> => {
-    const props = {
-      data: null,
-      url: subjectVersionURL + `/${id}/prerequisites/${prerequisitesId}`,
-      headers: GetHeader(),
-    };
-    const result = await axiosCreate(props);
-    if (result.success) {
-      return result.data;
-    } else {
-      throwApiError(result);
-      return null; // This will never be reached, but TypeScript needs it
-    }
-  };
   
-export const DeletePrerequisitesSubject = async (id:number,prerequisitesId:number): Promise<Subject | null> => {
+export const DeleteSubjectVersion = async (id:number): Promise<any | null> => {
   const props = {
     data: null,
-    url: subjectVersionURL + `/${id}/prerequisites/${prerequisitesId}`,
+    url: subjectVersionURL + `/${id}`,
     headers: GetHeader(),
   };
   const result = await axiosDelete(props);
@@ -50,43 +34,15 @@ export const DeletePrerequisitesSubject = async (id:number,prerequisitesId:numbe
   }
 };
 
-export const GetPrerequisitesSubject = async (id:number): Promise<Subject[] | null> => {
-  const props = {
-    data: null,
-    url: subjectVersionURL + `/${id}/prerequisites`,
-    headers: GetHeader(),
-  };
-  const result = await axiosRead(props);
-  if (result.success) {
-    return result.data;
-  } else {
-    throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
-  }
-}
 
-export const RegisterMultipleSubject = async (data: CreateSubject[]): Promise<any> => {
-  const props = {
-    data: data,
-    url: subjectVersionURL+"/bulk",
-    headers: GetHeader(),
-  };
-  const result = await axiosCreate(props);
-  if (result.success) {
-    return result.data;
-  } else {
-    throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
-  }
-};
 
-export const FetchSubjectList = async (
+export const FetchPagedSubjectVersionList = async (
   pageNumber?: number,
   pageSize?: number,
   search?: string,
   filterType?: string,
   filterValue?: string
-): Promise<PagedData<Subject> | null> => {
+): Promise<PagedData<SubjectVersion> | null> => {
   let params = new URLSearchParams();
   // Build query parameters
   if(pageNumber && pageSize){
@@ -119,7 +75,7 @@ export const FetchSubjectList = async (
   }
 };
 
-export const FetchSubjectById = async (id: number): Promise<Subject | null> => {
+export const FetchSubjectVersionById = async (id: number): Promise<SubjectVersion | null> => {
   const props = {
     data: null,
     url: subjectVersionURL + `/${id}`,
@@ -134,7 +90,37 @@ export const FetchSubjectById = async (id: number): Promise<Subject | null> => {
   }
 };
 
-export const UpdateSubjectById = async (id: number, data: UpdateSubject): Promise<Subject | null> => {
+export const FetchSubjectVersionBySubjectId = async (id: number): Promise<SubjectVersion[] | null> => {
+  const props = {
+    data: null,
+    url: subjectVersionURL + `/subject/${id}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
+  }
+};
+
+export const FetchDefaultSubjectVersionBySubject = async (id: number): Promise<SubjectVersion | null> => {
+  const props = {
+    data: null,
+    url: subjectVersionURL + `/subject/${id}/default`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
+  }
+};
+
+export const UpdateSubjectVersionById = async (id: number, data: UpdateSubjectVersion): Promise<any | null> => {
   const props = {
     data: data,
     url: subjectVersionURL + `/${id}`,
@@ -149,28 +135,14 @@ export const UpdateSubjectById = async (id: number, data: UpdateSubject): Promis
   }
 };
 
-export const DisableSubject = async (id: number): Promise<AccountProps | null> => {
-  const props = {
-    data: null,
-    url: subjectVersionURL + `/${id}`,
-    headers: GetHeader(),
-  };
-  const result = await axiosDelete(props);
-  if (result.success) {
-    return result.data;
-  } else {
-    throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
-  }
-}; 
 
-export const ACtiveSubject = async (id: number): Promise<AccountProps | null> => {
+export const ActiveSubjectVersion = async (id: number): Promise<any | null> => {
     const props = {
       data: null,
-      url: subjectVersionURL + `/${id}`,
+      url: subjectVersionURL + `/${id}/toggle-active`,
       headers: GetHeader(),
     };
-    const result = await axiosUpdate(props);
+    const result = await axiosCreate(props);
     if (result.success) {
       return result.data;
     } else {

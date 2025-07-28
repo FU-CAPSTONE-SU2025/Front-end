@@ -27,14 +27,86 @@ export const mockApiLogs = [
 // Mock SubjectVersion data
 export const mockSubjectVersions = [
   // Subject 1 has 3 versions
-  { id: 1, subjectId: 1, isActive: true, isApproved: true, versionNumber: 1, decisionNoDate: new Date('2022-01-01') },
-  { id: 2, subjectId: 1, isActive: false, isApproved: true, versionNumber: 2, decisionNoDate: new Date('2022-06-01') },
-  { id: 3, subjectId: 1, isActive: true, isApproved: false, versionNumber: 3, decisionNoDate: new Date('2023-01-01') },
+  { 
+    id: 1, 
+    subjectId: 1, 
+    versionCode: 'v1.0',
+    versionName: 'Version 1.0',
+    description: 'Initial version of Advanced Calculus',
+    isActive: true, 
+    isDefault: true,
+    effectiveFrom: '2022-01-01',
+    effectiveTo: null,
+    createdAt: '2022-01-01T00:00:00Z',
+    updatedAt: null
+  },
+  { 
+    id: 2, 
+    subjectId: 1, 
+    versionCode: 'v2.0',
+    versionName: 'Version 2.0',
+    description: 'Updated version with new content',
+    isActive: false, 
+    isDefault: false,
+    effectiveFrom: '2022-06-01',
+    effectiveTo: null,
+    createdAt: '2022-06-01T00:00:00Z',
+    updatedAt: null
+  },
+  { 
+    id: 3, 
+    subjectId: 1, 
+    versionCode: 'v3.0',
+    versionName: 'Version 3.0',
+    description: 'Latest version with improvements',
+    isActive: true, 
+    isDefault: false,
+    effectiveFrom: '2023-01-01',
+    effectiveTo: null,
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: null
+  },
   // Subject 2 has 2 versions
-  { id: 4, subjectId: 2, isActive: true, isApproved: true, versionNumber: 1, decisionNoDate: new Date('2022-02-01') },
-  { id: 5, subjectId: 2, isActive: true, isApproved: true, versionNumber: 2, decisionNoDate: new Date('2023-02-01') },
+  { 
+    id: 4, 
+    subjectId: 2, 
+    versionCode: 'v1.0',
+    versionName: 'Version 1.0',
+    description: 'Initial version of Modern Physics',
+    isActive: true, 
+    isDefault: true,
+    effectiveFrom: '2022-02-01',
+    effectiveTo: null,
+    createdAt: '2022-02-01T00:00:00Z',
+    updatedAt: null
+  },
+  { 
+    id: 5, 
+    subjectId: 2, 
+    versionCode: 'v2.0',
+    versionName: 'Version 2.0',
+    description: 'Updated version with new experiments',
+    isActive: true, 
+    isDefault: false,
+    effectiveFrom: '2023-02-01',
+    effectiveTo: null,
+    createdAt: '2023-02-01T00:00:00Z',
+    updatedAt: null
+  },
   // Subject 3 has 1 version
-  { id: 6, subjectId: 3, isActive: true, isApproved: true, versionNumber: 1, decisionNoDate: new Date('2022-03-01') },
+  { 
+    id: 6, 
+    subjectId: 3, 
+    versionCode: 'v1.0',
+    versionName: 'Version 1.0',
+    description: 'Initial version of Data Structures',
+    isActive: true, 
+    isDefault: true,
+    effectiveFrom: '2022-03-01',
+    effectiveTo: null,
+    createdAt: '2022-03-01T00:00:00Z',
+    updatedAt: null
+  },
 ];
 
 // Add mock syllabuses for all subject/version combinations for subjectId 1 and 2, two versions each

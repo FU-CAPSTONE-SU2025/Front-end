@@ -23,7 +23,7 @@ export const syllabuses: Syllabus[] = [
   { 
     id: 1, 
     subjectId: 1, 
-    versionId: 1, // Added to fix TS error
+    subjectVersionId: 1, // Fixed to use correct property name
     content: 'Syllabus for CS101',
     assessments: [],
     learningMaterials: [],
@@ -33,7 +33,7 @@ export const syllabuses: Syllabus[] = [
   { 
     id: 2, 
     subjectId: 2, 
-    versionId: 2, // Added to fix TS error
+    subjectVersionId: 2, // Fixed to use correct property name
     content: 'Syllabus for CS102',
     assessments: [],
     learningMaterials: [],

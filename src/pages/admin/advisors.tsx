@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, Input, Select, Table, Modal, message } from 'antd';
+import { ConfigProvider, Input, Select, Modal, message } from 'antd';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
 import BulkDataImport from '../../components/common/bulkDataImport';
@@ -347,11 +347,6 @@ const AdvisorList: React.FC = () => {
       <div className={styles.container}>
         <AccountCounter label="Advisor" advisor={categorizedData?.advisor} />
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible"
-         style={{ 
-          marginTop: '2rem',
-          maxHeight: 'none',
-          height: 'auto'
-        }}
         >
           <div className={styles.userInfo}>
             <h2>{isDeleteMode ? 'Delete Advisor Account' : 'List Of Advisors On the System'}</h2>

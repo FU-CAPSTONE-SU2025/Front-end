@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, Row, Col, Select, Spin, Empty, Typography, Space, Table, Tag, Input } from 'antd';
 import { BarChartOutlined, LineChartOutlined, PieChartOutlined, BookOutlined, UserOutlined, SearchOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import styles from '../../css/manager/managerSyllabus.module.css';
+import styles from '../../css/manager/studentInCoursePage.module.css';
 import { 
   ComboComparisonChart, 
   CurriculumDistributionChart, 
@@ -35,6 +35,9 @@ const StudentInCoursePage: React.FC = () => {
   const [semesterData, setSemesterData] = useState<SemesterData[]>([]);
   const [detailedEnrollmentData, setDetailedEnrollmentData] = useState<DetailedStudentEnrollment[]>([]);
   const [filteredEnrollmentData, setFilteredEnrollmentData] = useState<DetailedStudentEnrollment[]>([]);
+  const [isSticky, setIsSticky] = useState(false);
+  const filterCardRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
 
   const generateTimeRangeOptions = (): string[] => {
     const seasons = ['Spring', 'Summer', 'Fall', 'Winter'];
@@ -115,6 +118,26 @@ const StudentInCoursePage: React.FC = () => {
     loadChartData();
   }, [selectedCurriculum, selectedSemester, selectedTimeRange]);
 
+  // Scroll detection for sticky toolbar
+  useEffect(() => {
+    const handleScroll = () => {
+      if (headerRef.current && filterCardRef.current) {
+        const headerBottom = headerRef.current.getBoundingClientRect().bottom;
+        const navbarHeight = 80; // Adjust based on your navbar height
+        
+        // Check if header has scrolled past the top of the viewport
+        if (headerBottom <= navbarHeight) {
+          setIsSticky(true);
+        } else {
+          setIsSticky(false);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleCurriculumChange = (value: string) => {
     setSelectedCurriculum(value);
   };
@@ -135,6 +158,13 @@ const StudentInCoursePage: React.FC = () => {
     setSearchText(value);
   };
 
+  // Helper function to get GPA color class
+  const getGpaColorClass = (gpa: number): string => {
+    if (gpa >= 3.5) return styles.gpaExcellent;
+    if (gpa >= 3.0) return styles.gpaGood;
+    return styles.gpaPoor;
+  };
+
   // Table columns for detailed enrollment data
   const enrollmentColumns = [
     {
@@ -142,7 +172,7 @@ const StudentInCoursePage: React.FC = () => {
       dataIndex: 'studentId',
       key: 'studentId',
       width: 140,
-      render: (text: string) => <Text code style={{ fontSize: '12px' }}>{text}</Text>,
+      render: (text: string) => <Text code className={styles.studentIdText}>{text}</Text>,
     },
     {
       title: 'Student Name',
@@ -151,8 +181,8 @@ const StudentInCoursePage: React.FC = () => {
       width: 180,
       render: (text: string) => (
         <Space size="small">
-          <UserOutlined style={{ color: '#1E40AF', fontSize: '14px' }} />
-          <Text strong style={{ fontSize: '13px' }}>{text}</Text>
+          <UserOutlined className={styles.studentNameIcon} />
+          <Text strong className={styles.studentNameText}>{text}</Text>
         </Space>
       ),
     },
@@ -162,7 +192,7 @@ const StudentInCoursePage: React.FC = () => {
       key: 'curriculum',
       width: 140,
       render: (text: string) => (
-        <Tag color="blue" style={{ fontWeight: 500 }}>
+        <Tag color="blue" className={styles.curriculumTag}>
           {text}
         </Tag>
       ),
@@ -173,7 +203,7 @@ const StudentInCoursePage: React.FC = () => {
       key: 'combo',
       width: 160,
       render: (text: string) => (
-        <Tag color="orange" style={{ fontWeight: 500 }}>
+        <Tag color="orange" className={styles.comboTag}>
           {text}
         </Tag>
       ),
@@ -185,7 +215,7 @@ const StudentInCoursePage: React.FC = () => {
       width: 100,
       align: 'center' as const,
       render: (semester: number) => (
-        <Tag color="green" style={{ fontWeight: 600 }}>
+        <Tag color="green" className={styles.semesterTag}>
           {semester}
         </Tag>
       ),
@@ -204,7 +234,7 @@ const StudentInCoursePage: React.FC = () => {
       width: 80,
       align: 'center' as const,
       render: (gpa: number) => (
-        <Text strong style={{ color: gpa >= 3.5 ? '#059669' : gpa >= 3.0 ? '#f97316' : '#dc2626' }}>
+        <Text strong className={getGpaColorClass(gpa)}>
           {gpa.toFixed(1)}
         </Text>
       ),
@@ -215,7 +245,7 @@ const StudentInCoursePage: React.FC = () => {
       key: 'email',
       width: 200,
       render: (email: string) => (
-        <Text type="secondary" style={{ fontSize: '12px' }}>
+        <Text type="secondary" className={styles.emailText}>
           {email}
         </Text>
       ),
@@ -226,17 +256,18 @@ const StudentInCoursePage: React.FC = () => {
     <div className={styles.container}>
       {/* Header Section */}
       <motion.div
+        ref={headerRef}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         className={styles.header}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className={styles.headerContent}>
           <div>
-            <Title level={2} style={{ margin: 0, color: '#1E293B' }}>
+            <Title level={2} className={styles.headerTitle}>
               Student Monitoring Dashboard
             </Title>
-            <Text type="secondary" style={{ fontSize: '16px' }}>
+            <Text type="secondary" className={styles.headerSubtitle}>
               Comprehensive overview of student enrollment and academic progress
             </Text>
           </div>
@@ -249,62 +280,64 @@ const StudentInCoursePage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
-        <Card className={styles.filterCard}>
-          <Row gutter={[24, 16]} align="middle">
-            <Col xs={24} sm={8}>
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Text strong>By Curriculum</Text>
-                <Select
-                  value={selectedCurriculum}
-                  onChange={handleCurriculumChange}
-                  style={{ width: '100%' }}
-                  placeholder="Select Curriculum"
-                >
-                  <Option value="all">All Curriculums</Option>
-                  <Option value="Computer Science">Computer Science</Option>
-                  <Option value="Information Technology">Information Technology</Option>
-                  <Option value="Software Engineering">Software Engineering</Option>
-                  <Option value="Data Science">Data Science</Option>
-                  <Option value="Cybersecurity">Cybersecurity</Option>
-                </Select>
-              </Space>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Text strong>Semester</Text>
-                <Select
-                  value={selectedSemester}
-                  onChange={handleSemesterChange}
-                  style={{ width: '100%' }}
-                  placeholder="Select Semester"
-                >
-                  {generateSemesterOptions().map(option => (
-                    <Option key={option.value} value={option.value}>
-                      {option.label}
-                    </Option>
-                  ))}
-                </Select>
-              </Space>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Text strong>Time Range</Text>
-                <Select
-                  value={selectedTimeRange}
-                  onChange={handleTimeRangeChange}
-                  style={{ width: '100%' }}
-                  placeholder="Select Time Range"
-                >
-                  {generateTimeRangeOptions().map(option => (
-                    <Option key={option} value={option}>
-                      {option}
-                    </Option>
-                  ))}
-                </Select>
-              </Space>
-            </Col>
-          </Row>
-        </Card>
+        <div ref={filterCardRef}>
+          <Card className={`${styles.filterCard} ${isSticky ? styles.stickyActive : ''}`}>
+            <Row gutter={[24, 16]} align="middle">
+              <Col xs={24} sm={8}>
+                <Space direction="vertical" className={styles.filterSpace}>
+                  <Text strong>By Curriculum</Text>
+                  <Select
+                    value={selectedCurriculum}
+                    onChange={handleCurriculumChange}
+                    className={styles.filterSelect}
+                    placeholder="Select Curriculum"
+                  >
+                    <Option value="all">All Curriculums</Option>
+                    <Option value="Computer Science">Computer Science</Option>
+                    <Option value="Information Technology">Information Technology</Option>
+                    <Option value="Software Engineering">Software Engineering</Option>
+                    <Option value="Data Science">Data Science</Option>
+                    <Option value="Cybersecurity">Cybersecurity</Option>
+                  </Select>
+                </Space>
+              </Col>
+              <Col xs={24} sm={8}>
+                <Space direction="vertical" className={styles.filterSpace}>
+                  <Text strong>Semester</Text>
+                  <Select
+                    value={selectedSemester}
+                    onChange={handleSemesterChange}
+                    className={styles.filterSelect}
+                    placeholder="Select Semester"
+                  >
+                    {generateSemesterOptions().map(option => (
+                      <Option key={option.value} value={option.value}>
+                        {option.label}
+                      </Option>
+                    ))}
+                  </Select>
+                </Space>
+              </Col>
+              <Col xs={24} sm={8}>
+                <Space direction="vertical" className={styles.filterSpace}>
+                  <Text strong>Time Range</Text>
+                  <Select
+                    value={selectedTimeRange}
+                    onChange={handleTimeRangeChange}
+                    className={styles.filterSelect}
+                    placeholder="Select Time Range"
+                  >
+                    {generateTimeRangeOptions().map(option => (
+                      <Option key={option} value={option}>
+                        {option}
+                      </Option>
+                    ))}
+                  </Select>
+                </Space>
+              </Col>
+            </Row>
+          </Card>
+        </div>
       </motion.div>
 
       {/* Charts Section - Redesigned Layout */}
@@ -312,19 +345,20 @@ const StudentInCoursePage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
+        className={styles.motionContainer}
       >
         {/* Chart 1: Student Comparison Across Combos - Full Width */}
-        <Row style={{ marginTop: 24 }}>
+        <Row className={styles.chartRow}>
           <Col span={24}>
             <Card 
               title={
                 <Space>
-                  <BarChartOutlined style={{ color: '#1E40AF' }} />
+                  <BarChartOutlined className={styles.barChartIcon} />
                   <Text strong>Student Comparison Across Combos</Text>
                 </Space>
               }
               className={styles.chartCard}
-              style={{ height: '500px' }}
+          
             >
               <ComboComparisonChart data={comboComparisonData} loading={loading} />
             </Card>
@@ -332,18 +366,17 @@ const StudentInCoursePage: React.FC = () => {
         </Row>
 
         {/* Charts 2 & 3: Semester Distribution and Curriculum Distribution */}
-        <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
+        <Row gutter={[24, 24]} className={styles.chartRowGutter}>
           {/* Chart 2: Student Distribution by Semester - 70% width */}
           <Col xs={24} lg={17}>
-            <Card 
+            <Card
               title={
                 <Space>
-                  <LineChartOutlined style={{ color: '#059669' }} />
+                  <LineChartOutlined className={styles.lineChartIcon} />
                   <Text strong>Student Distribution by Semester</Text>
                 </Space>
               }
               className={styles.chartCard}
-              style={{ height: '500px' }}
             >
               <SemesterDistributionChart data={semesterData} loading={loading} />
             </Card>
@@ -354,12 +387,12 @@ const StudentInCoursePage: React.FC = () => {
             <Card 
               title={
                 <Space>
-                  <PieChartOutlined style={{ color: '#f97316' }} />
+                  <PieChartOutlined className={styles.pieChartIcon} />
                   <Text strong>Students by Curriculum</Text>
                 </Space>
               }
               className={styles.chartCard}
-              style={{ height: '500px' }}
+            
             >
               <CurriculumDistributionChart data={curriculumData} loading={loading} />
             </Card>
@@ -372,11 +405,12 @@ const StudentInCoursePage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
+        className={styles.motionContainer}
       >
         <Card 
           title={
             <Space>
-              <BookOutlined style={{ color: '#1E40AF' }} />
+              <BookOutlined className={styles.bookIcon} />
               <Text strong>Detailed Student Enrollment Data</Text>
               <Text type="secondary" style={{ fontSize: '14px' }}>
                 ({filteredEnrollmentData.length} students)
@@ -384,17 +418,16 @@ const StudentInCoursePage: React.FC = () => {
             </Space>
           }
           className={styles.tableCard}
-          style={{ marginTop: 24 }}
         >
           {/* Table Filters */}
-          <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+          <Row gutter={[16, 16]} className={styles.tableFiltersRow}>
             <Col xs={24} sm={12}>
-              <Space direction="vertical" style={{ width: '100%' }}>
+              <Space direction="vertical" className={styles.tableFiltersSpace}>
                 <Text strong>Filter by Combo</Text>
                 <Select
                   value={selectedCombo}
                   onChange={handleComboChange}
-                  style={{ width: '100%' }}
+                  className={styles.tableFiltersSelect}
                   placeholder="Select Combo"
                 >
                   {generateComboOptions().map(option => (
@@ -406,7 +439,7 @@ const StudentInCoursePage: React.FC = () => {
               </Space>
             </Col>
             <Col xs={24} sm={12}>
-              <Space direction="vertical" style={{ width: '100%' }}>
+              <Space direction="vertical" className={styles.tableFiltersSpace}>
                 <Text strong>Search Students</Text>
                 <Search
                   placeholder="Search by name, ID, curriculum, combo, or email..."
@@ -421,9 +454,9 @@ const StudentInCoursePage: React.FC = () => {
           </Row>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px' }}>
+            <div className={styles.loadingContainer}>
               <Spin size="large" />
-              <div style={{ marginTop: 16 }}>
+              <div className={styles.loadingText}>
                 <Text type="secondary">Loading detailed data...</Text>
               </div>
             </div>
@@ -441,7 +474,7 @@ const StudentInCoursePage: React.FC = () => {
               }}
               scroll={{ x: 1100 }}
               size="middle"
-              style={{ marginTop: 16 }}
+              className={styles.tableContainer}
             />
           )}
         </Card>

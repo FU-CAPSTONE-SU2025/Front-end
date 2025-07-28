@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {  Input, Button, Affix, message ,Collapse, Modal, Typography, Progress, Select } from 'antd';
 import { PlusOutlined, EditOutlined, SearchOutlined, CheckOutlined, ImportOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateCurriculum } from '../../interfaces/ISchoolProgram';
@@ -165,7 +166,7 @@ const CurriculumManagerPage: React.FC = () => {
       <div className={styles.sttContainer} style={{ paddingTop: 12 }}>
         {/* Sticky Toolbar */}
         <Affix offsetTop={80} style={{zIndex: 10}}>
-          <div style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', border: '1.5px solid rgba(255,255,255,0.18)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
+          <div className={glassStyles.appleGlassCard} style={{padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
             <Input
               placeholder="Search by Curriculum ID or Name"
               prefix={<SearchOutlined />}
@@ -173,6 +174,7 @@ const CurriculumManagerPage: React.FC = () => {
               onChange={e => setSearch(e.target.value)}
               style={{maxWidth: 240, borderRadius: 999}}
               size="large"
+              className={glassStyles.appleGlassInput}
             />
             <Button 
               type="primary" 
@@ -180,6 +182,7 @@ const CurriculumManagerPage: React.FC = () => {
               size="large" 
               style={{borderRadius: 999}}
               onClick={handleAddCurriculum}
+              className={glassStyles.appleGlassButton}
             >
               Add Curriculum
             </Button>
@@ -188,6 +191,7 @@ const CurriculumManagerPage: React.FC = () => {
               size="large" 
               style={{borderRadius: 999}}
               onClick={handleImportCurriculum}
+              className={glassStyles.appleGlassButton}
             >
               Import Curricula
             </Button>

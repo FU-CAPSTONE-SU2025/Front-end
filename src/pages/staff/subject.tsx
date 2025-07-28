@@ -10,7 +10,6 @@ import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { isErrorResponse } from '../../api/AxiosCRUD';
 import { Subject } from '../../interfaces/ISchoolProgram';
-import { useMockSubjectVersions } from '../../api/SchoolAPI/subjectAPI';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -198,8 +197,8 @@ const SubjectPage: React.FC = () => {
       key: 'version',
       align: 'center' as 'center',
       render: (_: any, record: any) => {
-        const versions = useMockSubjectVersions(record.id);
-        return versions.length > 0 ? versions.map(v => v.versionNumber).join(', ') : '-';
+        // Since we don't have real version data in the subject list, show a placeholder
+        return 'View Versions';
       }
     },
     {

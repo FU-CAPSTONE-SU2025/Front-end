@@ -19,10 +19,22 @@ import {
   AddSyllabusSessionsBulk, 
   AddSyllabusOutcomesToSession, 
   FetchSyllabusBySubject, 
+  FetchSyllabusBySubjectVersion,
   UpdateSyllabusById, 
   DisableSyllabus 
 } from '../api/SchoolAPI/syllabusAPI';
 import { CreateSyllabus, Syllabus, UpdateSyllabus, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from '../interfaces/ISchoolProgram';
+import { 
+  AddSubjectVersion, 
+  DeleteSubjectVersion, 
+  FetchPagedSubjectVersionList, 
+  FetchSubjectVersionById, 
+  FetchSubjectVersionBySubjectId, 
+  FetchDefaultSubjectVersionBySubject, 
+  UpdateSubjectVersionById, 
+  ActiveSubjectVersion 
+} from '../api/SchoolAPI/subjectVersionAPI';
+import { SubjectVersion, CreateSubjectVersion, UpdateSubjectVersion } from '../interfaces/ISchoolProgram';
 
 interface PaginationParams {
   pageNumber: number;
@@ -375,6 +387,18 @@ export function useCRUDSyllabus() {
     },
   });
 
+  // Fetch syllabus by subject version
+  const fetchSyllabusBySubjectVersionMutation = useMutation<Syllabus | null, unknown, number>({
+    mutationFn: async (subjectVersionId: number) => {
+      const result = await FetchSyllabusBySubjectVersion(subjectVersionId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+      return null;
+    },
+  });
+
   // Add syllabus
   const addSyllabusMutation = useMutation<Syllabus | null, unknown, CreateSyllabus>({
     mutationFn: async (data: CreateSyllabus) => {
@@ -498,6 +522,7 @@ export function useCRUDSyllabus() {
 
   return {
     fetchSyllabusBySubjectMutation,
+    fetchSyllabusBySubjectVersionMutation,
     addSyllabusMutation,
     updateSyllabusMutation,
     disableSyllabusMutation,
@@ -608,5 +633,136 @@ export function useCRUDProgram() {
     isSuccessBulkImport,
     programById,
     getProgramById
+  };
+}
+
+export function useCRUDSubjectVersion() {
+  // Fetch paged subject versions
+  const getSubjectVersionMutation = useMutation<PagedData<SubjectVersion> | null, unknown, PaginationParams>({
+    mutationFn: async (params: PaginationParams) => {
+      const data = await FetchPagedSubjectVersionList(
+        params.pageNumber,
+        params.pageSize,
+        params.filterValue,
+        params.filterType
+      );
+      return data;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Fetch subject version by ID
+  const getSubjectVersionById = useMutation<SubjectVersion | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await FetchSubjectVersionById(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Fetch subject versions by subject ID
+  const getSubjectVersionsBySubjectId = useMutation<SubjectVersion[] | null, unknown, number>({
+    mutationFn: async (subjectId: number) => {
+      const result = await FetchSubjectVersionBySubjectId(subjectId);
+      // Return empty array if result is null or undefined
+      return result || [];
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Fetch default subject version by subject ID
+  const getDefaultSubjectVersionBySubjectId = useMutation<SubjectVersion | null, unknown, number>({
+    mutationFn: async (subjectId: number) => {
+      const result = await FetchDefaultSubjectVersionBySubject(subjectId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Add subject version
+  const addSubjectVersionMutation = useMutation<SubjectVersion | null, unknown, CreateSubjectVersion>({
+    mutationFn: async (data: CreateSubjectVersion) => {
+      const result = await AddSubjectVersion(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Update subject version
+  const updateSubjectVersionMutation = useMutation<SubjectVersion | null, unknown, { id: number; data: UpdateSubjectVersion }>({
+    mutationFn: async ({ id, data }) => {
+      const result = await UpdateSubjectVersionById(id, data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Delete subject version
+  const deleteSubjectVersionMutation = useMutation<any | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await DeleteSubjectVersion(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Toggle active status
+  const toggleActiveSubjectVersionMutation = useMutation<SubjectVersion | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await ActiveSubjectVersion(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  const isSuccessCreateSubjectVersion = addSubjectVersionMutation.isSuccess;
+  const isSuccessUpdateSubjectVersion = updateSubjectVersionMutation.isSuccess;
+  const isSuccessDeleteSubjectVersion = deleteSubjectVersionMutation.isSuccess;
+  const isSuccessToggleActive = toggleActiveSubjectVersionMutation.isSuccess;
+
+  const subjectVersionById = getSubjectVersionById.data || null;
+  const metaData = getSubjectVersionMutation.data || null;
+  const subjectVersionList = metaData?.items || [];
+  const paginationSubjectVersion = metaData ? {
+    current: metaData.pageNumber,
+    pageSize: metaData.pageSize,
+    total: metaData.totalCount,
+    totalPages: Math.ceil(metaData.totalCount / metaData.pageSize)
+  } : null;
+
+  return {
+    addSubjectVersionMutation,
+    updateSubjectVersionMutation,
+    deleteSubjectVersionMutation,
+    toggleActiveSubjectVersionMutation,
+    getSubjectVersionMutation,
+    getSubjectVersionById,
+    getSubjectVersionsBySubjectId,
+    getDefaultSubjectVersionBySubjectId,
+    getAllSubjectVersions: getSubjectVersionMutation.mutate,
+    subjectVersionList,
+    paginationSubjectVersion,
+    isLoading: getSubjectVersionMutation.isPending,
+    isSuccessCreateSubjectVersion,
+    isSuccessUpdateSubjectVersion,
+    isSuccessDeleteSubjectVersion,
+    isSuccessToggleActive,
+    subjectVersionById
   };
 }

@@ -38,7 +38,7 @@ const SubjectDetail: React.FC = () => {
         if (!result) {
           const content = `Syllabus for subject ${id}`;
           loadedSyllabus = await addSyllabusMutation.mutateAsync({
-            subjectId: Number(id),
+            subjectVersionId: 1, // Default version ID
             content
           });
         } else {

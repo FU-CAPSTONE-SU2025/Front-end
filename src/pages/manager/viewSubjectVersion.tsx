@@ -5,6 +5,7 @@ import { PlusOutlined, ArrowLeftOutlined, EditOutlined, SaveOutlined, FileExcelO
 
 import AddVersionModal from '../../components/staff/AddVersionModal';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 
 import AssessmentTable from '../../components/staff/AssessmentTable';
 import MaterialTable from '../../components/staff/MaterialTable';
@@ -25,15 +26,51 @@ const noopAsync = async () => {};
 // Remove staticMockSubject
 // Mock data using correct interfaces
 const staticMockVersions: SubjectVersion[] = [
-  { id: 1, subjectId: 1, isActive: true, isApproved: true, versionNumber: 1, decisionNoDate: new Date('2022-01-01') },
-  { id: 2, subjectId: 1, isActive: false, isApproved: true, versionNumber: 2, decisionNoDate: new Date('2022-06-01') },
-  { id: 3, subjectId: 1, isActive: true, isApproved: false, versionNumber: 3, decisionNoDate: new Date('2023-01-01') },
+  { 
+    id: 1, 
+    subjectId: 1, 
+    versionCode: 'v1.0',
+    versionName: 'Version 1.0',
+    description: 'Initial version',
+    isActive: true, 
+    isDefault: true,
+    effectiveFrom: '2022-01-01',
+    effectiveTo: null,
+    createdAt: '2022-01-01T00:00:00Z',
+    updatedAt: null
+  },
+  { 
+    id: 2, 
+    subjectId: 1, 
+    versionCode: 'v2.0',
+    versionName: 'Version 2.0',
+    description: 'Updated version',
+    isActive: false, 
+    isDefault: false,
+    effectiveFrom: '2022-06-01',
+    effectiveTo: null,
+    createdAt: '2022-06-01T00:00:00Z',
+    updatedAt: null
+  },
+  { 
+    id: 3, 
+    subjectId: 1, 
+    versionCode: 'v3.0',
+    versionName: 'Version 3.0',
+    description: 'Latest version',
+    isActive: true, 
+    isDefault: false,
+    effectiveFrom: '2023-01-01',
+    effectiveTo: null,
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: null
+  },
 ];
 // Mock syllabuses for each version
 const staticMockSyllabuses: Syllabus[] = [
-  { id: 1, subjectId: 1, versionId: 1, content: 'Syllabus content for Version 1: Calculus fundamentals, limits, derivatives, and integrals.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
-  { id: 2, subjectId: 1, versionId: 2, content: 'Syllabus content for Version 2: Advanced topics in Calculus, multivariable calculus, and series.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
-  { id: 3, subjectId: 1, versionId: 3, content: 'Syllabus content for Version 3: Calculus applications, differential equations, and real analysis.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
+  { id: 1, subjectId: 1, subjectVersionId: 1, content: 'Syllabus content for Version 1: Calculus fundamentals, limits, derivatives, and integrals.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
+  { id: 2, subjectId: 1, subjectVersionId: 2, content: 'Syllabus content for Version 2: Advanced topics in Calculus, multivariable calculus, and series.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
+  { id: 3, subjectId: 1, subjectVersionId: 3, content: 'Syllabus content for Version 3: Calculus applications, differential equations, and real analysis.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
 ];
 // Mock prerequisites for each version
 const staticMockPrerequisites: SubjectPrerequisite[] = [
@@ -256,7 +293,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
       </style>
       <div className={styles.syllabusContainer} style={{ width: '100%', maxWidth: 'none', minWidth: 0 }}>
         {/* Header */}
-        <div className={styles.syllabusHeader}>
+        <div className={`${styles.syllabusHeader} ${glassStyles.appleGlassCard}`}>
           <div className={styles.syllabusHeaderLeft}>
             <button className={styles.backButton} onClick={() => navigate(-1)}>
               <ArrowLeftOutlined /> Back to Subjects
@@ -280,6 +317,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
               disabled={isApproved}
               onMouseEnter={() => setApproveHover(true)}
               onMouseLeave={() => setApproveHover(false)}
+              className={glassStyles.appleGlassButton}
               style={
                 isApproved
                   ? {
@@ -339,7 +377,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
             tabBarStyle={{ background: 'transparent', borderRadius: 12, boxShadow: 'none', display: 'flex', justifyContent: 'center' }}
             items={versions.map((v) => {
               const isActive = v.isActive;
-              const syllabus = staticMockSyllabuses.find(s => s.versionId === v.id);
+              const syllabus = staticMockSyllabuses.find(s => s.subjectVersionId === v.id);
               const prerequisites = staticMockPrerequisites.filter(p => p.version_id === v.id);
               return {
                 key: String(v.id),
@@ -355,7 +393,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                       transition: 'background 0.2s, color 0.2s',
                     }}
                   >
-                    {`Version ${v.versionNumber}`}
+                    {`Version ${v.versionCode}`}
                   </span>
                 ),
                 children: (
@@ -582,6 +620,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
           onCancel={() => setModalVisible(false)}
           onAdd={handleAddVersion}
           confirmLoading={adding}
+          subjectId={Number(subjectId)}
         />
       </div>
     </>

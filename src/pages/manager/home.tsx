@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import StatusBadge from '../../components/manager/statusBadge';
 import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { SubjectWithCurriculumInfo, Subject } from '../../interfaces/ISchoolProgram';
 import { AddSubjectToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
@@ -282,7 +283,7 @@ const HomePage: React.FC = () => {
     <div className={styles.sttContainer}>
       {/* Sticky Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
-        <div className={styles.sttToolbar}>
+        <div className={`${styles.sttToolbar} ${glassStyles.appleGlassCard}`}>
           <Input
             placeholder="Search by code, name, or description..."
             prefix={<SearchOutlined />}
@@ -290,6 +291,7 @@ const HomePage: React.FC = () => {
             onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
             style={{maxWidth: 240, borderRadius: 999}}
             size="large"
+            className={glassStyles.appleGlassInput}
           />
         </div>
       </Affix>
