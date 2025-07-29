@@ -4,7 +4,7 @@ import { Syllabus } from '../interfaces/ISchoolProgram';
 export const mockSyllabus: Syllabus = {
   id: 1,
   subjectId: 1,
-  subjectVersionId: 1, // Fixed to use correct property name
+  versionId: 1, // Added to fix TS error
   content: 'This course provides an overview of computer science, including algorithms, programming, and the basics of computer systems.',
   assessments: [
     { id: 1, syllabusId: 1, category: 'Quiz', quantity: 1, weight: 10, completionCriteria: 'Complete Quiz 1', duration: 30, questionType: 'multiple-choice' },

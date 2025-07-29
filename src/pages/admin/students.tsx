@@ -13,6 +13,7 @@ import { StudentBase } from '../../interfaces/IStudent';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { BulkRegisterStudent, DisableUser } from '../../api/Account/UserAPI';
 import { parseExcelDate } from '../../utils/dateUtils';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Option } = Select;
 
@@ -131,9 +132,10 @@ const StudentList: React.FC = () => {
       try {
         response = await BulkRegisterStudent(validData);
       } catch (err) {
+        const errorMessage = getUserFriendlyErrorMessage(err);
         setUploadStatus('error');
-        setUploadMessage('Failed to import students. Please try again.');
-        message.error('Failed to import students. Please try again.');
+        setUploadMessage(errorMessage);
+        message.error(errorMessage);
         return;
       }
       // Treat null/undefined (204 No Content) as success

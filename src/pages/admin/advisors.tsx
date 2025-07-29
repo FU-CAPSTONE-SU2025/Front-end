@@ -15,6 +15,7 @@ import * as XLSX from 'xlsx';
 import { GetAllMeetingRecordPaged } from '../../api/admin/auditlogAPI';
 import { AdminViewBooking } from '../../interfaces/IBookingAvailability';
 import { showForExport, hideLoading } from '../../hooks/useLoading';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 
 const { Option } = Select;
@@ -125,9 +126,10 @@ const AdvisorList: React.FC = () => {
       try {
         response = await BulkRegisterAdvisor(transformedData);
       } catch (err) {
+        const errorMessage = getUserFriendlyErrorMessage(err);
         setUploadStatus('error');
-        setUploadMessage('Failed to import advisors. Please try again.');
-        message.error('Failed to import advisors. Please try again.');
+        setUploadMessage(errorMessage);
+        message.error(errorMessage);
         return;
       }
       // Treat null/undefined (204 No Content) as success

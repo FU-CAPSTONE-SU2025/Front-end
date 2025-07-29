@@ -13,6 +13,7 @@ import useUserProfile from '../../hooks/useUserProfile';
 import { JWTAccountProps } from '../../interfaces/IAccount';
 import { validateEmail } from '../../components/common/validation';
 import { useNavigate } from 'react-router';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -131,7 +132,8 @@ const Profile: React.FC = () => {
   // Handle update errors
   useEffect(() => {
     if (updateError) {
-      message.error('Failed to update profile. Please try again.');
+      const errorMessage = getUserFriendlyErrorMessage(updateError);
+      message.error(errorMessage);
       console.error('Update error:', updateError);
     }
   }, [updateError]);
@@ -139,8 +141,9 @@ const Profile: React.FC = () => {
   // Handle current user fetch errors
   useEffect(() => {
     if (currentUserError) {
+      const errorMessage = getUserFriendlyErrorMessage(currentUserError);
       console.error('Failed to fetch user data:', currentUserError);
-      message.error('Failed to load user profile.');
+      message.error(errorMessage);
     }
   }, [currentUserError]);
 

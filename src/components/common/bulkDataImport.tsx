@@ -6,6 +6,7 @@ import * as XLSX from 'xlsx';
 import { getHeaderConfig, HeaderConfiguration, matchesConfiguration, findFieldMapping } from '../../data/importConfigurations';
 import { transformBulkImportData, createPreviewData } from '../../utils/bulkImportTransformers';
 import styles from '../../css/bulkImport.module.css';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Dragger } = Upload;
 const { Step } = Steps;
@@ -67,7 +68,8 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
           workbook = XLSX.read(data, { type: 'array' });
         } catch (xlsxError) {
           console.error('XLSX parsing error:', xlsxError);
-          message.error('Error reading Excel file. The file format may not be supported or the file may be corrupted.');
+          const errorMessage = getUserFriendlyErrorMessage(xlsxError);
+          message.error(errorMessage);
           setIsProcessing(false);
           return;
         }

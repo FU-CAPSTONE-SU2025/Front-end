@@ -3,6 +3,7 @@ import { Upload, message, Card } from 'antd';
 import { FileExcelOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Dragger } = Upload;
 
@@ -49,7 +50,8 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({
           workbook = XLSX.read(data, { type: 'array' });
         } catch (xlsxError) {
           console.error('XLSX parsing error:', xlsxError);
-          message.error('Error reading Excel file. The file format may not be supported or the file may be corrupted.');
+          const errorMessage = getUserFriendlyErrorMessage(xlsxError);
+          message.error(errorMessage);
           setIsUploading(false);
           return;
         }
@@ -76,7 +78,8 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({
         message.success(`Successfully uploaded ${transformedData.length} items`);
       } catch (error) {
         console.error('File processing error:', error);
-        message.error('Error reading Excel file. Please check the file format and try again.');
+        const errorMessage = getUserFriendlyErrorMessage(error);
+        message.error(errorMessage);
       } finally {
         setIsUploading(false);
       }
