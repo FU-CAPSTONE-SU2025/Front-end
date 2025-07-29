@@ -17,6 +17,7 @@ import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { SubjectVersion, Syllabus, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, SubjectPrerequisite, CreateSubjectVersion, CreateSyllabus } from '../../interfaces/ISchoolProgram';
 import { useCRUDSubject, useCRUDSubjectVersion, useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
 import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../data/mockData';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 // Function to create default version for a subject (moved outside component)
 const createDefaultVersion = async (
@@ -36,7 +37,8 @@ const createDefaultVersion = async (
       return [newVersion];
     }
   } catch (err: any) {
-    message.error('Failed to create default version: ' + err.message);
+    const errorMessage = getUserFriendlyErrorMessage(err);
+    message.error('Failed to create default version: ' + errorMessage);
   }
   return [];
 };
@@ -61,7 +63,8 @@ const createDefaultSyllabus = async (
       return newSyllabus;
     }
   } catch (err: any) {
-    message.error('Failed to create default syllabus: ' + err.message);
+    const errorMessage = getUserFriendlyErrorMessage(err);
+    message.error('Failed to create default syllabus: ' + errorMessage);
   }
   return null;
 };

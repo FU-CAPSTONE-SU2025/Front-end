@@ -17,6 +17,7 @@ import AssessmentTable from '../../components/staff/AssessmentTable';
 import MaterialTable from '../../components/staff/MaterialTable';
 import OutcomeTable from '../../components/staff/OutcomeTable';
 import SessionTable from '../../components/staff/SessionTable';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const SubjectSyllabus: React.FC = () => {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ const SubjectSyllabus: React.FC = () => {
             // Check for 404 error (syllabus not found)
 
           const content = subject ? `${subject.subjectCode} - ${subject.subjectName}'s syllabus` : `Syllabus for subject ${subjectId}`;
-            await addSyllabusMutation.mutateAsync({ subjectVersionId: 1, content });
+            await addSyllabusMutation.mutateAsync({ subjectId: Number(subjectId), content });
             // Refetch syllabus after creation
             const newResult = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
             setSyllabus(Array.isArray(newResult) ? newResult[0] : newResult);
@@ -95,7 +96,8 @@ const SubjectSyllabus: React.FC = () => {
       message.success('Syllabus saved successfully');
       setIsEditing(false);
     } catch (error) {
-      message.error('Failed to save syllabus');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -178,7 +180,8 @@ const SubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      message.error(`Failed to delete ${type}`);
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 
@@ -189,7 +192,8 @@ const SubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      message.error('Failed to update assessment');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 
@@ -200,7 +204,8 @@ const SubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      message.error('Failed to update material');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 
@@ -211,7 +216,8 @@ const SubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      message.error('Failed to update outcome');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 
@@ -222,7 +228,8 @@ const SubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      message.error('Failed to update session');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 

@@ -7,7 +7,7 @@ import { useSearchParams, useNavigate } from 'react-router';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { Curriculum, SubjectWithCurriculumInfo, CreateCurriculum } from '../../interfaces/ISchoolProgram';
-import { ErrorResponse, isErrorResponse } from '../../api/AxiosCRUD';
+import { ErrorResponse, isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import dayjs from 'dayjs';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 
@@ -152,34 +152,16 @@ const CurriculumPage: React.FC = () => {
         },
         onError: (error: any) => {
           console.error('Import error:', error);
-          
-          // Extract ErrorResponse details if available
-          let errorMessage = 'Unknown error occurred';
-          let errorStatus = '';
-          
-          // Check if the error has an attached ErrorResponse
-          if (error.errorResponse && isErrorResponse(error.errorResponse)) {
-            errorMessage = error.errorResponse.message;
-            errorStatus = ` (Status: ${error.errorResponse.status})`;
-          } 
-          // Check if the error itself is an ErrorResponse
-          else if (isErrorResponse(error)) {
-            errorMessage = error.message;
-            errorStatus = ` (Status: ${error.status})`;
-          }
-          // Fallback to error message
-          else if (error?.message) {
-            errorMessage = error.message;
-          }
-          
-          message.error(`Error importing curricula: ${errorMessage}${errorStatus}`);
+          const errorMessage = getUserFriendlyErrorMessage(error);
+          message.error(errorMessage);
           setUploadStatus('error');
         }
       });
 
     } catch (error) {
       console.error('Import error:', error);
-      message.error('Error processing imported data. Please check your data format.');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
       setUploadStatus('error');
     }
   };
