@@ -19,6 +19,10 @@ export const AddSubject = async (data: CreateSubject): Promise<Subject | null> =
   }
 };
 
+/**
+ * @deprecated Use AddPrerequisiteToSubjectVersion from subjectVersionAPI instead
+ * This function will be removed in a future version
+ */
 export const AddPrerequisitesSubject = async (id:number,prerequisitesId:number): Promise<Subject | null> => {
     const props = {
       data: null,
@@ -34,6 +38,10 @@ export const AddPrerequisitesSubject = async (id:number,prerequisitesId:number):
     }
   };
   
+/**
+ * @deprecated Use DeletePrerequisiteFromSubjectVersion from subjectVersionAPI instead
+ * This function will be removed in a future version
+ */
 export const DeletePrerequisitesSubject = async (id:number,prerequisitesId:number): Promise<Subject | null> => {
   const props = {
     data: null,
@@ -49,6 +57,10 @@ export const DeletePrerequisitesSubject = async (id:number,prerequisitesId:numbe
   }
 };
 
+/**
+ * @deprecated Use GetPrerequisitesBySubjectVersion from subjectVersionAPI instead
+ * This function will be removed in a future version
+ */
 export const GetPrerequisitesSubject = async (id:number): Promise<Subject[] | null> => {
   const props = {
     data: null,
@@ -151,10 +163,10 @@ export const UpdateSubjectById = async (id: number, data: UpdateSubject): Promis
 export const DisableSubject = async (userId: number): Promise<any | null> => {
   const props = {
     data: null,
-    url: subjectURL + `/${userId}`,
+    url: subjectURL + `/${userId}/disable`,
     headers: GetHeader(),
   };
-  const result = await axiosDelete(props);
+  const result = await axiosUpdate(props);
   if (result.success) {
     return result.data;
   } else {

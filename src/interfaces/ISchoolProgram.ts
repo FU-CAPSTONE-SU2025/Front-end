@@ -36,9 +36,14 @@ export interface SubjectInCombo {
 
 // Interface for Syllabus table
 export interface Syllabus {
-  id: number; // Primary key
-  subjectVersionId: number; // Foreign key referencing SubjectVersion.id
-  content: string; // text
+  id: number;
+  subjectVersionId: number;
+  subjectId: number;
+  subjectName: string;
+  subjectCode: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string | null;
   assessments: SyllabusAssessment[];
   learningMaterials: SyllabusMaterial[];
   learningOutcomes: SyllabusOutcome[];
@@ -177,6 +182,7 @@ export interface SubjectVersion {
   effectiveTo: string | null,
   createdAt: string,
   updatedAt: string | null,
+  subject: Subject
 }
 
 export interface CreateSubjectVersion {

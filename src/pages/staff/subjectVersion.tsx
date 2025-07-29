@@ -84,6 +84,7 @@ const SubjectVersionPage: React.FC = () => {
   
   // Local state for prerequisites per version
   const [prereqMap, setPrereqMap] = useState<Record<number, any[]>>({});
+  const [prereqLoading, setPrereqLoading] = useState<Record<number, boolean>>({});
 
   // Local state for each sub-table (per version)
   const [assessmentMap, setAssessmentMap] = useState<Record<number, any[]>>({});
@@ -100,7 +101,12 @@ const SubjectVersionPage: React.FC = () => {
     getSubjectVersionsBySubjectId, 
     addSubjectVersionMutation, 
     deleteSubjectVersionMutation,
-    toggleActiveSubjectVersionMutation 
+    toggleActiveSubjectVersionMutation,
+    addPrerequisiteToSubjectVersionMutation,
+    getPrerequisitesBySubjectVersionMutation,
+    deletePrerequisiteFromSubjectVersionMutation,
+    getPrerequisitesBySubjectMutation,
+    copyPrerequisitesBetweenVersionsMutation
   } = useCRUDSubjectVersion();
   const {
     fetchSyllabusBySubjectVersionMutation,
@@ -113,9 +119,70 @@ const SubjectVersionPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Function to fetch prerequisites for a specific version
+  const fetchPrerequisitesForVersion = useCallback(async (versionId: number) => {
+    setPrereqLoading(prev => ({ ...prev, [versionId]: true }));
+    try {
+      // Add timeout protection
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+      
+      const prerequisitesPromise = getPrerequisitesBySubjectVersionMutation.mutateAsync(versionId);
+      const prerequisites = await Promise.race([prerequisitesPromise, timeoutPromise]);
+      
+      if (prerequisites && Array.isArray(prerequisites)) {
+        setPrereqMap(prev => ({
+          ...prev,
+          [versionId]: prerequisites
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch prerequisites for version:', versionId, error);
+      message.error('Failed to fetch prerequisites');
+    } finally {
+      setPrereqLoading(prev => ({ ...prev, [versionId]: false }));
+    }
+  }, [getPrerequisitesBySubjectVersionMutation]);
+
+  // Function to fetch all prerequisites for the subject
+  const fetchAllPrerequisites = useCallback(async () => {
+    if (!subjectId) return;
+    
+    try {
+      // Add timeout protection
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+      
+      const allPrerequisitesPromise = getPrerequisitesBySubjectMutation.mutateAsync(Number(subjectId));
+      const allPrerequisites = await Promise.race([allPrerequisitesPromise, timeoutPromise]);
+      
+      if (allPrerequisites && Array.isArray(allPrerequisites)) {
+        // Group prerequisites by version
+        const groupedPrereqs: Record<number, any[]> = {};
+        allPrerequisites.forEach((prereq: any) => {
+          const versionId = prereq.version_id || prereq.subjectVersionId;
+          if (versionId) {
+            if (!groupedPrereqs[versionId]) {
+              groupedPrereqs[versionId] = [];
+            }
+            groupedPrereqs[versionId].push(prereq);
+          }
+        });
+        setPrereqMap(groupedPrereqs);
+      }
+    } catch (error) {
+      console.error('Failed to fetch all prerequisites:', error);
+      message.error('Failed to fetch prerequisites');
+    }
+  }, [subjectId, getPrerequisitesBySubjectMutation]);
+
   // Handler to fetch or create syllabus for a specific version
-  const fetchOrCreateSyllabus = useCallback(async (versionId: number) => {
-    if (!subject) return;
+  const fetchOrCreateSyllabus = useCallback(async (versionId: number, subjectData: any) => {
+    if (!subjectData) {
+      return;
+    }
     
     try {
       // Try to fetch existing syllabus for this version
@@ -123,7 +190,7 @@ const SubjectVersionPage: React.FC = () => {
       try {
         syllabusData = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
       } catch (err) {
-        console.log('No syllabus found for version:', versionId, err);
+        console.error('Error fetching syllabus for version:', versionId, err);
         syllabusData = null;
       }
       
@@ -132,8 +199,8 @@ const SubjectVersionPage: React.FC = () => {
         message.info('No syllabus found. Creating default syllabus...');
         const newSyllabus = await createDefaultSyllabus(
           versionId,
-          subject.subjectCode,
-          subject.subjectName,
+          subjectData.subjectCode,
+          subjectData.subjectName,
           addSyllabusMutation
         );
         
@@ -163,6 +230,12 @@ const SubjectVersionPage: React.FC = () => {
         }
       } else {
         // Syllabus exists, use it
+        // Check if the nested arrays exist and are arrays
+        const assessments = Array.isArray(syllabusData.assessments) ? syllabusData.assessments : [];
+        const materials = Array.isArray(syllabusData.learningMaterials) ? syllabusData.learningMaterials : [];
+        const outcomes = Array.isArray(syllabusData.learningOutcomes) ? syllabusData.learningOutcomes : [];
+        const sessions = Array.isArray(syllabusData.sessions) ? syllabusData.sessions : [];
+        
         setSyllabusMap(prev => ({
           ...prev,
           [versionId]: syllabusData
@@ -171,25 +244,26 @@ const SubjectVersionPage: React.FC = () => {
         // Update the maps with existing syllabus data
         setAssessmentMap(prev => ({
           ...prev,
-          [versionId]: syllabusData?.assessments || []
+          [versionId]: assessments
         }));
         setMaterialMap(prev => ({
           ...prev,
-          [versionId]: syllabusData?.learningMaterials || []
+          [versionId]: materials
         }));
         setOutcomeMap(prev => ({
           ...prev,
-          [versionId]: syllabusData?.learningOutcomes || []
+          [versionId]: outcomes
         }));
         setSessionMap(prev => ({
           ...prev,
-          [versionId]: syllabusData?.sessions || []
+          [versionId]: sessions
         }));
       }
     } catch (err: any) {
+      console.error('Error in fetchOrCreateSyllabus:', err);
       message.error('Failed to fetch/create syllabus: ' + err.message);
     }
-  }, [subject, fetchSyllabusBySubjectVersionMutation, addSyllabusMutation]);
+  }, [fetchSyllabusBySubjectVersionMutation, addSyllabusMutation]);
 
   // Fetch subject and versions
   useEffect(() => {
@@ -220,7 +294,13 @@ const SubjectVersionPage: React.FC = () => {
           if (defaultVersions.length > 0) {
             setActiveKey(String(defaultVersions[0].id));
             // Fetch syllabus for the first version
-            await fetchOrCreateSyllabus(defaultVersions[0].id);
+            await fetchOrCreateSyllabus(defaultVersions[0].id, subjectData);
+            // Fetch prerequisites for the first version
+            try {
+              await fetchPrerequisitesForVersion(defaultVersions[0].id);
+            } catch (error) {
+              console.error('Failed to fetch prerequisites for default version:', error);
+            }
           }
         } else {
           // Versions exist, use them
@@ -228,7 +308,19 @@ const SubjectVersionPage: React.FC = () => {
           if (versionsData.length > 0) {
             setActiveKey(String(versionsData[0].id));
             // Fetch syllabus for the first version
-            await fetchOrCreateSyllabus(versionsData[0].id);
+            await fetchOrCreateSyllabus(versionsData[0].id, subjectData);
+            // Fetch prerequisites for all versions - with error handling
+            try {
+              await fetchAllPrerequisites();
+            } catch (error) {
+              console.error('Failed to fetch all prerequisites:', error);
+              // Fallback: fetch prerequisites for the first version only
+              try {
+                await fetchPrerequisitesForVersion(versionsData[0].id);
+              } catch (prereqError) {
+                console.error('Failed to fetch prerequisites for first version:', prereqError);
+              }
+            }
           }
         }
         
@@ -240,7 +332,7 @@ const SubjectVersionPage: React.FC = () => {
     };
 
     fetchData();
-  }, [subjectId, fetchOrCreateSyllabus]); // Only depend on subjectId and fetchOrCreateSyllabus, not the mutation functions
+  }, [subjectId]); // Only depend on subjectId to prevent infinite loops
 
   // Handler for adding a new version
   const handleAddVersion = useCallback(async (values: CreateSubjectVersion) => {
@@ -254,7 +346,10 @@ const SubjectVersionPage: React.FC = () => {
       if (updatedVersions) {
         setSubjectVersions(updatedVersions);
         if (updatedVersions.length > 0) {
-          setActiveKey(String(updatedVersions[updatedVersions.length - 1].id));
+          const newVersionId = updatedVersions[updatedVersions.length - 1].id;
+          setActiveKey(String(newVersionId));
+          // Fetch prerequisites for the new version
+          await fetchPrerequisitesForVersion(newVersionId);
         }
       }
       
@@ -264,7 +359,7 @@ const SubjectVersionPage: React.FC = () => {
     } finally {
       setAdding(false);
     }
-  }, [addSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId]);
+  }, [addSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, fetchPrerequisitesForVersion]);
 
   // Handler to delete a version
   const handleDeleteVersion = useCallback(async (versionId: number) => {
@@ -307,22 +402,23 @@ const SubjectVersionPage: React.FC = () => {
     setPrereqModalOpen(true);
   };
 
-  const handlePrereqModalOk = () => {
+  const handlePrereqModalOk = async () => {
     if (selectedPrereqSubject && editingVersionId) {
-      setPrereqMap(prev => ({
-        ...prev,
-        [editingVersionId]: [
-          ...(prev[editingVersionId] || []),
-          {
-            version_id: editingVersionId,
-            subject_id: Number(subjectId),
-            prerequisite_subject_id: selectedPrereqSubject.id,
-            subjectCode: selectedPrereqSubject.subjectCode,
-            subjectName: selectedPrereqSubject.subjectName,
-          },
-        ],
-      }));
-      message.success('Prerequisite added successfully!');
+      try {
+        // Use the real API to add prerequisite
+        await addPrerequisiteToSubjectVersionMutation.mutateAsync({
+          subjectVersionId: editingVersionId,
+          prerequisiteId: selectedPrereqSubject.id
+        });
+        
+        // Refresh prerequisites for this version
+        await fetchPrerequisitesForVersion(editingVersionId);
+        
+        message.success('Prerequisite added successfully!');
+      } catch (error) {
+        console.error('Failed to add prerequisite:', error);
+        message.error('Failed to add prerequisite');
+      }
     }
     setPrereqModalOpen(false);
     setSelectedPrereqSubject(null);
@@ -336,12 +432,40 @@ const SubjectVersionPage: React.FC = () => {
   };
 
   // Handler to delete a prerequisite
-  const handleDeletePrerequisite = (versionId: number, prerequisite_subject_id: number) => {
-    setPrereqMap(prev => ({
-      ...prev,
-      [versionId]: (prev[versionId] || []).filter(p => p.prerequisite_subject_id !== prerequisite_subject_id),
-    }));
-    message.success('Prerequisite removed successfully!');
+  const handleDeletePrerequisite = async (versionId: number, prerequisite_subject_id: number) => {
+    try {
+      // Use the real API to delete prerequisite
+      await deletePrerequisiteFromSubjectVersionMutation.mutateAsync({
+        subjectVersionId: versionId,
+        prerequisiteId: prerequisite_subject_id
+      });
+      
+      // Refresh prerequisites for this version
+      await fetchPrerequisitesForVersion(versionId);
+      
+      message.success('Prerequisite removed successfully!');
+    } catch (error) {
+      console.error('Failed to delete prerequisite:', error);
+      message.error('Failed to remove prerequisite');
+    }
+  };
+
+  // Handler to copy prerequisites between versions
+  const handleCopyPrerequisites = async (sourceVersionId: number, targetVersionId: number) => {
+    try {
+      await copyPrerequisitesBetweenVersionsMutation.mutateAsync({
+        sourceVersionId,
+        targetVersionId
+      });
+      
+      // Refresh prerequisites for the target version
+      await fetchPrerequisitesForVersion(targetVersionId);
+      
+      message.success('Prerequisites copied successfully!');
+    } catch (error) {
+      console.error('Failed to copy prerequisites:', error);
+      message.error('Failed to copy prerequisites');
+    }
   };
 
   // Handlers for AssessmentTable
@@ -453,13 +577,20 @@ const SubjectVersionPage: React.FC = () => {
   const handleBulkModalClose = () => setBulkModal(null);
 
   // Handler for tab change
-  const handleTabChange = useCallback((key: string) => {
+  const handleTabChange = useCallback(async (key: string) => {
     setActiveKey(key);
     const versionId = Number(key);
-    if (versionId && !syllabusMap[versionId]) {
-      fetchOrCreateSyllabus(versionId);
+    
+    // Fetch syllabus for this version if not already loaded
+    if (!syllabusMap[versionId]) {
+      await fetchOrCreateSyllabus(versionId, subject);
     }
-  }, [syllabusMap, fetchOrCreateSyllabus]);
+    
+    // Fetch prerequisites for this version if not already loaded
+    if (!prereqMap[versionId] && !prereqLoading[versionId]) {
+      await fetchPrerequisitesForVersion(versionId);
+    }
+  }, [syllabusMap, prereqMap, prereqLoading, fetchOrCreateSyllabus, fetchPrerequisitesForVersion, subject]);
 
   if (loading) {
     return (
@@ -710,11 +841,56 @@ const SubjectVersionPage: React.FC = () => {
                         <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
                           📚 Prerequisite Subjects
                         </h3>
-                        <ExcelImportButton onClick={() => handleAddPrerequisite(version.id)}>
-                          Add Prerequisite
-                        </ExcelImportButton>
+                        <Space>
+                          {isEditing && subjectVersions.length > 1 && (
+                            <Button 
+                              type="default" 
+                              onClick={() => {
+                                // Show a modal to select source version for copying
+                                Modal.confirm({
+                                  title: 'Copy Prerequisites',
+                                  content: (
+                                    <div>
+                                      <p>Select a source version to copy prerequisites from:</p>
+                                      <select 
+                                        style={{ width: '100%', marginTop: 8 }}
+                                        onChange={(e) => {
+                                          const sourceVersionId = Number(e.target.value);
+                                          if (sourceVersionId && sourceVersionId !== version.id) {
+                                            handleCopyPrerequisites(sourceVersionId, version.id);
+                                          }
+                                        }}
+                                      >
+                                        <option value="">Select a version...</option>
+                                        {subjectVersions
+                                          .filter(v => v.id !== version.id)
+                                          .map(v => (
+                                            <option key={v.id} value={v.id}>
+                                              Version {v.versionCode} - {v.versionName}
+                                            </option>
+                                          ))}
+                                      </select>
+                                    </div>
+                                  ),
+                                  onOk: () => {},
+                                  onCancel: () => {},
+                                  okText: 'Cancel',
+                                  cancelText: 'Cancel'
+                                });
+                              }}
+                            >
+                              Copy from Other Version
+                            </Button>
+                          )}
+                          {isEditing && (
+                            <ExcelImportButton onClick={() => handleAddPrerequisite(version.id)}>
+                              Add Prerequisite
+                            </ExcelImportButton>
+                          )}
+                        </Space>
                       </div>
                       <Table
+                        loading={prereqLoading[version.id]}
                         columns={[
                           { title: 'Subject Code', dataIndex: 'subjectCode', key: 'subjectCode', width: 160 },
                           { title: 'Subject Name', dataIndex: 'subjectName', key: 'subjectName' },
@@ -732,6 +908,9 @@ const SubjectVersionPage: React.FC = () => {
                         rowKey={r => r.prerequisite_subject_id}
                         pagination={false}
                         style={{ marginTop: 12 }}
+                        locale={{
+                          emptyText: prereqLoading[version.id] ? 'Loading prerequisites...' : 'No prerequisites found'
+                        }}
                       />
                     </div>
 

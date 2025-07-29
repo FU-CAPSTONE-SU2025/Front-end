@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { CreateCurriculum, CreateSubject, Curriculum, Subject, UpdateCurriculum, CurriculumSubject, SubjectWithCurriculumInfo, Program, CreateProgram } from '../interfaces/ISchoolProgram';
+import { CreateCurriculum, CreateSubject, Curriculum, Subject, UpdateCurriculum, CurriculumSubject, SubjectWithCurriculumInfo, Program, CreateProgram, SubjectPrerequisite } from '../interfaces/ISchoolProgram';
 import { AddCurriculum, FetchCurriculumById, FetchCurriculumList, UpdateCurriculumById, FetchSubjectToCurriculum, RegisterMultipleCurriculum } from '../api/SchoolAPI/curriculumAPI';
 import { PagedData } from '../interfaces/ISchoolProgram';
 import { AddSubject, FetchSubjectById, FetchSubjectList, UpdateSubjectById, AddPrerequisitesSubject, RegisterMultipleSubject } from '../api/SchoolAPI/subjectAPI';
@@ -19,6 +19,7 @@ import {
   AddSyllabusSessionsBulk, 
   AddSyllabusOutcomesToSession, 
   FetchSyllabusBySubjectVersion,
+  FetchSyllabusBySubject,
   UpdateSyllabusById, 
   DisableSyllabus 
 } from '../api/SchoolAPI/syllabusAPI';
@@ -31,7 +32,13 @@ import {
   FetchSubjectVersionBySubjectId, 
   FetchDefaultSubjectVersionBySubject, 
   UpdateSubjectVersionById, 
-  ActiveSubjectVersion 
+  ActiveSubjectVersion, 
+  AddPrerequisiteToSubjectVersion, 
+  GetPrerequisitesBySubjectVersion, 
+  GetDependentsBySubjectVersion, 
+  DeletePrerequisiteFromSubjectVersion, 
+  GetPrerequisitesBySubject, 
+  CopyPrerequisitesBetweenVersions 
 } from '../api/SchoolAPI/subjectVersionAPI';
 import { SubjectVersion, CreateSubjectVersion, UpdateSubjectVersion } from '../interfaces/ISchoolProgram';
 
@@ -208,6 +215,10 @@ export function useCRUDSubject() {
     },
   });
 
+  /**
+   * @deprecated Use addPrerequisiteToSubjectVersionMutation from useCRUDSubjectVersion instead
+   * This mutation will be removed in a future version
+   */
   const addPrerequisiteMutation = useMutation<Subject | null, unknown, { id: number; prerequisitesId: number }>({
     mutationFn: async ({ id, prerequisitesId }) => {
       const result = await AddPrerequisitesSubject(id, prerequisitesId);
@@ -386,6 +397,16 @@ export function useCRUDSyllabus() {
     },
   });
 
+  const fetchSyllabusBySubjectMutation = useMutation<Syllabus | null, unknown, number>({
+    mutationFn: async (subjectId: number) => {
+      const result = await FetchSyllabusBySubject(subjectId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
   // Add syllabus
   const addSyllabusMutation = useMutation<Syllabus | null, unknown, CreateSyllabus>({
     mutationFn: async (data: CreateSyllabus) => {
@@ -509,6 +530,7 @@ export function useCRUDSyllabus() {
 
   return {
     fetchSyllabusBySubjectVersionMutation,
+    fetchSyllabusBySubjectMutation,
     addSyllabusMutation,
     updateSyllabusMutation,
     disableSyllabusMutation,
@@ -717,10 +739,82 @@ export function useCRUDSubjectVersion() {
     },
   });
 
+  // Add prerequisite to subject version
+  const addPrerequisiteToSubjectVersionMutation = useMutation<SubjectVersion | null, unknown, { subjectVersionId: number; prerequisiteId: number }>({
+    mutationFn: async ({ subjectVersionId, prerequisiteId }) => {
+      const result = await AddPrerequisiteToSubjectVersion(subjectVersionId, prerequisiteId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Get prerequisites by subject version
+  const getPrerequisitesBySubjectVersionMutation = useMutation<SubjectPrerequisite[] | null, unknown, number>({
+    mutationFn: async (subjectVersionId: number) => {
+      const result = await GetPrerequisitesBySubjectVersion(subjectVersionId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Get dependents by subject version
+  const getDependentsBySubjectVersionMutation = useMutation<SubjectVersion[] | null, unknown, number>({
+    mutationFn: async (subjectVersionId: number) => {
+      const result = await GetDependentsBySubjectVersion(subjectVersionId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Delete prerequisite from subject version
+  const deletePrerequisiteFromSubjectVersionMutation = useMutation<any | null, unknown, { subjectVersionId: number; prerequisiteId: number }>({
+    mutationFn: async ({ subjectVersionId, prerequisiteId }) => {
+      const result = await DeletePrerequisiteFromSubjectVersion(subjectVersionId, prerequisiteId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Get prerequisites by subject
+  const getPrerequisitesBySubjectMutation = useMutation<any | null, unknown, number>({
+    mutationFn: async (subjectId: number) => {
+      const result = await GetPrerequisitesBySubject(subjectId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Copy prerequisites between versions
+  const copyPrerequisitesBetweenVersionsMutation = useMutation<any | null, unknown, { sourceVersionId: number; targetVersionId: number }>({
+    mutationFn: async ({ sourceVersionId, targetVersionId }) => {
+      const result = await CopyPrerequisitesBetweenVersions(sourceVersionId, targetVersionId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
   const isSuccessCreateSubjectVersion = addSubjectVersionMutation.isSuccess;
   const isSuccessUpdateSubjectVersion = updateSubjectVersionMutation.isSuccess;
   const isSuccessDeleteSubjectVersion = deleteSubjectVersionMutation.isSuccess;
   const isSuccessToggleActive = toggleActiveSubjectVersionMutation.isSuccess;
+  const isSuccessAddPrerequisite = addPrerequisiteToSubjectVersionMutation.isSuccess;
+  const isSuccessGetPrerequisites = getPrerequisitesBySubjectVersionMutation.isSuccess;
+  const isSuccessGetDependents = getDependentsBySubjectVersionMutation.isSuccess;
+  const isSuccessDeletePrerequisite = deletePrerequisiteFromSubjectVersionMutation.isSuccess;
+  const isSuccessGetPrerequisitesBySubject = getPrerequisitesBySubjectMutation.isSuccess;
+  const isSuccessCopyPrerequisites = copyPrerequisitesBetweenVersionsMutation.isSuccess;
 
   const subjectVersionById = getSubjectVersionById.data || null;
   const metaData = getSubjectVersionMutation.data || null;
@@ -737,6 +831,12 @@ export function useCRUDSubjectVersion() {
     updateSubjectVersionMutation,
     deleteSubjectVersionMutation,
     toggleActiveSubjectVersionMutation,
+    addPrerequisiteToSubjectVersionMutation,
+    getPrerequisitesBySubjectVersionMutation,
+    getDependentsBySubjectVersionMutation,
+    deletePrerequisiteFromSubjectVersionMutation,
+    getPrerequisitesBySubjectMutation,
+    copyPrerequisitesBetweenVersionsMutation,
     getSubjectVersionMutation,
     getSubjectVersionById,
     getSubjectVersionsBySubjectId,
@@ -749,6 +849,12 @@ export function useCRUDSubjectVersion() {
     isSuccessUpdateSubjectVersion,
     isSuccessDeleteSubjectVersion,
     isSuccessToggleActive,
+    isSuccessAddPrerequisite,
+    isSuccessGetPrerequisites,
+    isSuccessGetDependents,
+    isSuccessDeletePrerequisite,
+    isSuccessGetPrerequisitesBySubject,
+    isSuccessCopyPrerequisites,
     subjectVersionById
   };
 }

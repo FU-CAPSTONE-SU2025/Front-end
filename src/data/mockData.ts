@@ -49,9 +49,100 @@ export const generateDefaultSyllabusData = (subjectVersionId: number, subjectCod
   return {
     subjectVersionId: subjectVersionId,
     content: `Syllabus for ${subjectCode} - ${subjectName}. This syllabus contains comprehensive learning materials, assessments, outcomes, and session plans designed to provide students with a thorough understanding of the subject matter.`,
-    assessments: [],
-    learningMaterials: [],
-    learningOutcomes: [],
-    sessions: []
+    assessments: [
+      {
+        id: 1,
+        syllabusId: subjectVersionId,
+        category: 'Midterm Exam',
+        quantity: 1,
+        weight: 30,
+        completionCriteria: 'Score 60% or higher',
+        duration: 90,
+        questionType: 'Multiple Choice'
+      },
+      {
+        id: 2,
+        syllabusId: subjectVersionId,
+        category: 'Final Exam',
+        quantity: 1,
+        weight: 40,
+        completionCriteria: 'Score 60% or higher',
+        duration: 120,
+        questionType: 'Mixed'
+      },
+      {
+        id: 3,
+        syllabusId: subjectVersionId,
+        category: 'Assignment',
+        quantity: 3,
+        weight: 30,
+        completionCriteria: 'Submit on time with quality work',
+        duration: 0,
+        questionType: 'Project'
+      }
+    ],
+    learningMaterials: [
+      {
+        id: 1,
+        syllabusId: subjectVersionId,
+        materialName: 'Introduction to Subject',
+        authorName: 'Dr. John Doe',
+        publishedDate: new Date('2024-01-01'),
+        description: 'Comprehensive introduction to the subject matter',
+        filepathOrUrl: 'https://example.com/intro.pdf'
+      },
+      {
+        id: 2,
+        syllabusId: subjectVersionId,
+        materialName: 'Advanced Topics',
+        authorName: 'Prof. Jane Smith',
+        publishedDate: new Date('2024-02-01'),
+        description: 'Advanced concepts and applications',
+        filepathOrUrl: 'https://example.com/advanced.pdf'
+      }
+    ],
+    learningOutcomes: [
+      {
+        id: 1,
+        syllabusId: subjectVersionId,
+        outcomeCode: 'LO1',
+        description: 'Understand fundamental concepts of the subject'
+      },
+      {
+        id: 2,
+        syllabusId: subjectVersionId,
+        outcomeCode: 'LO2',
+        description: 'Apply theoretical knowledge to practical problems'
+      },
+      {
+        id: 3,
+        syllabusId: subjectVersionId,
+        outcomeCode: 'LO3',
+        description: 'Analyze and evaluate complex scenarios'
+      }
+    ],
+    sessions: [
+      {
+        id: 1,
+        syllabusId: subjectVersionId,
+        sessionNumber: 1,
+        topic: 'Introduction and Course Overview',
+        mission: 'Understand course objectives and expectations'
+      },
+      {
+        id: 2,
+        syllabusId: subjectVersionId,
+        sessionNumber: 2,
+        topic: 'Fundamental Concepts',
+        mission: 'Master basic principles and terminology'
+      },
+      {
+        id: 3,
+        syllabusId: subjectVersionId,
+        sessionNumber: 3,
+        topic: 'Practical Applications',
+        mission: 'Apply concepts to real-world scenarios'
+      }
+    ]
   };
 }; 

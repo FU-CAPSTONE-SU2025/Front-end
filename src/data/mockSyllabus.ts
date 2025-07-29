@@ -3,8 +3,13 @@ import { Syllabus } from '../interfaces/ISchoolProgram';
 
 export const mockSyllabus: Syllabus = {
   id: 1,
-  subjectVersionId: 1, // Added to fix TS error
+  subjectVersionId: 1,
+  subjectId: 1,
+  subjectName: 'Computer Science Overview',
+  subjectCode: 'CS101',
   content: 'This course provides an overview of computer science, including algorithms, programming, and the basics of computer systems.',
+  createdAt: '2023-01-01T00:00:00Z',
+  updatedAt: null,
   assessments: [
     { id: 1, syllabusId: 1, category: 'Quiz', quantity: 1, weight: 10, completionCriteria: 'Complete Quiz 1', duration: 30, questionType: 'multiple-choice' },
     { id: 2, syllabusId: 1, category: 'Final Exam', quantity: 1, weight: 40, completionCriteria: 'Pass Final Exam', duration: 120, questionType: 'essay' },

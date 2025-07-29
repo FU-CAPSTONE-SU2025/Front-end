@@ -88,7 +88,7 @@ const ManagerSubjectSyllabus: React.FC = () => {
     };
 
     fetchOrCreateSyllabus();
-  }, [subjectId, syllabusId, subject]);
+  }, [subjectId, syllabusId]);
 
   const handleSaveSyllabus = async () => {
     setLoading(true);
