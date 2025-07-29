@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { useCRUDSyllabus, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { Syllabus, Subject, SyllabusSession, SyllabusOutcome } from '../../interfaces/ISchoolProgram';
 import styles from '../../css/manager/managerCustomTable.module.css';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const SubjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,7 +39,7 @@ const SubjectDetail: React.FC = () => {
         if (!result) {
           const content = `Syllabus for subject ${id}`;
           loadedSyllabus = await addSyllabusMutation.mutateAsync({
-            subjectVersionId: 1, // Default version ID
+            subjectId: Number(id),
             content
           });
         } else {
@@ -47,7 +48,8 @@ const SubjectDetail: React.FC = () => {
         setSyllabus(loadedSyllabus);
         setOutcomes(loadedSyllabus?.outcomes || []);
       } catch (error) {
-        message.error('Failed to load subject or syllabus');
+        const errorMessage = getUserFriendlyErrorMessage(error);
+        message.error(errorMessage);
       } finally {
         setLoading(false);
       }

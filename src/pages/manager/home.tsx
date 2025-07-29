@@ -9,6 +9,7 @@ import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { SubjectWithCurriculumInfo, Subject } from '../../interfaces/ISchoolProgram';
 import { AddSubjectToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 const { Option } = Select;
 
 const statusOptions = [
@@ -201,7 +202,8 @@ const HomePage: React.FC = () => {
       setCurriculumSubjects(subjects || []);
     } catch (error) {
       console.error('Failed to fetch curriculum subjects:', error);
-      message.error('Failed to load subjects');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
       setCurriculumSubjects([]);
     } finally {
       setIsLoadingSubjects(false);
@@ -239,7 +241,8 @@ const HomePage: React.FC = () => {
       setCurriculumSubjects(subjects || []);
     } catch (error) {
       console.error('Failed to add subject:', error);
-      message.error('Failed to add subject to curriculum');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     } finally {
       setIsAddingSubject(false);
     }
@@ -257,8 +260,9 @@ const HomePage: React.FC = () => {
             setModalOpen(false);
             getCurriculumMutation.mutate({ pageNumber: currentPage, pageSize, filterValue: search });
           },
-          onError: () => {
-            message.error('Failed to update curriculum!');
+          onError: (error) => {
+            const errorMessage = getUserFriendlyErrorMessage(error);
+            message.error(errorMessage);
           }
         });
       } else {
@@ -268,8 +272,9 @@ const HomePage: React.FC = () => {
             setModalOpen(false);
             getCurriculumMutation.mutate({ pageNumber: currentPage, pageSize, filterValue: search });
           },
-          onError: () => {
-            message.error('Failed to add curriculum!');
+          onError: (error) => {
+            const errorMessage = getUserFriendlyErrorMessage(error);
+            message.error(errorMessage);
           }
         });
       }

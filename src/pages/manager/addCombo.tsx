@@ -4,6 +4,7 @@ import {  FileExcelOutlined, CheckCircleOutlined, PlusOutlined } from '@ant-desi
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router';
 import * as XLSX from 'xlsx';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -48,7 +49,8 @@ const AddComboPage: React.FC = () => {
           workbook = XLSX.read(data, { type: 'array' });
         } catch (xlsxError) {
           console.error('XLSX parsing error:', xlsxError);
-          message.error('Error reading Excel file. The file format may not be supported or the file may be corrupted.');
+          const errorMessage = getUserFriendlyErrorMessage(xlsxError);
+          message.error(errorMessage);
           setIsUploading(false);
           return;
         }
@@ -88,7 +90,8 @@ const AddComboPage: React.FC = () => {
         setCurrentStep(1);
       } catch (error) {
         console.error('File processing error:', error);
-        message.error('Error reading Excel file. Please check the file format and try again.');
+        const errorMessage = getUserFriendlyErrorMessage(error);
+        message.error(errorMessage);
       } finally {
         setIsUploading(false);
       }
