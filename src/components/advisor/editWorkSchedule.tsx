@@ -4,6 +4,7 @@ import { EditOutlined, ClockCircleOutlined, CalendarOutlined } from '@ant-design
 import { useUpdateBookingAvailability, useGetBookingAvailabilityById } from '../../hooks/useCRUDAdvisor';
 import { BookingAvailability, UpdateBookingAvailabilityRequest } from '../../interfaces/IBookingAvailability';
 import dayjs from 'dayjs';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Option } = Select;
 
@@ -112,7 +113,8 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
       onCancel();
     } catch (error) {
       console.error('Error updating work schedule:', error);
-      message.error('An error occurred while updating the work schedule.');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 

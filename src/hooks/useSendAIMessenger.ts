@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { sendAiMessage } from '../api/student/AiChatBox';
+import { getUserFriendlyErrorMessage } from '../api/AxiosCRUD';
 
 interface ApiResponse {
   message: string;
@@ -20,7 +21,8 @@ export const useSendAiMessage = () => {
       }
     },
     onError: (error) => {
-      console.error('Error sending AI message:', error.response?.data?.message || error.message);
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      console.error('Error sending AI message:', errorMessage);
     },
     retry: 2, 
   });
