@@ -18,7 +18,6 @@ import {
   AddSyllabusSessions, 
   AddSyllabusSessionsBulk, 
   AddSyllabusOutcomesToSession, 
-  FetchSyllabusBySubject, 
   FetchSyllabusBySubjectVersion,
   UpdateSyllabusById, 
   DisableSyllabus 
@@ -375,18 +374,6 @@ export function useCRUDCombo() {
 }
 
 export function useCRUDSyllabus() {
-  // Fetch syllabus by subject
-  const fetchSyllabusBySubjectMutation = useMutation<Syllabus | null, unknown, number>({
-    mutationFn: async (subjectId: number) => {
-      const result = await FetchSyllabusBySubject(subjectId);
-      return result as Syllabus | null;
-    },
-    onError: (error) => {
-      console.error(error);
-       return null;
-    },
-  });
-
   // Fetch syllabus by subject version
   const fetchSyllabusBySubjectVersionMutation = useMutation<Syllabus | null, unknown, number>({
     mutationFn: async (subjectVersionId: number) => {
@@ -476,7 +463,7 @@ export function useCRUDSyllabus() {
     },
   });
 
-  // Add outcomes to session
+  // Add syllabus outcomes to session
   const addSyllabusOutcomesToSessionMutation = useMutation<any | null, unknown, { sessionId: number; outcomeId: number }>({
     mutationFn: async ({ sessionId, outcomeId }) => {
       const result = await AddSyllabusOutcomesToSession(sessionId, outcomeId);
@@ -487,7 +474,7 @@ export function useCRUDSyllabus() {
     },
   });
 
-  // Bulk add syllabus materials
+  // Add syllabus materials bulk
   const addSyllabusMaterialsBulkMutation = useMutation<any | null, unknown, CreateSyllabusMaterial[]>({
     mutationFn: async (data: CreateSyllabusMaterial[]) => {
       const result = await AddSyllabusMaterialsBulk(data);
@@ -498,7 +485,7 @@ export function useCRUDSyllabus() {
     },
   });
 
-  // Bulk add syllabus outcomes
+  // Add syllabus outcomes bulk
   const addSyllabusOutcomesBulkMutation = useMutation<any | null, unknown, CreateSyllabusOutcome[]>({
     mutationFn: async (data: CreateSyllabusOutcome[]) => {
       const result = await AddSyllabusOutcomesBulk(data);
@@ -509,7 +496,7 @@ export function useCRUDSyllabus() {
     },
   });
 
-  // Bulk add syllabus sessions
+  // Add syllabus sessions bulk
   const addSyllabusSessionsBulkMutation = useMutation<any | null, unknown, CreateSyllabusSession[]>({
     mutationFn: async (data: CreateSyllabusSession[]) => {
       const result = await AddSyllabusSessionsBulk(data);
@@ -521,7 +508,6 @@ export function useCRUDSyllabus() {
   });
 
   return {
-    fetchSyllabusBySubjectMutation,
     fetchSyllabusBySubjectVersionMutation,
     addSyllabusMutation,
     updateSyllabusMutation,

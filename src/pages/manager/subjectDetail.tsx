@@ -19,7 +19,7 @@ const SubjectDetail: React.FC = () => {
   const [outcomes, setOutcomes] = useState<SyllabusOutcome[]>([]);
 
   const {
-    fetchSyllabusBySubjectMutation,
+    fetchSyllabusBySubjectVersionMutation,
     addSyllabusMutation,
     addSyllabusOutcomesToSessionMutation,
   } = useCRUDSyllabus();
@@ -34,12 +34,12 @@ const SubjectDetail: React.FC = () => {
         const subj = await getSubjectById.mutateAsync(Number(id));
         setSubject(subj || null);
         // Fetch or create syllabus
-        const result = await fetchSyllabusBySubjectMutation.mutateAsync(Number(id));
+        const result = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(id));
         let loadedSyllabus = null;
         if (!result) {
           const content = `Syllabus for subject ${id}`;
           loadedSyllabus = await addSyllabusMutation.mutateAsync({
-            subjectId: Number(id),
+            subjectVersionId: Number(id),
             content
           });
         } else {

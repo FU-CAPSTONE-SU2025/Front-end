@@ -148,21 +148,6 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
   };
   
 
-export const FetchSyllabusBySubject = async (subjectId: number): Promise<Subject[]> => {
-  const props = {
-    data: null,
-    url: syllabusURL+"/by-subject/"+subjectId,
-    headers: GetHeader(),
-  };
-  const result = await axiosRead(props);
-  if (result.success) {
-    return result.data;
-  } else {
-    throwApiError(result);
-    return null as never;
-  }
-};
-
 export const FetchSyllabusBySubjectVersion = async (subjectVersionId: number): Promise<Syllabus> => {
   const props = {
     data: null,

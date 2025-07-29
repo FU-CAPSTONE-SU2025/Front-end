@@ -37,7 +37,6 @@ export interface SubjectInCombo {
 // Interface for Syllabus table
 export interface Syllabus {
   id: number; // Primary key
-  subjectId?: number; // Foreign key referencing Subject.id (for backward compatibility)
   subjectVersionId: number; // Foreign key referencing SubjectVersion.id
   content: string; // text
   assessments: SyllabusAssessment[];

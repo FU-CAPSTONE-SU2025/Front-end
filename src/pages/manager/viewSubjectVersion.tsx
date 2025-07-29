@@ -68,9 +68,9 @@ const staticMockVersions: SubjectVersion[] = [
 ];
 // Mock syllabuses for each version
 const staticMockSyllabuses: Syllabus[] = [
-  { id: 1, subjectId: 1, subjectVersionId: 1, content: 'Syllabus content for Version 1: Calculus fundamentals, limits, derivatives, and integrals.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
-  { id: 2, subjectId: 1, subjectVersionId: 2, content: 'Syllabus content for Version 2: Advanced topics in Calculus, multivariable calculus, and series.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
-  { id: 3, subjectId: 1, subjectVersionId: 3, content: 'Syllabus content for Version 3: Calculus applications, differential equations, and real analysis.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
+  { id: 1, subjectVersionId: 1, content: 'Syllabus content for Version 1: Calculus fundamentals, limits, derivatives, and integrals.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
+  { id: 2, subjectVersionId: 2, content: 'Syllabus content for Version 2: Advanced topics in Calculus, multivariable calculus, and series.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
+  { id: 3, subjectVersionId: 3, content: 'Syllabus content for Version 3: Calculus applications, differential equations, and real analysis.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
 ];
 // Mock prerequisites for each version
 const staticMockPrerequisites: SubjectPrerequisite[] = [

@@ -27,7 +27,7 @@ const SubjectSyllabus: React.FC = () => {
 
   // Syllabus API hooks
   const {
-    fetchSyllabusBySubjectMutation,
+    fetchSyllabusBySubjectVersionMutation,
     addSyllabusMutation,
     addSyllabusAssessmentMutation,
     addSyllabusMaterialMutation,
@@ -66,15 +66,15 @@ const SubjectSyllabus: React.FC = () => {
       setLoading(true);
       try {
         // Try to fetch syllabus for this subject
-        const result = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+        const result = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
 
         if(result === null){
             // Check for 404 error (syllabus not found)
 
           const content = subject ? `${subject.subjectCode} - ${subject.subjectName}'s syllabus` : `Syllabus for subject ${subjectId}`;
-            await addSyllabusMutation.mutateAsync({ subjectId: Number(subjectId), content });
+            await addSyllabusMutation.mutateAsync({ subjectVersionId: Number(subjectId), content });
             // Refetch syllabus after creation
-            const newResult = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+            const newResult = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
             setSyllabus(Array.isArray(newResult) ? newResult[0] : newResult);
         }else{
           setSyllabus(Array.isArray(result) ? result[0] : result);
@@ -113,7 +113,7 @@ const SubjectSyllabus: React.FC = () => {
       });
 
       // Refetch syllabus to update UI
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       console.error('Error adding assessment:', error);
@@ -130,7 +130,7 @@ const SubjectSyllabus: React.FC = () => {
         syllabusId: syllabus.id
       });
      
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       console.error('Error adding material:', error);
@@ -147,7 +147,7 @@ const SubjectSyllabus: React.FC = () => {
         syllabusId: syllabus.id
       });
 
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       console.error('Error adding outcome:', error);
@@ -164,7 +164,7 @@ const SubjectSyllabus: React.FC = () => {
         syllabusId: syllabus.id
       });
     
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       console.error('Error adding session:', error);
@@ -177,7 +177,7 @@ const SubjectSyllabus: React.FC = () => {
       // TODO: Implement delete mutations
       message.success(`${type} deleted successfully`);
       // Refetch syllabus to update UI
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
@@ -189,7 +189,7 @@ const SubjectSyllabus: React.FC = () => {
     try {
       // TODO: Implement update mutation
       message.success('Assessment updated successfully');
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
@@ -201,7 +201,7 @@ const SubjectSyllabus: React.FC = () => {
     try {
       // TODO: Implement update mutation
       message.success('Material updated successfully');
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
@@ -213,7 +213,7 @@ const SubjectSyllabus: React.FC = () => {
     try {
       // TODO: Implement update mutation
       message.success('Outcome updated successfully');
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
@@ -225,7 +225,7 @@ const SubjectSyllabus: React.FC = () => {
     try {
       // TODO: Implement update mutation
       message.success('Session updated successfully');
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
@@ -240,7 +240,7 @@ const SubjectSyllabus: React.FC = () => {
         outcomeId
       });
       // Refetch syllabus to update UI
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       throw error;
