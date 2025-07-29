@@ -1,10 +1,10 @@
-import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, extractErrorMessage } from "../AxiosCRUD";
+import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, extractErrorMessage, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { CreateSyllabus, Curriculum, Subject, Syllabus, UpdateSyllabus, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from "../../interfaces/ISchoolProgram";
 
 const syllabusURL = baseUrl + "/Syllabus";
 
-export const AddSyllabus = async (data: CreateSyllabus): Promise<Syllabus | null> => {
+export const AddSyllabus = async (data: CreateSyllabus): Promise<Syllabus> => {
   const props = {
     data: data,
     url: syllabusURL,
@@ -14,10 +14,11 @@ export const AddSyllabus = async (data: CreateSyllabus): Promise<Syllabus | null
   if (result.success) {
     return result.data;
   } else {
-    throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus');
+    throwApiError(result);
+    return null as never;
   }
 };
-export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): Promise<Curriculum | null> => {
+export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): Promise<Curriculum> => {
     const props = {
       data: data,
       url: syllabusURL+"/assessments",
@@ -27,10 +28,11 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
     if (result.success) {
       return result.data;
     } else {
-      throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus assessments');
+      throwApiError(result);
+      return null as never;
     }
   };
-  export const AddSyllabusAssessmentsBulk = async ( data: CreateSyllabusAssessment[]): Promise<Curriculum | null> => {
+  export const AddSyllabusAssessmentsBulk = async ( data: CreateSyllabusAssessment[]): Promise<Curriculum> => {
     const props = {
       data: data,
       url: syllabusURL+"/assessments/bulk",
@@ -40,10 +42,11 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
     if (result.success) {
       return result.data;
     } else {
-      throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus assessments');
+      throwApiError(result);
+      return null as never;
     }
   };
-  export const AddSyllabusMaterial = async ( data: CreateSyllabusMaterial): Promise<any | null> => {
+  export const AddSyllabusMaterial = async ( data: CreateSyllabusMaterial): Promise<any> => {
     const props = {
       data: data,
       url: syllabusURL+"/materials",
@@ -53,10 +56,11 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
     if (result.success) {
       return result.data;
     } else {
-      throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus material');
+      throwApiError(result);
+      return null as never;
     }
   };
-  export const AddSyllabusOutcomes = async ( data: CreateSyllabusOutcome): Promise<any | null> => {
+  export const AddSyllabusOutcomes = async ( data: CreateSyllabusOutcome): Promise<any> => {
     const props = {
       data: data,
       url: syllabusURL+"/outcomes",
@@ -66,10 +70,11 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
     if (result.success) {
       return result.data;
     } else {
-      throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus outcomes');
+      throwApiError(result);
+      return null as never;
     }
   };
-  export const AddSyllabusSessions = async ( data: CreateSyllabusSession): Promise<any | null> => {
+  export const AddSyllabusSessions = async ( data: CreateSyllabusSession): Promise<any> => {
     const props = {
       data: data,
       url: syllabusURL+"/sessions",
@@ -79,10 +84,11 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
     if (result.success) {
       return result.data;
     } else {
-      throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus sessions');
+      throwApiError(result);
+      return null as never;
     }
   };
-  export const AddSyllabusOutcomesToSession = async (sessionId: number, outcomeId: number): Promise<Curriculum | null> => {
+  export const AddSyllabusOutcomesToSession = async (sessionId: number, outcomeId: number): Promise<Curriculum> => {
     const props = {
       data: null,
       url: syllabusURL+"/sessions/"+sessionId+"/outcomes/"+outcomeId,
@@ -92,10 +98,11 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
     if (result.success) {
       return result.data;
     } else {
-      throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus outcomes to session');
+      throwApiError(result);
+      return null as never;
     }
   };
-  export const AddSyllabusMaterialsBulk = async (data: CreateSyllabusMaterial[]): Promise<any | null> => {
+  export const AddSyllabusMaterialsBulk = async (data: CreateSyllabusMaterial[]): Promise<any> => {
     const props = {
       data: data,
       url: syllabusURL + "/materials/bulk",
@@ -105,11 +112,12 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
     if (result.success) {
       return result.data;
     } else {
-      throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus materials');
+      throwApiError(result);
+      return null as never;
     }
   };
 
-  export const AddSyllabusOutcomesBulk = async (data: CreateSyllabusOutcome[]): Promise<any | null> => {
+  export const AddSyllabusOutcomesBulk = async (data: CreateSyllabusOutcome[]): Promise<any> => {
     const props = {
       data: data,
       url: syllabusURL + "/outcomes/bulk",
@@ -119,11 +127,12 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
     if (result.success) {
       return result.data;
     } else {
-      throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus outcomes');
+      throwApiError(result);
+      return null as never;
     }
   };
 
-  export const AddSyllabusSessionsBulk = async (data: CreateSyllabusSession[]): Promise<any | null> => {
+  export const AddSyllabusSessionsBulk = async (data: CreateSyllabusSession[]): Promise<any> => {
     const props = {
       data: data,
       url: syllabusURL + "/sessions/bulk",
@@ -133,12 +142,13 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
     if (result.success) {
       return result.data;
     } else {
-      throw new Error(extractErrorMessage(result.error) || 'Failed to add syllabus sessions');
+      throwApiError(result);
+      return null as never;
     }
   };
   
 
-export const FetchSyllabusBySubject = async (subjectId: number): Promise<Subject[] | null> => {
+export const FetchSyllabusBySubject = async (subjectId: number): Promise<Subject[]> => {
   const props = {
     data: null,
     url: syllabusURL+"/by-subject/"+subjectId,
@@ -148,12 +158,12 @@ export const FetchSyllabusBySubject = async (subjectId: number): Promise<Subject
   if (result.success) {
     return result.data;
   } else {
-    //throw new Error(result.error || 'Failed to fetch syllabus by subject');
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 };
 
-export const FetchSyllabusBySubjectVersion = async (subjectVersionId: number): Promise<Syllabus | null> => {
+export const FetchSyllabusBySubjectVersion = async (subjectVersionId: number): Promise<Syllabus> => {
   const props = {
     data: null,
     url: syllabusURL+"/by-version/"+subjectVersionId,
@@ -163,12 +173,12 @@ export const FetchSyllabusBySubjectVersion = async (subjectVersionId: number): P
   if (result.success) {
     return result.data;
   } else {
-    //throw new Error(result.error || 'Failed to fetch syllabus by subject version');
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 };
 
-export const UpdateSyllabusById = async (id: number, data: UpdateSyllabus): Promise<any | null> => {
+export const UpdateSyllabusById = async (id: number, data: UpdateSyllabus): Promise<any> => {
   const props = {
     data: data,
     url: syllabusURL + `/${id}`,
@@ -178,11 +188,12 @@ export const UpdateSyllabusById = async (id: number, data: UpdateSyllabus): Prom
   if (result.success) {
     return result.data;
   } else {
-    throw new Error(extractErrorMessage(result.error) || 'Failed to update curriculum');
+    throwApiError(result);
+    return null as never;
   }
 };
 
-export const DisableSyllabus = async (id: number): Promise<any | null> => {
+export const DisableSyllabus = async (id: number): Promise<any> => {
   const props = {
     data: null,
     url: syllabusURL + `/${id}`,
@@ -192,6 +203,7 @@ export const DisableSyllabus = async (id: number): Promise<any | null> => {
   if (result.success) {
     return result.data;
   } else {
-    throw new Error(extractErrorMessage(result.error) || 'Failed to disable curriculum');
+    throwApiError(result);
+    return null as never;
   }
 }; 

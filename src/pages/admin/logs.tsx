@@ -7,6 +7,7 @@ import styles from '../../css/admin/logs.module.css';
 import { mockUserActivity } from '../../../data/mockData';
 import { useAuditLog } from '../../hooks/useAuditLog';
 import { AuditLog } from '../../interfaces/IAuditLog';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 interface ActivityData {
   date: string;
@@ -94,7 +95,8 @@ const LogsPage: React.FC = () => {
       XLSX.writeFile(workbook, 'audit_logs.xlsx');
       message.success('Audit logs exported successfully!');
     } catch (err) {
-      message.error('Failed to export audit logs');
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      message.error(errorMessage);
       console.error('Export error:', err);
     }
   };

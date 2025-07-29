@@ -1,4 +1,4 @@
-import { axiosCreate, axiosRead, axiosDelete, axiosUpdate, extractErrorMessage } from "../AxiosCRUD";
+import { axiosCreate, axiosRead, axiosDelete, axiosUpdate, extractErrorMessage, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import type {
   IChatSessionListResponse,
@@ -24,8 +24,8 @@ export const initChatSession = async (request: IInitChatSessionRequest): Promise
   if (result.success) {
     return result.data as IInitChatSessionResponse;
   } else {
-    console.error('Failed to initialize chat session:', result.error);
-    throw new Error(extractErrorMessage(result.error) || 'Failed to initialize chat session');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -40,8 +40,8 @@ export const sendChatMessage = async (request: ISendChatMessageRequest): Promise
   if (result.success) {
     return result.data as ISendChatMessageResponse;
   } else {
-    console.error('Failed to send message to AI:', result.error);
-    throw new Error(extractErrorMessage(result.error) || 'Failed to send message to AI');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -55,8 +55,8 @@ export const getChatSessions = async (): Promise<IChatSessionListResponse> => {
   if (result.success) {
     return result.data as IChatSessionListResponse;
   } else {
-    console.error('Failed to fetch chat sessions:', result.error);
-    throw new Error(extractErrorMessage(result.error) || 'Failed to fetch chat sessions');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -70,8 +70,8 @@ export const getChatMessages = async (chatSessionId: number, page: number = 1, p
   if (result.success) {
     return result.data as IChatMessageListResponse;
   } else {
-    console.error('Failed to fetch chat messages for session', chatSessionId, ':', result.error);
-    throw new Error(extractErrorMessage(result.error) || 'Failed to fetch chat messages');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -91,43 +91,46 @@ export const deleteChatSession = async (chatSessionId: number): Promise<{ succes
       console.log(`Successfully deleted chat session: ${chatSessionId}`);
       return { success: true, message: 'Chat session deleted successfully' };
     } else {
-      console.error(`Failed to delete chat session ${chatSessionId}:`, result.error);
-      throw new Error(extractErrorMessage(result.error) || 'Failed to delete chat session');
+      throwApiError(result);
+      return null as never;
     }
   } catch (error) {
     console.error(`Error deleting chat session ${chatSessionId}:`, error);
     if (error instanceof Error) {
       throw new Error(`Failed to delete chat session: ${error.message}`);
-    } else {
-      throw new Error('An unexpected error occurred while deleting the chat session');
     }
+    throw new Error('Failed to delete chat session');
   }
 };
 
-// Đổi tên chat session
 export const renameChatSession = async (chatSessionId: number, title: string): Promise<{ success: boolean }> => {
   const props = {
     data: { title },
-    url: `${sessionUrl}/${chatSessionId}`,
+    url: `${sessionUrl}/${chatSessionId}/rename`,
     headers: GetHeader(),
   };
+  
   const result = await axiosUpdate(props);
   if (result.success) {
     return { success: true };
   } else {
-    console.error('Failed to rename chat session', chatSessionId, ':', result.error);
-    throw new Error(extractErrorMessage(result.error) || 'Failed to rename chat session');
+    throwApiError(result);
+    return null as never;
   }
 };
 
-// Legacy function for backward compatibility
 export const sendAiMessage = async (message: string): Promise<ISendChatMessageResponse> => {
-  // This is a simplified version that assumes a default session
-  // For new implementations, use sendChatMessage with proper sessionId
-  const request: ISendChatMessageRequest = {
-    message,
-    chatSessionId: 1, // Default session ID - should be replaced with actual session
+  const props = {
+    data: { message },
+    url: aiUrl + "/send",
+    headers: GetHeader(),
   };
-  return sendChatMessage(request);
+  const result = await axiosCreate(props);
+  if (result.success) {
+    return result.data as ISendChatMessageResponse;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
 };
 
