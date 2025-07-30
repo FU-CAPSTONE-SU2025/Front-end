@@ -9,6 +9,7 @@ import type { IChatMessage, IChatSession } from '../../interfaces/IChatAI';
 import SidebarChat from '../../components/student/sidebarChat';
 import HistoryModal from '../../components/student/historyModal';
 import { useQueryClient } from '@tanstack/react-query';
+import { debugLog } from '../../utils/performanceOptimization';
 
 const AI_BOT = {
   name: 'AISEA BOT',
@@ -164,15 +165,15 @@ const ChatAI: React.FC = () => {
       return dateA - dateB;
     });
   
-  // Debug logs
-  console.log('Sessions:', sessions);
-  console.log('Selected Session ID:', selectedSessionId);
-  console.log('Messages:', messages);
-  console.log('Loading Messages:', loadingMessages);
-  console.log('Has Next Page:', hasNextPage);
-  console.log('Is Fetching Next Page:', isFetchingNextPage);
-  console.log('Sessions Error:', sessionsError);
-  console.log('Messages Error:', messagesError);
+  // Debug logs - replaced with debugLog
+  debugLog('Sessions:', sessions);
+  debugLog('Selected Session ID:', selectedSessionId);
+  debugLog('Messages:', messages);
+  debugLog('Loading Messages:', loadingMessages);
+  debugLog('Has Next Page:', hasNextPage);
+  debugLog('Is Fetching Next Page:', isFetchingNextPage);
+  debugLog('Sessions Error:', sessionsError);
+  debugLog('Messages Error:', messagesError);
   
   // Mutations
   const initChatMutation = useInitChatSession();
@@ -231,7 +232,7 @@ const ChatAI: React.FC = () => {
     
     // Load more when user scrolls to top (within 100px)
     if (scrollTop < 100 && hasNextPage && !isFetchingNextPage) {
-      console.log('Loading more messages...');
+      debugLog('Loading more messages...');
       handleFetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, handleFetchNextPage]);
@@ -263,18 +264,18 @@ const ChatAI: React.FC = () => {
     setShouldAutoScroll(true);
   };
 
-  // Debug: Log messages and session info
+  // Debug: Log messages and session info - replaced with debugLog
   useEffect(() => {
-    console.log('=== DEBUG INFO ===');
-    console.log('Selected Session:', sessions.find(s => s.id === selectedSessionId));
-    console.log('Messages count:', messages.length);
-    console.log('Messages:', messages.map(m => ({
+    debugLog('=== DEBUG INFO ===');
+    debugLog('Selected Session:', sessions.find(s => s.id === selectedSessionId));
+    debugLog('Messages count:', messages.length);
+    debugLog('Messages:', messages.map(m => ({
       id: m.messageId,
       senderId: m.senderId,
       content: m.content.substring(0, 30) + '...',
       createdAt: m.createdAt
     })));
-    console.log('==================');
+    debugLog('==================');
   }, [messages, selectedSessionId, sessions]);
 
   // Prefetch sessions khi component mount
@@ -319,7 +320,7 @@ const ChatAI: React.FC = () => {
       createdAt: new Date().toISOString(),
     };
 
-    console.log('Creating optimistic user message with senderId:', optimisticUserMessage.senderId);
+    debugLog('Creating optimistic user message with senderId:', optimisticUserMessage.senderId);
 
     // Optimistically update the cache with user message
     queryClient.setQueryData(['chatMessages', selectedSessionId], (oldData: any) => {
@@ -353,7 +354,7 @@ const ChatAI: React.FC = () => {
                 createdAt: new Date().toISOString(),
               };
 
-              console.log('Creating AI response message with senderId:', aiMessage.senderId);
+              debugLog('Creating AI response message with senderId:', aiMessage.senderId);
 
               queryClient.setQueryData(['chatMessages', selectedSessionId], (oldData: any) => {
                 if (!oldData) return { pages: [{ items: [optimisticUserMessage, aiMessage], nextPage: null, hasMore: false }] };
@@ -386,7 +387,7 @@ const ChatAI: React.FC = () => {
           onError: (error) => {
             setIsTyping(false);
             message.error('AI is currently unavailable. Please try again later.');
-            console.error('Send message error:', error);
+            debugLog('Send message error:', error);
             // Remove optimistic message on error
             queryClient.setQueryData(['chatMessages', selectedSessionId], (oldData: any) => {
               if (!oldData) return { pages: [{ items: [], nextPage: null, hasMore: false }] };
@@ -410,13 +411,13 @@ const ChatAI: React.FC = () => {
       { message: initMessage },
       {
         onSuccess: (data) => {
-          console.log('New chat session created:', data);
+          debugLog('New chat session created:', data);
           setSelectedSessionId(data.chatSessionId);
           setInput('');
           message.success('New chat session created!');
         },
         onError: (error) => {
-          console.error('Failed to create new chat session:', error);
+          debugLog('Failed to create new chat session:', error);
           message.error('Failed to create new chat session. Please try again.');
         },
       }
@@ -424,7 +425,7 @@ const ChatAI: React.FC = () => {
   };
 
   const handleSelectSession = (sessionId: number) => {
-    console.log('Selecting session:', sessionId);
+    debugLog('Selecting session:', sessionId);
     setSelectedSessionId(sessionId);
     setInput('');
     setShouldAutoScroll(true); // Enable auto-scroll when selecting new session
@@ -450,7 +451,7 @@ const ChatAI: React.FC = () => {
           }
         },
         onError: (error) => {
-          console.error('Failed to delete session:', error);
+          debugLog('Failed to delete session:', error);
           // Show more specific error message if available
           const errorMessage = error.message || 'Failed to delete session. Please try again.';
           message.error(errorMessage);
@@ -467,7 +468,7 @@ const ChatAI: React.FC = () => {
           message.success('Session renamed successfully');
         },
         onError: (error) => {
-          console.error('Failed to rename session:', error);
+          debugLog('Failed to rename session:', error);
           message.error('Failed to rename session. Please try again.');
         },
       }

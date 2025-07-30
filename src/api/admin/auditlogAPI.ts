@@ -3,6 +3,7 @@ import { AdminViewBooking } from "../../interfaces/IBookingAvailability";
 import { PagedData } from "../../interfaces/ISchoolProgram";
 import { axiosDelete, axiosRead, extractErrorMessage, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
+import { debugLog } from "../../utils/performanceOptimization";
 
 const auditlogURL = baseUrl + "/AuditLog";
 const meetingURL = baseUrl + "/Meeting";
@@ -15,7 +16,7 @@ export const GetAllAuditLog = async (): Promise<AuditLog[]> => {
   };
   const result = await axiosRead(props);
   if (result.success) {
-    console.log(result.data)
+    debugLog(result.data)
     return result.data;
   } else {
     throwApiError(result);

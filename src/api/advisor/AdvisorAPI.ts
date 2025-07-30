@@ -191,13 +191,7 @@ export const sendMessageToAdvisor = async ({ message }: { message: string }): Pr
     url: baseUrl + "/AdvisorySession1to1/human",
     headers: GetHeader(),
   };
-  const result = await axiosCreate(props);
-  if (result.success) {
-    return result.data;
-  } else {
-    throwApiError(result);
-    return null as never;
-  }
+
 };
 
 

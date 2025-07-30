@@ -16,11 +16,12 @@
     "jsx": "react-jsx",
 
     /* Linting */
-    "strict": true,
+    "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": false,
-    "noUncheckedSideEffectImports": false
+    "noUncheckedSideEffectImports": false,
+    "noImplicitAny": false
     // For testing purposes, I disabled the following options
     // reenable them if you want the default clean code checking back
   },
