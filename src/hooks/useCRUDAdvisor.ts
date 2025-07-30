@@ -60,28 +60,27 @@ export default function useCRUDAdvisor() {
   }
 }
 
-export function useBookingAvailability() {
-  const getBookingAvailabilityMutation = useMutation<BookingAvailability[], unknown, void>({
-    mutationKey: ['bookingAvailability'],
-    mutationFn: async () => {
+export function useBookingAvailability(pageSize: number = 100) {
+  const getBookingAvailabilityQuery = useQuery<BookingAvailability[], Error>({
+    queryKey: ['bookingAvailability', pageSize],
+    queryFn: async () => {
+      console.log('useBookingAvailability - Fetching data with pageSize:', pageSize);
       const data = await FetchBookingAvailability();
+      console.log('useBookingAvailability - Data fetched:', data.length, 'items');
       return data;
-    },
-    onError: (error) => {
-      console.error(error);
     },
   });
 
   // Ensure allBookingAvailability is always an array
-  const allBookingAvailability = Array.isArray(getBookingAvailabilityMutation.data) 
-    ? getBookingAvailabilityMutation.data 
+  const allBookingAvailability = Array.isArray(getBookingAvailabilityQuery.data) 
+    ? getBookingAvailabilityQuery.data 
     : [];
   
-  // Sort data by day of week (Monday = 1, Sunday = 0) and time
+  // Sort data by day of week (Monday = 2, Sunday = 1) and time
   const sortedAllBookingAvailability = [...allBookingAvailability].sort((a, b) => {
-    // Convert Sunday from 0 to 7 for proper sorting (Monday=1, Tuesday=2, ..., Sunday=7)
-    const dayA = a.dayInWeek === 0 ? 7 : a.dayInWeek;
-    const dayB = b.dayInWeek === 0 ? 7 : b.dayInWeek;
+    // Convert Sunday from 1 to 8 for proper sorting (Monday=2, Tuesday=3, ..., Sunday=8)
+    const dayA = a.dayInWeek === 1 ? 8 : a.dayInWeek;
+    const dayB = b.dayInWeek === 1 ? 8 : b.dayInWeek;
     
     // First sort by day of week (Monday first)
     if (dayA !== dayB) {
@@ -101,7 +100,6 @@ export function useBookingAvailability() {
   
   // Client-side pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
@@ -116,17 +114,17 @@ export function useBookingAvailability() {
 
   const handlePageChange = (page: number, size: number) => {
     setCurrentPage(page);
-    setPageSize(size);
   };
 
   return {
-    ...getBookingAvailabilityMutation,
-    getAllBookingAvailability: getBookingAvailabilityMutation.mutate,
+    ...getBookingAvailabilityQuery,
+    getAllBookingAvailability: getBookingAvailabilityQuery.refetch,
     bookingAvailabilityList,
     allSortedData: sortedAllBookingAvailability, // Add full sorted data
     pagination,
-    isLoading: getBookingAvailabilityMutation.isPending,
-    handlePageChange
+    isLoading: getBookingAvailabilityQuery.isPending,
+    handlePageChange,
+    refetch: getBookingAvailabilityQuery.refetch
   };
 }
 
@@ -139,8 +137,11 @@ export function useCreateBookingAvailability() {
       return result;
     },
     onSuccess: () => {
-      // Invalidate and refetch booking availability data
+      // Debug: Log before invalidating
+      console.log('CreateBookingAvailability - Invalidating queries...');
+      // Invalidate all booking availability queries (including different pageSize)
       queryClient.invalidateQueries({ queryKey: ['bookingAvailability'] });
+      console.log('CreateBookingAvailability - Queries invalidated');
     },
     onError: (error) => {
       console.error('Failed to create booking availability:', error);
@@ -157,8 +158,11 @@ export function useCreateBulkBookingAvailability() {
       return result;
     },
     onSuccess: () => {
-      // Invalidate and refetch booking availability data
+      // Debug: Log before invalidating
+      console.log('CreateBulkBookingAvailability - Invalidating queries...');
+      // Invalidate all booking availability queries (including different pageSize)
       queryClient.invalidateQueries({ queryKey: ['bookingAvailability'] });
+      console.log('CreateBulkBookingAvailability - Queries invalidated');
     },
     onError: (error) => {
       console.error('Failed to create bulk booking availability:', error);
@@ -175,7 +179,7 @@ export function useUpdateBookingAvailability() {
       return result;
     },
     onSuccess: () => {
-      // Invalidate and refetch booking availability data
+      // Invalidate all booking availability queries (including different pageSize)
       queryClient.invalidateQueries({ queryKey: ['bookingAvailability'] });
     },
     onError: (error) => {
@@ -193,7 +197,7 @@ export function useDeleteBookingAvailability() {
       return result;
     },
     onSuccess: () => {
-      // Invalidate and refetch booking availability data
+      // Invalidate all booking availability queries (including different pageSize)
       queryClient.invalidateQueries({ queryKey: ['bookingAvailability'] });
     },
     onError: (error) => {

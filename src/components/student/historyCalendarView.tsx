@@ -53,7 +53,7 @@ const HistoryCalendarView = ({
         id: meeting ? meeting.id : `${date.format('YYYY-MM-DD')}-${hour}`,
         startTime: start.format('HH:mm'),
         endTime: end.format('HH:mm'),
-        dayInWeek: date.day(),
+        dayInWeek: date.day() === 0 ? 1 : date.day() + 1, // Map 0=Sunday to 1, 1=Monday to 2, etc.
         type: meeting ? 'booked' : 'available',
         meeting: meeting ?? null,
       });
@@ -113,7 +113,7 @@ const HistoryCalendarView = ({
                       id: meeting.id,
                       startTime: start.format('HH:mm'),
                       endTime: end.format('HH:mm'),
-                      dayInWeek: start.day(),
+                      dayInWeek: start.day() === 0 ? 1 : start.day() + 1, // Map 0=Sunday to 1, 1=Monday to 2, etc.
                       type: 'booked',
                       meeting
                     }, selectedDate)}

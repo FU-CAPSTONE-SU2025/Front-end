@@ -7,8 +7,10 @@ import {
     GetUpcomingLeaveSchedules, 
     PagedLeaveScheduleData,
     GetBookingAvailability,
-    BookingAvailabilityData
+    BookingAvailabilityData,
+    getAdvisorMeetings
 } from '../api/student/StudentAPI';
+import { AdvisorMeetingPaged } from '../interfaces/IStudent';
 
 interface UseStudentFeatureParams {
   search: string;
@@ -77,6 +79,21 @@ export const useBookingAvailability = (staffProfileId: number | null) => {
   });
 };
 
+// Hook for fetching advisor meetings
+export const useAdvisorMeetings = (staffProfileId: number | null) => {
+  return useQuery<AdvisorMeetingPaged | null, Error>({
+    queryKey: ['advisorMeetings', staffProfileId],
+    queryFn: () => staffProfileId ? getAdvisorMeetings(staffProfileId) : null,
+    enabled: !!staffProfileId,
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 5, // 5 minutes (shorter for meetings)
+    gcTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
+};
+
 // Hook for prefetching advisor data
 export const usePrefetchAdvisorData = () => {
   const queryClient = useQueryClient();
@@ -105,26 +122,26 @@ export const useAdvisorDataManager = () => {
   const queryClient = useQueryClient();
 
   const invalidateAdvisorData = (staffProfileId: number) => {
-    queryClient.invalidateQueries({
-      queryKey: ['leaveSchedules', staffProfileId],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ['bookingAvailability', staffProfileId],
-    });
+    // Invalidate leave schedules
+    queryClient.invalidateQueries({ queryKey: ['leaveSchedules', staffProfileId] });
+    
+    // Invalidate booking availability
+    queryClient.invalidateQueries({ queryKey: ['bookingAvailability', staffProfileId] });
+    
+    // Invalidate advisor meetings
+    queryClient.invalidateQueries({ queryKey: ['advisorMeetings', staffProfileId] });
   };
 
   const removeAdvisorData = (staffProfileId: number) => {
-    queryClient.removeQueries({
-      queryKey: ['leaveSchedules', staffProfileId],
-    });
-    queryClient.removeQueries({
-      queryKey: ['bookingAvailability', staffProfileId],
-    });
+    queryClient.removeQueries({ queryKey: ['leaveSchedules', staffProfileId] });
+    queryClient.removeQueries({ queryKey: ['bookingAvailability', staffProfileId] });
+    queryClient.removeQueries({ queryKey: ['advisorMeetings', staffProfileId] });
   };
 
   const setAdvisorData = (staffProfileId: number, data: any) => {
     queryClient.setQueryData(['leaveSchedules', staffProfileId], data.leaveSchedules);
     queryClient.setQueryData(['bookingAvailability', staffProfileId], data.bookingAvailability);
+    queryClient.setQueryData(['advisorMeetings', staffProfileId], data.meetings);
   };
 
   return { invalidateAdvisorData, removeAdvisorData, setAdvisorData };

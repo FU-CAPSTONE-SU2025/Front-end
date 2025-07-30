@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Typography, Space, Button, message, Tag, Segmented } from 'antd';
 import { CalendarOutlined, PlusOutlined, ClockCircleOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import SearchBar from '../../components/common/searchBar';
@@ -30,11 +30,21 @@ const LeaveSchedulePage: React.FC = () => {
   const [viewLeaveId, setViewLeaveId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
+  const [selectedSlotInfo, setSelectedSlotInfo] = useState<{ date: Dayjs; start: Dayjs; end: Dayjs } | null>(null);
 
-  const { data, isLoading, error } = useLeaveScheduleList(currentPage, pageSize);
+  // Tính toán pageSize dựa trên viewMode
+  const effectivePageSize = viewMode === 'week' ? 50 : 10; // Week view = hết data, Day view = 10
+
+  const { data, isLoading, error } = useLeaveScheduleList(currentPage, effectivePageSize);
   const leaveList = data?.items || [];
   const totalCount = data?.totalCount || 0;
   console.log(data)
+
+  // Refetch when viewMode changes
+  useEffect(() => {
+    // React Query will automatically refetch when queryKey changes (pageSize changes)
+  }, [viewMode]);
+
   // Modal handlers
   const handleAddSuccess = () => {
     setIsAddModalVisible(false);
@@ -108,14 +118,8 @@ const LeaveSchedulePage: React.FC = () => {
   };
 
   // Search logic
-  const filteredList = searchQuery
-    ? leaveList.filter(item =>
-       
-        item.id.toString().includes(searchQuery) ||
-        item.startDateTime.includes(searchQuery) ||
-        item.endDateTime.includes(searchQuery) ||
-        (item.note && item.note.includes(searchQuery))
-      )
+  const filteredLeaves = viewMode === 'day'
+    ? leaveList.filter(l => dayjs(l.startDateTime).isSame(selectedDate, 'day'))
     : leaveList;
 
   return (
@@ -152,7 +156,7 @@ const LeaveSchedulePage: React.FC = () => {
         </Space>
       </Card>
       <AdvisorCalendar
-        events={leaveList.map(l => ({
+        events={filteredLeaves.map(l => ({
           id: l.id,
           startDateTime: l.startDateTime,
           endDateTime: l.endDateTime,
@@ -163,19 +167,32 @@ const LeaveSchedulePage: React.FC = () => {
         selectedDate={selectedDate}
         onViewModeChange={setViewMode}
         onDateChange={setSelectedDate}
-        onSlotClick={(_slot, date) => {
+        onSlotClick={(slot, date) => {
+          setSelectedSlotInfo({ date, start: slot.start, end: slot.end });
           setIsAddModalVisible(true);
           setSelectedDate(date);
         }}
-        onEventClick={event => {
+        onEdit={event => {
           setSelectedLeaveId(Number(event.id));
           setIsEditModalVisible(true);
+        }}
+        onDelete={async (event) => {
+          try {
+            await deleteLeaveSchedule.mutateAsync(Number(event.id));
+            message.success('Leave deleted successfully!');
+          } catch (error) {
+            message.error('Failed to delete leave.');
+          }
         }}
       />
       <AddLeaveScheduleModal
         visible={isAddModalVisible}
-        onCancel={() => setIsAddModalVisible(false)}
+        onCancel={() => {
+          setIsAddModalVisible(false);
+          setSelectedSlotInfo(null);
+        }}
         onSuccess={handleAddSuccess}
+        selectedSlotInfo={selectedSlotInfo}
       />
   
       <EditLeaveScheduleModal
@@ -188,6 +205,16 @@ const LeaveSchedulePage: React.FC = () => {
         visible={isViewModalVisible}
         onCancel={() => { setIsViewModalVisible(false); setViewLeaveId(null); }}
         leaveId={viewLeaveId}
+        onEdit={id => {
+          setIsViewModalVisible(false);
+          setSelectedLeaveId(id);
+          setIsEditModalVisible(true);
+        }}
+        onDeleted={() => {
+          setIsViewModalVisible(false);
+          setViewLeaveId(null);
+          // reload lại lịch nếu cần (có thể gọi lại API hoặc refetch)
+        }}
       />
     </div>
   );

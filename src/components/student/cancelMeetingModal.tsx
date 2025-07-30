@@ -50,7 +50,8 @@ const CancelMeetingModal: React.FC<CancelMeetingModalProps> = ({
       centered
       width={500}
       footer={[
-        <Button key="cancel" onClick={handleCancelCancel}>
+       <div className='flex justify-between'>
+         <Button key="cancel" onClick={handleCancelCancel}>
           Cancel
         </Button>,
         <Button 
@@ -62,6 +63,7 @@ const CancelMeetingModal: React.FC<CancelMeetingModalProps> = ({
         >
           Confirm Cancellation
         </Button>
+       </div>
       ]}
     >
       <div className="space-y-4">
