@@ -97,8 +97,10 @@ export const FetchBookingAvailability = async (
   };
   const result = await axiosRead(props);
   if (result.success) {
-    return result.data || [];
+    // Ensure we always return an array
+    return Array.isArray(result.data) ? result.data : [];
   } else {
+    console.error('Failed to fetch booking availability:', result.error);
     return [];
   }
 };
@@ -203,7 +205,7 @@ export const FetchLeaveScheduleList = async (
   });
   const props = {
     data: null,
-    url:  baseUrl + '/LeaveSche/self' + params.toString(),
+    url:  baseUrl + '/LeaveSche/self?' + params.toString(),
     headers: GetHeader(),
   };
   const result = await axiosRead(props);

@@ -18,14 +18,15 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleModalProps> = ({ visible, 
     try {
       const values = await form.validateFields();
       console.log('values.range:', values.range);
-      const startDateTime = dayjs(values.range[0]).format('YYYY-MM-DDTHH:mm');
-      const endDateTime = dayjs(values.range[1]).format('YYYY-MM-DDTHH:mm');
+      const startDateTime = dayjs(values.range[0]).toISOString();
+      const endDateTime = dayjs(values.range[1]).toISOString();
       console.log('startDateTime:', startDateTime);
       console.log('endDateTime:', endDateTime);
       setLoading(true);
       await createLeave.mutateAsync({
         startDateTime,
         endDateTime,
+        note: values.note,
       });
       form.resetFields();
       onSuccess();
@@ -56,7 +57,12 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleModalProps> = ({ visible, 
         >
           <DatePicker.RangePicker showTime={{ format: 'HH:mm', use12Hours: false }} format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} />
         </Form.Item>
-       
+        <Form.Item
+          label="Note"
+          name="note"
+        >
+          <Input.TextArea rows={3} placeholder="Optional note about this leave period" />
+        </Form.Item>
       </Form>
     </Modal>
   );

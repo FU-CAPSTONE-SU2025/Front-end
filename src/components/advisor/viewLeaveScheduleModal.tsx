@@ -23,7 +23,9 @@ const ViewLeaveScheduleModal: React.FC<ViewLeaveScheduleModalProps> = ({ visible
           <Descriptions.Item label="ID">{data.id}</Descriptions.Item>
           <Descriptions.Item label="Start Time">{new Date(data.startDateTime).toLocaleString()}</Descriptions.Item>
           <Descriptions.Item label="End Time">{new Date(data.endDateTime).toLocaleString()}</Descriptions.Item>
-          
+          {data.note && (
+            <Descriptions.Item label="Note">{data.note}</Descriptions.Item>
+          )}
           {data.createdAt && (
             <Descriptions.Item label="Created At">{new Date(data.createdAt).toLocaleString()}</Descriptions.Item>
           )}

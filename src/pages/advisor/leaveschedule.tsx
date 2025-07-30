@@ -75,6 +75,16 @@ const LeaveSchedulePage: React.FC = () => {
         </Space>
       ),
     },
+    {
+      title: 'Note',
+      dataIndex: 'note',
+      key: 'note',
+      width: 200,
+      align: 'center' as const,
+      render: (value: string) => (
+        <Text>{value || '-'}</Text>
+      ),
+    },
   
     {
       title: 'Actions',
@@ -108,7 +118,8 @@ const LeaveSchedulePage: React.FC = () => {
        
         item.id.toString().includes(searchQuery) ||
         item.startDateTime.includes(searchQuery) ||
-        item.endDateTime.includes(searchQuery)
+        item.endDateTime.includes(searchQuery) ||
+        (item.note && item.note.includes(searchQuery))
       )
     : leaveList;
 
@@ -147,7 +158,7 @@ const LeaveSchedulePage: React.FC = () => {
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search by , ID, or time..."
+            placeholder="Search by ID, time, or note..."
             className={styles.searchBar}
           />
         </div>

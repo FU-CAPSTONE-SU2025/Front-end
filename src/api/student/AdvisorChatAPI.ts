@@ -28,7 +28,7 @@ export interface InitHumanChatSessionResponse {
 export const initHumanChatSession = async (request: InitHumanChatSessionRequest): Promise<InitHumanChatSessionResponse> => {
   const props = {
     data: request,
-    url: advisorChatUrl + "/init-human",
+    url: advisorChatUrl + "/human",
     headers: GetHeader(),
   };
   
