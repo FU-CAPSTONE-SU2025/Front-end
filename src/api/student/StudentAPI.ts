@@ -217,6 +217,25 @@ export const GetUpcomingLeaveSchedules = async (staffProfileId: number): Promise
     }
 }
 
+// Api for admin and student getting All leave schedule in ONE STAFF ADVISOR
+export const GetPagedLeaveSchedulesOneStaff = async (staffProfileId: number): Promise<PagedLeaveScheduleData> => {
+  const props = {
+      data: null,
+      url: baseUrl + `/LeaveSche/${staffProfileId}`,
+      headers: GetHeader()
+  }
+  
+  const result = await axiosRead(props)
+  if (result.success) {
+      console.log("Leave schedules data:", result.data)
+      return result.data
+  }
+  else {
+      throwApiError(result);
+      return null as never;
+  }
+}
+
 // Get booking availability for an advisor
 export const GetBookingAvailability = async (staffProfileId: number): Promise<BookingAvailabilityData[]> => {
     const props = {
@@ -284,7 +303,7 @@ export const getStudentMeetings = async (pageNumber = 1, pageSize = 20): Promise
   }
 };
 
-// API lấy chi tiết meeting
+// API lấy chi tiết meeting - cho cả Admin
 export const getMeetingDetail = async (meetingId: number): Promise<any> => {
   const props = {
     data: null,
