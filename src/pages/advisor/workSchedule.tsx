@@ -13,6 +13,8 @@ import {
 import { BookingAvailability } from '../../interfaces/IBookingAvailability';
 import styles from '../../css/advisor/workSchedule.module.css';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import AdvisorCalendar, { AdvisorCalendarEvent } from '../../components/advisor/advisorCalendar';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
@@ -21,6 +23,8 @@ const WorkSchedule: React.FC = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [selectedDate, setSelectedDate] = useState(dayjs());
   
   const {
     getAllBookingAvailability,
@@ -288,43 +292,37 @@ const WorkSchedule: React.FC = () => {
           </div>
         </Space>
       </Card>
-
-      <Card className={styles.tableCard}>
-        <div className={styles.searchContainer}>
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search schedules by day (Monday, Tuesday...), time, or ID..."
-            className={styles.searchBar}
-          />
-        </div>
-        <DataTable
-          columns={columns}
-          data={filteredData}
-          rowSelection={null}
-          pagination={searchQuery && searchQuery.trim() !== '' ? {
-            current: 1,
-            pageSize: 50, // Show more items when searching
-            total: filteredData.length,
-            totalPages: Math.ceil(filteredData.length / 50)
-          } : pagination}
-          onPageChange={handlePageChangeWrapper}
-          loading={isLoading}
-          searchQuery="" // Disable DataTable's built-in search
-          searchFields={[]} // Disable DataTable's built-in search
-          onRow={(record) => ({
-            onClick: () => message.info(`Clicked on schedule #${record.id}`),
-            style: { cursor: 'pointer' }
-          })}
-        />
-      </Card>
-
+      <AdvisorCalendar
+        events={safeDataToUse.map(item => {
+          // Chuyển đổi dữ liệu sang event dạng work
+          const today = dayjs().startOf('week');
+          const day = today.add(item.dayInWeek, 'day');
+          return {
+            id: item.id,
+            startDateTime: day.format('YYYY-MM-DD') + 'T' + item.startTime,
+            endDateTime: day.format('YYYY-MM-DD') + 'T' + item.endTime,
+            type: 'work',
+            note: '',
+          };
+        })}
+        viewMode={viewMode}
+        selectedDate={selectedDate}
+        onViewModeChange={setViewMode}
+        onDateChange={setSelectedDate}
+        onSlotClick={(_slot, date) => {
+          setIsAddModalVisible(true);
+          setSelectedDate(date);
+        }}
+        onEventClick={event => {
+          setSelectedScheduleId(Number(event.id));
+          setIsEditModalVisible(true);
+        }}
+      />
       <AddWorkSchedule
         visible={isAddModalVisible}
         onCancel={() => setIsAddModalVisible(false)}
         onSuccess={handleAddSuccess}
       />
-
       <EditWorkSchedule
         visible={isEditModalVisible}
         onCancel={() => {

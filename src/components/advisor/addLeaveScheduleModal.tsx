@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Form, TimePicker, Select, Button, message, Space, Tabs, Card, Typography, Divider, Row, Col, DatePicker } from 'antd';
+import { Modal, Form, TimePicker, Select, Button, message, Space, Tabs, Card, Typography, Divider, Row, Col, DatePicker, Alert } from 'antd';
 import { PlusOutlined, ClockCircleOutlined, CalendarOutlined, DeleteOutlined, CopyOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useCreateLeaveSchedule, useCreateBulkLeaveSchedule } from '../../hooks/useCRUDLeaveSchedule';
 import dayjs from 'dayjs';
@@ -31,6 +31,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
   const [showSplitModal, setShowSplitModal] = useState(false);
   const [splitSlots, setSplitSlots] = useState<LeaveSlot[]>([]);
   const [pendingSingleValues, setPendingSingleValues] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const createLeave = useCreateLeaveSchedule();
   const createBulkLeave = useCreateBulkLeaveSchedule();
@@ -111,7 +112,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
       onSuccess();
       onCancel();
     } catch (error) {
-      message.error('An error occurred while creating the leave schedule.');
+      setErrorMessage('An error occurred while creating the leave schedule.');
     }
   };
 
@@ -140,7 +141,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
       onSuccess();
       onCancel();
     } catch (error) {
-      message.error('An error occurred while creating the leave schedules.');
+      setErrorMessage('An error occurred while creating the leave schedules.');
     }
   };
 
@@ -160,7 +161,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
       onSuccess();
       onCancel();
     } catch (error) {
-      message.error('An error occurred while creating the leave schedules.');
+      setErrorMessage('An error occurred while creating the leave schedules.');
     }
   };
 
@@ -214,6 +215,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
     bulkForm.resetFields();
     setLeaveSlots([{ key: '1', date: dayjs(), startTime: dayjs('09:00', 'HH:mm'), endTime: dayjs('17:00', 'HH:mm') }]);
     onCancel();
+    setErrorMessage(null);
   };
 
   return (
@@ -231,6 +233,9 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
         width={800}
         destroyOnClose
       >
+        {errorMessage && (
+          <Alert type="error" message={errorMessage} closable onClose={() => setErrorMessage(null)} style={{ marginBottom: 16 }} />
+        )}
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           <TabPane tab="Single Leave" key="single">
             <Form
@@ -257,7 +262,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
                     name="startTime"
                     rules={[{ required: true, message: 'Please select start time' }]}
                   >
-                    <TimePicker format="HH:mm" style={{ width: '100%' }} minuteStep={15} />
+                    <TimePicker format="HH:mm" style={{ width: '100%' }} minuteStep={15} use12Hours={false} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
@@ -269,7 +274,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
                       { validator: validateTimeRange }
                     ]}
                   >
-                    <TimePicker format="HH:mm" style={{ width: '100%' }} minuteStep={15} />
+                    <TimePicker format="HH:mm" style={{ width: '100%' }} minuteStep={15} use12Hours={false} />
                   </Form.Item>
                 </Col>
               </Row>
@@ -331,6 +336,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
                       style={{ width: '100%' }}
                       placeholder="Start time"
                       minuteStep={15}
+                      use12Hours={false}
                     />
                   </Col>
                   <Col span={8}>
@@ -341,6 +347,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
                       style={{ width: '100%' }}
                       placeholder="End time"
                       minuteStep={15}
+                      use12Hours={false}
                     />
                   </Col>
                 </Row>
@@ -407,6 +414,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
                 format="HH:mm"
                 minuteStep={5}
                 style={{ width: '100%' }}
+                use12Hours={false}
               />
             </Col>
             <Col span={8}>
@@ -416,6 +424,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
                 format="HH:mm"
                 minuteStep={5}
                 style={{ width: '100%' }}
+                use12Hours={false}
               />
             </Col>
             <Col span={6}>
