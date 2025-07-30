@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Button, Tabs, Typography, message, Table, Card, Tag, Space, Popconfirm, Tooltip } from 'antd';
-import { PlusOutlined, ArrowLeftOutlined, EditOutlined, SaveOutlined, FileExcelOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { Button, Tabs, Typography, message, Card, Tag, Space, Popconfirm, Tooltip } from 'antd';
+import { PlusOutlined, ArrowLeftOutlined, EditOutlined, SaveOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import AddVersionModal from '../../components/staff/AddVersionModal';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 import AssessmentTable from '../../components/staff/AssessmentTable';
