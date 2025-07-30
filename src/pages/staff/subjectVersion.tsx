@@ -2,22 +2,19 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Button, Tabs, Typography, message, Table, Card, Tag, Space, Popconfirm, Tooltip } from 'antd';
 import { PlusOutlined, ArrowLeftOutlined, EditOutlined, SaveOutlined, FileExcelOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
-
 import AddVersionModal from '../../components/staff/AddVersionModal';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
-
 import AssessmentTable from '../../components/staff/AssessmentTable';
 import MaterialTable from '../../components/staff/MaterialTable';
 import OutcomeTable from '../../components/staff/OutcomeTable';
 import SessionTable from '../../components/staff/SessionTable';
-import SubjectSelect from '../../components/common/SubjectSelect';
 import { Modal } from 'antd';
-import BulkDataImport from '../../components/common/bulkDataImport';
-import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { SubjectVersion, Syllabus, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, SubjectPrerequisite, CreateSubjectVersion, CreateSyllabus } from '../../interfaces/ISchoolProgram';
+import { SubjectVersion, Syllabus, CreateSubjectVersion } from '../../interfaces/ISchoolProgram';
 import { useCRUDSubject, useCRUDSubjectVersion, useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
 import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../data/mockData';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import AddPrerequisiteSubjectVersionModal from '../../components/staff/AddPrerequisiteSubjectVersionModal';
+import BulkDataImport from '../../components/common/bulkDataImport';
 
 // Function to create default version for a subject (moved outside component)
 const createDefaultVersion = async (
@@ -314,12 +311,12 @@ const SubjectVersionPage: React.FC = () => {
               await fetchAllPrerequisites();
             } catch (error) {
               console.error('Failed to fetch all prerequisites:', error);
-              // Fallback: fetch prerequisites for the first version only
-              try {
-                await fetchPrerequisitesForVersion(versionsData[0].id);
-              } catch (prereqError) {
-                console.error('Failed to fetch prerequisites for first version:', prereqError);
-              }
+            }
+            // Always fetch prerequisites for the first (active) version to guarantee display
+            try {
+              await fetchPrerequisitesForVersion(versionsData[0].id);
+            } catch (prereqError) {
+              console.error('Failed to fetch prerequisites for first version:', prereqError);
             }
           }
         }
@@ -434,10 +431,20 @@ const SubjectVersionPage: React.FC = () => {
   // Handler to delete a prerequisite
   const handleDeletePrerequisite = async (versionId: number, prerequisite_subject_id: number) => {
     try {
+      // Find the prerequisite that matches the subject ID to get the subject version ID
+      const prerequisite = (prereqMap[versionId] || []).find((p: any) => p.prerequisite_subject_id === prerequisite_subject_id);
+      if (!prerequisite) {
+        message.error('Prerequisite not found');
+        return;
+      }
+      
+      // Use the prerequisite subject version ID for deletion
+      const prerequisiteSubjectVersionId = prerequisite.prerequisite_subject_version_id || prerequisite.id;
+      
       // Use the real API to delete prerequisite
       await deletePrerequisiteFromSubjectVersionMutation.mutateAsync({
         subjectVersionId: versionId,
-        prerequisiteId: prerequisite_subject_id
+        prerequisiteId: prerequisiteSubjectVersionId
       });
       
       // Refresh prerequisites for this version
@@ -836,93 +843,74 @@ const SubjectVersionPage: React.FC = () => {
                     </div>
 
                     {/* Prerequisite Subjects Section */}
-                    <div style={{ marginBottom: 32 }}>
+                    <Card style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                         <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
                           📚 Prerequisite Subjects
                         </h3>
                         <Space>
-                          {isEditing && subjectVersions.length > 1 && (
-                            <Button 
-                              type="default" 
-                              onClick={() => {
-                                // Show a modal to select source version for copying
-                                Modal.confirm({
-                                  title: 'Copy Prerequisites',
-                                  content: (
-                                    <div>
-                                      <p>Select a source version to copy prerequisites from:</p>
-                                      <select 
-                                        style={{ width: '100%', marginTop: 8 }}
-                                        onChange={(e) => {
-                                          const sourceVersionId = Number(e.target.value);
-                                          if (sourceVersionId && sourceVersionId !== version.id) {
-                                            handleCopyPrerequisites(sourceVersionId, version.id);
-                                          }
-                                        }}
-                                      >
-                                        <option value="">Select a version...</option>
-                                        {subjectVersions
-                                          .filter(v => v.id !== version.id)
-                                          .map(v => (
-                                            <option key={v.id} value={v.id}>
-                                              Version {v.versionCode} - {v.versionName}
-                                            </option>
-                                          ))}
-                                      </select>
-                                    </div>
-                                  ),
-                                  onOk: () => {},
-                                  onCancel: () => {},
-                                  okText: 'Cancel',
-                                  cancelText: 'Cancel'
-                                });
-                              }}
-                            >
-                              Copy from Other Version
-                            </Button>
-                          )}
                           {isEditing && (
-                            <ExcelImportButton onClick={() => handleAddPrerequisite(version.id)}>
+                            <Button type="primary" onClick={() => { setEditingVersionId(version.id); setPrereqModalOpen(true); }}>
                               Add Prerequisite
-                            </ExcelImportButton>
+                            </Button>
                           )}
                         </Space>
                       </div>
-                      <Table
-                        loading={prereqLoading[version.id]}
-                        columns={[
-                          { title: 'Subject Code', dataIndex: 'subjectCode', key: 'subjectCode', width: 160 },
-                          { title: 'Subject Name', dataIndex: 'subjectName', key: 'subjectName' },
-                          ...(isEditing ? [{
-                            title: 'Action',
-                            key: 'action',
-                            render: (_: any, record: any) => (
-                              <Button type="link" danger onClick={() => handleDeletePrerequisite(version.id, record.prerequisite_subject_id)}>
-                                Delete
-                              </Button>
-                            ),
-                          }] : [])
-                        ].filter(Boolean)}
-                        dataSource={prereqMap[version.id] || []}
-                        rowKey={r => r.prerequisite_subject_id}
-                        pagination={false}
-                        style={{ marginTop: 12 }}
-                        locale={{
-                          emptyText: prereqLoading[version.id] ? 'Loading prerequisites...' : 'No prerequisites found'
+                      {/* Prerequisite chips */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, minHeight: '40px', alignItems: 'center' }}>
+                        {(prereqMap[version.id] || []).length === 0 ? (
+                          <Typography.Text type="secondary" style={{ fontStyle: 'italic' }}>No prerequisites added yet.</Typography.Text>
+                        ) : (
+                          (prereqMap[version.id] || []).map((prereq: any) => (
+                            <span key={prereq.prerequisite_subject_id} style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              background: '#f0f9ff',
+                              border: '1px solid #0ea5e9',
+                              borderRadius: '6px',
+                              padding: '6px 12px',
+                              fontSize: '13px',
+                              fontWeight: '500',
+                              color: '#0369a1',
+                              marginRight: 8,
+                              marginBottom: 8,
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            }}>
+                              <b>{prereq.subject?.subjectCode || prereq.subjectCode}</b> v{prereq.versionCode}
+                              {isEditing && (
+                                <Button
+                                  type="text"
+                                  size="small"
+                                  danger
+                                  style={{ marginLeft: 6, padding: 0, lineHeight: 1, color: '#ef4444' }}
+                                  icon={<DeleteOutlined />}
+                                  onClick={() => handleDeletePrerequisite(version.id, prereq.prerequisite_subject_id)}
+                                />
+                              )}
+                            </span>
+                          ))
+                        )}
+                      </div>
+                      {/* Add Prerequisite Modal */}
+                      <AddPrerequisiteSubjectVersionModal
+                        open={prereqModalOpen && editingVersionId === version.id}
+                        onClose={() => setPrereqModalOpen(false)}
+                        onAdd={async (prereqVersionId) => {
+                          await addPrerequisiteToSubjectVersionMutation.mutateAsync({
+                            subjectVersionId: version.id,
+                            prerequisiteId: prereqVersionId
+                          });
+                          await fetchPrerequisitesForVersion(version.id);
                         }}
+                        currentSubjectVersionId={version.id}
+                        existingPrerequisites={(prereqMap[version.id] || []).map((p: any) => p.prerequisite_subject_id)}
                       />
-                    </div>
+                    </Card>
 
                     {/* Assessment Table Section */}
                     <div style={{ marginBottom: 32 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          📊 Assessments
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('ASSESSMENT', version.id)}>
-                          Import Excel
-                        </ExcelImportButton>
+          
                       </div>
                       <AssessmentTable
                         assessments={assessmentMap[version.id] || []}
@@ -936,12 +924,7 @@ const SubjectVersionPage: React.FC = () => {
                     {/* Material Table Section */}
                     <div style={{ marginBottom: 32 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          📚 Learning Materials
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('MATERIAL', version.id)}>
-                          Import Excel
-                        </ExcelImportButton>
+
                       </div>
                       <MaterialTable
                         materials={materialMap[version.id] || []}
@@ -955,12 +938,7 @@ const SubjectVersionPage: React.FC = () => {
                     {/* Outcome Table Section */}
                     <div style={{ marginBottom: 32 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          🎯 Learning Outcomes
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('OUTCOME', version.id)}>
-                          Import Excel
-                        </ExcelImportButton>
+       
                       </div>
                       <OutcomeTable
                         outcomes={outcomeMap[version.id] || []}
@@ -974,12 +952,6 @@ const SubjectVersionPage: React.FC = () => {
                     {/* Session Table Section */}
                     <div style={{ marginBottom: 32 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          📅 Course Sessions
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('SESSION', version.id)}>
-                          Import Excel
-                        </ExcelImportButton>
                       </div>
                       <SessionTable
                         sessions={sessionMap[version.id] || []}
@@ -991,23 +963,6 @@ const SubjectVersionPage: React.FC = () => {
                         onAddOutcomeToSession={(sessionId, outcomeId) => handleAddOutcomeToSession(version.id, sessionId, outcomeId)}
                       />
                     </div>
-
-                    {/* Add Prerequisite Modal */}
-                    <Modal
-                      title="Add Prerequisite Subject"
-                      open={prereqModalOpen && editingVersionId === version.id}
-                      onOk={handlePrereqModalOk}
-                      onCancel={handlePrereqModalCancel}
-                      okButtonProps={{ disabled: !selectedPrereqSubject }}
-                    >
-                      <SubjectSelect
-                        value={selectedPrereqSubject ? [selectedPrereqSubject] : []}
-                        onChange={arr => Array.isArray(arr) && arr.length > 0 ? setSelectedPrereqSubject(arr[0]) : setSelectedPrereqSubject(null)}
-                        multiple={false}
-                        placeholder="Select subject..."
-                        style={{ width: '100%' }}
-                      />
-                    </Modal>
 
                     {/* Bulk Import Modal */}
                     <Modal
