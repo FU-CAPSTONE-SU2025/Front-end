@@ -92,10 +92,18 @@ export default defineConfig({
         drop_debugger: true,
         pure_funcs: ['console.log', 'console.info', 'console.debug'], // Remove console functions
         passes: 1, // Reduce compression passes to prevent over-optimization
+        unsafe: false, // Disable unsafe optimizations
+        unsafe_comps: false, // Disable unsafe comparisons
+        unsafe_Function: false, // Disable unsafe function optimizations
+        unsafe_math: false, // Disable unsafe math optimizations
+        unsafe_methods: false, // Disable unsafe method optimizations
+        unsafe_proto: false, // Disable unsafe prototype optimizations
+        unsafe_regexp: false, // Disable unsafe regexp optimizations
+        unsafe_undefined: false, // Disable unsafe undefined optimizations
       },
-      mangle: {
-        toplevel: false, // Disable top-level mangling to prevent variable name conflicts
-        reserved: ['React', 'ReactDOM', 'We'], // Reserve certain names to prevent mangling
+      mangle: false, // Completely disable mangling to prevent variable name conflicts
+      format: {
+        comments: false, // Remove comments
       },
     },
     // Enable tree shaking
@@ -131,6 +139,10 @@ export default defineConfig({
     ],
     // Force pre-bundling of dependencies
     force: true,
+    // Add esbuild options for better compatibility
+    esbuildOptions: {
+      target: 'es2020',
+    },
   },
   // Define environment variables
   define: {
@@ -139,5 +151,7 @@ export default defineConfig({
     // Optimize React
     __VUE_OPTIONS_API__: false,
     __VUE_PROD_DEVTOOLS__: false,
+    // Add global variables to prevent undefined access
+    global: 'globalThis',
   },
 })
