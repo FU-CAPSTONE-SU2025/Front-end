@@ -6,6 +6,7 @@ import DataTable from '../../components/common/dataTable';
 import { useLeaveScheduleList, useCreateLeaveSchedule, useUpdateLeaveSchedule, useDeleteLeaveSchedule } from '../../hooks/useCRUDLeaveSchedule';
 import { LeaveSchedule } from '../../interfaces/ILeaveSchedule';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import dayjs from 'dayjs';
 
 import styles from '../../css/advisor/workSchedule.module.css';
 import AddLeaveScheduleModal from '../../components/advisor/addLeaveScheduleModal';
@@ -20,6 +21,7 @@ const LeaveSchedulePage: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [isBulkAddModalVisible, setIsBulkAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedLeaveId, setSelectedLeaveId] = useState<number | null>(null);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
@@ -33,6 +35,10 @@ const LeaveSchedulePage: React.FC = () => {
   const handleAddSuccess = () => {
     setIsAddModalVisible(false);
     message.success('Leave schedule added successfully!');
+  };
+  const handleBulkAddSuccess = () => {
+    setIsBulkAddModalVisible(false);
+    message.success('Bulk leave schedules added successfully!');
   };
   const handleEditSuccess = () => {
     setIsEditModalVisible(false);
@@ -57,10 +63,7 @@ const LeaveSchedulePage: React.FC = () => {
       width: 180,
       align: 'center' as const,
       render: (value: string) => (
-        <Space>
-        
-          <Text>{new Date(value).toLocaleString()}</Text>
-        </Space>
+        <Text>{dayjs(value).format('YYYY-MM-DD HH:mm')}</Text>
       ),
     },
     {
@@ -70,10 +73,7 @@ const LeaveSchedulePage: React.FC = () => {
       width: 180,
       align: 'center' as const,
       render: (value: string) => (
-        <Space>
-        
-          <Text>{new Date(value).toLocaleString()}</Text>
-        </Space>
+        <Text>{dayjs(value).format('YYYY-MM-DD HH:mm')}</Text>
       ),
     },
     {
@@ -143,14 +143,17 @@ const LeaveSchedulePage: React.FC = () => {
               </Space>
             </Card>
             <Card size="small" className={styles.addButtonCard}>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setIsAddModalVisible(true)}
-                className={styles.addButton}
-              >
-                Add Leave
-              </Button>
+              <Space>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setIsAddModalVisible(true)}
+                  className={styles.addButton}
+                >
+                  Add Leave
+                </Button>
+          
+              </Space>
             </Card>
           </div>
         </Space>
@@ -185,6 +188,7 @@ const LeaveSchedulePage: React.FC = () => {
         onCancel={() => setIsAddModalVisible(false)}
         onSuccess={handleAddSuccess}
       />
+  
       <EditLeaveScheduleModal
         visible={isEditModalVisible}
         onCancel={() => { setIsEditModalVisible(false); setSelectedLeaveId(null); }}

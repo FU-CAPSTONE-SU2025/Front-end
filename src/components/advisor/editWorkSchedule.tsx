@@ -113,19 +113,15 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
       onCancel();
     } catch (error) {
       console.error('Error updating work schedule:', error);
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      message.error('An error occurred while updating the work schedule.');
     }
   };
 
   const handleCancel = () => {
-    // Don't reset form immediately, let the useEffect handle it when modal closes
     onCancel();
   };
 
   const isLoading = updateBookingAvailability.isPending || isLoadingSchedule;
-
-  // Show error if schedule failed to load
   useEffect(() => {
     if (visible && scheduleId && !isLoadingSchedule && !schedule) {
       message.error('Failed to load schedule details. Please try again.');
@@ -139,9 +135,8 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
 
   const formatTime = (time: string | undefined): string => {
     if (!time) return '--:--';
-    return time.substring(0, 5); // Remove seconds, keep HH:MM format
+    return time.substring(0, 5); 
   };
-
   return (
     <Modal
       title={
@@ -193,7 +188,6 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
           </div>
         </div>
       )}
-
       <Form
         form={form}
         layout="vertical"
@@ -263,7 +257,7 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
         </Row>
 
         <Form.Item>
-          <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+          <Space style={{ width: '100%', justifyContent: '' }}>
             <Button onClick={handleCancel}>
               Cancel
             </Button>

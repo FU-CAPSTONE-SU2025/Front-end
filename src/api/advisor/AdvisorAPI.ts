@@ -9,7 +9,7 @@ import {
   CreateBulkBookingAvailabilityRequest,
   UpdateBookingAvailabilityRequest
 } from "../../interfaces/IBookingAvailability";
-import { LeaveSchedule, PagedLeaveScheduleData, CreateLeaveScheduleRequest, UpdateLeaveScheduleRequest } from '../../interfaces/ILeaveSchedule';
+import { LeaveSchedule, PagedLeaveScheduleData, CreateLeaveScheduleRequest, UpdateLeaveScheduleRequest, CreateBulkLeaveScheduleRequest } from '../../interfaces/ILeaveSchedule';
 
 const userURL = baseUrl + "/User/advisors";
 
@@ -229,6 +229,21 @@ export const CreateLeaveSchedule = async (data: CreateLeaveScheduleRequest): Pro
   const props = {
     data: data,
     url: baseUrl + '/LeaveSche',
+    headers: GetHeader(),
+  };
+  const result = await axiosCreate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+export const CreateBulkLeaveSchedule = async (data: CreateBulkLeaveScheduleRequest): Promise<LeaveSchedule[]> => {
+  const props = {
+    data: data,
+    url: baseUrl + '/LeaveSche/bulk',
     headers: GetHeader(),
   };
   const result = await axiosCreate(props);

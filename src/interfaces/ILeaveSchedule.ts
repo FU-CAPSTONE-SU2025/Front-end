@@ -24,4 +24,10 @@ export interface UpdateLeaveScheduleRequest {
   startDateTime: string;
   endDateTime: string;
   note?: string;
-} 
+}
+
+export type CreateBulkLeaveScheduleRequest = {
+  startDateTime: string;
+  endDateTime: string;
+  note?: string;
+}[] 

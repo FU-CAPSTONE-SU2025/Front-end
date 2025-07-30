@@ -1,7 +1,8 @@
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   FetchLeaveScheduleList,
   CreateLeaveSchedule,
+  CreateBulkLeaveSchedule,
   UpdateLeaveSchedule,
   DeleteLeaveSchedule,
   GetLeaveScheduleById
@@ -10,7 +11,8 @@ import {
   LeaveSchedule,
   PagedLeaveScheduleData,
   CreateLeaveScheduleRequest,
-  UpdateLeaveScheduleRequest
+  UpdateLeaveScheduleRequest,
+  CreateBulkLeaveScheduleRequest
 } from '../interfaces/ILeaveSchedule';
 
 interface PaginationParams {
@@ -30,6 +32,16 @@ export function useCreateLeaveSchedule() {
   const queryClient = useQueryClient();
   return useMutation<LeaveSchedule | null, Error, CreateLeaveScheduleRequest>({
     mutationFn: CreateLeaveSchedule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leaveScheduleList'] });
+    },
+  });
+}
+
+export function useCreateBulkLeaveSchedule() {
+  const queryClient = useQueryClient();
+  return useMutation<LeaveSchedule[] | null, Error, CreateBulkLeaveScheduleRequest>({
+    mutationFn: CreateBulkLeaveSchedule,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leaveScheduleList'] });
     },
