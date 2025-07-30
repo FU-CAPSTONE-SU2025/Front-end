@@ -16,7 +16,7 @@ export const useSendAiMessage = () => {
     mutationFn: sendAiMessage,
     onSuccess: (data) => {
       if (data && data.message) {
-        debugLog('AI response:', data.message, 'Session ID:', data.chatSessionId);
+        debugLog('AI response:', { message: data.message, sessionId: data.chatSessionId });
       } else {
         debugLog('Failed to get AI response:', data);
       }

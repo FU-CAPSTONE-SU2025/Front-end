@@ -155,7 +155,7 @@ export function useSendChatMessage() {
   const queryClient = useQueryClient();
   return useMutation<ISendChatMessageResponse, Error, ISendChatMessageRequest>({
     mutationFn: async (request) => {
-      debugLog('Sending message to session', request.chatSessionId, ':', request.message);
+      debugLog('Sending message to session', { chatSessionId: request.chatSessionId, message: request.message });
       const response = await sendChatMessage(request);
       debugLog('Send message response:', response);
       return response;
@@ -177,7 +177,7 @@ export function useSendChatMessage() {
       });
     },
     onError: (error, variables) => {
-      debugLog('Failed to send message to session', variables.chatSessionId, ':', error);
+      debugLog('Failed to send message to session', { chatSessionId: variables.chatSessionId, error });
     }
   });
 }
@@ -202,7 +202,7 @@ export function useDeleteChatSession() {
       queryClient.removeQueries({ queryKey: ['chatMessagesSimple', variables.chatSessionId] });
     },
     onError: (error, variables) => {
-      debugLog('Failed to delete chat session', variables.chatSessionId, ':', error);
+      debugLog('Failed to delete chat session', { chatSessionId: variables.chatSessionId, error });
       // Log additional error details for debugging
       if (error.message) {
         debugLog('Error message:', error.message);
@@ -216,13 +216,13 @@ export function useRenameChatSession() {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, { chatSessionId: number, title: string }>({
     mutationFn: async ({ chatSessionId, title }) => {
-      debugLog('Renaming chat session', chatSessionId, 'to:', title);
+      debugLog('Renaming chat session', { chatSessionId, title });
       const response = await renameChatSession(chatSessionId, title);
       debugLog('Rename session response:', response);
       return response;
     },
     onSuccess: (_data, variables) => {
-      debugLog('Chat session renamed successfully:', variables.chatSessionId, 'to', variables.title);
+      debugLog('Chat session renamed successfully:', { chatSessionId: variables.chatSessionId, title: variables.title });
       // Optimistic update cho sessions
       queryClient.setQueryData(['chatSessions'], (oldData: IChatSession[] | undefined) => {
         if (!oldData) return oldData;
@@ -234,7 +234,7 @@ export function useRenameChatSession() {
       });
     },
     onError: (error, variables) => {
-      debugLog('Failed to rename chat session', variables.chatSessionId, ':', error);
+      debugLog('Failed to rename chat session', { chatSessionId: variables.chatSessionId, error });
     }
   });
 }

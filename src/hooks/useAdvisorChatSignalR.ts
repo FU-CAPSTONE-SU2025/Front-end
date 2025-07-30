@@ -232,7 +232,7 @@ export function useAdvisorChatSignalR() {
     setLoading(true);
     setError(null);
     try {
-      debugLog('[SignalR] Invoking SendMessage:', sessionId, message);
+      debugLog('[SignalR] Invoking SendMessage:', { sessionId, message });
       await conn.invoke('SendMessage', sessionId, message);
       debugLog('[SignalR] SendMessage invoked successfully');
     } catch (err: any) {
