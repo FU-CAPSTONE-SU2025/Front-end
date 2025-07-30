@@ -9,8 +9,7 @@ import {
   CreateBulkBookingAvailabilityRequest,
   UpdateBookingAvailabilityRequest
 } from "../../interfaces/IBookingAvailability";
-import { LeaveSchedule, PagedLeaveScheduleData, CreateLeaveScheduleRequest, UpdateLeaveScheduleRequest } from '../../interfaces/ILeaveSchedule';
-import { debugLog } from "../../utils/performanceOptimization";
+import { LeaveSchedule, PagedLeaveScheduleData, CreateLeaveScheduleRequest, UpdateLeaveScheduleRequest, CreateBulkLeaveScheduleRequest } from '../../interfaces/ILeaveSchedule';
 
 const userURL = baseUrl + "/User/advisors";
 
@@ -102,8 +101,10 @@ export const FetchBookingAvailability = async (
   };
   const result = await axiosRead(props);
   if (result.success) {
-    return result.data || [];
+    // Ensure we always return an array
+    return Array.isArray(result.data) ? result.data : [];
   } else {
+
     throwApiError(result);
     return null as never;
   }
@@ -190,16 +191,7 @@ export const sendMessageToAdvisor = async ({ message }: { message: string }): Pr
     url: baseUrl + "/AdvisorySession1to1/human",
     headers: GetHeader(),
   };
-  debugLog('[API] sendMessageToAdvisor - payload:', props.data);
-  const result = await axiosCreate(props);
-  if (result.success) {
-    debugLog('[API] sendMessageToAdvisor - response:', result.data);
-    return result.data;
-  } else {
-    debugLog('[API] sendMessageToAdvisor - error:', result.error);
-    throwApiError(result);
-    return null as never;
-  }
+
 };
 
 
@@ -215,7 +207,7 @@ export const FetchLeaveScheduleList = async (
   });
   const props = {
     data: null,
-    url:  baseUrl + '/LeaveSche/self' + params.toString(),
+    url:  baseUrl + '/LeaveSche/self?' + params.toString(),
     headers: GetHeader(),
   };
   const result = await axiosRead(props);
@@ -231,6 +223,21 @@ export const CreateLeaveSchedule = async (data: CreateLeaveScheduleRequest): Pro
   const props = {
     data: data,
     url: baseUrl + '/LeaveSche',
+    headers: GetHeader(),
+  };
+  const result = await axiosCreate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+export const CreateBulkLeaveSchedule = async (data: CreateBulkLeaveScheduleRequest): Promise<LeaveSchedule[]> => {
+  const props = {
+    data: data,
+    url: baseUrl + '/LeaveSche/bulk',
     headers: GetHeader(),
   };
   const result = await axiosCreate(props);

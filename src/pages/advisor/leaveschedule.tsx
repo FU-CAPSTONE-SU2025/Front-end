@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { Card, Typography, Space, Button, message, Tag } from 'antd';
-import { CalendarOutlined, PlusOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Card, Typography, Space, Button, message, Tag, Segmented } from 'antd';
+import { CalendarOutlined, PlusOutlined, ClockCircleOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import SearchBar from '../../components/common/searchBar';
 import DataTable from '../../components/common/dataTable';
 import { useLeaveScheduleList, useCreateLeaveSchedule, useUpdateLeaveSchedule, useDeleteLeaveSchedule } from '../../hooks/useCRUDLeaveSchedule';
 import { LeaveSchedule } from '../../interfaces/ILeaveSchedule';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import dayjs, { Dayjs } from 'dayjs';
 
 import styles from '../../css/advisor/workSchedule.module.css';
 import AddLeaveScheduleModal from '../../components/advisor/addLeaveScheduleModal';
 import EditLeaveScheduleModal from '../../components/advisor/editLeaveScheduleModal';
 import ViewLeaveScheduleModal from '../../components/advisor/viewLeaveScheduleModal';
+import HistoryCalendarView from '../../components/student/historyCalendarView';
+import AdvisorCalendar, { AdvisorCalendarEvent } from '../../components/advisor/advisorCalendar';
 
 
 const { Title, Text } = Typography;
@@ -20,19 +23,26 @@ const LeaveSchedulePage: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [isBulkAddModalVisible, setIsBulkAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedLeaveId, setSelectedLeaveId] = useState<number | null>(null);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [viewLeaveId, setViewLeaveId] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
 
   const { data, isLoading, error } = useLeaveScheduleList(currentPage, pageSize);
   const leaveList = data?.items || [];
   const totalCount = data?.totalCount || 0;
-
+  console.log(data)
   // Modal handlers
   const handleAddSuccess = () => {
     setIsAddModalVisible(false);
     message.success('Leave schedule added successfully!');
+  };
+  const handleBulkAddSuccess = () => {
+    setIsBulkAddModalVisible(false);
+    message.success('Bulk leave schedules added successfully!');
   };
   const handleEditSuccess = () => {
     setIsEditModalVisible(false);
@@ -57,10 +67,7 @@ const LeaveSchedulePage: React.FC = () => {
       width: 180,
       align: 'center' as const,
       render: (value: string) => (
-        <Space>
-        
-          <Text>{new Date(value).toLocaleString()}</Text>
-        </Space>
+        <Text>{dayjs(value).format('YYYY-MM-DD HH:mm')}</Text>
       ),
     },
     {
@@ -70,13 +77,9 @@ const LeaveSchedulePage: React.FC = () => {
       width: 180,
       align: 'center' as const,
       render: (value: string) => (
-        <Space>
-        
-          <Text>{new Date(value).toLocaleString()}</Text>
-        </Space>
+        <Text>{dayjs(value).format('YYYY-MM-DD HH:mm')}</Text>
       ),
     },
-  
     {
       title: 'Actions',
       key: 'actions',
@@ -110,7 +113,8 @@ const LeaveSchedulePage: React.FC = () => {
        
         item.id.toString().includes(searchQuery) ||
         item.startDateTime.includes(searchQuery) ||
-        item.endDateTime.includes(searchQuery)
+        item.endDateTime.includes(searchQuery) ||
+        (item.note && item.note.includes(searchQuery))
       )
     : leaveList;
 
@@ -132,48 +136,48 @@ const LeaveSchedulePage: React.FC = () => {
               </Space>
             </Card>
             <Card size="small" className={styles.addButtonCard}>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setIsAddModalVisible(true)}
-                className={styles.addButton}
-              >
-                Add Leave
-              </Button>
+              <Space>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setIsAddModalVisible(true)}
+                  className={styles.addButton}
+                >
+                  Add Leave
+                </Button>
+          
+              </Space>
             </Card>
           </div>
         </Space>
       </Card>
-      <Card className={styles.tableCard}>
-        <div className={styles.searchContainer}>
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search by , ID, or time..."
-            className={styles.searchBar}
-          />
-        </div>
-        <DataTable
-          columns={columns}
-          data={filteredList}
-          rowSelection={null}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: totalCount,
-            totalPages: Math.ceil(totalCount / pageSize),
-          }}
-          onPageChange={(page, size) => { setCurrentPage(page); setPageSize(size); }}
-          loading={isLoading}
-          searchQuery={searchQuery}
-          searchFields={['note', 'id', 'startDateTime', 'endDateTime']}
-        />
-      </Card>
+      <AdvisorCalendar
+        events={leaveList.map(l => ({
+          id: l.id,
+          startDateTime: l.startDateTime,
+          endDateTime: l.endDateTime,
+          type: 'leave',
+          note: l.note || '',
+        }))}
+        viewMode={viewMode}
+        selectedDate={selectedDate}
+        onViewModeChange={setViewMode}
+        onDateChange={setSelectedDate}
+        onSlotClick={(_slot, date) => {
+          setIsAddModalVisible(true);
+          setSelectedDate(date);
+        }}
+        onEventClick={event => {
+          setSelectedLeaveId(Number(event.id));
+          setIsEditModalVisible(true);
+        }}
+      />
       <AddLeaveScheduleModal
         visible={isAddModalVisible}
         onCancel={() => setIsAddModalVisible(false)}
         onSuccess={handleAddSuccess}
       />
+  
       <EditLeaveScheduleModal
         visible={isEditModalVisible}
         onCancel={() => { setIsEditModalVisible(false); setSelectedLeaveId(null); }}

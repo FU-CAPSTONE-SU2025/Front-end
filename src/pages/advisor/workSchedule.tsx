@@ -13,6 +13,8 @@ import {
 import { BookingAvailability } from '../../interfaces/IBookingAvailability';
 import styles from '../../css/advisor/workSchedule.module.css';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import AdvisorCalendar, { AdvisorCalendarEvent } from '../../components/advisor/advisorCalendar';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
@@ -21,10 +23,13 @@ const WorkSchedule: React.FC = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [selectedDate, setSelectedDate] = useState(dayjs());
   
   const {
     getAllBookingAvailability,
     bookingAvailabilityList,
+    allSortedData,
     pagination,
     isLoading,
     handlePageChange
@@ -37,6 +42,15 @@ const WorkSchedule: React.FC = () => {
     getAllBookingAvailability();
   }, [getAllBookingAvailability]);
 
+  // Use full data for search, paginated data for normal display
+  const dataToUse = searchQuery && searchQuery.trim() !== '' ? allSortedData : bookingAvailabilityList;
+  
+  // Ensure dataToUse is always an array
+  const safeDataToUse = Array.isArray(dataToUse) ? dataToUse : [];
+
+  // Debug logging to check sorting
+  console.log('Data to use:', safeDataToUse);
+  console.log('Search query:', searchQuery);
 
 
   const handlePageChangeWrapper = (page: number, size: number) => {
@@ -97,7 +111,8 @@ const WorkSchedule: React.FC = () => {
       width: 80,
       align: 'center' as const,
       render: (value: number, record: BookingAvailability, index: number) => (
-        <Text strong>{index + 1}</Text>)
+        <Text strong>{index + 1}</Text>),
+      sorter: false
     },
     {
       title: 'Day of Week',
@@ -109,7 +124,13 @@ const WorkSchedule: React.FC = () => {
         <Tag color={getDayColor(value)} icon={<CalendarOutlined />}>
           {getDayName(value)}
         </Tag>
-      )
+      ),
+      sorter: (a: BookingAvailability, b: BookingAvailability) => {
+        const dayA = a.dayInWeek === 0 ? 7 : a.dayInWeek;
+        const dayB = b.dayInWeek === 0 ? 7 : b.dayInWeek;
+        return dayA - dayB;
+      },
+      defaultSortOrder: 'ascend' as const
     },
     {
       title: 'Start Time',
@@ -122,7 +143,12 @@ const WorkSchedule: React.FC = () => {
           <ClockCircleOutlined />
           <Text>{formatTime(value)}</Text>
         </Space>
-      )
+      ),
+      sorter: (a: BookingAvailability, b: BookingAvailability) => {
+        const timeAValue = parseInt(a.startTime.replace(':', ''));
+        const timeBValue = parseInt(b.startTime.replace(':', ''));
+        return timeAValue - timeBValue;
+      }
     },
     {
       title: 'End Time',
@@ -135,7 +161,8 @@ const WorkSchedule: React.FC = () => {
           <ClockCircleOutlined />
           <Text>{formatTime(value)}</Text>
         </Space>
-      )
+      ),
+      sorter: false
     },
     {
       title: 'Duration',
@@ -154,7 +181,8 @@ const WorkSchedule: React.FC = () => {
             {diffHours}h {diffMinutes}m
           </Tag>
         );
-      }
+      },
+      sorter: false
     },
     {
       title: 'Actions',
@@ -178,11 +206,38 @@ const WorkSchedule: React.FC = () => {
             Delete
           </Button>
         </Space>
-      )
+      ),
+      sorter: false
     }
   ];
 
   const searchFields = ['id', 'dayInWeek', 'startTime', 'endTime', 'staffProfileId'];
+
+  // Custom search function to support day name search
+  const customSearchFilter = (data: BookingAvailability[], searchQuery: string) => {
+    if (!searchQuery || searchQuery.trim() === '') {
+      return data;
+    }
+
+    const query = searchQuery.toLowerCase();
+    return data.filter(item => {
+      // Search by day name
+      const dayName = getDayName(item.dayInWeek).toLowerCase();
+      if (dayName.includes(query)) {
+        return true;
+      }
+
+      // Search by other fields
+      return searchFields.some(field => {
+        const value = item[field as keyof BookingAvailability];
+        if (value === null || value === undefined) return false;
+        return String(value).toLowerCase().includes(query);
+      });
+    });
+  };
+
+  // Apply custom search filter
+  const filteredData = customSearchFilter(safeDataToUse, searchQuery);
 
   return (
     <div className={styles.workScheduleContainer}>
@@ -200,14 +255,14 @@ const WorkSchedule: React.FC = () => {
           <div className={styles.statsRow}>
             <Card size="small" className={styles.statCard}>
               <Space direction="vertical" align="center">
-                <Text strong>{bookingAvailabilityList.length}</Text>
+                <Text strong>{safeDataToUse.length}</Text>
                 <Text type="secondary">Total Schedules</Text>
               </Space>
             </Card>
             <Card size="small" className={styles.statCard}>
               <Space direction="vertical" align="center">
                 <Text strong>
-                  {new Set(bookingAvailabilityList.map(item => item.dayInWeek)).size}
+                  {new Set(safeDataToUse.map(item => item.dayInWeek)).size}
                 </Text>
                 <Text type="secondary">Working Days</Text>
               </Space>
@@ -215,7 +270,7 @@ const WorkSchedule: React.FC = () => {
             <Card size="small" className={styles.statCard}>
               <Space direction="vertical" align="center">
                 <Text strong>
-                  {bookingAvailabilityList.reduce((total, item) => {
+                  {safeDataToUse.reduce((total, item) => {
                     const start = new Date(`2000-01-01T${item.startTime}`);
                     const end = new Date(`2000-01-01T${item.endTime}`);
                     return total + (end.getTime() - start.getTime()) / (1000 * 60 * 60);
@@ -237,38 +292,37 @@ const WorkSchedule: React.FC = () => {
           </div>
         </Space>
       </Card>
-
-      <Card className={styles.tableCard}>
-        <div className={styles.searchContainer}>
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search schedules by ID, day, time, or staff ID..."
-            className={styles.searchBar}
-          />
-        </div>
-        <DataTable
-          columns={columns}
-          data={bookingAvailabilityList}
-          rowSelection={null}
-          pagination={pagination}
-          onPageChange={handlePageChangeWrapper}
-          loading={isLoading}
-          searchQuery={searchQuery}
-          searchFields={searchFields}
-          onRow={(record) => ({
-            onClick: () => message.info(`Clicked on schedule #${record.id}`),
-            style: { cursor: 'pointer' }
-          })}
-        />
-      </Card>
-
+      <AdvisorCalendar
+        events={safeDataToUse.map(item => {
+          // Chuyển đổi dữ liệu sang event dạng work
+          const today = dayjs().startOf('week');
+          const day = today.add(item.dayInWeek, 'day');
+          return {
+            id: item.id,
+            startDateTime: day.format('YYYY-MM-DD') + 'T' + item.startTime,
+            endDateTime: day.format('YYYY-MM-DD') + 'T' + item.endTime,
+            type: 'work',
+            note: '',
+          };
+        })}
+        viewMode={viewMode}
+        selectedDate={selectedDate}
+        onViewModeChange={setViewMode}
+        onDateChange={setSelectedDate}
+        onSlotClick={(_slot, date) => {
+          setIsAddModalVisible(true);
+          setSelectedDate(date);
+        }}
+        onEventClick={event => {
+          setSelectedScheduleId(Number(event.id));
+          setIsEditModalVisible(true);
+        }}
+      />
       <AddWorkSchedule
         visible={isAddModalVisible}
         onCancel={() => setIsAddModalVisible(false)}
         onSuccess={handleAddSuccess}
       />
-
       <EditWorkSchedule
         visible={isEditModalVisible}
         onCancel={() => {

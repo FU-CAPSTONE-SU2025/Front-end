@@ -72,7 +72,32 @@ export function useBookingAvailability() {
     },
   });
 
-  const allBookingAvailability = getBookingAvailabilityMutation.data || [];
+  // Ensure allBookingAvailability is always an array
+  const allBookingAvailability = Array.isArray(getBookingAvailabilityMutation.data) 
+    ? getBookingAvailabilityMutation.data 
+    : [];
+  
+  // Sort data by day of week (Monday = 1, Sunday = 0) and time
+  const sortedAllBookingAvailability = [...allBookingAvailability].sort((a, b) => {
+    // Convert Sunday from 0 to 7 for proper sorting (Monday=1, Tuesday=2, ..., Sunday=7)
+    const dayA = a.dayInWeek === 0 ? 7 : a.dayInWeek;
+    const dayB = b.dayInWeek === 0 ? 7 : b.dayInWeek;
+    
+    // First sort by day of week (Monday first)
+    if (dayA !== dayB) {
+      return dayA - dayB;
+    }
+    
+    // If same day, sort by start time (earliest first)
+    const timeA = a.startTime;
+    const timeB = b.startTime;
+    
+    // Convert time strings to comparable values
+    const timeAValue = parseInt(timeA.replace(':', ''));
+    const timeBValue = parseInt(timeB.replace(':', ''));
+    
+    return timeAValue - timeBValue;
+  });
   
   // Client-side pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -80,13 +105,13 @@ export function useBookingAvailability() {
   
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const bookingAvailabilityList = allBookingAvailability.slice(startIndex, endIndex);
+  const bookingAvailabilityList = sortedAllBookingAvailability.slice(startIndex, endIndex);
   
   const pagination = {
     current: currentPage,
     pageSize: pageSize,
-    total: allBookingAvailability.length,
-    totalPages: Math.ceil(allBookingAvailability.length / pageSize),
+    total: sortedAllBookingAvailability.length,
+    totalPages: Math.ceil(sortedAllBookingAvailability.length / pageSize),
   };
 
   const handlePageChange = (page: number, size: number) => {
@@ -98,6 +123,7 @@ export function useBookingAvailability() {
     ...getBookingAvailabilityMutation,
     getAllBookingAvailability: getBookingAvailabilityMutation.mutate,
     bookingAvailabilityList,
+    allSortedData: sortedAllBookingAvailability, // Add full sorted data
     pagination,
     isLoading: getBookingAvailabilityMutation.isPending,
     handlePageChange
