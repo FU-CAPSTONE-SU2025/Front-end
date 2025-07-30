@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Button, Tabs, Typography, message, Table, Card, Tag, Space, Popconfirm, Tooltip } from 'antd';
-import { PlusOutlined, ArrowLeftOutlined, EditOutlined, SaveOutlined, FileExcelOutlined, CheckOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Tabs, message, Table } from 'antd';
+import {  ArrowLeftOutlined,CheckOutlined} from '@ant-design/icons';
 
 import AddVersionModal from '../../components/staff/AddVersionModal';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
@@ -15,12 +15,10 @@ import SubjectSelect from '../../components/common/SubjectSelect';
 import { Modal } from 'antd';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { SubjectVersion, Syllabus, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, SubjectPrerequisite, CreateSubjectVersion, CreateSyllabus } from '../../interfaces/ISchoolProgram';
+import { SubjectVersion, Syllabus, CreateSubjectVersion } from '../../interfaces/ISchoolProgram';
 import { useCRUDSubject, useCRUDSubjectVersion, useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
 import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../data/mockData';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
-
-const noopAsync = async () => {};
 
 // Function to create default version for a subject (moved outside component)
 const createDefaultVersion = async (
@@ -422,12 +420,13 @@ const ManagerSubjectVersionPage: React.FC = () => {
   const handlePrereqModalOk = async () => {
     if (selectedPrereqSubject && editingVersionId) {
       try {
+        // Use the real API to add prerequisite
         await addPrerequisiteToSubjectVersionMutation.mutateAsync({
           subjectVersionId: editingVersionId,
           prerequisiteId: selectedPrereqSubject.id
         });
         
-        // Refresh prerequisites for this version
+        // Refetch prerequisites for this version to ensure UI reflects server state
         await fetchPrerequisitesForVersion(editingVersionId);
         
         message.success('Prerequisite added successfully!');
@@ -445,42 +444,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
     setPrereqModalOpen(false);
     setSelectedPrereqSubject(null);
     setEditingVersionId(null);
-  };
-
-  // Handler to delete a prerequisite
-  const handleDeletePrerequisite = async (versionId: number, prerequisite_subject_id: number) => {
-    try {
-      await deletePrerequisiteFromSubjectVersionMutation.mutateAsync({
-        subjectVersionId: versionId,
-        prerequisiteId: prerequisite_subject_id
-      });
-      
-      // Refresh prerequisites for this version
-      await fetchPrerequisitesForVersion(versionId);
-      
-      message.success('Prerequisite removed successfully!');
-    } catch (error) {
-      console.error('Failed to delete prerequisite:', error);
-      message.error('Failed to remove prerequisite');
-    }
-  };
-
-  // Handler to copy prerequisites between versions
-  const handleCopyPrerequisites = async (sourceVersionId: number, targetVersionId: number) => {
-    try {
-      await copyPrerequisitesBetweenVersionsMutation.mutateAsync({
-        sourceVersionId,
-        targetVersionId
-      });
-      
-      // Refresh prerequisites for the target version
-      await fetchPrerequisitesForVersion(targetVersionId);
-      
-      message.success('Prerequisites copied successfully!');
-    } catch (error) {
-      console.error('Failed to copy prerequisites:', error);
-      message.error('Failed to copy prerequisites');
-    }
   };
 
   // Handlers for AssessmentTable
@@ -572,7 +535,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
   };
 
   const handleAddOutcomeToSession = async (versionId: number, sessionId: number, outcomeId: number): Promise<void> => {
-    // For demo, no-op or add to session's outcomes array if present
+    alert("Feature disabled for Manager")
   };
 
   // Bulk import handlers

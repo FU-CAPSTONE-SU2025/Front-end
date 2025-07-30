@@ -408,7 +408,7 @@ const SubjectVersionPage: React.FC = () => {
           prerequisiteId: selectedPrereqSubject.id
         });
         
-        // Refresh prerequisites for this version
+        // Refetch prerequisites for this version to ensure UI reflects server state
         await fetchPrerequisitesForVersion(editingVersionId);
         
         message.success('Prerequisite added successfully!');
@@ -417,12 +417,6 @@ const SubjectVersionPage: React.FC = () => {
         message.error('Failed to add prerequisite');
       }
     }
-    setPrereqModalOpen(false);
-    setSelectedPrereqSubject(null);
-    setEditingVersionId(null);
-  };
-
-  const handlePrereqModalCancel = () => {
     setPrereqModalOpen(false);
     setSelectedPrereqSubject(null);
     setEditingVersionId(null);
@@ -447,7 +441,7 @@ const SubjectVersionPage: React.FC = () => {
         prerequisiteId: prerequisiteSubjectVersionId
       });
       
-      // Refresh prerequisites for this version
+      // Refetch prerequisites for this version to ensure UI reflects server state
       await fetchPrerequisitesForVersion(versionId);
       
       message.success('Prerequisite removed successfully!');
@@ -456,25 +450,6 @@ const SubjectVersionPage: React.FC = () => {
       message.error('Failed to remove prerequisite');
     }
   };
-
-  // Handler to copy prerequisites between versions
-  const handleCopyPrerequisites = async (sourceVersionId: number, targetVersionId: number) => {
-    try {
-      await copyPrerequisitesBetweenVersionsMutation.mutateAsync({
-        sourceVersionId,
-        targetVersionId
-      });
-      
-      // Refresh prerequisites for the target version
-      await fetchPrerequisitesForVersion(targetVersionId);
-      
-      message.success('Prerequisites copied successfully!');
-    } catch (error) {
-      console.error('Failed to copy prerequisites:', error);
-      message.error('Failed to copy prerequisites');
-    }
-  };
-
   // Handlers for AssessmentTable
   const handleAddAssessment = async (versionId: number, assessment: any): Promise<void> => {
     setAssessmentMap(prev => ({ 
@@ -598,6 +573,24 @@ const SubjectVersionPage: React.FC = () => {
       await fetchPrerequisitesForVersion(versionId);
     }
   }, [syllabusMap, prereqMap, prereqLoading, fetchOrCreateSyllabus, fetchPrerequisitesForVersion, subject]);
+
+  // Handler to copy prerequisites between versions
+  const handleCopyPrerequisites = async (sourceVersionId: number, targetVersionId: number) => {
+    try {
+      await copyPrerequisitesBetweenVersionsMutation.mutateAsync({
+        sourceVersionId,
+        targetVersionId
+      });
+      
+      // Refetch prerequisites for the target version to ensure UI reflects server state
+      await fetchPrerequisitesForVersion(targetVersionId);
+      
+      message.success('Prerequisites copied successfully!');
+    } catch (error) {
+      console.error('Failed to copy prerequisites:', error);
+      message.error('Failed to copy prerequisites');
+    }
+  };
 
   if (loading) {
     return (
