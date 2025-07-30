@@ -35,6 +35,7 @@ export interface StudentDataListResponse {
     enrolledAt:Date
     doGraduate: boolean
     careerGoal: string
+    numberOfBan:number
 }
 
 export interface StudentDataUpdateRequest {

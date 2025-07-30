@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, Input, Select, Modal, message } from 'antd';
+import { ConfigProvider, Input, Select, Modal, message, Button } from 'antd';
+import { EyeOutlined, CalendarOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
 import BulkDataImport from '../../components/common/bulkDataImport';
@@ -13,9 +14,13 @@ import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { BulkRegisterAdvisor } from '../../api/Account/UserAPI';
 import * as XLSX from 'xlsx';
 import { GetAllMeetingRecordPaged } from '../../api/admin/auditlogAPI';
+import { GetPagedLeaveSchedulesOneStaff } from '../../api/student/StudentAPI';
+import { getMeetingDetail } from '../../api/student/StudentAPI';
 import { AdminViewBooking } from '../../interfaces/IBookingAvailability';
 import { showForExport, hideLoading } from '../../hooks/useLoading';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import MeetingDetailModal from '../../components/admin/meetingDetailModal';
+import LeaveScheduleModal from '../../components/admin/leaveScheduleModal';
 
 
 const { Option } = Select;
@@ -39,6 +44,16 @@ const AdvisorList: React.FC = () => {
   const [meetingTotal, setMeetingTotal] = useState<number>(0);
   const [meetingLoading, setMeetingLoading] = useState<boolean>(false);
   const [downloadLoading, setDownloadLoading] = useState<boolean>(false);
+  
+  // Modal state
+  const [selectedMeeting, setSelectedMeeting] = useState<AdminViewBooking | null>(null);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [detailLoading, setDetailLoading] = useState<boolean>(false);
+  
+  // Leave schedule modal state
+  const [leaveScheduleModalVisible, setLeaveScheduleModalVisible] = useState<boolean>(false);
+  const [selectedStaffProfileId, setSelectedStaffProfileId] = useState<number | null>(null);
+  const [selectedStaffName, setSelectedStaffName] = useState<string>('');
 
   const { categorizedData, refetch } = useActiveUserData();
   const { getAllAdvisor, advisorList, pagination, isLoading } = useCRUDAdvisor();
@@ -72,6 +87,35 @@ const AdvisorList: React.FC = () => {
   useEffect(() => {
     fetchMeetingRecords(meetingPage, meetingPageSize);
   }, [meetingPage, meetingPageSize]);
+
+  // Handle view detail click
+  const handleViewDetail = async (record: AdminViewBooking) => {
+    setDetailLoading(true);
+    setModalVisible(true);
+    try {
+      const meetingDetail = await getMeetingDetail(record.id);
+      setSelectedMeeting(meetingDetail);
+    } catch (err) {
+      message.error('Failed to fetch meeting details');
+      setModalVisible(false);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  // Handle meeting deletion
+  const handleMeetingDelete = () => {
+    fetchMeetingRecords(meetingPage, meetingPageSize);
+  };
+
+  // Handle view leave schedule click
+  const handleViewLeaveSchedule = (record: AdvisorBase) => {
+    // Get the staff profile ID from the record
+    const staffProfileId = record.staffDataDetailResponse ? record.id : null;
+    setSelectedStaffProfileId(staffProfileId);
+    setSelectedStaffName(`${record.firstName} ${record.lastName}`);
+    setLeaveScheduleModalVisible(true);
+  };
 
   const loadAdvisorData = () => {
     getAllAdvisor({
@@ -230,6 +274,22 @@ const AdvisorList: React.FC = () => {
     { title: 'Advisor Email', dataIndex: 'staffEmail', key: 'staffEmail', width: 200 },
     { title: 'Student', key: 'student', width: 180, render: (_: any, rec: AdminViewBooking) => `${rec.studentFirstName} ${rec.studentLastName}` },
     { title: 'Student Email', dataIndex: 'studentEmail', key: 'studentEmail', width: 200 },
+    {
+      title: 'View Detail',
+      key: 'viewDetail',
+      width: 100,
+      render: (_: any, record: AdminViewBooking) => (
+        <Button
+          type="primary"
+          icon={<EyeOutlined />}
+          size="small"
+          onClick={() => handleViewDetail(record)}
+        >
+          View
+        </Button>
+      ),
+    },
+
   ];
 
   // Download meeting records as Excel
@@ -292,6 +352,50 @@ const AdvisorList: React.FC = () => {
         {record.status === 0 ? 'Active' : 'Inactive'}
       </span>
     ) },
+    {
+      title: 'View Leave Schedule',
+      key: 'viewLeaveSchedule',
+      width: 150,
+      render: (_: any, record: AdvisorBase) => (
+        <Button
+          type="default"
+          icon={<CalendarOutlined />}
+          size="small"
+          style={{
+            backgroundColor: '#ffffff',
+            borderColor: '#d9d9d9',
+            color: '#1890ff',
+            fontWeight: '500',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderRadius: '6px',
+            padding: '4px 12px',
+            height: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            transition: 'all 0.2s ease',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#1890ff';
+            e.currentTarget.style.borderColor = '#1890ff';
+            e.currentTarget.style.color = '#ffffff';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#ffffff';
+            e.currentTarget.style.borderColor = '#d9d9d9';
+            e.currentTarget.style.color = '#1890ff';
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleViewLeaveSchedule(record);
+          }}
+        >
+          View Leave
+        </Button>
+      ),
+    },
   ];
 
   // Row selection for delete mode
@@ -527,6 +631,23 @@ const AdvisorList: React.FC = () => {
             uploadMessage={uploadMessage}
           />
         )}
+        
+        {/* Meeting Detail Modal */}
+        <MeetingDetailModal
+          visible={modalVisible}
+          meeting={selectedMeeting}
+          onClose={() => setModalVisible(false)}
+          onDelete={handleMeetingDelete}
+          loading={detailLoading}
+        />
+        
+        {/* Leave Schedule Modal */}
+        <LeaveScheduleModal
+          visible={leaveScheduleModalVisible}
+          staffProfileId={selectedStaffProfileId}
+          staffName={selectedStaffName}
+          onClose={() => setLeaveScheduleModalVisible(false)}
+        />
       </div>
     </ConfigProvider>
   );

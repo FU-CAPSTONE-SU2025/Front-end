@@ -1,7 +1,7 @@
 import { AuditLog } from "../../interfaces/IAuditLog";
 import { AdminViewBooking } from "../../interfaces/IBookingAvailability";
 import { PagedData } from "../../interfaces/ISchoolProgram";
-import { axiosRead, extractErrorMessage } from "../AxiosCRUD";
+import { axiosDelete, axiosRead, extractErrorMessage, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 
 const auditlogURL = baseUrl + "/AuditLog";
@@ -18,7 +18,8 @@ export const GetAllAuditLog = async (): Promise<AuditLog[]> => {
     console.log(result.data)
     return result.data;
   } else {
-    throw new Error(extractErrorMessage(result.error) || 'Failed to fetch audit log');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -32,7 +33,8 @@ export const GetAuditLogPaged= async (pageNumber: number = 1, pageSize: number =
   if (result.success) {
     return result.data;
   } else {
-    throw new Error(extractErrorMessage(result.error) || 'Failed to fetch audit log');
+    throwApiError(result);
+    return null as never;
   }
 };
   
@@ -46,6 +48,25 @@ export const GetAllMeetingRecordPaged = async (pageNumber: number = 1, pageSize:
   if (result.success) {
     return result.data;
   } else {
-    throw new Error(extractErrorMessage(result.error) || 'Failed to fetch syllabus by subject');
+    throwApiError(result);
+    return null as never;
+  }
+}
+
+
+
+// Admin only
+export const DeleteMeetingById = async (id:number): Promise<any> => {
+  const props = {
+    data: null,
+    url: meetingURL + `/${id}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosDelete(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
   }
 }
