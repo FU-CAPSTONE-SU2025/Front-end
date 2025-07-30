@@ -82,8 +82,8 @@ export default defineConfig({
     },
     // Optimize chunk size warnings
     chunkSizeWarningLimit: 800, // Reduce from 1000kb to 800kb
-    // Enable source maps for debugging (disable in production)
-    sourcemap: false,
+    // Enable source maps for debugging (enable in production for better error tracking)
+    sourcemap: true,
     // Optimize minification
     minify: 'terser',
     terserOptions: {
@@ -91,10 +91,11 @@ export default defineConfig({
         drop_console: true, // Remove console.log in production
         drop_debugger: true,
         pure_funcs: ['console.log', 'console.info', 'console.debug'], // Remove console functions
-        passes: 2, // Multiple compression passes
+        passes: 1, // Reduce compression passes to prevent over-optimization
       },
       mangle: {
-        toplevel: true, // Mangle top-level names
+        toplevel: false, // Disable top-level mangling to prevent variable name conflicts
+        reserved: ['React', 'ReactDOM', 'We'], // Reserve certain names to prevent mangling
       },
     },
     // Enable tree shaking
