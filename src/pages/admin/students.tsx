@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, Input, Select, Modal, message } from 'antd';
+import { ConfigProvider, Input, Select, Modal, message, Button, Popconfirm } from 'antd';
 import styles from '../../css/admin/students.module.css';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import AccountCounter from '../../components/admin/accountCounter';
@@ -11,7 +11,7 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDStudent from '../../hooks/useCRUDStudent';
 import { StudentBase } from '../../interfaces/IStudent';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { BulkRegisterStudent, DisableUser } from '../../api/Account/UserAPI';
+import { BulkRegisterStudent, DisableUser, ResetBanNumberForStudent } from '../../api/Account/UserAPI';
 import { parseExcelDate } from '../../utils/dateUtils';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
@@ -219,6 +219,19 @@ const StudentList: React.FC = () => {
     setSelectedStudents([]);
   };
 
+  // Handle reset ban number
+  const handleResetBanNumber = async (studentId: number) => {
+    try {
+      await ResetBanNumberForStudent(studentId);
+      message.success('Ban number reset successfully');
+      loadStudentData(); // Refresh the data
+    } catch (err) {
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      message.error(errorMessage);
+      console.error('Reset ban number error:', err);
+    }
+  };
+
   // Table columns
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 100 },
@@ -262,6 +275,79 @@ const StudentList: React.FC = () => {
     { title: 'Graduation Status', key: 'doGraduate', width: 120,
       render: (_: any, record: StudentBase) =>
         record.studentDataListResponse?.doGraduate ? 'Graduated' : 'Enrolled' },
+    { title: 'Number of Ban', key: 'numberOfBan', width: 120,
+      render: (_: any, record: StudentBase) => {
+        const banCount = record.studentDataListResponse?.numberOfBan || 0;
+        return (
+          <span
+            style={{
+              backgroundColor: banCount > 0 ? '#EF4444' : '#10B981',
+              color: 'white',
+              padding: '4px 8px',
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              fontWeight: '600',
+              display: 'inline-block',
+              minWidth: '30px',
+              textAlign: 'center'
+            }}
+          >
+            {banCount}
+          </span>
+        );
+      }},
+    { title: 'Action', key: 'action', width: 150,
+      render: (_: any, record: StudentBase) => (
+        <Popconfirm
+          title="Reset Ban Number"
+          description="Are you sure you want to reset the ban number for this student?"
+          onConfirm={() => handleResetBanNumber(record.id)}
+          okText="Yes"
+          cancelText="No"
+          okType="danger"
+          overlayStyle={{
+            backgroundColor: '#ffffff',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            border: '1px solid #f0f0f0',
+          }}
+          overlayClassName="reset-ban-popconfirm"
+        >
+          <Button
+            type="default"
+            size="small"
+            style={{
+              backgroundColor: '#ffffff',
+              borderColor: '#f97316',
+              color: '#f97316',
+              fontWeight: '500',
+              borderRadius: '6px',
+              height: '28px',
+              padding: '2px 8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f97316';
+              e.currentTarget.style.borderColor = '#f97316';
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ffffff';
+              e.currentTarget.style.borderColor = '#f97316';
+              e.currentTarget.style.color = '#f97316';
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            Reset Ban
+          </Button>
+        </Popconfirm>
+      ),
+    },
   ];
 
   // Row selection for delete mode

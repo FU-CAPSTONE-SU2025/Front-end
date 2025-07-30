@@ -8,15 +8,6 @@ import { mockUserActivity } from '../../../data/mockData';
 import { useAuditLog } from '../../hooks/useAuditLog';
 import { AuditLog } from '../../interfaces/IAuditLog';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
-
-interface ActivityData {
-  date: string;
-  student: number;
-  advisor: number;
-  manager: number;
-  staff: number;
-}
-
 const LogsPage: React.FC = () => {
   const [dateRange, setDateRange] = useState<[Date, Date] | null>(null);
   const { 
@@ -29,6 +20,8 @@ const LogsPage: React.FC = () => {
     fetchAuditLogs, 
     downloadAllAuditLogs 
   } = useAuditLog();
+
+
 
   // Custom date filter function
   const isBetweenDates = (dateStr: string, start: Date, end: Date) => {
@@ -46,6 +39,8 @@ const LogsPage: React.FC = () => {
     const [start, end] = dateRange;
     return mockUserActivity.filter(item => isBetweenDates(item.date, start, end));
   }, [dateRange]);
+
+
 
   // Table columns for audit logs
   const columns = [
@@ -80,6 +75,8 @@ const LogsPage: React.FC = () => {
     },
   ];
 
+
+
   // Export to XLSX
   const exportToXlsx = async () => {
     try {
@@ -105,6 +102,8 @@ const LogsPage: React.FC = () => {
   const handleTableChange = (pagination: any) => {
     fetchAuditLogs(pagination.current, pagination.pageSize);
   };
+
+
 
   // Animation variants
   const cardVariants = {
@@ -182,6 +181,7 @@ const LogsPage: React.FC = () => {
               scroll={{ x: 'max-content' }}
             />
           </div>
+          
         </motion.div>
       </div>
     </ConfigProvider>
