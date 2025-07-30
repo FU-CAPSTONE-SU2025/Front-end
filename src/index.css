@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "./css/modalFixes.css";
+
 :root {
 }
 body {

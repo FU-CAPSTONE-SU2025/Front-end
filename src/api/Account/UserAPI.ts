@@ -325,10 +325,10 @@ export const BulkRegisterAdmin = async (data: BulkAccountPropsCreate[]):Promise<
     }
 }
 
-export const ResetNumberOfBan = async (userId:number):Promise<any> => {
+export const ResetBanNumberForStudent = async (studentProfileId:number):Promise<any> => {
     const props = {
         data: null,
-        url: userURL+`/reset-noOfBan/`+userId,
+        url: userURL+`/reset-noOfBan/`+studentProfileId,
         headers: GetHeader()
     }
     const result = await axiosUpdate(props)
@@ -342,5 +342,3 @@ export const ResetNumberOfBan = async (userId:number):Promise<any> => {
         return null
     }
 }
-
-
