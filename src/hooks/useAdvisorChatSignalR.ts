@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useAuths } from './useAuths';
+import { debugLog } from '../utils/performanceOptimization';
 
 export interface ChatMessage {
   id: number;
@@ -54,10 +55,10 @@ export function useAdvisorChatSignalR() {
     connectionRef.current = newConnection;
     setConnection(newConnection);
     newConnection.start()
-      .then(() => console.log('[SignalR] Connected to advisoryChat1to1Hub'))
+      .then(() => debugLog('[SignalR] Connected to advisoryChat1to1Hub'))
       .catch((err) => {
         setError(err.message);
-        console.error('[SignalR] Connection error:', err);
+        debugLog('[SignalR] Connection error:', err);
       });
     return () => {
       newConnection.stop().catch(() => {});
@@ -71,7 +72,7 @@ export function useAdvisorChatSignalR() {
     if (!conn) return;
     // Nhận danh sách session
     conn.on('GetSessionsHUBMethod', (sessionData: any) => {
-      console.log('[SignalR] GetSessionsHUBMethod:', sessionData);
+      debugLog('[SignalR] GetSessionsHUBMethod:', sessionData);
       let sessionList: ChatSession[] = [];
       if (Array.isArray(sessionData)) sessionList = sessionData;
       else if (sessionData && sessionData.items) sessionList = sessionData.items;
@@ -81,7 +82,7 @@ export function useAdvisorChatSignalR() {
     });
     // Nhận lịch sử tin nhắn khi join session
     conn.on('JoinGrAdvSS', (messageData: any) => {
-      console.log('[SignalR] JoinGrAdvSS (history):', messageData);
+      debugLog('[SignalR] JoinGrAdvSS (history):', messageData);
       let msgList: any[] = [];
       if (Array.isArray(messageData)) msgList = messageData;
       else if (messageData && messageData.items) msgList = messageData.items;
@@ -104,7 +105,7 @@ export function useAdvisorChatSignalR() {
     });
     // Nhận thêm tin nhắn khi load more
     conn.on('LoadMoreMessagesMethod', (messageData: any) => {
-      console.log('[SignalR] LoadMoreMessagesMethod:', messageData);
+      debugLog('[SignalR] LoadMoreMessagesMethod:', messageData);
       let msgList: any[] = [];
       if (Array.isArray(messageData)) msgList = messageData;
       else if (messageData && messageData.items) msgList = messageData.items;
@@ -127,7 +128,7 @@ export function useAdvisorChatSignalR() {
     });
     // Nhận tin nhắn mới realtime
     conn.on('SendADVSSMethod', (message: any) => {
-      console.log('[SignalR] SendADVSSMethod (new message):', message);
+      debugLog('[SignalR] SendADVSSMethod (new message):', message);
       // Map về format UI nếu cần
       const mapped = {
         id: message.messageId?.toString() ?? message.id?.toString() ?? Math.random().toString(),
@@ -159,7 +160,7 @@ export function useAdvisorChatSignalR() {
     });
     // Nhận event tạo session mới
     conn.on('SessionCreated', (sessionData: any) => {
-      console.log('[SignalR] SessionCreated:', sessionData);
+      debugLog('[SignalR] SessionCreated:', sessionData);
       // Có thể cần map lại nếu format khác
       setSessions((prev) => {
         // Nếu session đã có thì không thêm
@@ -169,7 +170,7 @@ export function useAdvisorChatSignalR() {
     });
     // Nhận event xóa session
     conn.on('SessionDeletedMethod', (sessionId: number) => {
-      console.log('[SignalR] SessionDeletedMethod:', sessionId);
+      debugLog('[SignalR] SessionDeletedMethod:', sessionId);
       setSessions((prev) => prev.filter(s => s.id !== sessionId));
       // Nếu đang chat session này thì clear messages
       if (currentSessionIdRef.current === sessionId) {
@@ -194,11 +195,11 @@ export function useAdvisorChatSignalR() {
     setLoading(true);
     setError(null);
     try {
-      console.log('[SignalR] Invoking ListAllSessionByStudent');
+      debugLog('[SignalR] Invoking ListAllSessionByStudent');
       await conn.invoke('ListAllSessionByStudent');
     } catch (err: any) {
       setError(err.message || 'Failed to list sessions');
-      console.error('[SignalR] ListAllSessionByStudent error:', err);
+      debugLog('[SignalR] ListAllSessionByStudent error:', err);
     } finally {
       setLoading(false);
     }
@@ -214,11 +215,11 @@ export function useAdvisorChatSignalR() {
       setCurrentSessionId(sessionId);
       currentSessionIdRef.current = sessionId;
       setMessages([]);
-      console.log('[SignalR] Invoking JoinSession:', sessionId);
+      debugLog('[SignalR] Invoking JoinSession:', sessionId);
       await conn.invoke('JoinSession', sessionId);
     } catch (err: any) {
       setError(err.message || 'Failed to join session');
-      console.error('[SignalR] JoinSession error:', err);
+      debugLog('[SignalR] JoinSession error:', err);
     } finally {
       setLoading(false);
     }
@@ -231,12 +232,12 @@ export function useAdvisorChatSignalR() {
     setLoading(true);
     setError(null);
     try {
-      console.log('[SignalR] Invoking SendMessage:', sessionId, message);
+      debugLog('[SignalR] Invoking SendMessage:', sessionId, message);
       await conn.invoke('SendMessage', sessionId, message);
-      console.log('[SignalR] SendMessage invoked successfully');
+      debugLog('[SignalR] SendMessage invoked successfully');
     } catch (err: any) {
       setError(err.message || 'Failed to send message');
-      console.error('[SignalR] SendMessage error:', err);
+      debugLog('[SignalR] SendMessage error:', err);
     } finally {
       setLoading(false);
     }

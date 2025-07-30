@@ -3,6 +3,7 @@ import { GetAllAuditLog, GetAuditLogPaged } from '../api/admin/auditlogAPI';
 import { AuditLog } from '../interfaces/IAuditLog';
 import { PagedData } from '../interfaces/ISchoolProgram';
 import { showForExport, hideLoading } from './useLoading';
+import { debugLog } from '../utils/performanceOptimization';
 
 export const useAuditLog = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -24,7 +25,7 @@ export const useAuditLog = () => {
       setPageSize(response.pageSize);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch audit logs');
-      console.error('Error fetching audit logs:', err);
+      debugLog('Error fetching audit logs:', err);
     } finally {
       setLoading(false);
     }
@@ -64,7 +65,7 @@ export const useAuditLog = () => {
     } catch (err) {
       hideLoading();
       setError(err instanceof Error ? err.message : 'Failed to download audit logs');
-      console.error('Error downloading audit logs:', err);
+      debugLog('Error downloading audit logs:', err);
       throw err;
     }
   };

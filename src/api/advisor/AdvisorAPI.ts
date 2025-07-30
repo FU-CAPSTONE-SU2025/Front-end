@@ -10,6 +10,7 @@ import {
   UpdateBookingAvailabilityRequest
 } from "../../interfaces/IBookingAvailability";
 import { LeaveSchedule, PagedLeaveScheduleData, CreateLeaveScheduleRequest, UpdateLeaveScheduleRequest } from '../../interfaces/ILeaveSchedule';
+import { debugLog } from "../../utils/performanceOptimization";
 
 const userURL = baseUrl + "/User/advisors";
 
@@ -189,13 +190,13 @@ export const sendMessageToAdvisor = async ({ message }: { message: string }): Pr
     url: baseUrl + "/AdvisorySession1to1/human",
     headers: GetHeader(),
   };
-  console.log('[API] sendMessageToAdvisor - payload:', props.data);
+  debugLog('[API] sendMessageToAdvisor - payload:', props.data);
   const result = await axiosCreate(props);
   if (result.success) {
-    console.log('[API] sendMessageToAdvisor - response:', result.data);
+    debugLog('[API] sendMessageToAdvisor - response:', result.data);
     return result.data;
   } else {
-    console.error('[API] sendMessageToAdvisor - error:', result.error);
+    debugLog('[API] sendMessageToAdvisor - error:', result.error);
     throwApiError(result);
     return null as never;
   }

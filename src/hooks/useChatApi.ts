@@ -17,15 +17,16 @@ import {
   deleteChatSession,
   renameChatSession
 } from '../api/student/AiChatBox';
+import { debugLog } from '../utils/performanceOptimization';
 
 // Lấy danh sách các chat session với caching tối ưu
 export function useChatSessions() {
   return useQuery<IChatSession[], Error>({
     queryKey: ['chatSessions'],
     queryFn: async () => {
-      console.log('Fetching chat sessions...');
+      debugLog('Fetching chat sessions...');
       const response: IChatSessionListResponse = await getChatSessions();
-      console.log('Chat sessions response:', response);
+      debugLog('Chat sessions response:', response);
       return response.items || [];
     },
     // Tối ưu caching: cache trong 5 phút, stale time 2 phút
@@ -46,13 +47,13 @@ export function useChatSessionMessages(chatSessionId?: number, pageSize: number 
     queryKey: ['chatMessages', chatSessionId],
     queryFn: async ({ pageParam = 1 }) => {
       if (!chatSessionId) {
-        console.log('No chat session ID provided, returning empty data');
+        debugLog('No chat session ID provided, returning empty data');
         return { items: [], nextPage: null, hasMore: false };
       }
       
-      console.log(`Fetching messages for session ${chatSessionId}, page ${pageParam}`);
+      debugLog(`Fetching messages for session ${chatSessionId}, page ${pageParam}`);
       const response: IChatMessageListResponse = await getChatMessages(chatSessionId, pageParam, pageSize);
-      console.log(`Messages response for session ${chatSessionId}:`, response);
+      debugLog(`Messages response for session ${chatSessionId}:`, response);
       
       const totalPages = Math.ceil(response.totalCount / response.pageSize);
       const hasMore = response.pageNumber < totalPages;
@@ -88,13 +89,13 @@ export function useChatSessionMessagesSimple(chatSessionId?: number) {
     queryKey: ['chatMessagesSimple', chatSessionId],
     queryFn: async () => {
       if (!chatSessionId) {
-        console.log('No chat session ID provided for simple query');
+        debugLog('No chat session ID provided for simple query');
         return [];
       }
       
-      console.log(`Fetching messages (simple) for session ${chatSessionId}`);
+      debugLog(`Fetching messages (simple) for session ${chatSessionId}`);
       const response: IChatMessageListResponse = await getChatMessages(chatSessionId);
-      console.log(`Simple messages response for session ${chatSessionId}:`, response);
+      debugLog(`Simple messages response for session ${chatSessionId}:`, response);
       return response.items || [];
     },
     enabled: !!chatSessionId,
@@ -112,13 +113,13 @@ export function useInitChatSession() {
   const queryClient = useQueryClient();
   return useMutation<IInitChatSessionResponse, Error, IInitChatSessionRequest>({
     mutationFn: async (request) => {
-      console.log('Initializing new chat session with message:', request.message);
+      debugLog('Initializing new chat session with message:', request.message);
       const response = await initChatSession(request);
-      console.log('Init session response:', response);
+      debugLog('Init session response:', response);
       return response;
     },
     onSuccess: (data) => {
-      console.log('Chat session initialized successfully:', data);
+      debugLog('Chat session initialized successfully:', data);
       // Chỉ invalidate sessions, không invalidate messages vì session mới chưa có messages
       queryClient.invalidateQueries({ queryKey: ['chatSessions'] });
       
@@ -144,7 +145,7 @@ export function useInitChatSession() {
       });
     },
     onError: (error) => {
-      console.error('Failed to initialize chat session:', error);
+      debugLog('Failed to initialize chat session:', error);
     }
   });
 }
@@ -154,13 +155,13 @@ export function useSendChatMessage() {
   const queryClient = useQueryClient();
   return useMutation<ISendChatMessageResponse, Error, ISendChatMessageRequest>({
     mutationFn: async (request) => {
-      console.log('Sending message to session', request.chatSessionId, ':', request.message);
+      debugLog('Sending message to session', request.chatSessionId, ':', request.message);
       const response = await sendChatMessage(request);
-      console.log('Send message response:', response);
+      debugLog('Send message response:', response);
       return response;
     },
     onSuccess: (_data, variables) => {
-      console.log('Message sent successfully to session', variables.chatSessionId);
+      debugLog('Message sent successfully to session', variables.chatSessionId);
       // Chỉ invalidate messages của session hiện tại, không invalidate sessions
       queryClient.invalidateQueries({ queryKey: ['chatMessages', variables.chatSessionId] });
       queryClient.invalidateQueries({ queryKey: ['chatMessagesSimple', variables.chatSessionId] });
@@ -176,7 +177,7 @@ export function useSendChatMessage() {
       });
     },
     onError: (error, variables) => {
-      console.error('Failed to send message to session', variables.chatSessionId, ':', error);
+      debugLog('Failed to send message to session', variables.chatSessionId, ':', error);
     }
   });
 }
@@ -186,14 +187,14 @@ export function useDeleteChatSession() {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean; message?: string }, Error, { chatSessionId: number }>({
     mutationFn: async ({ chatSessionId }) => {
-      console.log('Deleting chat session:', chatSessionId);
+      debugLog('Deleting chat session:', chatSessionId);
       const response = await deleteChatSession(chatSessionId);
-      console.log('Delete session response:', response);
+      debugLog('Delete session response:', response);
       return response;
     },
     onSuccess: (data, variables) => {
-      console.log('Chat session deleted successfully:', variables.chatSessionId);
-      console.log('Delete response message:', data.message);
+      debugLog('Chat session deleted successfully:', variables.chatSessionId);
+      debugLog('Delete response message:', data.message);
       
       // Invalidate sessions và xóa cache messages của session đã xóa
       queryClient.invalidateQueries({ queryKey: ['chatSessions'] });
@@ -201,10 +202,10 @@ export function useDeleteChatSession() {
       queryClient.removeQueries({ queryKey: ['chatMessagesSimple', variables.chatSessionId] });
     },
     onError: (error, variables) => {
-      console.error('Failed to delete chat session', variables.chatSessionId, ':', error);
+      debugLog('Failed to delete chat session', variables.chatSessionId, ':', error);
       // Log additional error details for debugging
       if (error.message) {
-        console.error('Error message:', error.message);
+        debugLog('Error message:', error.message);
       }
     }
   });
@@ -215,13 +216,13 @@ export function useRenameChatSession() {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, { chatSessionId: number, title: string }>({
     mutationFn: async ({ chatSessionId, title }) => {
-      console.log('Renaming chat session', chatSessionId, 'to:', title);
+      debugLog('Renaming chat session', chatSessionId, 'to:', title);
       const response = await renameChatSession(chatSessionId, title);
-      console.log('Rename session response:', response);
+      debugLog('Rename session response:', response);
       return response;
     },
     onSuccess: (_data, variables) => {
-      console.log('Chat session renamed successfully:', variables.chatSessionId, 'to', variables.title);
+      debugLog('Chat session renamed successfully:', variables.chatSessionId, 'to', variables.title);
       // Optimistic update cho sessions
       queryClient.setQueryData(['chatSessions'], (oldData: IChatSession[] | undefined) => {
         if (!oldData) return oldData;
@@ -233,7 +234,7 @@ export function useRenameChatSession() {
       });
     },
     onError: (error, variables) => {
-      console.error('Failed to rename chat session', variables.chatSessionId, ':', error);
+      debugLog('Failed to rename chat session', variables.chatSessionId, ':', error);
     }
   });
 }

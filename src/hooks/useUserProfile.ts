@@ -5,6 +5,7 @@ import { GetCurrentStaffUser, UpdateCurrentStaffUser, UpdateUserAvatar } from '.
 import { StaffDataUpdateRequest } from '../interfaces/IStaff';
 import { StudentDataUpdateRequest } from '../interfaces/IStudent';
 import { uploadAvatar, deleteAvatar, validateImageFile } from '../api/firebaseConfig';
+import { debugLog } from '../utils/performanceOptimization';
 
 
 interface UseUserProfileProps {
@@ -23,7 +24,7 @@ export default function useUserProfile(props?: UseUserProfileProps) {
     queryKey: ['currentUser', userId],
     queryFn: async () => {
       if (!userId || userId === 0) {
-        console.log('No valid user ID provided');
+        debugLog('No valid user ID provided');
         return null;
       }
       const data = await GetCurrentStaffUser(userId);
@@ -51,15 +52,15 @@ export default function useUserProfile(props?: UseUserProfileProps) {
         staffDataUpdateRequest: data.staffDataUpdateRequest as StaffDataUpdateRequest, 
         studentDataUpdateRequest: data.studentDataUpdateRequest as StudentDataUpdateRequest,
       };
-      console.log('updateData: ',updateData)
+      debugLog('updateData: ',updateData)
       const result = await UpdateCurrentStaffUser(userId, updateData);
       return result;
     },
     onError: (error) => {
-      console.error('Failed to update user profile:', error);
+      debugLog('Failed to update user profile:', error);
     },
     onSuccess: (data) => {
-      console.log('Profile updated successfully:', data);
+      debugLog('Profile updated successfully:', data);
     },
   });
 
@@ -83,7 +84,7 @@ export default function useUserProfile(props?: UseUserProfileProps) {
       }
     },
     onError: (error) => {
-      console.error('Error updating avatar:', error);
+      debugLog('Error updating avatar:', error);
       message.error('Failed to update avatar. Please try again.');
     },
   });
