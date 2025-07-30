@@ -341,7 +341,7 @@ export const cancelConfirmedMeeting = async (meetingId: number, note: string): P
     url: `${baseUrl}/Meeting/stu-cancel-the-confirmed/${meetingId}`,
     headers: GetHeader(),
   };
-  const result = await axiosUpdate(props);
+  const result = await axiosDelete(props);
   if (result.success) {
     return result.data;
   } else {
@@ -357,7 +357,7 @@ export const cancelPendingMeeting = async (meetingId: number, note: string): Pro
     url: `${baseUrl}/Meeting/stu-cancel-the-pending/${meetingId}`,
     headers: GetHeader(),
   };
-  const result = await axiosUpdate(props);
+  const result = await axiosCreate(props);
   if (result.success) {
     return result.data;
   } else {

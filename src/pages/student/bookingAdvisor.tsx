@@ -7,14 +7,14 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 // Extend dayjs with isSameOrAfter plugin
 dayjs.extend(isSameOrAfter);
-import { useAdvisors, useLeaveSchedules, useBookingAvailability, usePrefetchAdvisorData, useAdvisorDataManager } from '../../hooks/useStudentFeature';
+import { useAdvisors, useLeaveSchedules, useBookingAvailability, usePrefetchAdvisorData, useAdvisorDataManager, useAdvisorMeetings } from '../../hooks/useStudentFeature';
 import AdvisorList from '../../components/student/advisorList';
 import CalendarHeader from '../../components/student/calendarHeader';
 import SelectedAdvisorInfo from '../../components/student/selectedAdvisorInfo';
 import CalendarView from '../../components/student/calendarView';
 import BookingModal from '../../components/student/bookingModal';
-import { AdvisorData, BookingAvailabilityData, CreateBookingMeeting, getAdvisorMeetings } from '../../api/student/StudentAPI';
-import { CreateBookingMeetingRequest, AdvisorMeetingItem } from '../../interfaces/IStudent';
+import { AdvisorData, BookingAvailabilityData, CreateBookingMeeting } from '../../api/student/StudentAPI';
+import { CreateBookingMeetingRequest } from '../../interfaces/IStudent';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 interface WorkSlot {
@@ -46,7 +46,6 @@ const BookingPage = () => {
   const [selectedSlot, setSelectedSlot] = useState<WorkSlot | null>(null);
   const [searchValue, setSearchValue] = useState('');
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [meetings, setMeetings] = useState<AdvisorMeetingItem[]>([]);
 
   // Fetch advisors using hook
   const { data: advisorsData, isLoading, error } = useAdvisors({ page: 1, pageSize: 20 });
@@ -63,6 +62,9 @@ const BookingPage = () => {
   
   // Cache management hook
   const { invalidateAdvisorData } = useAdvisorDataManager();
+
+  // Fetch meetings using the new hook
+  const { data: meetingsData, isLoading: isMeetingsLoading, error: meetingsError } = useAdvisorMeetings(staffProfileId);
 
   // Convert booking availability to work slots
   const workSlots = Array.isArray(bookingAvailabilityData)
@@ -81,19 +83,6 @@ const BookingPage = () => {
       prefetchAdvisorData(selectedAdvisor.staffDataDetailResponse.id);
     }
   }, [selectedAdvisor, prefetchAdvisorData]);
-
-  // Fetch meetings when advisor changes
-  useEffect(() => {
-    const fetchMeetings = async () => {
-      if (staffProfileId) {
-        const res = await getAdvisorMeetings(staffProfileId);
-        setMeetings(res?.items || []);
-      } else {
-        setMeetings([]);
-      }
-    };
-    fetchMeetings();
-  }, [staffProfileId]);
 
   // Navigation functions
   const goToPrevious = () => {
@@ -170,6 +159,8 @@ const BookingPage = () => {
         setModalVisible(false);
         message.success('Booking successful!');
         setSelectedSlot(null);
+        
+        // Invalidate all advisor data to refresh calendar
         if (selectedAdvisor?.staffDataDetailResponse?.id) {
           invalidateAdvisorData(selectedAdvisor.staffDataDetailResponse.id);
         }
@@ -251,7 +242,7 @@ const BookingPage = () => {
               selectedAdvisor={selectedAdvisor}
               mockWorkSlots={workSlots}
               leaveSchedules={leaveSchedulesData?.items || []}
-              meetings={meetings}
+              meetings={meetingsData?.items || []}
               onDateChange={handleDateChange}
               onSlotClick={handleSlotClick}
               onViewModeChange={setViewMode}

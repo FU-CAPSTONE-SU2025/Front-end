@@ -49,7 +49,8 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
       centered
       width={600}
       footer={[
-        <Button key="cancel" onClick={handleCancel}>
+     <div className='flex justify-between'>
+         <Button key="cancel" onClick={handleCancel}>
           Cancel
         </Button>,
         <Button 
@@ -61,6 +62,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
         >
           Send Feedback
         </Button>
+     </div>
       ]}
     >
       <div className="space-y-6">

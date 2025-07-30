@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Form, TimePicker, Select, Button, message, Space, Tabs, Card, Typography, Divider, Row, Col, DatePicker, Alert } from 'antd';
 import { PlusOutlined, ClockCircleOutlined, CalendarOutlined, DeleteOutlined, CopyOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useCreateLeaveSchedule, useCreateBulkLeaveSchedule } from '../../hooks/useCRUDLeaveSchedule';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -12,6 +12,7 @@ interface AddLeaveScheduleProps {
   visible: boolean;
   onCancel: () => void;
   onSuccess: () => void;
+  selectedSlotInfo?: { date: Dayjs; start: Dayjs; end: Dayjs } | null;
 }
 
 interface LeaveSlot {
@@ -21,20 +22,28 @@ interface LeaveSlot {
   endTime: any;
 }
 
-const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCancel, onSuccess }) => {
+const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCancel, onSuccess, selectedSlotInfo }) => {
   const [singleForm] = Form.useForm();
   const [bulkForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState('single');
   const [leaveSlots, setLeaveSlots] = useState<LeaveSlot[]>([
     { key: '1', date: dayjs(), startTime: dayjs('09:00', 'HH:mm'), endTime: dayjs('17:00', 'HH:mm') }
   ]);
-  const [showSplitModal, setShowSplitModal] = useState(false);
-  const [splitSlots, setSplitSlots] = useState<LeaveSlot[]>([]);
-  const [pendingSingleValues, setPendingSingleValues] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const createLeave = useCreateLeaveSchedule();
   const createBulkLeave = useCreateBulkLeaveSchedule();
+
+  // Set form values when selectedSlotInfo changes
+  useEffect(() => {
+    if (selectedSlotInfo && visible) {
+      singleForm.setFieldsValue({
+        date: selectedSlotInfo.date,
+        startTime: selectedSlotInfo.start,
+        endTime: selectedSlotInfo.end,
+      });
+    }
+  }, [selectedSlotInfo, visible, singleForm]);
 
   const validateTimeRange = (_: any, value: any) => {
     const startTime = singleForm.getFieldValue('startTime');
@@ -98,9 +107,11 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
       return;
     }
     if (duration > 60) {
-      setSplitSlots(splitLargeSlot(values.date, start, end));
-      setPendingSingleValues(values);
-      setShowSplitModal(true);
+      // Tự động chuyển sang tab Multiple và set data
+      const splitSlots = splitLargeSlot(values.date, start, end);
+      setLeaveSlots(splitSlots);
+      setActiveTab('bulk');
+      message.info('Time slot is longer than 1 hour. Switched to Multiple tab with split slots.');
       return;
     }
     try {
@@ -127,9 +138,9 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
       // Nếu có slot dài > 1 tiếng, chia nhỏ
       const needSplit = leaveSlots.find(item => dayjs(item.endTime).diff(dayjs(item.startTime), 'minute') > 60);
       if (needSplit) {
-        setSplitSlots(splitLargeSlot(needSplit.date, needSplit.startTime, needSplit.endTime));
-        setPendingSingleValues(null);
-        setShowSplitModal(true);
+        const splitSlots = splitLargeSlot(needSplit.date, needSplit.startTime, needSplit.endTime);
+        setLeaveSlots(splitSlots);
+        message.info('Time slot is longer than 1 hour. Switched to Multiple tab with split slots.');
         return;
       }
       const bulkData = leaveSlots.map(item => ({
@@ -143,33 +154,6 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
     } catch (error) {
       setErrorMessage('An error occurred while creating the leave schedules.');
     }
-  };
-
-  // Confirm split slots
-  const handleConfirmSplitSlots = async () => {
-    try {
-      const bulkData = splitSlots.map(item => ({
-        startDateTime: dayjs(item.date).hour(item.startTime.hour()).minute(item.startTime.minute()).second(0).toISOString(),
-        endDateTime: dayjs(item.date).hour(item.endTime.hour()).minute(item.endTime.minute()).second(0).toISOString(),
-      }));
-      await createBulkLeave.mutateAsync(bulkData);
-      setShowSplitModal(false);
-      setSplitSlots([]);
-      setPendingSingleValues(null);
-      setLeaveSlots([{ key: '1', date: dayjs(), startTime: dayjs('09:00', 'HH:mm'), endTime: dayjs('17:00', 'HH:mm') }]);
-      singleForm.resetFields();
-      onSuccess();
-      onCancel();
-    } catch (error) {
-      setErrorMessage('An error occurred while creating the leave schedules.');
-    }
-  };
-
-  // Cancel split modal
-  const handleCancelSplitSlots = () => {
-    setShowSplitModal(false);
-    setSplitSlots([]);
-    setPendingSingleValues(null);
   };
 
   // Bulk item helpers
@@ -190,24 +174,6 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
       const newKey = (leaveSlots.length + 1).toString();
       setLeaveSlots([...leaveSlots, { ...item, key: newKey }]);
     }
-  };
-  // Split slot helpers
-  const updateSplitSlot = (key: string, field: keyof LeaveSlot, value: any) => {
-    setSplitSlots(slots => slots.map(slot => slot.key === key ? { ...slot, [field]: value } : slot));
-  };
-  const removeSplitSlot = (key: string) => {
-    if (splitSlots.length > 1) setSplitSlots(slots => slots.filter(slot => slot.key !== key));
-    else message.warning('At least one slot is required.');
-  };
-  const addSplitSlot = () => {
-    const last = splitSlots[splitSlots.length - 1];
-    const newKey = (splitSlots.length + 1).toString();
-    setSplitSlots([...splitSlots, {
-      key: newKey,
-      date: last.date,
-      startTime: dayjs(last.endTime),
-      endTime: dayjs(last.endTime).add(30, 'minute')
-    }]);
   };
 
   const handleCancel = () => {
@@ -318,37 +284,61 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
                   </Space>
                 }
               >
-                <Row gutter={16}>
+                <Row gutter={[16, 16]} align="bottom" style={{ alignItems: 'flex-start' }}>
                   <Col span={8}>
-                    <DatePicker
-                      value={item.date}
-                      onChange={val => updateLeaveSlot(item.key, 'date', val)}
-                      style={{ width: '100%' }}
-                      format="YYYY-MM-DD"
-                      placeholder="Date"
-                    />
+                    <Form.Item
+                      label="Date"
+                      required
+                      style={{ marginBottom: 0 }}
+                      labelCol={{ span: 24 }}
+                      wrapperCol={{ span: 24 }}
+                    >
+                      <DatePicker
+                        value={item.date}
+                        onChange={val => updateLeaveSlot(item.key, 'date', val)}
+                        style={{ width: '100%' }}
+                        format="YYYY-MM-DD"
+                        placeholder="Date"
+                      />
+                    </Form.Item>
                   </Col>
                   <Col span={8}>
-                    <TimePicker
-                      value={item.startTime}
-                      onChange={val => updateLeaveSlot(item.key, 'startTime', val)}
-                      format="HH:mm"
-                      style={{ width: '100%' }}
-                      placeholder="Start time"
-                      minuteStep={15}
-                      use12Hours={false}
-                    />
+                    <Form.Item
+                      label="Start Time"
+                      required
+                      style={{ marginBottom: 0 }}
+                      labelCol={{ span: 24 }}
+                      wrapperCol={{ span: 24 }}
+                    >
+                      <TimePicker
+                        value={item.startTime}
+                        onChange={val => updateLeaveSlot(item.key, 'startTime', val)}
+                        format="HH:mm"
+                        style={{ width: '100%' }}
+                        placeholder="Start time"
+                        minuteStep={15}
+                        use12Hours={false}
+                      />
+                    </Form.Item>
                   </Col>
                   <Col span={8}>
-                    <TimePicker
-                      value={item.endTime}
-                      onChange={val => updateLeaveSlot(item.key, 'endTime', val)}
-                      format="HH:mm"
-                      style={{ width: '100%' }}
-                      placeholder="End time"
-                      minuteStep={15}
-                      use12Hours={false}
-                    />
+                    <Form.Item
+                      label="End Time"
+                      required
+                      style={{ marginBottom: 0 }}
+                      labelCol={{ span: 24 }}
+                      wrapperCol={{ span: 24 }}
+                    >
+                      <TimePicker
+                        value={item.endTime}
+                        onChange={val => updateLeaveSlot(item.key, 'endTime', val)}
+                        format="HH:mm"
+                        style={{ width: '100%' }}
+                        placeholder="End time"
+                        minuteStep={15}
+                        use12Hours={false}
+                      />
+                    </Form.Item>
                   </Col>
                 </Row>
                 {!validateBulkTimeRange(index) && (
@@ -379,62 +369,6 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
             </Space>
           </TabPane>
         </Tabs>
-      </Modal>
-      <Modal
-        open={showSplitModal}
-        onCancel={handleCancelSplitSlots}
-        title={
-          <Space>
-            <ExclamationCircleOutlined style={{ color: '#faad14' }} />
-            Leave slot is longer than 1 hour. Please review and edit the split slots below.
-          </Space>
-        }
-        width={600}
-        destroyOnClose
-        footer={[
-          <Button key="cancel" onClick={handleCancelSplitSlots} style={{ minWidth: 100 }} type="default">
-            Cancel
-          </Button>,
-          <Button key="confirm" type="primary" onClick={handleConfirmSplitSlots} style={{ minWidth: 120 }}>
-            Confirm
-          </Button>
-        ]}
-      >
-        <div style={{ marginBottom: 16 }}>
-          <span style={{ color: '#faad14' }}>
-            The original slot will be split into multiple slots (each 1 hour, last one may be shorter). You can edit, remove, or add slots as needed before confirming.
-          </span>
-        </div>
-        {splitSlots.map((slot, idx) => (
-          <Row gutter={8} key={slot.key} align="middle" style={{ marginBottom: 8 }}>
-            <Col span={8}>
-              <TimePicker
-                value={dayjs(slot.startTime)}
-                onChange={val => updateSplitSlot(slot.key, 'startTime', val)}
-                format="HH:mm"
-                minuteStep={5}
-                style={{ width: '100%' }}
-                use12Hours={false}
-              />
-            </Col>
-            <Col span={8}>
-              <TimePicker
-                value={dayjs(slot.endTime)}
-                onChange={val => updateSplitSlot(slot.key, 'endTime', val)}
-                format="HH:mm"
-                minuteStep={5}
-                style={{ width: '100%' }}
-                use12Hours={false}
-              />
-            </Col>
-            <Col span={6}>
-              <Button danger type="text" icon={<DeleteOutlined />} onClick={() => removeSplitSlot(slot.key)} />
-            </Col>
-          </Row>
-        ))}
-        <Button type="dashed" onClick={addSplitSlot} icon={<PlusOutlined />} style={{ width: '100%', marginTop: 8 }}>
-          Add Another Slot
-        </Button>
       </Modal>
     </>
   );

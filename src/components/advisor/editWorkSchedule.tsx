@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
-import { Modal, Form, TimePicker, Select, Button, message, Space, Row, Col } from 'antd';
-import { EditOutlined, ClockCircleOutlined, CalendarOutlined } from '@ant-design/icons';
-import { useUpdateBookingAvailability, useGetBookingAvailabilityById } from '../../hooks/useCRUDAdvisor';
+import React, { useState, useEffect } from 'react';
+import { Modal, Form, TimePicker, Select, Button, message, Space, Typography, Card, Alert, Row, Col } from 'antd';
+import { EditOutlined, ClockCircleOutlined, CalendarOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { useGetBookingAvailabilityById, useUpdateBookingAvailability } from '../../hooks/useCRUDAdvisor';
 import { BookingAvailability, UpdateBookingAvailabilityRequest } from '../../interfaces/IBookingAvailability';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import { dayOptions } from '../../interfaces/IDayOptions';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Option } = Select;
@@ -27,17 +28,6 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
 
   // Log scheduleId for debugging
   console.log('EditWorkSchedule - scheduleId:', scheduleId);
-
-  const dayOptions = [
-    { value: 1, label: 'Monday' },
-    { value: 2, label: 'Tuesday' },
-    { value: 3, label: 'Wednesday' },
-    { value: 4, label: 'Thursday' },
-    { value: 5, label: 'Friday' },
-    { value: 6, label: 'Saturday' },
-    { value: 7, label: 'Sunday' },
-   
-  ];
 
   // Set form values when schedule changes or modal opens
   useEffect(() => {
@@ -129,8 +119,7 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
   }, [visible, scheduleId, isLoadingSchedule, schedule]);
 
   const getDayName = (dayInWeek: number): string => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[dayInWeek] || 'Unknown';
+    return dayOptions.find(day => day.value === dayInWeek)?.label || 'Unknown';
   };
 
   const formatTime = (time: string | undefined): string => {

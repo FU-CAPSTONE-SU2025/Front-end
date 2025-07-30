@@ -125,7 +125,8 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({
       open={visible}
       onCancel={onClose}
       footer={[
-        <Button 
+     <div className='flex justify-between'>
+         <Button 
           key="close" 
           icon={<CloseOutlined />} 
           onClick={onClose}
@@ -171,6 +172,7 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({
             Delete
           </Button>
         </Popconfirm>
+     </div>
       ]}
       width={800}
       destroyOnClose

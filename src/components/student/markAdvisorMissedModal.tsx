@@ -37,7 +37,8 @@ const MarkAdvisorMissedModal: React.FC<MarkAdvisorMissedModalProps> = ({
       centered
       width={500}
       footer={[
-        <Button key="cancel" onClick={handleCancel}>
+     <div className='flex justify-between'>
+         <Button key="cancel" onClick={handleCancel}>
           Cancel
         </Button>,
         <Button 
@@ -49,6 +50,7 @@ const MarkAdvisorMissedModal: React.FC<MarkAdvisorMissedModalProps> = ({
         >
           Mark as Missed
         </Button>
+     </div>
       ]}
     >
       <div className="space-y-4">

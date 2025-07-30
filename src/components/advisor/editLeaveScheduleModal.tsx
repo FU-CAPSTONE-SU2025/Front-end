@@ -52,8 +52,10 @@ const EditLeaveScheduleModal: React.FC<EditLeaveScheduleModalProps> = ({ visible
       onCancel={() => { form.resetFields(); onCancel(); }}
       onOk={handleOk}
       footer={[
-        <Button key="back" onClick={() => { form.resetFields(); onCancel(); }}>Cancel</Button>,
-        <Button key="submit" type="primary" loading={updateLeave.isPending} onClick={handleOk}>Save</Button>,
+    <div className='flex justify-between'>
+          <Button key="back" onClick={() => { form.resetFields(); onCancel(); }}>Cancel</Button>,
+          <Button key="submit" type="primary" loading={updateLeave.isPending} onClick={handleOk}>Save</Button>,
+    </div>
       ]}
     >
       {isLoading ? <Spin /> : (

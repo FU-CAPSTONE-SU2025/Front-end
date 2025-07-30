@@ -21,6 +21,8 @@ interface AdvisorCalendarProps {
   onEventClick?: (event: AdvisorCalendarEvent) => void;
   onDateChange?: (date: Dayjs) => void;
   onViewModeChange?: (mode: 'day' | 'week') => void;
+  onEdit?: (event: AdvisorCalendarEvent) => void;
+  onDelete?: (event: AdvisorCalendarEvent) => void;
   workingHours?: { start: number; end: number }; // e.g. { start: 8, end: 18 }
 }
 
@@ -34,6 +36,8 @@ const AdvisorCalendar: React.FC<AdvisorCalendarProps> = ({
   onEventClick,
   onDateChange,
   onViewModeChange,
+  onEdit,
+  onDelete,
   workingHours = defaultWorkingHours,
 }) => {
   // Generate working hours labels
@@ -128,8 +132,44 @@ const AdvisorCalendar: React.FC<AdvisorCalendarProps> = ({
                     >
                       {slot.event && (
                         <div style={{ padding: 4, fontSize: 13, fontWeight: 500, color: slot.event.type === 'leave' ? '#d4380d' : '#096dd9' }}>
-                          {slot.event.title || (slot.event.type === 'leave' ? 'Leave' : 'Work')}
+                          <div>{slot.event.title || (slot.event.type === 'leave' ? 'Leave' : 'Work')}</div>
                           {slot.event.note && <div style={{ fontSize: 11, color: '#888' }}>{slot.event.note}</div>}
+                          <div style={{ marginTop: 4, display: 'flex', gap: 4 }}>
+                            <button
+                              style={{
+                                fontSize: 11,
+                                padding: '3px 6px',
+                                background: '#1890ff',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: 3,
+                                cursor: 'pointer'
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit && onEdit(slot.event);
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              style={{
+                                fontSize: 11,
+                                padding: '3px 6px',
+                                background: '#ff4d4f',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: 3,
+                                cursor: 'pointer'
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete && onDelete(slot.event);
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
                       )}
                     </td>
