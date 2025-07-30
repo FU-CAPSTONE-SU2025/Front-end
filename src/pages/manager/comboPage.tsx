@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Affix, Tag, message, Pagination, Spin, Empty, Modal, Select, Space, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateCombo } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { GetSubjectsInCombo } from '../../api/SchoolAPI/comboAPI';
-import { isErrorResponse } from '../../api/AxiosCRUD';
+import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import SubjectSelect from '../../components/common/SubjectSelect';
 
 const ComboManagerPage: React.FC = () => {
@@ -156,33 +157,16 @@ const ComboManagerPage: React.FC = () => {
         },
         onError: (error: any) => {
           console.error('Import error:', error);
-          
-          // Extract ErrorResponse details if available
-          let errorMessage = 'Unknown error occurred';
-          let errorStatus = '';
-          
-          // Check if the error has an attached ErrorResponse
-          if (error.errorResponse && isErrorResponse(error.errorResponse)) {
-            errorMessage = error.errorResponse.message;
-            errorStatus = ` (Status: ${error.errorResponse.status})`;
-          } 
-          // Check if the error itself is an ErrorResponse
-          else if (isErrorResponse(error)) {
-            errorMessage = error.message;
-            errorStatus = ` (Status: ${error.status})`;
-          }
-          // Fallback to error message
-          else if (error?.message) {
-            errorMessage = error.message;
-          }
-          
-          message.error(`Error importing combos: ${errorMessage}${errorStatus}`);
+          const errorMessage = getUserFriendlyErrorMessage(error);
+          message.error(errorMessage);
         }
       });
 
     } catch (error) {
-      console.error('Import error:', error);
-      message.error('Error processing imported data. Please check your data format.');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
+    } finally {
+
     }
   };
 
@@ -255,7 +239,7 @@ const ComboManagerPage: React.FC = () => {
     <div className={styles.sttContainer}>
       {/* Sticky Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
-        <div className={styles.sttToolbar}>
+        <div className={`${styles.sttToolbar} ${glassStyles.appleGlassCard}`}>
           <Input
             placeholder="Search by ID or Combo Name"
             prefix={<SearchOutlined />}
@@ -263,6 +247,7 @@ const ComboManagerPage: React.FC = () => {
             onChange={e => { setSearch(e.target.value); setPage(1); }}
             style={{maxWidth: 240, borderRadius: 999}}
             size="large"
+            className={glassStyles.appleGlassInput}
           />
         </div>
       </Affix>

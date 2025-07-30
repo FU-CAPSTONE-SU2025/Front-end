@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { useCRUDSyllabus, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { Syllabus, Subject, SyllabusSession, SyllabusOutcome } from '../../interfaces/ISchoolProgram';
 import styles from '../../css/manager/managerCustomTable.module.css';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const SubjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,7 +19,7 @@ const SubjectDetail: React.FC = () => {
   const [outcomes, setOutcomes] = useState<SyllabusOutcome[]>([]);
 
   const {
-    fetchSyllabusBySubjectMutation,
+    fetchSyllabusBySubjectVersionMutation,
     addSyllabusMutation,
     addSyllabusOutcomesToSessionMutation,
   } = useCRUDSyllabus();
@@ -33,12 +34,12 @@ const SubjectDetail: React.FC = () => {
         const subj = await getSubjectById.mutateAsync(Number(id));
         setSubject(subj || null);
         // Fetch or create syllabus
-        const result = await fetchSyllabusBySubjectMutation.mutateAsync(Number(id));
+        const result = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(id));
         let loadedSyllabus = null;
         if (!result) {
           const content = `Syllabus for subject ${id}`;
           loadedSyllabus = await addSyllabusMutation.mutateAsync({
-            subjectId: Number(id),
+            subjectVersionId: Number(id),
             content
           });
         } else {
@@ -47,7 +48,8 @@ const SubjectDetail: React.FC = () => {
         setSyllabus(loadedSyllabus);
         setOutcomes(loadedSyllabus?.outcomes || []);
       } catch (error) {
-        message.error('Failed to load subject or syllabus');
+        const errorMessage = getUserFriendlyErrorMessage(error);
+        message.error(errorMessage);
       } finally {
         setLoading(false);
       }

@@ -14,6 +14,7 @@ import {
   CheckCircleOutlined
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 
 const { Option } = Select;
 
@@ -243,6 +244,7 @@ const ComboDetail: React.FC = () => {
                 onClick={handleEdit} 
                 type="primary" 
                 size="large"
+                className={glassStyles.appleGlassButton}
               >
                 Edit Combo
               </Button>
@@ -253,6 +255,7 @@ const ComboDetail: React.FC = () => {
                 onClick={handleDelete} 
                 danger 
                 size="large"
+                className={glassStyles.appleGlassButton}
               >
                 Delete Combo
               </Button>

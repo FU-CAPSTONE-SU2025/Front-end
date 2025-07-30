@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Affix, message, Pagination, Spin, Modal, Form, Tag, Space, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, UploadOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateProgram, Program } from '../../interfaces/ISchoolProgram';
@@ -75,7 +76,7 @@ const ManagerProgramPage: React.FC = () => {
     <div className={styles.sttContainer}>
       {/* Sticky Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
-        <div className={styles.sttToolbar}>
+        <div className={`${styles.sttToolbar} ${glassStyles.appleGlassCard}`}>
           <Input.Search
             placeholder="Search by Program Name or Code"
             prefix={<SearchOutlined />}
@@ -85,6 +86,7 @@ const ManagerProgramPage: React.FC = () => {
             style={{maxWidth: 280, borderRadius: 999}}
             size="large"
             allowClear
+            className={glassStyles.appleGlassInput}
           />
         </div>
       </Affix>

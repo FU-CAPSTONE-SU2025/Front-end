@@ -3,6 +3,7 @@ import { Form, Input, Button, message, Space, Typography, Modal } from 'antd';
 import { SaveOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { Program, CreateProgram } from '../../interfaces/ISchoolProgram';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Title } = Typography;
 
@@ -77,7 +78,8 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
         addProgramMutation.mutate(values, {
           onError: (error) => {
             console.error('Create error:', error);
-            message.error('Failed to create program. Please try again.');
+            const errorMessage = getUserFriendlyErrorMessage(error);
+            message.error(errorMessage);
           }
         });
       } else {
@@ -88,12 +90,14 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
         }, {
           onError: (error) => {
             console.error('Update error:', error);
-            message.error('Failed to update program. Please try again.');
+            const errorMessage = getUserFriendlyErrorMessage(error);
+            message.error(errorMessage);
           }
         });
       }
     } catch (error) {
-      message.error('An error occurred. Please try again.');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 
@@ -116,7 +120,8 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
           },
           onError: (error) => {
             console.error('Delete error:', error);
-            message.error('Failed to delete program. Please try again.');
+            const errorMessage = getUserFriendlyErrorMessage(error);
+            message.error(errorMessage);
           }
         });
       },

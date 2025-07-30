@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { CreateCurriculum, CreateSubject, Curriculum, Subject, UpdateCurriculum, CurriculumSubject, SubjectWithCurriculumInfo, Program, CreateProgram } from '../interfaces/ISchoolProgram';
+import { CreateCurriculum, CreateSubject, Curriculum, Subject, UpdateCurriculum, CurriculumSubject, SubjectWithCurriculumInfo, Program, CreateProgram, SubjectPrerequisite } from '../interfaces/ISchoolProgram';
 import { AddCurriculum, FetchCurriculumById, FetchCurriculumList, UpdateCurriculumById, FetchSubjectToCurriculum, RegisterMultipleCurriculum } from '../api/SchoolAPI/curriculumAPI';
 import { PagedData } from '../interfaces/ISchoolProgram';
 import { AddSubject, FetchSubjectById, FetchSubjectList, UpdateSubjectById, AddPrerequisitesSubject, RegisterMultipleSubject } from '../api/SchoolAPI/subjectAPI';
@@ -18,11 +18,29 @@ import {
   AddSyllabusSessions, 
   AddSyllabusSessionsBulk, 
   AddSyllabusOutcomesToSession, 
-  FetchSyllabusBySubject, 
+  FetchSyllabusBySubjectVersion,
+  FetchSyllabusBySubject,
   UpdateSyllabusById, 
   DisableSyllabus 
 } from '../api/SchoolAPI/syllabusAPI';
 import { CreateSyllabus, Syllabus, UpdateSyllabus, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from '../interfaces/ISchoolProgram';
+import { 
+  AddSubjectVersion, 
+  DeleteSubjectVersion, 
+  FetchPagedSubjectVersionList, 
+  FetchSubjectVersionById, 
+  FetchSubjectVersionBySubjectId, 
+  FetchDefaultSubjectVersionBySubject, 
+  UpdateSubjectVersionById, 
+  ActiveSubjectVersion, 
+  AddPrerequisiteToSubjectVersion, 
+  GetPrerequisitesBySubjectVersion, 
+  GetDependentsBySubjectVersion, 
+  DeletePrerequisiteFromSubjectVersion, 
+  GetPrerequisitesBySubject, 
+  CopyPrerequisitesBetweenVersions 
+} from '../api/SchoolAPI/subjectVersionAPI';
+import { SubjectVersion, CreateSubjectVersion, UpdateSubjectVersion } from '../interfaces/ISchoolProgram';
 
 interface PaginationParams {
   pageNumber: number;
@@ -197,6 +215,10 @@ export function useCRUDSubject() {
     },
   });
 
+  /**
+   * @deprecated Use addPrerequisiteToSubjectVersionMutation from useCRUDSubjectVersion instead
+   * This mutation will be removed in a future version
+   */
   const addPrerequisiteMutation = useMutation<Subject | null, unknown, { id: number; prerequisitesId: number }>({
     mutationFn: async ({ id, prerequisitesId }) => {
       const result = await AddPrerequisitesSubject(id, prerequisitesId);
@@ -363,15 +385,25 @@ export function useCRUDCombo() {
 }
 
 export function useCRUDSyllabus() {
-  // Fetch syllabus by subject
-  const fetchSyllabusBySubjectMutation = useMutation<Syllabus | null, unknown, number>({
-    mutationFn: async (subjectId: number) => {
-      const result = await FetchSyllabusBySubject(subjectId);
-      return result as Syllabus | null;
+  // Fetch syllabus by subject version
+  const fetchSyllabusBySubjectVersionMutation = useMutation<Syllabus | null, unknown, number>({
+    mutationFn: async (subjectVersionId: number) => {
+      const result = await FetchSyllabusBySubjectVersion(subjectVersionId);
+      return result;
     },
     onError: (error) => {
       console.error(error);
-       return null;
+      return null;
+    },
+  });
+
+  const fetchSyllabusBySubjectMutation = useMutation<Syllabus | null, unknown, number>({
+    mutationFn: async (subjectId: number) => {
+      const result = await FetchSyllabusBySubject(subjectId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
     },
   });
 
@@ -452,7 +484,7 @@ export function useCRUDSyllabus() {
     },
   });
 
-  // Add outcomes to session
+  // Add syllabus outcomes to session
   const addSyllabusOutcomesToSessionMutation = useMutation<any | null, unknown, { sessionId: number; outcomeId: number }>({
     mutationFn: async ({ sessionId, outcomeId }) => {
       const result = await AddSyllabusOutcomesToSession(sessionId, outcomeId);
@@ -463,7 +495,7 @@ export function useCRUDSyllabus() {
     },
   });
 
-  // Bulk add syllabus materials
+  // Add syllabus materials bulk
   const addSyllabusMaterialsBulkMutation = useMutation<any | null, unknown, CreateSyllabusMaterial[]>({
     mutationFn: async (data: CreateSyllabusMaterial[]) => {
       const result = await AddSyllabusMaterialsBulk(data);
@@ -474,7 +506,7 @@ export function useCRUDSyllabus() {
     },
   });
 
-  // Bulk add syllabus outcomes
+  // Add syllabus outcomes bulk
   const addSyllabusOutcomesBulkMutation = useMutation<any | null, unknown, CreateSyllabusOutcome[]>({
     mutationFn: async (data: CreateSyllabusOutcome[]) => {
       const result = await AddSyllabusOutcomesBulk(data);
@@ -485,7 +517,7 @@ export function useCRUDSyllabus() {
     },
   });
 
-  // Bulk add syllabus sessions
+  // Add syllabus sessions bulk
   const addSyllabusSessionsBulkMutation = useMutation<any | null, unknown, CreateSyllabusSession[]>({
     mutationFn: async (data: CreateSyllabusSession[]) => {
       const result = await AddSyllabusSessionsBulk(data);
@@ -497,6 +529,7 @@ export function useCRUDSyllabus() {
   });
 
   return {
+    fetchSyllabusBySubjectVersionMutation,
     fetchSyllabusBySubjectMutation,
     addSyllabusMutation,
     updateSyllabusMutation,
@@ -608,5 +641,220 @@ export function useCRUDProgram() {
     isSuccessBulkImport,
     programById,
     getProgramById
+  };
+}
+
+export function useCRUDSubjectVersion() {
+  // Fetch paged subject versions
+  const getSubjectVersionMutation = useMutation<PagedData<SubjectVersion> | null, unknown, PaginationParams>({
+    mutationFn: async (params: PaginationParams) => {
+      const data = await FetchPagedSubjectVersionList(
+        params.pageNumber,
+        params.pageSize,
+        params.filterValue,
+        params.filterType
+      );
+      return data;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Fetch subject version by ID
+  const getSubjectVersionById = useMutation<SubjectVersion | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await FetchSubjectVersionById(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Fetch subject versions by subject ID
+  const getSubjectVersionsBySubjectId = useMutation<SubjectVersion[] | null, unknown, number>({
+    mutationFn: async (subjectId: number) => {
+      const result = await FetchSubjectVersionBySubjectId(subjectId);
+      // Return empty array if result is null or undefined
+      return result || [];
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Fetch default subject version by subject ID
+  const getDefaultSubjectVersionBySubjectId = useMutation<SubjectVersion | null, unknown, number>({
+    mutationFn: async (subjectId: number) => {
+      const result = await FetchDefaultSubjectVersionBySubject(subjectId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Add subject version
+  const addSubjectVersionMutation = useMutation<SubjectVersion | null, unknown, CreateSubjectVersion>({
+    mutationFn: async (data: CreateSubjectVersion) => {
+      const result = await AddSubjectVersion(data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Update subject version
+  const updateSubjectVersionMutation = useMutation<SubjectVersion | null, unknown, { id: number; data: UpdateSubjectVersion }>({
+    mutationFn: async ({ id, data }) => {
+      const result = await UpdateSubjectVersionById(id, data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Delete subject version
+  const deleteSubjectVersionMutation = useMutation<any | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await DeleteSubjectVersion(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Toggle active status
+  const toggleActiveSubjectVersionMutation = useMutation<SubjectVersion | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await ActiveSubjectVersion(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Add prerequisite to subject version
+  const addPrerequisiteToSubjectVersionMutation = useMutation<SubjectVersion | null, unknown, { subjectVersionId: number; prerequisiteId: number }>({
+    mutationFn: async ({ subjectVersionId, prerequisiteId }) => {
+      const result = await AddPrerequisiteToSubjectVersion(subjectVersionId, prerequisiteId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Get prerequisites by subject version
+  const getPrerequisitesBySubjectVersionMutation = useMutation<SubjectPrerequisite[] | null, unknown, number>({
+    mutationFn: async (subjectVersionId: number) => {
+      const result = await GetPrerequisitesBySubjectVersion(subjectVersionId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Get dependents by subject version
+  const getDependentsBySubjectVersionMutation = useMutation<SubjectVersion[] | null, unknown, number>({
+    mutationFn: async (subjectVersionId: number) => {
+      const result = await GetDependentsBySubjectVersion(subjectVersionId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Delete prerequisite from subject version
+  const deletePrerequisiteFromSubjectVersionMutation = useMutation<any | null, unknown, { subjectVersionId: number; prerequisiteId: number }>({
+    mutationFn: async ({ subjectVersionId, prerequisiteId }) => {
+      const result = await DeletePrerequisiteFromSubjectVersion(subjectVersionId, prerequisiteId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Get prerequisites by subject
+  const getPrerequisitesBySubjectMutation = useMutation<any | null, unknown, number>({
+    mutationFn: async (subjectId: number) => {
+      const result = await GetPrerequisitesBySubject(subjectId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Copy prerequisites between versions
+  const copyPrerequisitesBetweenVersionsMutation = useMutation<any | null, unknown, { sourceVersionId: number; targetVersionId: number }>({
+    mutationFn: async ({ sourceVersionId, targetVersionId }) => {
+      const result = await CopyPrerequisitesBetweenVersions(sourceVersionId, targetVersionId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  const isSuccessCreateSubjectVersion = addSubjectVersionMutation.isSuccess;
+  const isSuccessUpdateSubjectVersion = updateSubjectVersionMutation.isSuccess;
+  const isSuccessDeleteSubjectVersion = deleteSubjectVersionMutation.isSuccess;
+  const isSuccessToggleActive = toggleActiveSubjectVersionMutation.isSuccess;
+  const isSuccessAddPrerequisite = addPrerequisiteToSubjectVersionMutation.isSuccess;
+  const isSuccessGetPrerequisites = getPrerequisitesBySubjectVersionMutation.isSuccess;
+  const isSuccessGetDependents = getDependentsBySubjectVersionMutation.isSuccess;
+  const isSuccessDeletePrerequisite = deletePrerequisiteFromSubjectVersionMutation.isSuccess;
+  const isSuccessGetPrerequisitesBySubject = getPrerequisitesBySubjectMutation.isSuccess;
+  const isSuccessCopyPrerequisites = copyPrerequisitesBetweenVersionsMutation.isSuccess;
+
+  const subjectVersionById = getSubjectVersionById.data || null;
+  const metaData = getSubjectVersionMutation.data || null;
+  const subjectVersionList = metaData?.items || [];
+  const paginationSubjectVersion = metaData ? {
+    current: metaData.pageNumber,
+    pageSize: metaData.pageSize,
+    total: metaData.totalCount,
+    totalPages: Math.ceil(metaData.totalCount / metaData.pageSize)
+  } : null;
+
+  return {
+    addSubjectVersionMutation,
+    updateSubjectVersionMutation,
+    deleteSubjectVersionMutation,
+    toggleActiveSubjectVersionMutation,
+    addPrerequisiteToSubjectVersionMutation,
+    getPrerequisitesBySubjectVersionMutation,
+    getDependentsBySubjectVersionMutation,
+    deletePrerequisiteFromSubjectVersionMutation,
+    getPrerequisitesBySubjectMutation,
+    copyPrerequisitesBetweenVersionsMutation,
+    getSubjectVersionMutation,
+    getSubjectVersionById,
+    getSubjectVersionsBySubjectId,
+    getDefaultSubjectVersionBySubjectId,
+    getAllSubjectVersions: getSubjectVersionMutation.mutate,
+    subjectVersionList,
+    paginationSubjectVersion,
+    isLoading: getSubjectVersionMutation.isPending,
+    isSuccessCreateSubjectVersion,
+    isSuccessUpdateSubjectVersion,
+    isSuccessDeleteSubjectVersion,
+    isSuccessToggleActive,
+    isSuccessAddPrerequisite,
+    isSuccessGetPrerequisites,
+    isSuccessGetDependents,
+    isSuccessDeletePrerequisite,
+    isSuccessGetPrerequisitesBySubject,
+    isSuccessCopyPrerequisites,
+    subjectVersionById
   };
 }

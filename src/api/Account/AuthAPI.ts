@@ -23,6 +23,7 @@ export const LoginGoogleAccount = async (data: string) => {
         return result.data
     }
     else {
+        throwApiError(result);
         return null; // This will never be reached, but TypeScript needs it
     }
 } // TODO change to use axiosCreate
@@ -37,7 +38,7 @@ export const LoginAccount = async (data: LoginProps) => {
         return result.data
     }
     else {
-        //throwApiError(result);
+        throwApiError(result);
         return null; 
     }
 }
@@ -52,6 +53,7 @@ export const CloudflareVerification = async (data:any) => {
         return result.data
     }
     else {
+        throwApiError(result);
         return null;
     }
 }
@@ -61,12 +63,12 @@ export const Logout = async () => {
         data: null,
         url: accountUrl+`/logout`,
     }
-    const response = await axiosCreate(props)
-    if (response.success) {
-        return response.data
+    const result = await axiosCreate(props)
+    if (result.success) {
+        return result.data
     }
     else {
-        throwApiError(response);
+        throwApiError(result);
         return null; // This will never be reached, but TypeScript needs it
     }
 } // TODO change to use axiosCreate
@@ -88,6 +90,7 @@ export const RefreshToken = async () => {
     }
     else {
         //console.log(newAccessToken.error)
+        
         return false
     }
 }

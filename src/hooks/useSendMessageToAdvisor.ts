@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { sendMessageToAdvisor } from '../api/advisor/AdvisorAPI';
+import { getUserFriendlyErrorMessage } from '../api/AxiosCRUD';
 
 export function useSendMessageToAdvisor() {
   const [loading, setLoading] = useState(false);
@@ -14,7 +15,8 @@ export function useSendMessageToAdvisor() {
       return result;
     } catch (err: any) {
       console.error('[HOOK] useSendMessageToAdvisor - error:', err);
-      setError(err?.message || 'Failed to send message');
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      setError(errorMessage);
       throw err;
     } finally {
       setLoading(false);

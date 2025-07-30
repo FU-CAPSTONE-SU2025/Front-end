@@ -15,6 +15,7 @@ import CalendarView from '../../components/student/calendarView';
 import BookingModal from '../../components/student/bookingModal';
 import { AdvisorData, BookingAvailabilityData, CreateBookingMeeting, getAdvisorMeetings } from '../../api/student/StudentAPI';
 import { CreateBookingMeetingRequest, AdvisorMeetingItem } from '../../interfaces/IStudent';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 interface WorkSlot {
   id: number | string;
@@ -172,68 +173,17 @@ const BookingPage = () => {
         if (selectedAdvisor?.staffDataDetailResponse?.id) {
           invalidateAdvisorData(selectedAdvisor.staffDataDetailResponse.id);
         }
-      } else {
-        // Show only error messages from backend (no key, just content)
-        if (result === null && (window as any).lastBookingError) {
-          const err = (window as any).lastBookingError;
-          console.error('Booking API error:', err); // Debug log
-          let errorMsg = '';
-          if (err.errors) {
-            const errorLines: string[] = [];
-            for (const key in err.errors) {
-              if (Array.isArray(err.errors[key])) {
-                errorLines.push(...err.errors[key]);
-              } else {
-                errorLines.push(err.errors[key]);
-              }
-            }
-            errorMsg = errorLines.join('\n');
-          }
-          if (!errorMsg && err.message) {
-            errorMsg = err.message;
-          }
-          if (!errorMsg) {
-            errorMsg = 'Booking failed. Please try again!';
-          }
-          Modal.error({
-            title: 'Booking Failed',
-            content: <pre style={{whiteSpace:'pre-wrap',fontFamily:'inherit'}}>{errorMsg}</pre>,
-            centered: true,
-          });
-        } else {
-          message.error('Booking failed. Please try again!');
-        }
       }
-    } catch (err: any) {
-      if (err && err.response && err.response.data) {
-        const data = err.response.data;
-        console.error('Booking API error:', data); // Debug log
-        let errorMsg = '';
-        if (data.errors) {
-          const errorLines: string[] = [];
-          for (const key in data.errors) {
-            if (Array.isArray(data.errors[key])) {
-              errorLines.push(...data.errors[key]);
-            } else {
-              errorLines.push(data.errors[key]);
-            }
-          }
-          errorMsg = errorLines.join('\n');
-        }
-        if (!errorMsg && data.message) {
-          errorMsg = data.message;
-        }
-        if (!errorMsg) {
-          errorMsg = 'Booking failed. Please try again!';
-        }
-        Modal.error({
-          title: 'Booking Failed',
-          content: <pre style={{whiteSpace:'pre-wrap',fontFamily:'inherit'}}>{errorMsg}</pre>,
-          centered: true,
-        });
-      } else {
-        message.error('An error occurred while booking!');
-      }
+    } catch (error: any) {
+      // Use the improved error handling
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      console.error('Booking API error:', error);
+      
+      Modal.error({
+        title: 'Booking Failed',
+        content: <pre style={{whiteSpace:'pre-wrap',fontFamily:'inherit'}}>{errorMessage}</pre>,
+        centered: true,
+      });
     } finally {
       setBookingLoading(false);
     }

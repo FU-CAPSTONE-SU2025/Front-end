@@ -8,9 +8,8 @@ import { useCRUDSubject, useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial'
 import { CreateSubject } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { isErrorResponse } from '../../api/AxiosCRUD';
+import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { Subject } from '../../interfaces/ISchoolProgram';
-import { useMockSubjectVersions } from '../../api/SchoolAPI/subjectAPI';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -67,7 +66,8 @@ const SubjectPage: React.FC = () => {
             setComboSubjectsMap(prev => ({ ...prev, [comboId]: subjects }));
           }
         } catch (error) {
-          message.error('Failed to fetch combo subjects');
+          const errorMessage = getUserFriendlyErrorMessage(error);
+          message.error(errorMessage);
         } finally {
           setLoadingComboSubjects(false);
         }
@@ -158,27 +158,8 @@ const SubjectPage: React.FC = () => {
         },
         onError: (error: any) => {
           console.error('Import error:', error);
-          
-          // Extract ErrorResponse details if available
-          let errorMessage = 'Unknown error occurred';
-          let errorStatus = '';
-          
-          // Check if the error has an attached ErrorResponse
-          if (error.errorResponse && isErrorResponse(error.errorResponse)) {
-            errorMessage = error.errorResponse.message;
-            errorStatus = ` (Status: ${error.errorResponse.status})`;
-          } 
-          // Check if the error itself is an ErrorResponse
-          else if (isErrorResponse(error)) {
-            errorMessage = error.message;
-            errorStatus = ` (Status: ${error.status})`;
-          }
-          // Fallback to error message
-          else if (error?.message) {
-            errorMessage = error.message;
-          }
-          
-          message.error(`Error importing subjects: ${errorMessage}${errorStatus}`);
+          const errorMessage = getUserFriendlyErrorMessage(error);
+          message.error(errorMessage);
         }
       });
 
@@ -198,8 +179,8 @@ const SubjectPage: React.FC = () => {
       key: 'version',
       align: 'center' as 'center',
       render: (_: any, record: any) => {
-        const versions = useMockSubjectVersions(record.id);
-        return versions.length > 0 ? versions.map(v => v.versionNumber).join(', ') : '-';
+        // Since we don't have real version data in the subject list, show a placeholder
+        return 'View Versions';
       }
     },
     {

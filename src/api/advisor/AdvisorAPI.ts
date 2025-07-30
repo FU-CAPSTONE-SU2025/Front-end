@@ -1,4 +1,4 @@
-import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
+import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps, AccountPropsCreate } from "../../interfaces/IAccount";
 import { pagedAdvisorData, AdvisorBase } from "../../interfaces/IAdvisor";
@@ -13,7 +13,7 @@ import { LeaveSchedule, PagedLeaveScheduleData, CreateLeaveScheduleRequest, Upda
 
 const userURL = baseUrl + "/User/advisors";
 
-export const GetActiveAdvisor = async (): Promise<AccountProps | null> => {
+export const GetActiveAdvisor = async (): Promise<AccountProps> => {
   const props = {
     data: null,
     url: userURL + `/active`,
@@ -23,7 +23,8 @@ export const GetActiveAdvisor = async (): Promise<AccountProps | null> => {
   if (result.success) {
     return result.data;
   } else {
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -37,7 +38,8 @@ export const RegisterAdvisor = async (data: AccountPropsCreate): Promise<any> =>
   if (result.success) {
     return result.data;
   } else {
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -47,7 +49,7 @@ export const FetchAdvisorList = async (
   searchQuery?: string,
   filterType?: string,
   filterValue?: string
-): Promise<pagedAdvisorData | null> => {
+): Promise<pagedAdvisorData> => {
   const params = new URLSearchParams({
     pageNumber: pageNumber.toString(),
     pageSize: pageSize.toString(),
@@ -68,11 +70,12 @@ export const FetchAdvisorList = async (
   if (result.success) {
     return result.data;
   } else {
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 };
 
-export const FetchAdvisorById = async (userId: number): Promise<AccountProps | null> => {
+export const FetchAdvisorById = async (userId: number): Promise<AccountProps> => {
   const props = {
     data: null,
     url: userURL + `/${userId}`,
@@ -82,7 +85,8 @@ export const FetchAdvisorById = async (userId: number): Promise<AccountProps | n
   if (result.success) {
     return result.data;
   } else {
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -100,12 +104,13 @@ export const FetchBookingAvailability = async (
     // Ensure we always return an array
     return Array.isArray(result.data) ? result.data : [];
   } else {
-    console.error('Failed to fetch booking availability:', result.error);
-    return [];
+
+    throwApiError(result);
+    return null as never;
   }
 };
 
-export const CreateBookingAvailability = async (data: CreateBookingAvailabilityRequest): Promise<BookingAvailability | null> => {
+export const CreateBookingAvailability = async (data: CreateBookingAvailabilityRequest): Promise<BookingAvailability> => {
   const props = {
     data: data,
     url: baseUrl + "/BookingAvailability",
@@ -115,11 +120,12 @@ export const CreateBookingAvailability = async (data: CreateBookingAvailabilityR
   if (result.success) {
     return result.data || { id: 0, ...data, staffProfileId: 0 } as BookingAvailability;
   } else {
-    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to create booking availability');
+    throwApiError(result);
+    return null as never;
   }
 };
 
-export const CreateBulkBookingAvailability = async (data: CreateBulkBookingAvailabilityRequest): Promise<BookingAvailability[] | null> => {
+export const CreateBulkBookingAvailability = async (data: CreateBulkBookingAvailabilityRequest): Promise<BookingAvailability[]> => {
   const props = {
     data: data,
     url: baseUrl + "/BookingAvailability/bulk",
@@ -129,11 +135,12 @@ export const CreateBulkBookingAvailability = async (data: CreateBulkBookingAvail
   if (result.success) {
     return result.data || data.map((item, index) => ({ id: index + 1, ...item, staffProfileId: 0 })) as BookingAvailability[];
   } else {
-    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to create bulk booking availability');
+    throwApiError(result);
+    return null as never;
   }
 };
 
-export const UpdateBookingAvailability = async (id: number, data: UpdateBookingAvailabilityRequest): Promise<BookingAvailability | null> => {
+export const UpdateBookingAvailability = async (id: number, data: UpdateBookingAvailabilityRequest): Promise<BookingAvailability> => {
   const props = {
     data: data,
     url: baseUrl + `/BookingAvailability/${id}`,
@@ -143,7 +150,8 @@ export const UpdateBookingAvailability = async (id: number, data: UpdateBookingA
   if (result.success) {
     return result.data || { id, ...data, staffProfileId: 0 } as BookingAvailability;
   } else {
-    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to update booking availability');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -157,11 +165,12 @@ export const DeleteBookingAvailability = async (id: number): Promise<boolean> =>
   if (result.success) {
     return true;
   } else {
-    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to delete booking availability');
+    throwApiError(result);
+    return null as never;
   }
 };
 
-export const GetBookingAvailabilityById = async (id: number): Promise<BookingAvailability | null> => {
+export const GetBookingAvailabilityById = async (id: number): Promise<BookingAvailability> => {
   const props = {
     data: null,
     url: baseUrl + `/BookingAvailability/simply-single/${id}`,
@@ -171,7 +180,8 @@ export const GetBookingAvailabilityById = async (id: number): Promise<BookingAva
   if (result.success) {
     return result.data;
   } else {
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -181,14 +191,12 @@ export const sendMessageToAdvisor = async ({ message }: { message: string }): Pr
     url: baseUrl + "/AdvisorySession1to1/human",
     headers: GetHeader(),
   };
-  console.log('[API] sendMessageToAdvisor - payload:', props.data);
   const result = await axiosCreate(props);
   if (result.success) {
-    console.log('[API] sendMessageToAdvisor - response:', result.data);
     return result.data;
   } else {
-    console.error('[API] sendMessageToAdvisor - error:', result.error);
-    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to send message to advisor');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -198,7 +206,7 @@ export const sendMessageToAdvisor = async ({ message }: { message: string }): Pr
 export const FetchLeaveScheduleList = async (
   pageNumber: number = 1,
   pageSize: number = 10
-): Promise<PagedLeaveScheduleData | null> => {
+): Promise<PagedLeaveScheduleData> => {
   const params = new URLSearchParams({
     pageNumber: pageNumber.toString(),
     pageSize: pageSize.toString(),
@@ -212,11 +220,12 @@ export const FetchLeaveScheduleList = async (
   if (result.success) {
     return result.data;
   } else {
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 };
 
-export const CreateLeaveSchedule = async (data: CreateLeaveScheduleRequest): Promise<LeaveSchedule | null> => {
+export const CreateLeaveSchedule = async (data: CreateLeaveScheduleRequest): Promise<LeaveSchedule> => {
   const props = {
     data: data,
     url: baseUrl + '/LeaveSche',
@@ -226,11 +235,12 @@ export const CreateLeaveSchedule = async (data: CreateLeaveScheduleRequest): Pro
   if (result.success) {
     return result.data;
   } else {
-    throw new Error('Failed to create leave schedule');
+    throwApiError(result);
+    return null as never;
   }
 };
 
-export const UpdateLeaveSchedule = async (id: number, data: UpdateLeaveScheduleRequest): Promise<LeaveSchedule | null> => {
+export const UpdateLeaveSchedule = async (id: number, data: UpdateLeaveScheduleRequest): Promise<LeaveSchedule> => {
   const props = {
     data: data,
     url: baseUrl + '/LeaveSche' + `/${id}`,
@@ -240,7 +250,8 @@ export const UpdateLeaveSchedule = async (id: number, data: UpdateLeaveScheduleR
   if (result.success) {
     return result.data;
   } else {
-    throw new Error('Failed to update leave schedule');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -254,11 +265,12 @@ export const DeleteLeaveSchedule = async (id: number): Promise<boolean> => {
   if (result.success) {
     return true;
   } else {
-    throw new Error('Failed to delete leave schedule');
+    throwApiError(result);
+    return null as never;
   }
 };
 
-export const GetLeaveScheduleById = async (id: number): Promise<LeaveSchedule | null> => {
+export const GetLeaveScheduleById = async (id: number): Promise<LeaveSchedule> => {
   const props = {
     data: null,
     url: baseUrl + '/LeaveSche' + `/simply-single/${id}`,
@@ -268,7 +280,8 @@ export const GetLeaveScheduleById = async (id: number): Promise<LeaveSchedule | 
   if (result.success) {
     return result.data;
   } else {
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 }; 
 
@@ -287,7 +300,8 @@ export const getAdvisorSelfMeetings = async (pageNumber = 1, pageSize = 50): Pro
   if (result.success) {
     return result.data;
   } else {
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 }; 
 
@@ -301,7 +315,8 @@ export const confirmMeeting = async (id: number): Promise<any> => {
   if (result.success) {
     return result.data;
   } else {
-    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to confirm meeting');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -315,7 +330,8 @@ export const cancelPendingMeeting = async (id: number, note?: string): Promise<a
   if (result.success) {
     return result.data;
   } else {
-    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to cancel meeting');
+    throwApiError(result);
+    return null as never;
   }
 
 };
@@ -330,7 +346,8 @@ export const completeMeeting = async (id: number, checkInCode: string): Promise<
   if (result.success) {
     return result.data;
   } else {
-    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to complete meeting');
+    throwApiError(result);
+    return null as never;
   }
 }; 
 

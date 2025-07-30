@@ -1,11 +1,11 @@
-import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
+import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
 import { pagedStudentData, StudentBase, CreateBookingMeetingRequest, BookingMeetingResponse, AdvisorMeetingItem, AdvisorMeetingPaged } from "../../interfaces/IStudent";
 
 const userURL = baseUrl+"/User/student"
 
-export const GetAllStudent = async (pageNumber: number = 1, pageSize: number = 10, searchQuery?: string, filterType?: string, filterValue?: string):Promise<pagedStudentData|null> => {
+export const GetAllStudent = async (pageNumber: number = 1, pageSize: number = 10, searchQuery?: string, filterType?: string, filterValue?: string):Promise<pagedStudentData> => {
     // Build query parameters
     const params = new URLSearchParams({
         pageNumber: pageNumber.toString(),
@@ -30,8 +30,8 @@ export const GetAllStudent = async (pageNumber: number = 1, pageSize: number = 1
         return result.data
     }
     else {
-        console.log(result.error)
-        return null
+        throwApiError(result);
+        return null as never;
     }
 }
 
@@ -47,13 +47,13 @@ export const RegisterStudent = async (data: AccountPropsCreate):Promise<any> => 
         return result.data
     }
     else {
-        console.log(result.error)
-        return result.error
+        throwApiError(result);
+        return null as never;
     }
 }
 
 
-export const FetchStudentById = async (userId:number):Promise<AccountProps|null> => {
+export const FetchStudentById = async (userId:number):Promise<AccountProps> => {
     const props = {
         data: null,
         url: userURL+`/`+userId,
@@ -65,11 +65,11 @@ export const FetchStudentById = async (userId:number):Promise<AccountProps|null>
         return result.data
     }
     else {
-        console.log(result.error)
-        return null
+        throwApiError(result);
+        return null as never;
     }
 }
-export const UpdateStudent = async (userId:number,data:any):Promise<AccountProps|null> => {
+export const UpdateStudent = async (userId:number,data:any):Promise<AccountProps> => {
     const props = {
         data: data,
         url: userURL+`/`+userId,
@@ -81,11 +81,11 @@ export const UpdateStudent = async (userId:number,data:any):Promise<AccountProps
         return result.data
     }
     else {
-        console.log(result.error)
-        return null
+        throwApiError(result);
+        return null as never;
     }
 }
-export const DisableUser = async (userId:number):Promise<AccountProps|null> => {
+export const DisableUser = async (userId:number):Promise<AccountProps> => {
     const props = {
         data: null,
         url: userURL+`/`+userId,
@@ -97,8 +97,8 @@ export const DisableUser = async (userId:number):Promise<AccountProps|null> => {
         return result.data
     }
     else {
-        console.log(result.error)
-        return null
+        throwApiError(result);
+        return null as never;
     }
 }
 
@@ -130,7 +130,7 @@ export interface PagedAdvisorData {
     pageSize: number;
 }
 
-export const GetActiveAdvisors = async (pageNumber: number = 1, pageSize: number = 10): Promise<PagedAdvisorData | null> => {
+export const GetActiveAdvisors = async (pageNumber: number = 1, pageSize: number = 10): Promise<PagedAdvisorData> => {
     const params = new URLSearchParams({
         pageNumber: pageNumber.toString(),
         pageSize: pageSize.toString()
@@ -148,8 +148,8 @@ export const GetActiveAdvisors = async (pageNumber: number = 1, pageSize: number
         return result.data
     }
     else {
-        console.log("Error fetching advisors:", result.error)
-        return null
+        throwApiError(result);
+        return null as never;
     }
 }
 
@@ -199,7 +199,7 @@ export interface BookingAvailabilityData {
 }
 
 // Get upcoming leave schedules for an advisor
-export const GetUpcomingLeaveSchedules = async (staffProfileId: number): Promise<PagedLeaveScheduleData | null> => {
+export const GetUpcomingLeaveSchedules = async (staffProfileId: number): Promise<PagedLeaveScheduleData> => {
     const props = {
         data: null,
         url: baseUrl + `/LeaveSche/upcoming/${staffProfileId}`,
@@ -212,13 +212,13 @@ export const GetUpcomingLeaveSchedules = async (staffProfileId: number): Promise
         return result.data
     }
     else {
-        console.log("Error fetching leave schedules:", result.error)
-        return null
+        throwApiError(result);
+        return null as never;
     }
 }
 
 // Get booking availability for an advisor
-export const GetBookingAvailability = async (staffProfileId: number): Promise<BookingAvailabilityData[] | null> => {
+export const GetBookingAvailability = async (staffProfileId: number): Promise<BookingAvailabilityData[]> => {
     const props = {
         data: null,
         url: baseUrl + `/BookingAvailability/${staffProfileId}`,
@@ -231,13 +231,13 @@ export const GetBookingAvailability = async (staffProfileId: number): Promise<Bo
         return result.data
     }
     else {
-        console.log("Error fetching booking availability:", result.error)
-        return null
+        throwApiError(result);
+        return null as never;
     }
 }
 
 // API tạo booking meeting
-export const CreateBookingMeeting = async (data: CreateBookingMeetingRequest): Promise<BookingMeetingResponse | null> => {
+export const CreateBookingMeeting = async (data: CreateBookingMeetingRequest): Promise<BookingMeetingResponse> => {
   const props = {
     data,
     url: baseUrl + '/Meeting',
@@ -247,13 +247,13 @@ export const CreateBookingMeeting = async (data: CreateBookingMeetingRequest): P
   if (result.success) {
     return result.data;
   } else {
-    console.log('Error creating booking meeting:', result.error);
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 };
 
 // API lấy danh sách meeting của advisor
-export const getAdvisorMeetings = async (staffProfileId: number, pageNumber = 1, pageSize = 50): Promise<AdvisorMeetingPaged | null> => {
+export const getAdvisorMeetings = async (staffProfileId: number, pageNumber = 1, pageSize = 50): Promise<AdvisorMeetingPaged> => {
   const props = {
     data: null,
     url: `${baseUrl}/Meeting/all-of-one-adv/paged/${staffProfileId}?pageNumber=${pageNumber}&pageSize=${pageSize}`,
@@ -263,13 +263,13 @@ export const getAdvisorMeetings = async (staffProfileId: number, pageNumber = 1,
   if (result.success) {
     return result.data;
   } else {
-    console.log('Error fetching advisor meetings:', result.error);
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 };
 
 // API lấy lịch sử meeting của sinh viên
-export const getStudentMeetings = async (pageNumber = 1, pageSize = 20): Promise<AdvisorMeetingPaged | null> => {
+export const getStudentMeetings = async (pageNumber = 1, pageSize = 20): Promise<AdvisorMeetingPaged> => {
   const props = {
     data: null,
     url: `${baseUrl}/Meeting/all-stu-self/paged?pageNumber=${pageNumber}&pageSize=${pageSize}`,
@@ -279,8 +279,8 @@ export const getStudentMeetings = async (pageNumber = 1, pageSize = 20): Promise
   if (result.success) {
     return result.data;
   } else {
-    console.log('Error fetching student meetings:', result.error);
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -295,8 +295,8 @@ export const getMeetingDetail = async (meetingId: number): Promise<any> => {
   if (result.success) {
     return result.data;
   } else {
-    console.log('Error fetching meeting detail:', result.error);
-    return null;
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -310,7 +310,8 @@ export const sendMeetingFeedback = async (meetingId: number, feedback: string, s
   if (result.success) {
     return result.data;
   } else {
-    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to send feedback');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -325,7 +326,8 @@ export const cancelConfirmedMeeting = async (meetingId: number, note: string): P
   if (result.success) {
     return result.data;
   } else {
-    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to cancel confirmed meeting');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -340,7 +342,8 @@ export const cancelPendingMeeting = async (meetingId: number, note: string): Pro
   if (result.success) {
     return result.data;
   } else {
-    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to cancel pending meeting');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -355,6 +358,7 @@ export const markAdvisorMissed = async (meetingId: number, note: string): Promis
   if (result.success) {
     return result.data;
   } else {
-    throw new Error(typeof result.error === 'string' ? result.error : 'Failed to mark advisor missed');
+    throwApiError(result);
+    return null as never;
   }
 };

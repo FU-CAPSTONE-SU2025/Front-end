@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router';
 import { useCRUDCombo, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import SubjectSelect from '../../components/common/SubjectSelect';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const EditComboPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -41,8 +42,9 @@ const EditComboPage: React.FC = () => {
             navigate('/manager/combo');
           }
         },
-        onError: () => {
-          message.error('Failed to fetch combo!');
+        onError: (error) => {
+          const errorMessage = getUserFriendlyErrorMessage(error);
+          message.error(errorMessage);
           navigate('/manager/combo');
         }
       });
@@ -78,8 +80,9 @@ const EditComboPage: React.FC = () => {
         message.success('Combo updated successfully!');
         navigate('/manager/combo');
       },
-      onError: () => {
-        message.error('Failed to update combo!');
+      onError: (error) => {
+        const errorMessage = getUserFriendlyErrorMessage(error);
+        message.error(errorMessage);
       }
     });
   };

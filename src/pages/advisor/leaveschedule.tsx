@@ -5,6 +5,7 @@ import SearchBar from '../../components/common/searchBar';
 import DataTable from '../../components/common/dataTable';
 import { useLeaveScheduleList, useCreateLeaveSchedule, useUpdateLeaveSchedule, useDeleteLeaveSchedule } from '../../hooks/useCRUDLeaveSchedule';
 import { LeaveSchedule } from '../../interfaces/ILeaveSchedule';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 import styles from '../../css/advisor/workSchedule.module.css';
 import AddLeaveScheduleModal from '../../components/advisor/addLeaveScheduleModal';
@@ -108,7 +109,8 @@ const LeaveSchedulePage: React.FC = () => {
       await deleteLeaveSchedule.mutateAsync(id);
       message.success('Leave schedule deleted successfully!');
     } catch (err) {
-      message.error('Delete failed!');
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      message.error(errorMessage);
     }
   };
 

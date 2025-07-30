@@ -1,20 +1,38 @@
-import { axiosRead } from "../AxiosCRUD";
+import { axiosCreate, axiosRead, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { Syllabus, PagedData } from "../../interfaces/ISchoolProgram";
 
-const userURL = baseUrl+"/Syllabus"
-export const GetAllSyllabus = async (): Promise<Syllabus[] | null> => {
+const syllabusURL = baseUrl + "/Syllabus";
+
+export const GetSyllabusBySubject = async (subjectId: number) => {
     const props = {
         data: null,
-        url: userURL,
+        url: syllabusURL + `/subject/${subjectId}`,
         headers: GetHeader()
     }
     const result = await axiosRead(props)
     if (result.success) {
         return result.data
-    } else {
-        console.log(result.error)
-        return null
+    }
+    else {
+        throwApiError(result);
+        return null as never;
+    }
+}
+
+export const GetSyllabusById = async (syllabusId: number) => {
+    const props = {
+        data: null,
+        url: syllabusURL + `/${syllabusId}`,
+        headers: GetHeader()
+    }
+    const result = await axiosRead(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        throwApiError(result);
+        return null as never;
     }
 }
 
@@ -25,7 +43,7 @@ interface FetchSyllabusParams {
     pageSize?: number;
 }
 
-export const fetchSyllabusPaged = async (params: FetchSyllabusParams): Promise<PagedData<Syllabus> | null> => {
+export const fetchSyllabusPaged = async (params: FetchSyllabusParams): Promise<PagedData<Syllabus>> => {
     const { search = '', page = 1, pageSize = 10 } = params;
     const queryParams: any = {
         search,
@@ -34,14 +52,14 @@ export const fetchSyllabusPaged = async (params: FetchSyllabusParams): Promise<P
     };
     const props = {
         data: queryParams,
-        url: userURL,
+        url: syllabusURL,
         headers: GetHeader(),
     };
     const result = await axiosRead(props);
     if (result.success) {
         return result.data;
     } else {
-        console.log(result.error);
-        return null;
+        throwApiError(result);
+        return null as never;
     }
 };

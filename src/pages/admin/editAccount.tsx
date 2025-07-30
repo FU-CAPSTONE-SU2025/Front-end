@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import styles from '../../css/admin/editAccount.module.css';
 import { GetCurrentStudentUser, GetCurrentStaffUser, UpdateCurrentStaffUser, UpdateCurrentStudentUser, RegisterUser } from '../../api/Account/UserAPI';
 import { AccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 import AvatarUpload from '../../components/common/AvatarUpload';
 
@@ -159,7 +160,10 @@ const EditAccount: React.FC = () => {
           message.success('Account created successfully!');
           nav(-1);
         } catch (err) {
-          message.error('Failed to create account');
+          // Use the improved error handling
+          const errorMessage = getUserFriendlyErrorMessage(err);
+          console.error('Account creation error:', err);
+          message.error(errorMessage);
         }
         setLoading(false);
         return;

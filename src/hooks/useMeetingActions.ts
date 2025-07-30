@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { message } from 'antd';
 import { confirmMeeting, cancelPendingMeeting, completeMeeting } from '../api/advisor/AdvisorAPI';
 import { sendMeetingFeedback, cancelConfirmedMeeting, cancelPendingMeeting as cancelPendingMeetingStudent, markAdvisorMissed } from '../api/student/StudentAPI';
+import { getUserFriendlyErrorMessage } from '../api/AxiosCRUD';
 
 interface UseMeetingActionsProps {
   onActionComplete?: () => void;
@@ -19,7 +20,8 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       message.success('Meeting confirmed successfully!');
       onActionComplete?.();
     } catch (err) {
-      message.error('Failed to confirm meeting.');
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      message.error(errorMessage);
     } finally {
       setActionLoading(false);
     }
@@ -35,7 +37,8 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       onActionComplete?.();
     } catch (err) {
       console.error('Error cancelling meeting:', err);
-      message.error('Failed to cancel meeting. Please try again.');
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      message.error(errorMessage);
     } finally {
       setActionLoading(false);
     }
@@ -54,7 +57,8 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       onActionComplete?.();
     } catch (err) {
       console.error('Error completing meeting:', err);
-      message.error('Failed to complete meeting. Please check the code and try again.');
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      message.error(errorMessage);
     } finally {
       setActionLoading(false);
     }
@@ -73,7 +77,8 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       onActionComplete?.();
     } catch (err) {
       console.error('Error sending feedback:', err);
-      message.error('Failed to send feedback. Please try again.');
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      message.error(errorMessage);
     } finally {
       setActionLoading(false);
     }
@@ -95,7 +100,8 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       onActionComplete?.();
     } catch (err) {
       console.error('Error cancelling meeting:', err);
-      message.error('Failed to cancel meeting. Please try again.');
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      message.error(errorMessage);
     } finally {
       setActionLoading(false);
     }

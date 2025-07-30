@@ -9,6 +9,7 @@ import { Link, useNavigate } from 'react-router';
 import { getAuthState } from '../../hooks/useAuths';
 import { showForNavigation, hideLoading, showForAuth } from '../../hooks/useLoading';
 import BackgroundWrapper from '../../components/common/backgroundWrapper';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Title, Text } = Typography;
 
@@ -88,7 +89,8 @@ const Login: React.FC = () => {
 
       } catch (error) {
         console.error('Google Login Error:', error);
-        message.error('Google Login failed. Please try again.');
+        const errorMessage = getUserFriendlyErrorMessage(error);
+        message.error(errorMessage);
         hideLoading();
       } finally {
         setIsGoogleLoading(false);
@@ -96,7 +98,8 @@ const Login: React.FC = () => {
     },
     onError: (error) => {
       console.error('Google Login Failed:', error);
-      message.error('Google Login failed. Please try again.');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
       hideLoading();
     },
   });
@@ -118,7 +121,8 @@ const Login: React.FC = () => {
       }
     } catch (error) {
       console.error('Login Error:', error);
-      message.error('Login failed. Please try again.');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
       hideLoading();
     } finally {
       setIsEmailLoading(false);

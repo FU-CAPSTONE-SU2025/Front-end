@@ -36,10 +36,14 @@ export interface SubjectInCombo {
 
 // Interface for Syllabus table
 export interface Syllabus {
-  id: number; // Primary key
-  subjectId: number; // Foreign key referencing Subject.id
-  versionId: number | null; // Foreign key referencing SubjectVersion.id
-  content: string; // text
+  id: number;
+  subjectVersionId: number;
+  subjectId: number;
+  subjectName: string;
+  subjectCode: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string | null;
   assessments: SyllabusAssessment[];
   learningMaterials: SyllabusMaterial[];
   learningOutcomes: SyllabusOutcome[];
@@ -108,7 +112,7 @@ export interface UpdateSubject {
 }
 
 export interface CreateSyllabus {
-  subjectId: number,
+  subjectVersionId: number,
   content: string
 }
 export interface UpdateSyllabus {
@@ -169,25 +173,39 @@ export interface UpdateCurriculum {
 export interface SubjectVersion {
   id: number,
   subjectId: number,
+  versionCode: string,
+  versionName: string,
+  description: string,
   isActive: boolean,
-  isApproved: boolean,
-  versionNumber: number,
-  decisionNoDate: Date,
+  isDefault: boolean,
+  effectiveFrom: string,
+  effectiveTo: string | null,
+  createdAt: string,
+  updatedAt: string | null,
+  subject: Subject
 }
 
 export interface CreateSubjectVersion {
   subjectId: number,
-  isActive: boolean,
-  versionNumber: number,
   versionCode: string,
-  versionEffectiveDate: Date,
+  versionName: string,
+  description: string,
+  isActive: boolean,
+  isDefault: boolean,
+  effectiveFrom: string,
+  effectiveTo: string
 }
 
 export interface UpdateSubjectVersion {
-  isActive: boolean,
-  versionNumber: number,
   versionCode: string,
-  versionEffectiveDate: Date,
+  versionName: string,
+  description: string,
+  isActive: boolean,
+  isDefault: boolean,
+  effectiveFrom: string,
+  effectiveTo: string | null,
+  createdAt: string,
+  updatedAt: string | null,
 }
 
 // ==================== RESPONSE TYPES ====================

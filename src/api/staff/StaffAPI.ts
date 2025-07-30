@@ -1,4 +1,4 @@
-import { axiosCreate, axiosDelete, axiosRead, axiosUpdate } from "../AxiosCRUD";
+import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
 import { TokenProps } from "../../interfaces/IAuthen";
@@ -6,7 +6,7 @@ import { pagedStaffData, StaffProfileData } from "../../interfaces/IStaff";
 
 const userURL = baseUrl+"/User/staff"
 
-export const GetActiveUser = async ():Promise<TokenProps|null> => {
+export const GetActiveUser = async ():Promise<TokenProps> => {
     const props = {
         data: null,
         url: userURL+`/active`,
@@ -18,8 +18,8 @@ export const GetActiveUser = async ():Promise<TokenProps|null> => {
         return result.data
     }
     else {
-        console.log(result.error)
-        return null
+        throwApiError(result);
+        return null as never;
     }
 }
 
@@ -35,12 +35,12 @@ export const RegisterStaff = async (data: AccountPropsCreate):Promise<any> => {
         return result.data
     }
     else {
-        console.log(result.error)
-        return null
+        throwApiError(result);
+        return null as never;
     }
 }
 
-export const FetchStaffList = async (pageNumber: number = 1, pageSize: number = 10, searchQuery?: string, filterType?: string, filterValue?: string):Promise<pagedStaffData|null> => {
+export const FetchStaffList = async (pageNumber: number = 1, pageSize: number = 10, searchQuery?: string, filterType?: string, filterValue?: string):Promise<pagedStaffData> => {
     // Build query parameters
     const params = new URLSearchParams({
         pageNumber: pageNumber.toString(),
@@ -67,11 +67,11 @@ export const FetchStaffList = async (pageNumber: number = 1, pageSize: number = 
         return result.data
     }
     else {
-        console.log(result.error)
-        return null
+        throwApiError(result);
+        return null as never;
     }
 }
-export const FetchStaffyId = async (userId:number):Promise<AccountProps|null> => {
+export const FetchStaffyId = async (userId:number):Promise<AccountProps> => {
     const props = {
         data: null,
         url: userURL+`/`+userId,
@@ -83,11 +83,11 @@ export const FetchStaffyId = async (userId:number):Promise<AccountProps|null> =>
         return result.data
     }
     else {
-        console.log(result.error)
-        return null
+        throwApiError(result);
+        return null as never;
     }
 }
-export const UpdateStaff = async (userId:number,data:any):Promise<AccountProps|null> => {
+export const UpdateStaff = async (userId:number,data:any):Promise<AccountProps> => {
     const props = {
         data: data,
         url: userURL+`/`+userId,
@@ -99,7 +99,7 @@ export const UpdateStaff = async (userId:number,data:any):Promise<AccountProps|n
         return result.data
     }
     else {
-        console.log(result.error)
-        return null
+        throwApiError(result);
+        return null as never;
     }
 }

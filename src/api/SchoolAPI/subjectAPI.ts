@@ -1,24 +1,6 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { AccountProps } from "../../interfaces/IAccount";
 import { CreateSubject, PagedData, Subject, UpdateSubject } from "../../interfaces/ISchoolProgram";
-import { mockSubjectVersions } from '../../../data/mockData';
-import { SubjectVersion } from '../../interfaces/ISchoolProgram';
-import { mockSubjectPrerequisites } from '../../../data/mockData';
-
-export function useMockSubjectVersions(subjectId: number): SubjectVersion[] {
-  const found = mockSubjectVersions.filter(v => v.subjectId === subjectId);
-  if (found.length > 0) return found;
-  // If no mock, return two fake versions for any subject
-  return [
-    { id: 1000 + subjectId * 10, subjectId, isActive: true, isApproved: true, versionNumber: 1, decisionNoDate: new Date() },
-    { id: 1000 + subjectId * 10 + 1, subjectId, isActive: false, isApproved: false, versionNumber: 2, decisionNoDate: new Date() },
-  ];
-}
-
-export function useMockPrerequisites(subjectId: number, versionId: number) {
-  return mockSubjectPrerequisites.filter(p => p.subject_id === subjectId && p.version_id === versionId);
-}
 
 const subjectURL = baseUrl + "/Subject";
 
@@ -37,6 +19,10 @@ export const AddSubject = async (data: CreateSubject): Promise<Subject | null> =
   }
 };
 
+/**
+ * @deprecated Use AddPrerequisiteToSubjectVersion from subjectVersionAPI instead
+ * This function will be removed in a future version
+ */
 export const AddPrerequisitesSubject = async (id:number,prerequisitesId:number): Promise<Subject | null> => {
     const props = {
       data: null,
@@ -52,6 +38,10 @@ export const AddPrerequisitesSubject = async (id:number,prerequisitesId:number):
     }
   };
   
+/**
+ * @deprecated Use DeletePrerequisiteFromSubjectVersion from subjectVersionAPI instead
+ * This function will be removed in a future version
+ */
 export const DeletePrerequisitesSubject = async (id:number,prerequisitesId:number): Promise<Subject | null> => {
   const props = {
     data: null,
@@ -67,6 +57,10 @@ export const DeletePrerequisitesSubject = async (id:number,prerequisitesId:numbe
   }
 };
 
+/**
+ * @deprecated Use GetPrerequisitesBySubjectVersion from subjectVersionAPI instead
+ * This function will be removed in a future version
+ */
 export const GetPrerequisitesSubject = async (id:number): Promise<Subject[] | null> => {
   const props = {
     data: null,
@@ -166,13 +160,13 @@ export const UpdateSubjectById = async (id: number, data: UpdateSubject): Promis
   }
 };
 
-export const DisableSubject = async (userId: number): Promise<AccountProps | null> => {
+export const DisableSubject = async (userId: number): Promise<any | null> => {
   const props = {
     data: null,
-    url: subjectURL + `/${userId}`,
+    url: subjectURL + `/${userId}/disable`,
     headers: GetHeader(),
   };
-  const result = await axiosDelete(props);
+  const result = await axiosUpdate(props);
   if (result.success) {
     return result.data;
   } else {

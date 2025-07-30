@@ -12,6 +12,7 @@ import { ManagerBase } from '../../interfaces/IManager';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { BulkRegisterManager } from '../../api/Account/UserAPI';
 import { parseExcelDate } from '../../utils/dateUtils';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Option } = Select;
 
@@ -96,9 +97,10 @@ const ManagerList: React.FC = () => {
       try {
         response = await BulkRegisterManager(transformedData);
       } catch (err) {
+        const errorMessage = getUserFriendlyErrorMessage(err);
         setUploadStatus('error');
-        setUploadMessage('Failed to import managers. Please try again.');
-        message.error('Failed to import managers. Please try again.');
+        setUploadMessage(errorMessage);
+        message.error(errorMessage);
         return;
       }
       // Treat null/undefined (204 No Content) as success

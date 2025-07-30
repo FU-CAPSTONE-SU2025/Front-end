@@ -13,6 +13,7 @@ import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { BulkRegisterStaff, BulkRegisterManager, BulkRegisterAdvisor, BulkRegisterAdmin } from '../../api/Account/UserAPI';
 import { transformBulkImportData, validateBulkData, getApiFunctionName } from '../../utils/bulkImportTransformers';
 import { AccountProps } from '../../interfaces/IAccount';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Option } = Select;
 
@@ -122,9 +123,10 @@ const StaffList: React.FC = () => {
       try {
         response = await BulkRegisterStaff(validData);
       } catch (err) {
+        const errorMessage = getUserFriendlyErrorMessage(err);
         setUploadStatus('error');
-        setUploadMessage('Failed to import staff members. Please try again.');
-        message.error('Failed to import staff members. Please try again.');
+        setUploadMessage(errorMessage);
+        message.error(errorMessage);
         return;
       }
       // Treat null/undefined (204 No Content) as success

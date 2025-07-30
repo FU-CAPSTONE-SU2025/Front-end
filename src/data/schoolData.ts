@@ -22,9 +22,13 @@ export const subjects: Subject[] = [
 export const syllabuses: Syllabus[] = [
   { 
     id: 1, 
-    subjectId: 1, 
-    versionId: 1, // Added to fix TS error
+    subjectVersionId: 1,
+    subjectId: 1,
+    subjectName: 'Intro to Computer Science',
+    subjectCode: 'CS101',
     content: 'Syllabus for CS101',
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: null,
     assessments: [],
     learningMaterials: [],
     learningOutcomes: [],
@@ -32,9 +36,13 @@ export const syllabuses: Syllabus[] = [
   },
   { 
     id: 2, 
-    subjectId: 2, 
-    versionId: 2, // Added to fix TS error
+    subjectVersionId: 2,
+    subjectId: 2,
+    subjectName: 'Data Structures',
+    subjectCode: 'CS102',
     content: 'Syllabus for CS102',
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: null,
     assessments: [],
     learningMaterials: [],
     learningOutcomes: [],

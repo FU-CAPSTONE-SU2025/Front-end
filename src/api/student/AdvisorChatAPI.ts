@@ -1,4 +1,4 @@
-import { axiosCreate, axiosRead, extractErrorMessage } from "../AxiosCRUD";
+import { axiosCreate, axiosRead, extractErrorMessage, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 
 const advisorChatUrl = baseUrl + "/AdvisorySession1to1";
@@ -36,8 +36,8 @@ export const initHumanChatSession = async (request: InitHumanChatSessionRequest)
   if (result.success) {
     return result.data as InitHumanChatSessionResponse;
   } else {
-    console.error('Failed to initialize human chat session:', result.error);
-    throw new Error(extractErrorMessage(result.error) || 'Failed to initialize human chat session');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -53,8 +53,8 @@ export const getHumanSessionsByStudent = async (pageNumber: number = 1, pageSize
   if (result.success) {
     return result.data;
   } else {
-    console.error('Failed to get human sessions:', result.error);
-    throw new Error(extractErrorMessage(result.error) || 'Failed to get human sessions');
+    throwApiError(result);
+    return null as never;
   }
 };
 
@@ -70,7 +70,7 @@ export const getSessionMessages = async (sessionId: number, pageNumber: number =
   if (result.success) {
     return result.data;
   } else {
-    console.error('Failed to get session messages:', result.error);
-    throw new Error(extractErrorMessage(result.error) || 'Failed to get session messages');
+    throwApiError(result);
+    return null as never;
   }
 }; 

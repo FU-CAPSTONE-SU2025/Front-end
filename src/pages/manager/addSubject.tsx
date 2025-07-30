@@ -8,6 +8,7 @@ import DataPreview from '../../components/manager/data-preview';
 import ManualInput from '../../components/manager/manual-input';
 import ReviewSection from '../../components/manager/review-section';
 import SummaryCard from '../../components/manager/summary-card';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 
 // Custom CSS for better table styling
 const customTableStyles = `

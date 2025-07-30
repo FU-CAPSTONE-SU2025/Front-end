@@ -12,6 +12,7 @@ import {
 } from '../../hooks/useCRUDAdvisor';
 import { BookingAvailability } from '../../interfaces/IBookingAvailability';
 import styles from '../../css/advisor/workSchedule.module.css';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Title, Text } = Typography;
 
@@ -71,7 +72,8 @@ const WorkSchedule: React.FC = () => {
       getAllBookingAvailability();
     } catch (error) {
       console.error('Error deleting schedule:', error);
-      message.error('An error occurred while deleting the schedule.');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 

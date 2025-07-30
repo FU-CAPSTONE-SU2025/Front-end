@@ -19,6 +19,7 @@ import AssessmentTable from '../../components/staff/AssessmentTable';
 import MaterialTable from '../../components/staff/MaterialTable';
 import OutcomeTable from '../../components/staff/OutcomeTable';
 import SessionTable from '../../components/staff/SessionTable';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Title } = Typography;
 
@@ -29,7 +30,7 @@ const ManagerSubjectSyllabus: React.FC = () => {
 
   // Syllabus API hooks
   const {
-    fetchSyllabusBySubjectMutation,
+    fetchSyllabusBySubjectVersionMutation,
     addSyllabusMutation,
     addSyllabusAssessmentMutation,
     addSyllabusMaterialMutation,
@@ -67,14 +68,14 @@ const ManagerSubjectSyllabus: React.FC = () => {
       setLoading(true);
       try {
         // Try to fetch syllabus for this subject
-        const result = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+        const result = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
 
         if(result === null){
             // Check for 404 error (syllabus not found)
           const content = subject ? `${subject.subjectCode} - ${subject.subjectName}'s syllabus` : `Syllabus for subject ${subjectId}`;
-            await addSyllabusMutation.mutateAsync({ subjectId: Number(subjectId), content });
+            await addSyllabusMutation.mutateAsync({ subjectVersionId: Number(subjectId), content });
             // Refetch syllabus after creation
-            const newResult = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+            const newResult = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
             setSyllabus(Array.isArray(newResult) ? newResult[0] : newResult);
         }else{
           setSyllabus(Array.isArray(result) ? result[0] : result);
@@ -87,7 +88,7 @@ const ManagerSubjectSyllabus: React.FC = () => {
     };
 
     fetchOrCreateSyllabus();
-  }, [subjectId, syllabusId, subject]);
+  }, [subjectId, syllabusId]);
 
   const handleSaveSyllabus = async () => {
     setLoading(true);
@@ -96,7 +97,8 @@ const ManagerSubjectSyllabus: React.FC = () => {
       message.success('Syllabus saved successfully');
       setIsEditing(false);
     } catch (error) {
-      message.error('Failed to save syllabus');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -111,7 +113,7 @@ const ManagerSubjectSyllabus: React.FC = () => {
       });
     
       // Refetch syllabus to update UI
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       console.error('Error adding assessment:', error);
@@ -128,7 +130,7 @@ const ManagerSubjectSyllabus: React.FC = () => {
         syllabusId: syllabus.id
       });
 
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       console.error('Error adding material:', error);
@@ -145,7 +147,7 @@ const ManagerSubjectSyllabus: React.FC = () => {
         syllabusId: syllabus.id
       });
     
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       console.error('Error adding outcome:', error);
@@ -162,7 +164,7 @@ const ManagerSubjectSyllabus: React.FC = () => {
         syllabusId: syllabus.id
       });
   
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       console.error('Error adding session:', error);
@@ -175,10 +177,11 @@ const ManagerSubjectSyllabus: React.FC = () => {
       // TODO: Implement delete mutations
       message.success(`${type} deleted successfully`);
       // Refetch syllabus to update UI
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      message.error(`Failed to delete ${type}`);
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 
@@ -186,10 +189,11 @@ const ManagerSubjectSyllabus: React.FC = () => {
     try {
       // TODO: Implement update mutation
       message.success('Assessment updated successfully');
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      message.error('Failed to update assessment');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 
@@ -197,10 +201,11 @@ const ManagerSubjectSyllabus: React.FC = () => {
     try {
       // TODO: Implement update mutation
       message.success('Material updated successfully');
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      message.error('Failed to update material');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 
@@ -208,10 +213,11 @@ const ManagerSubjectSyllabus: React.FC = () => {
     try {
       // TODO: Implement update mutation
       message.success('Outcome updated successfully');
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      message.error('Failed to update outcome');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 
@@ -219,21 +225,23 @@ const ManagerSubjectSyllabus: React.FC = () => {
     try {
       // TODO: Implement update mutation
       message.success('Session updated successfully');
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      message.error('Failed to update session');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 
   const handleAddOutcomeToSession = async (sessionId: number, outcomeId: number) => {
     try {
-      await addSyllabusOutcomesToSessionMutation.mutateAsync({ sessionId, outcomeId });
+      // TODO: Implement add outcome to session mutation
       message.success('Outcome added to session successfully');
-      const updated = await fetchSyllabusBySubjectMutation.mutateAsync(Number(subjectId));
+      const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      message.error('Failed to add outcome to session');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 

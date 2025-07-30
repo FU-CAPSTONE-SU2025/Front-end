@@ -46,6 +46,42 @@ export const extractErrorMessage = (error: string | ErrorResponse | undefined): 
     return "Unknown error occurred";
 };
 
+// Helper function to extract detailed error messages from backend response
+export const extractBackendErrorMessage = (backendError: any): string => {
+    if (!backendError) return "Unknown error occurred";
+    
+    // Handle validation errors (nested in errors object)
+    if (backendError.errors && typeof backendError.errors === 'object') {
+        const validationErrors: string[] = [];
+        
+        // Extract all validation error messages
+        for (const field in backendError.errors) {
+            const fieldErrors = backendError.errors[field];
+            if (Array.isArray(fieldErrors)) {
+                validationErrors.push(...fieldErrors);
+            } else if (typeof fieldErrors === 'string') {
+                validationErrors.push(fieldErrors);
+            }
+        }
+        
+        if (validationErrors.length > 0) {
+            return validationErrors.join('\n');
+        }
+    }
+    
+    // Handle general message
+    if (backendError.message && typeof backendError.message === 'string') {
+        return backendError.message;
+    }
+    
+    // Handle string errors
+    if (typeof backendError === 'string') {
+        return backendError;
+    }
+    
+    return "Unknown error occurred";
+};
+
 // Helper function to create and throw proper error with ErrorResponse attached
 export const throwApiError = (result: AxiosResult): never => {
     if (isErrorResponse(result.error)) {
@@ -55,11 +91,80 @@ export const throwApiError = (result: AxiosResult): never => {
         // Create a new Error with the message and attach ErrorResponse if available
         const errorMessage = extractErrorMessage(result.error);
         const error = new Error(errorMessage);
+        
+        // Attach the full error context for debugging
         if (result.error) {
             (error as any).errorResponse = result.error;
         }
+        
+        // Add additional context for validation errors
+        if (result.error && typeof result.error === 'object' && 'errors' in result.error) {
+            (error as any).validationErrors = (result.error as any).errors;
+        }
+        
         throw error;
     }
+};
+
+// Utility function to extract validation errors for UI display
+export const extractValidationErrors = (error: any): Record<string, string[]> => {
+    if (!error) return {};
+    
+    // If it's an ErrorResponse with validation errors
+    if (isErrorResponse(error) && (error as any).validationErrors) {
+        return (error as any).validationErrors;
+    }
+    
+    // If it's a raw error object with validation errors
+    if (typeof error === 'object' && error.errors && typeof error.errors === 'object') {
+        return error.errors;
+    }
+    
+    return {};
+};
+
+// Utility function to get a user-friendly error message
+export const getUserFriendlyErrorMessage = (error: any): string => {
+    if (!error) return "An unknown error occurred";
+    
+    // If it's an ErrorResponse
+    if (isErrorResponse(error)) {
+        return error.message;
+    }
+    
+    // If it's a string
+    if (typeof error === 'string') {
+        return error;
+    }
+    
+    // If it's an Error object
+    if (error instanceof Error) {
+        return error.message;
+    }
+    
+    // If it's an object with validation errors
+    if (typeof error === 'object' && error.errors) {
+        const validationErrors = extractValidationErrors(error);
+        const errorMessages: string[] = [];
+        
+        for (const field in validationErrors) {
+            const fieldErrors = validationErrors[field];
+            if (Array.isArray(fieldErrors)) {
+                errorMessages.push(...fieldErrors);
+            }
+        }
+        
+        if (errorMessages.length > 0) {
+            return errorMessages.join('\n');
+        }
+    }
+    
+    // If it has a message property
+    if (typeof error === 'object' && error.message) {
+        return error.message;
+    }
+    
+    return "An unknown error occurred";
 };
 
 const MAX_REFRESH_RETRIES = 3;
@@ -112,33 +217,13 @@ export const makeRequest = async (
                     // Check if the backend sent a structured error response
                     const backendError = errorResponse.data;
                     
-                    // If the backend error is already an object with message and status
-                    if (typeof backendError === 'object' && backendError.message) {
-                        return { 
-                            success: false, 
-                            error: createErrorResponse(
-                                backendError.message, 
-                                errorResponse.status
-                            ) 
-                        };
-                    }
+                    // Use the improved error message extraction
+                    const errorMessage = extractBackendErrorMessage(backendError);
                     
-                    // If the backend error is a string, wrap it in ErrorResponse
-                    if (typeof backendError === 'string') {
-                        return { 
-                            success: false, 
-                            error: createErrorResponse(
-                                backendError, 
-                                errorResponse.status
-                            ) 
-                        };
-                    }
-                    
-                    // Fallback: use status text or generic message
                     return { 
                         success: false, 
                         error: createErrorResponse(
-                            errorResponse.statusText || `HTTP ${errorResponse.status} Error`, 
+                            errorMessage, 
                             errorResponse.status
                         ) 
                     };
@@ -174,27 +259,6 @@ export const makeRequest = async (
         }
     }
 };
-
-// React Query mutation hook for any Axios CRUD operation
-export const useAxiosMutation = () =>
-    useMutation({
-        mutationFn: async (params: { method: Method; url: string; data?: any; headers?: any }) => {
-            const { method, url, data, headers } = params;
-            const result = await makeRequest(method, url, data, headers);
-            if (result.success) {
-                return result.data;
-            } else {
-                // Create a proper Error object with the ErrorResponse attached
-                const error = new Error(
-                    isErrorResponse(result.error) ? result.error.message : (result.error || "Request failed")
-                );
-                // Attach the full ErrorResponse object to the error
-                (error as any).errorResponse = result.error;
-                throw error;
-            }
-        },
-        retry: 3, // Retry up to 3 times on error
-    });
 
 // CRUD-specific functions
 export const axiosCreate = (props: AxiosProp) =>

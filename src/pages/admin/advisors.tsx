@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, Input, Select, Table, Modal, message } from 'antd';
+import { ConfigProvider, Input, Select, Modal, message } from 'antd';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
 import BulkDataImport from '../../components/common/bulkDataImport';
@@ -15,6 +15,7 @@ import * as XLSX from 'xlsx';
 import { GetAllMeetingRecordPaged } from '../../api/admin/auditlogAPI';
 import { AdminViewBooking } from '../../interfaces/IBookingAvailability';
 import { showForExport, hideLoading } from '../../hooks/useLoading';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 
 const { Option } = Select;
@@ -125,9 +126,10 @@ const AdvisorList: React.FC = () => {
       try {
         response = await BulkRegisterAdvisor(transformedData);
       } catch (err) {
+        const errorMessage = getUserFriendlyErrorMessage(err);
         setUploadStatus('error');
-        setUploadMessage('Failed to import advisors. Please try again.');
-        message.error('Failed to import advisors. Please try again.');
+        setUploadMessage(errorMessage);
+        message.error(errorMessage);
         return;
       }
       // Treat null/undefined (204 No Content) as success
@@ -347,11 +349,6 @@ const AdvisorList: React.FC = () => {
       <div className={styles.container}>
         <AccountCounter label="Advisor" advisor={categorizedData?.advisor} />
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible"
-         style={{ 
-          marginTop: '2rem',
-          maxHeight: 'none',
-          height: 'auto'
-        }}
         >
           <div className={styles.userInfo}>
             <h2>{isDeleteMode ? 'Delete Advisor Account' : 'List Of Advisors On the System'}</h2>

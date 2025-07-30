@@ -1,10 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Button, Tabs, Typography, message, Table, Card } from 'antd';
-import { PlusOutlined, ArrowLeftOutlined, EditOutlined, SaveOutlined, FileExcelOutlined, CheckOutlined } from '@ant-design/icons';
+import { Button, Tabs, Typography, message, Table, Card, Tag, Space, Popconfirm, Tooltip } from 'antd';
+import { PlusOutlined, ArrowLeftOutlined, EditOutlined, SaveOutlined, FileExcelOutlined, CheckOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 
 import AddVersionModal from '../../components/staff/AddVersionModal';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 
 import AssessmentTable from '../../components/staff/AssessmentTable';
 import MaterialTable from '../../components/staff/MaterialTable';
@@ -14,228 +15,580 @@ import SubjectSelect from '../../components/common/SubjectSelect';
 import { Modal } from 'antd';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { SubjectVersion, Syllabus, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, SubjectPrerequisite } from '../../interfaces/ISchoolProgram';
-import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import { SubjectVersion, Syllabus, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, SubjectPrerequisite, CreateSubjectVersion, CreateSyllabus } from '../../interfaces/ISchoolProgram';
+import { useCRUDSubject, useCRUDSubjectVersion, useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
+import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../data/mockData';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const noopAsync = async () => {};
 
-// Remove useParams, subjectId, and dynamic subject lookup
-// Use hardcoded mock subject and versions for static UI
+// Function to create default version for a subject (moved outside component)
+const createDefaultVersion = async (
+  subjectData: any, 
+  addSubjectVersionMutation: any
+) => {
+  try {
+    const defaultVersionData = generateDefaultVersionData(
+      subjectData.id,
+      subjectData.subjectCode,
+      subjectData.subjectName
+    );
+    
+    const newVersion = await addSubjectVersionMutation.mutateAsync(defaultVersionData);
+    if (newVersion) {
+      message.success('Default version created successfully!');
+      return [newVersion];
+    }
+  } catch (err: any) {
+    const errorMessage = getUserFriendlyErrorMessage(err);
+    message.error('Failed to create default version: ' + errorMessage);
+  }
+  return [];
+};
 
-// Remove staticMockSubject
-// Mock data using correct interfaces
-const staticMockVersions: SubjectVersion[] = [
-  { id: 1, subjectId: 1, isActive: true, isApproved: true, versionNumber: 1, decisionNoDate: new Date('2022-01-01') },
-  { id: 2, subjectId: 1, isActive: false, isApproved: true, versionNumber: 2, decisionNoDate: new Date('2022-06-01') },
-  { id: 3, subjectId: 1, isActive: true, isApproved: false, versionNumber: 3, decisionNoDate: new Date('2023-01-01') },
-];
-// Mock syllabuses for each version
-const staticMockSyllabuses: Syllabus[] = [
-  { id: 1, subjectId: 1, versionId: 1, content: 'Syllabus content for Version 1: Calculus fundamentals, limits, derivatives, and integrals.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
-  { id: 2, subjectId: 1, versionId: 2, content: 'Syllabus content for Version 2: Advanced topics in Calculus, multivariable calculus, and series.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
-  { id: 3, subjectId: 1, versionId: 3, content: 'Syllabus content for Version 3: Calculus applications, differential equations, and real analysis.', assessments: [], learningMaterials: [], learningOutcomes: [], sessions: [] },
-];
-// Mock prerequisites for each version
-const staticMockPrerequisites: SubjectPrerequisite[] = [
-  { version_id: 1, subject_id: 1, prerequisite_subject_id: 101, subjectCode: 'MATH101', subjectName: 'Calculus I' } as any,
-  { version_id: 1, subject_id: 1, prerequisite_subject_id: 102, subjectCode: 'PHYS101', subjectName: 'Physics I' } as any,
-  { version_id: 2, subject_id: 1, prerequisite_subject_id: 103, subjectCode: 'CHEM101', subjectName: 'Chemistry I' } as any,
-  { version_id: 3, subject_id: 1, prerequisite_subject_id: 104, subjectCode: 'BIO101', subjectName: 'Biology I' } as any,
-];
-
-// Mock data for all sub-tables (assessments, materials, outcomes, sessions)
-const staticMockAssessments: SyllabusAssessment[] = [
-  { id: 1, syllabusId: 1, category: 'Quiz', quantity: 2, weight: 20, duration: 30, questionType: 'multiple-choice', completionCriteria: 'Score above 50%' },
-  { id: 2, syllabusId: 1, category: 'Assignment', quantity: 1, weight: 30, duration: 60, questionType: 'essay', completionCriteria: 'Submit on time' },
-];
-const staticMockMaterials: SyllabusMaterial[] = [
-  { id: 1, syllabusId: 1, materialName: 'Calculus Textbook', authorName: 'James Stewart', publishedDate: new Date('2020-01-01'), description: 'Main course textbook', filepathOrUrl: 'https://example.com/calculus.pdf' },
-  { id: 2, syllabusId: 1, materialName: 'Lecture Slides', authorName: 'Prof. Smith', publishedDate: new Date('2023-01-01'), description: 'Slides for all lectures', filepathOrUrl: '' },
-];
-const staticMockOutcomes: SyllabusOutcome[] = [
-  { id: 1, syllabusId: 1, outcomeCode: 'LO1', description: 'Understand limits and derivatives' },
-  { id: 2, syllabusId: 1, outcomeCode: 'LO2', description: 'Apply integration techniques' },
-];
-const staticMockSessions: SyllabusSession[] = [
-  { id: 1, syllabusId: 1, sessionNumber: 1, topic: 'Limits', mission: 'Introduction to limits' },
-  { id: 2, syllabusId: 1, sessionNumber: 2, topic: 'Derivatives', mission: 'Basic differentiation' },
-];
+// Function to create default syllabus for a subject version (moved outside component)
+const createDefaultSyllabus = async (
+  subjectVersionId: number,
+  subjectCode: string,
+  subjectName: string,
+  addSyllabusMutation: any
+) => {
+  try {
+    const defaultSyllabusData = generateDefaultSyllabusData(
+      subjectVersionId,
+      subjectCode,
+      subjectName
+    );
+    
+    const newSyllabus = await addSyllabusMutation.mutateAsync(defaultSyllabusData);
+    if (newSyllabus) {
+      message.success('Default syllabus created successfully!');
+      return newSyllabus;
+    }
+  } catch (err: any) {
+    const errorMessage = getUserFriendlyErrorMessage(err);
+    message.error('Failed to create default syllabus: ' + errorMessage);
+  }
+  return null;
+};
 
 const ManagerSubjectVersionPage: React.FC = () => {
   const navigate = useNavigate();
+  const { subjectId } = useParams();
   const [modalVisible, setModalVisible] = useState(false);
   const [adding, setAdding] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [approveHover, setApproveHover] = useState(false);
-  const [versions, setVersions] = useState(staticMockVersions);
-  const [activeKey, setActiveKey] = useState(String(staticMockVersions[0].id));
-  const [activateModal, setActivateModal] = useState<{ open: boolean, versionId: number | null }>({ open: false, versionId: null });
-  const [activeHover, setActiveHover] = useState<number | null>(null);
-  useEffect(() => {
-    setActiveKey(String(staticMockVersions[0].id));
-  }, []);
+  const [activeKey, setActiveKey] = useState<string>('');
 
   // State for Add Prerequisite Modal
   const [prereqModalOpen, setPrereqModalOpen] = useState(false);
   const [selectedPrereqSubject, setSelectedPrereqSubject] = useState<any>(null);
   const [editingVersionId, setEditingVersionId] = useState<number | null>(null);
-  // Local state for prerequisites per version (for demo)
-  const [prereqMap, setPrereqMap] = useState(() => {
-    // Map versionId to its prerequisites
-    const map: Record<number, any[]> = {};
-    staticMockVersions.forEach(v => {
-      map[v.id] = staticMockPrerequisites.filter(p => p.version_id === v.id);
-    });
-    return map;
-  });
+  
+  // Local state for prerequisites per version
+  const [prereqMap, setPrereqMap] = useState<Record<number, any[]>>({});
+  const [prereqLoading, setPrereqLoading] = useState<Record<number, boolean>>({});
 
-  // Local state for each sub-table (per version for demo)
-  const [assessmentMap, setAssessmentMap] = useState(() => {
-    const map: Record<number, any[]> = {};
-    staticMockVersions.forEach(v => { map[v.id] = [...staticMockAssessments]; });
-    return map;
-  });
-  const [materialMap, setMaterialMap] = useState(() => {
-    const map: Record<number, any[]> = {};
-    staticMockVersions.forEach(v => { map[v.id] = [...staticMockMaterials]; });
-    return map;
-  });
-  const [outcomeMap, setOutcomeMap] = useState(() => {
-    const map: Record<number, any[]> = {};
-    staticMockVersions.forEach(v => { map[v.id] = [...staticMockOutcomes]; });
-    return map;
-  });
-  const [sessionMap, setSessionMap] = useState(() => {
-    const map: Record<number, any[]> = {};
-    staticMockVersions.forEach(v => { map[v.id] = [...staticMockSessions]; });
-    return map;
-  });
+  // Local state for each sub-table (per version)
+  const [assessmentMap, setAssessmentMap] = useState<Record<number, any[]>>({});
+  const [materialMap, setMaterialMap] = useState<Record<number, any[]>>({});
+  const [outcomeMap, setOutcomeMap] = useState<Record<number, any[]>>({});
+  const [sessionMap, setSessionMap] = useState<Record<number, any[]>>({});
+  
   // Bulk import modal state
   const [bulkModal, setBulkModal] = useState<{ type: string, versionId: number } | null>(null);
 
-  // Fetch subject from BE (replace 1 with dynamic subjectId when routing is ready)
+  // API hooks
   const { getSubjectById } = useCRUDSubject();
+  const { 
+    getSubjectVersionsBySubjectId, 
+    addSubjectVersionMutation, 
+    deleteSubjectVersionMutation,
+    toggleActiveSubjectVersionMutation,
+    addPrerequisiteToSubjectVersionMutation,
+    getPrerequisitesBySubjectVersionMutation,
+    deletePrerequisiteFromSubjectVersionMutation,
+    getPrerequisitesBySubjectMutation,
+    copyPrerequisitesBetweenVersionsMutation
+  } = useCRUDSubjectVersion();
+  const {
+    fetchSyllabusBySubjectVersionMutation,
+    addSyllabusMutation
+  } = useCRUDSyllabus();
+
   const [subject, setSubject] = useState<any | null>(null);
+  const [subjectVersions, setSubjectVersions] = useState<SubjectVersion[]>([]);
+  const [syllabusMap, setSyllabusMap] = useState<Record<number, Syllabus | null>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { subjectId } = useParams();
-  useEffect(() => {
-    setLoading(true);
-    getSubjectById.mutateAsync(Number(subjectId))
-      .then(data => {
-        setSubject(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError('Failed to fetch subject:' + err);
-        setLoading(false);
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  // Handler for adding a new version (mocked)
-  const handleAddVersion = (values: any) => {
+  // Function to fetch prerequisites for a specific version
+  const fetchPrerequisitesForVersion = useCallback(async (versionId: number) => {
+    setPrereqLoading(prev => ({ ...prev, [versionId]: true }));
+    try {
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+      
+      const prerequisitesPromise = getPrerequisitesBySubjectVersionMutation.mutateAsync(versionId);
+      const prerequisites = await Promise.race([prerequisitesPromise, timeoutPromise]);
+      
+      if (prerequisites && Array.isArray(prerequisites)) {
+        setPrereqMap(prev => ({
+          ...prev,
+          [versionId]: prerequisites
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch prerequisites for version:', versionId, error);
+      message.error('Failed to fetch prerequisites');
+    } finally {
+      setPrereqLoading(prev => ({ ...prev, [versionId]: false }));
+    }
+  }, [getPrerequisitesBySubjectVersionMutation]);
+
+  // Function to fetch all prerequisites for the subject
+  const fetchAllPrerequisites = useCallback(async () => {
+    if (!subjectId) return;
+    
+    try {
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+      
+      const allPrerequisitesPromise = getPrerequisitesBySubjectMutation.mutateAsync(Number(subjectId));
+      const allPrerequisites = await Promise.race([allPrerequisitesPromise, timeoutPromise]);
+      
+      if (allPrerequisites && Array.isArray(allPrerequisites)) {
+        const groupedPrereqs: Record<number, any[]> = {};
+        allPrerequisites.forEach((prereq: any) => {
+          const versionId = prereq.version_id || prereq.subjectVersionId;
+          if (versionId) {
+            if (!groupedPrereqs[versionId]) {
+              groupedPrereqs[versionId] = [];
+            }
+            groupedPrereqs[versionId].push(prereq);
+          }
+        });
+        setPrereqMap(groupedPrereqs);
+      }
+    } catch (error) {
+      console.error('Failed to fetch all prerequisites:', error);
+      message.error('Failed to fetch prerequisites');
+    }
+  }, [subjectId, getPrerequisitesBySubjectMutation]);
+
+  // Handler to fetch or create syllabus for a specific version
+  const fetchOrCreateSyllabus = useCallback(async (versionId: number, subjectData: any) => {
+    if (!subjectData) {
+      return;
+    }
+    
+    try {
+      // Try to fetch existing syllabus for this version
+      let syllabusData: Syllabus | null = null;
+      try {
+        syllabusData = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      } catch (err) {
+        console.error('Error fetching syllabus for version:', versionId, err);
+        syllabusData = null;
+      }
+      
+      if (!syllabusData) {
+        // No syllabus exists, create default syllabus
+        message.info('No syllabus found. Creating default syllabus...');
+        const newSyllabus = await createDefaultSyllabus(
+          versionId,
+          subjectData.subjectCode,
+          subjectData.subjectName,
+          addSyllabusMutation
+        );
+        
+        if (newSyllabus) {
+          setSyllabusMap(prev => ({
+            ...prev,
+            [versionId]: newSyllabus
+          }));
+          
+          // Update the assessment, material, outcome, and session maps with the new syllabus data
+          setAssessmentMap(prev => ({
+            ...prev,
+            [versionId]: newSyllabus.assessments || []
+          }));
+          setMaterialMap(prev => ({
+            ...prev,
+            [versionId]: newSyllabus.learningMaterials || []
+          }));
+          setOutcomeMap(prev => ({
+            ...prev,
+            [versionId]: newSyllabus.learningOutcomes || []
+          }));
+          setSessionMap(prev => ({
+            ...prev,
+            [versionId]: newSyllabus.sessions || []
+          }));
+        }
+      } else {
+        // Syllabus exists, use it
+        // Check if the nested arrays exist and are arrays
+        const assessments = Array.isArray(syllabusData.assessments) ? syllabusData.assessments : [];
+        const materials = Array.isArray(syllabusData.learningMaterials) ? syllabusData.learningMaterials : [];
+        const outcomes = Array.isArray(syllabusData.learningOutcomes) ? syllabusData.learningOutcomes : [];
+        const sessions = Array.isArray(syllabusData.sessions) ? syllabusData.sessions : [];
+        
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: syllabusData
+        }));
+        
+        // Update the maps with existing syllabus data
+        setAssessmentMap(prev => ({
+          ...prev,
+          [versionId]: assessments
+        }));
+        setMaterialMap(prev => ({
+          ...prev,
+          [versionId]: materials
+        }));
+        setOutcomeMap(prev => ({
+          ...prev,
+          [versionId]: outcomes
+        }));
+        setSessionMap(prev => ({
+          ...prev,
+          [versionId]: sessions
+        }));
+      }
+    } catch (err: any) {
+      console.error('Error in fetchOrCreateSyllabus:', err);
+      message.error('Failed to fetch/create syllabus: ' + err.message);
+    }
+  }, [fetchSyllabusBySubjectVersionMutation, addSyllabusMutation]);
+
+  // Fetch subject and versions
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!subjectId) return;
+      
+      setLoading(true);
+      try {
+        // Fetch subject first
+        const subjectData = await getSubjectById.mutateAsync(Number(subjectId));
+        setSubject(subjectData);
+        
+        // Fetch subject versions
+        let versionsData: SubjectVersion[] | null = null;
+        try {
+          versionsData = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+        } catch (err) {
+          console.log('No versions found or API error:', err);
+          versionsData = null;
+        }
+        
+        if (!versionsData || versionsData.length === 0) {
+          // No versions exist, create default version
+          message.info('No versions found. Creating default version...');
+          const defaultVersions = await createDefaultVersion(subjectData, addSubjectVersionMutation);
+          setSubjectVersions(defaultVersions);
+          if (defaultVersions.length > 0) {
+            setActiveKey(String(defaultVersions[0].id));
+            // Fetch syllabus for the first version
+            await fetchOrCreateSyllabus(defaultVersions[0].id, subjectData);
+            // Fetch prerequisites for the first version
+            try {
+              await fetchPrerequisitesForVersion(defaultVersions[0].id);
+            } catch (error) {
+              console.error('Failed to fetch prerequisites for default version:', error);
+            }
+          }
+        } else {
+          // Versions exist, use them
+          setSubjectVersions(versionsData);
+          if (versionsData.length > 0) {
+            setActiveKey(String(versionsData[0].id));
+            // Fetch syllabus for the first version
+            await fetchOrCreateSyllabus(versionsData[0].id, subjectData);
+            // Fetch prerequisites for all versions - with error handling
+            try {
+              await fetchAllPrerequisites();
+            } catch (error) {
+              console.error('Failed to fetch all prerequisites:', error);
+              // Fallback: fetch prerequisites for the first version only
+              try {
+                await fetchPrerequisitesForVersion(versionsData[0].id);
+              } catch (prereqError) {
+                console.error('Failed to fetch prerequisites for first version:', prereqError);
+              }
+            }
+          }
+        }
+        
+        setLoading(false);
+      } catch (err: any) {
+        setError('Failed to fetch data: ' + err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [subjectId]);
+
+  // Handler for tab change
+  const handleTabChange = useCallback(async (key: string) => {
+    setActiveKey(key);
+    const versionId = Number(key);
+    
+    // Fetch syllabus for this version if not already loaded
+    if (!syllabusMap[versionId]) {
+      await fetchOrCreateSyllabus(versionId, subject);
+    }
+    
+    // Fetch prerequisites for this version if not already loaded
+    if (!prereqMap[versionId] && !prereqLoading[versionId]) {
+      await fetchPrerequisitesForVersion(versionId);
+    }
+  }, [syllabusMap, prereqMap, prereqLoading, fetchOrCreateSyllabus, fetchPrerequisitesForVersion, subject]);
+
+  // Handler for adding a new version
+  const handleAddVersion = useCallback(async (values: CreateSubjectVersion) => {
     setAdding(true);
-    setTimeout(() => {
-      message.success('Version added (mock)!');
-      setAdding(false);
+    try {
+      await addSubjectVersionMutation.mutateAsync(values);
+      message.success('Version added successfully!');
+      
+      // Refresh versions list
+      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+      if (updatedVersions) {
+        setSubjectVersions(updatedVersions);
+        if (updatedVersions.length > 0) {
+          const newVersionId = updatedVersions[updatedVersions.length - 1].id;
+          setActiveKey(String(newVersionId));
+          // Fetch prerequisites for the new version
+          await fetchPrerequisitesForVersion(newVersionId);
+        }
+      }
+      
       setModalVisible(false);
-    }, 1000);
-  };
+    } catch (err: any) {
+      message.error('Failed to add version: ' + err.message);
+    } finally {
+      setAdding(false);
+    }
+  }, [addSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, fetchPrerequisitesForVersion]);
+
+  // Handler to delete a version
+  const handleDeleteVersion = useCallback(async (versionId: number) => {
+    try {
+      await deleteSubjectVersionMutation.mutateAsync(versionId);
+      message.success('Version deleted successfully!');
+      
+      // Refresh versions list
+      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+      if (updatedVersions) {
+        setSubjectVersions(updatedVersions);
+        if (updatedVersions.length > 0 && activeKey === String(versionId)) {
+          setActiveKey(String(updatedVersions[0].id));
+        }
+      }
+    } catch (err: any) {
+      message.error('Failed to delete version: ' + err.message);
+    }
+  }, [deleteSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, activeKey]);
+
+  // Handler to toggle active status (Manager approval)
+  const handleToggleActive = useCallback(async (versionId: number) => {
+    try {
+      await toggleActiveSubjectVersionMutation.mutateAsync(versionId);
+      message.success('Version status updated successfully!');
+      
+      // Refresh versions list
+      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+      if (updatedVersions) {
+        setSubjectVersions(updatedVersions);
+      }
+    } catch (err: any) {
+      message.error('Failed to update version status: ' + err.message);
+    }
+  }, [toggleActiveSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId]);
 
   // Handler to add a prerequisite
   const handleAddPrerequisite = (versionId: number) => {
     setEditingVersionId(versionId);
     setPrereqModalOpen(true);
   };
-  const handlePrereqModalOk = () => {
+
+  const handlePrereqModalOk = async () => {
     if (selectedPrereqSubject && editingVersionId) {
-      setPrereqMap(prev => ({
-        ...prev,
-        [editingVersionId]: [
-          ...prev[editingVersionId],
-          {
-            version_id: editingVersionId,
-            subject_id: 1, // Assuming subject_id is always 1 for mock
-            prerequisite_subject_id: selectedPrereqSubject.id,
-            subjectCode: selectedPrereqSubject.subjectCode,
-            subjectName: selectedPrereqSubject.subjectName,
-          },
-        ],
-      }));
+      try {
+        await addPrerequisiteToSubjectVersionMutation.mutateAsync({
+          subjectVersionId: editingVersionId,
+          prerequisiteId: selectedPrereqSubject.id
+        });
+        
+        // Refresh prerequisites for this version
+        await fetchPrerequisitesForVersion(editingVersionId);
+        
+        message.success('Prerequisite added successfully!');
+      } catch (error) {
+        console.error('Failed to add prerequisite:', error);
+        message.error('Failed to add prerequisite');
+      }
     }
     setPrereqModalOpen(false);
     setSelectedPrereqSubject(null);
     setEditingVersionId(null);
   };
+
   const handlePrereqModalCancel = () => {
     setPrereqModalOpen(false);
     setSelectedPrereqSubject(null);
     setEditingVersionId(null);
   };
+
   // Handler to delete a prerequisite
-  const handleDeletePrerequisite = (versionId: number, prerequisite_subject_id: number) => {
-    setPrereqMap(prev => ({
-      ...prev,
-      [versionId]: prev[versionId].filter(p => p.prerequisite_subject_id !== prerequisite_subject_id),
-    }));
+  const handleDeletePrerequisite = async (versionId: number, prerequisite_subject_id: number) => {
+    try {
+      await deletePrerequisiteFromSubjectVersionMutation.mutateAsync({
+        subjectVersionId: versionId,
+        prerequisiteId: prerequisite_subject_id
+      });
+      
+      // Refresh prerequisites for this version
+      await fetchPrerequisitesForVersion(versionId);
+      
+      message.success('Prerequisite removed successfully!');
+    } catch (error) {
+      console.error('Failed to delete prerequisite:', error);
+      message.error('Failed to remove prerequisite');
+    }
+  };
+
+  // Handler to copy prerequisites between versions
+  const handleCopyPrerequisites = async (sourceVersionId: number, targetVersionId: number) => {
+    try {
+      await copyPrerequisitesBetweenVersionsMutation.mutateAsync({
+        sourceVersionId,
+        targetVersionId
+      });
+      
+      // Refresh prerequisites for the target version
+      await fetchPrerequisitesForVersion(targetVersionId);
+      
+      message.success('Prerequisites copied successfully!');
+    } catch (error) {
+      console.error('Failed to copy prerequisites:', error);
+      message.error('Failed to copy prerequisites');
+    }
   };
 
   // Handlers for AssessmentTable
   const handleAddAssessment = async (versionId: number, assessment: any): Promise<void> => {
-    setAssessmentMap(prev => ({ ...prev, [versionId]: [...prev[versionId], { ...assessment, id: Date.now() }] }));
+    setAssessmentMap(prev => ({ 
+      ...prev, 
+      [versionId]: [...(prev[versionId] || []), { ...assessment, id: Date.now() }] 
+    }));
   };
+
   const handleDeleteAssessment = async (versionId: number, id: number): Promise<void> => {
-    setAssessmentMap(prev => ({ ...prev, [versionId]: prev[versionId].filter(a => a.id !== id) }));
+    setAssessmentMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).filter(a => a.id !== id) 
+    }));
   };
+
   const handleUpdateAssessment = async (versionId: number, id: number, update: any): Promise<void> => {
-    setAssessmentMap(prev => ({ ...prev, [versionId]: prev[versionId].map(a => a.id === id ? { ...a, ...update } : a) }));
+    setAssessmentMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).map(a => a.id === id ? { ...a, ...update } : a) 
+    }));
   };
+
   // Handlers for MaterialTable
   const handleAddMaterial = async (versionId: number, material: any): Promise<void> => {
-    setMaterialMap(prev => ({ ...prev, [versionId]: [...prev[versionId], { ...material, id: Date.now() }] }));
+    setMaterialMap(prev => ({ 
+      ...prev, 
+      [versionId]: [...(prev[versionId] || []), { ...material, id: Date.now() }] 
+    }));
   };
+
   const handleDeleteMaterial = async (versionId: number, id: number): Promise<void> => {
-    setMaterialMap(prev => ({ ...prev, [versionId]: prev[versionId].filter(m => m.id !== id) }));
+    setMaterialMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).filter(m => m.id !== id) 
+    }));
   };
+
   const handleUpdateMaterial = async (versionId: number, id: number, update: any): Promise<void> => {
-    setMaterialMap(prev => ({ ...prev, [versionId]: prev[versionId].map(m => m.id === id ? { ...m, ...update } : m) }));
+    setMaterialMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).map(m => m.id === id ? { ...m, ...update } : m) 
+    }));
   };
+
   // Handlers for OutcomeTable
   const handleAddOutcome = async (versionId: number, outcome: any): Promise<void> => {
-    setOutcomeMap(prev => ({ ...prev, [versionId]: [...prev[versionId], { ...outcome, id: Date.now() }] }));
+    setOutcomeMap(prev => ({ 
+      ...prev, 
+      [versionId]: [...(prev[versionId] || []), { ...outcome, id: Date.now() }] 
+    }));
   };
+
   const handleDeleteOutcome = async (versionId: number, id: number): Promise<void> => {
-    setOutcomeMap(prev => ({ ...prev, [versionId]: prev[versionId].filter(o => o.id !== id) }));
+    setOutcomeMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).filter(o => o.id !== id) 
+    }));
   };
+
   const handleUpdateOutcome = async (versionId: number, id: number, update: any): Promise<void> => {
-    setOutcomeMap(prev => ({ ...prev, [versionId]: prev[versionId].map(o => o.id === id ? { ...o, ...update } : o) }));
+    setOutcomeMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).map(o => o.id === id ? { ...o, ...update } : o) 
+    }));
   };
+
   // Handlers for SessionTable
   const handleAddSession = async (versionId: number, session: any): Promise<void> => {
-    setSessionMap(prev => ({ ...prev, [versionId]: [...prev[versionId], { ...session, id: Date.now() }] }));
+    setSessionMap(prev => ({ 
+      ...prev, 
+      [versionId]: [...(prev[versionId] || []), { ...session, id: Date.now() }] 
+    }));
   };
+
   const handleDeleteSession = async (versionId: number, id: number): Promise<void> => {
-    setSessionMap(prev => ({ ...prev, [versionId]: prev[versionId].filter(s => s.id !== id) }));
+    setSessionMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).filter(s => s.id !== id) 
+    }));
   };
+
   const handleUpdateSession = async (versionId: number, id: number, update: any): Promise<void> => {
-    setSessionMap(prev => ({ ...prev, [versionId]: prev[versionId].map(s => s.id === id ? { ...s, ...update } : s) }));
+    setSessionMap(prev => ({ 
+      ...prev, 
+      [versionId]: (prev[versionId] || []).map(s => s.id === id ? { ...s, ...update } : s) 
+    }));
   };
+
   const handleAddOutcomeToSession = async (versionId: number, sessionId: number, outcomeId: number): Promise<void> => {
     // For demo, no-op or add to session's outcomes array if present
   };
+
   // Bulk import handlers
   const handleBulkImport = (type: string, versionId: number) => {
     setBulkModal({ type, versionId });
   };
+
   const handleBulkDataImported = (type: string, versionId: number, importedData: any[]) => {
     if (type === 'ASSESSMENT') setAssessmentMap(prev => ({ ...prev, [versionId]: importedData }));
     if (type === 'MATERIAL') setMaterialMap(prev => ({ ...prev, [versionId]: importedData }));
     if (type === 'OUTCOME') setOutcomeMap(prev => ({ ...prev, [versionId]: importedData }));
     if (type === 'SESSION') setSessionMap(prev => ({ ...prev, [versionId]: importedData }));
     setBulkModal(null);
+    message.success(`${type} data imported successfully!`);
   };
+
   const handleBulkModalClose = () => setBulkModal(null);
 
   return (
@@ -256,7 +609,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
       </style>
       <div className={styles.syllabusContainer} style={{ width: '100%', maxWidth: 'none', minWidth: 0 }}>
         {/* Header */}
-        <div className={styles.syllabusHeader}>
+        <div className={`${styles.syllabusHeader} ${glassStyles.appleGlassCard}`}>
           <div className={styles.syllabusHeaderLeft}>
             <button className={styles.backButton} onClick={() => navigate(-1)}>
               <ArrowLeftOutlined /> Back to Subjects
@@ -280,6 +633,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
               disabled={isApproved}
               onMouseEnter={() => setApproveHover(true)}
               onMouseLeave={() => setApproveHover(false)}
+              className={glassStyles.appleGlassButton}
               style={
                 isApproved
                   ? {
@@ -334,13 +688,13 @@ const ManagerSubjectVersionPage: React.FC = () => {
         <div>
           <Tabs
             activeKey={activeKey}
-            onChange={setActiveKey}
+            onChange={handleTabChange}
             type="card"
             tabBarStyle={{ background: 'transparent', borderRadius: 12, boxShadow: 'none', display: 'flex', justifyContent: 'center' }}
-            items={versions.map((v) => {
+            items={subjectVersions.map((v) => {
               const isActive = v.isActive;
-              const syllabus = staticMockSyllabuses.find(s => s.versionId === v.id);
-              const prerequisites = staticMockPrerequisites.filter(p => p.version_id === v.id);
+              const syllabus = syllabusMap[v.id];
+              const prerequisites = prereqMap[v.id];
               return {
                 key: String(v.id),
                 label: (
@@ -355,7 +709,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                       transition: 'background 0.2s, color 0.2s',
                     }}
                   >
-                    {`Version ${v.versionNumber}`}
+                    {`Version ${v.versionCode}`}
                   </span>
                 ),
                 children: (
@@ -365,11 +719,11 @@ const ManagerSubjectVersionPage: React.FC = () => {
                       <Button
                         type="default"
                         onClick={() => {
-                          if (!isActive) setActivateModal({ open: true, versionId: v.id });
+                          if (!isActive) {
+                            handleToggleActive(v.id);
+                          }
                         }}
                         disabled={isActive}
-                        onMouseEnter={() => setActiveHover(v.id)}
-                        onMouseLeave={() => setActiveHover(null)}
                         style={
                           isActive
                             ? {
@@ -377,17 +731,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
                                 backgroundColor: '#22c55e',
                                 color: '#fff',
                                 borderColor: '#22c55e',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 700,
-                              }
-                            : activeHover === v.id
-                            ? {
-                                minWidth: 120,
-                                backgroundColor: '#4ade80',
-                                color: '#fff',
-                                borderColor: '#4ade80',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -408,20 +751,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
                         {isActive && <CheckOutlined style={{ color: '#fff', marginRight: 8, fontSize: 18 }} />}
                         {isActive ? 'Active' : 'Set Active'}
                       </Button>
-                      <Modal
-                        open={activateModal.open && activateModal.versionId === v.id}
-                        onOk={() => {
-                          setVersions(prev => prev.map(ver => ({ ...ver, isActive: ver.id === v.id })));
-                          setActivateModal({ open: false, versionId: null });
-                          message.success('Version set as active! (mock)');
-                        }}
-                        onCancel={() => setActivateModal({ open: false, versionId: null })}
-                        okText="Confirm"
-                        cancelText="Cancel"
-                        title="Set Version as Active"
-                      >
-                        <p>Are you sure you want to set this version as active?</p>
-                      </Modal>
                     </div>
                     {/* Syllabus Section */}
                     <div style={{ marginBottom: 32 }}>
@@ -459,7 +788,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                           { title: 'Subject Code', dataIndex: 'subjectCode', key: 'subjectCode', width: 160 },
                           { title: 'Subject Name', dataIndex: 'subjectName', key: 'subjectName' },
                         ].filter(Boolean)}
-                        dataSource={prereqMap[v.id]}
+                        dataSource={prerequisites}
                         rowKey={r => r.prerequisite_subject_id}
                         pagination={false}
                         style={{ marginTop: 12 }}
@@ -582,6 +911,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
           onCancel={() => setModalVisible(false)}
           onAdd={handleAddVersion}
           confirmLoading={adding}
+          subjectId={Number(subjectId)}
         />
       </div>
     </>

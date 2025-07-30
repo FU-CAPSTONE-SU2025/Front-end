@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import {  Input, Button, Affix, message ,Collapse, Modal, Typography, Progress, Select } from 'antd';
 import { PlusOutlined, EditOutlined, SearchOutlined, CheckOutlined, ImportOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateCurriculum } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { subjects, combos, comboSubjects, curriculums, curriculumSubjects } from '../../data/schoolData';
 import { AddSubjectToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
-import { isErrorResponse } from '../../api/AxiosCRUD';
+import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Panel } = Collapse;
 const { Title } = Typography;
@@ -104,33 +105,15 @@ const CurriculumManagerPage: React.FC = () => {
         },
         onError: (error: any) => {
           console.error('Import error:', error);
-          
-          // Extract ErrorResponse details if available
-          let errorMessage = 'Unknown error occurred';
-          let errorStatus = '';
-          
-          // Check if the error has an attached ErrorResponse
-          if (error.errorResponse && isErrorResponse(error.errorResponse)) {
-            errorMessage = error.errorResponse.message;
-            errorStatus = ` (Status: ${error.errorResponse.status})`;
-          } 
-          // Check if the error itself is an ErrorResponse
-          else if (isErrorResponse(error)) {
-            errorMessage = error.message;
-            errorStatus = ` (Status: ${error.status})`;
-          }
-          // Fallback to error message
-          else if (error?.message) {
-            errorMessage = error.message;
-          }
-          
-          message.error(`Error importing curricula: ${errorMessage}${errorStatus}`);
+          const errorMessage = getUserFriendlyErrorMessage(error);
+          message.error(errorMessage);
         }
       });
 
     } catch (error) {
       console.error('Import error:', error);
-      message.error('Error processing imported data. Please check your data format.');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      message.error(errorMessage);
     }
   };
 
@@ -156,7 +139,8 @@ const CurriculumManagerPage: React.FC = () => {
       setAddSubjectModal({ open: false, curriculumId: null, semester: null });
       setSelectedSubjectId(null);
     } catch (err) {
-      message.error('Failed to add subject to curriculum');
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      message.error(errorMessage);
     }
   };
 
@@ -165,7 +149,7 @@ const CurriculumManagerPage: React.FC = () => {
       <div className={styles.sttContainer} style={{ paddingTop: 12 }}>
         {/* Sticky Toolbar */}
         <Affix offsetTop={80} style={{zIndex: 10}}>
-          <div style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', border: '1.5px solid rgba(255,255,255,0.18)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
+          <div className={glassStyles.appleGlassCard} style={{padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
             <Input
               placeholder="Search by Curriculum ID or Name"
               prefix={<SearchOutlined />}
@@ -173,6 +157,7 @@ const CurriculumManagerPage: React.FC = () => {
               onChange={e => setSearch(e.target.value)}
               style={{maxWidth: 240, borderRadius: 999}}
               size="large"
+              className={glassStyles.appleGlassInput}
             />
             <Button 
               type="primary" 
@@ -180,6 +165,7 @@ const CurriculumManagerPage: React.FC = () => {
               size="large" 
               style={{borderRadius: 999}}
               onClick={handleAddCurriculum}
+              className={glassStyles.appleGlassButton}
             >
               Add Curriculum
             </Button>
@@ -188,6 +174,7 @@ const CurriculumManagerPage: React.FC = () => {
               size="large" 
               style={{borderRadius: 999}}
               onClick={handleImportCurriculum}
+              className={glassStyles.appleGlassButton}
             >
               Import Curricula
             </Button>
