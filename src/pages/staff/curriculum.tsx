@@ -398,7 +398,6 @@ const CurriculumPage: React.FC = () => {
             />
           </div>
         )}
-      </Spin>
       
       {/* Data Import Modal */}
       {isImportOpen && (
