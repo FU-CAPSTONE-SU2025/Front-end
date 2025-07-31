@@ -1,7 +1,9 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
+import axios from "axios";
 import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
 import { pagedStudentData, StudentBase, CreateBookingMeetingRequest, BookingMeetingResponse, AdvisorMeetingItem, AdvisorMeetingPaged } from "../../interfaces/IStudent";
+import { IStudentBookingResponse, IStudentBookingCalendarResponse } from '../../interfaces/IChat';
 
 const userURL = baseUrl+"/User/student"
 
@@ -376,6 +378,51 @@ export const markAdvisorMissed = async (meetingId: number, note: string): Promis
   const result = await axiosUpdate(props);
   if (result.success) {
     return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+// Get all student self bookings for history calendar
+export const getAllStudentSelfBookings = async (pageNumber: number, pageSize: number): Promise<IStudentBookingResponse> => {
+  const props = {
+    data: null,
+    url: `${baseUrl}/Meeting/all-stu-self/paged?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+// Get all student self bookings for history calendar (API riêng cho calendar)
+export const getStudentBookingsForCalendar = async (pageNumber: number, pageSize: number): Promise<IStudentBookingCalendarResponse> => {
+  const props = {
+    data: null,
+    url: `${baseUrl}/Meeting/all-stu-self/active/paged?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    const calendarData = {
+      ...result.data,
+      items: result.data.items.map((item: any) => ({
+        id: item.id,
+        startDateTime: item.startDateTime,
+        endDateTime: item.endDateTime,
+        status: item.status,
+        titleStudentIssue: item.titleStudentIssue,
+        staffProfileId: item.staffProfileId,
+        staffFirstName: item.staffFirstName,
+        staffLastName: item.staffLastName,
+      }))
+    };
+    return calendarData;
   } else {
     throwApiError(result);
     return null as never;

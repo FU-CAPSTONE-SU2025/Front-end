@@ -8,18 +8,26 @@ import { CloseCircleOutlined, UserOutlined, CalendarOutlined, ClockCircleOutline
 import MeetingDetailModal from './meetingDetailModal';
 
 interface StudentHistoryCalendarProps {
-  meetings: AdvisorMeetingItem[];
+  meetings: any[];
+  bookingsList: any[];
   loading: boolean;
+  bookingsLoading: boolean;
+  onDataRefresh?: () => void;
 }
 
-const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({ meetings, loading }) => {
+const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({ 
+  meetings, 
+  bookingsList, 
+  loading, 
+  bookingsLoading,
+  onDataRefresh 
+}) => {
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [selectedMeeting, setSelectedMeeting] = useState<AdvisorMeetingItem | null>(null);
   const [detail, setDetail] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-
-  // Status mapping for display
+  console.log("ádasd",bookingsList);
   const statusMap: Record<number, { color: string; text: string; icon: React.ReactNode }> = {
     1: { color: 'blue', text: 'Pending', icon: <InfoCircleTwoTone twoToneColor="#1890ff" /> },
     2: { color: 'green', text: 'Confirmed', icon: <CheckCircleTwoTone twoToneColor="#52c41a" /> },
@@ -31,42 +39,7 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({ meeting
     9: { color: 'red', text: 'Student Canceled', icon: <CloseCircleOutlined className="text-red-500" /> },
   };
 
-  // Chỉ filter slot hiển thị (slot >= today), không filter selectedDate
-  const filteredMeetings = meetings.filter(m => dayjs(m.startDateTime).isSameOrAfter(dayjs(), 'day'));
 
-  // Tạo workSlots cho tất cả các khung giờ (8h-18h) của ngày/tuần, slot đã book type 'booked', còn lại 'available'
-  const generateAllSlots = (date: Dayjs) => {
-    const slots = [];
-    for (let hour = 8; hour < 18; hour++) {
-      const start = dayjs(date).hour(hour).minute(0);
-      const end = start.add(1, 'hour');
-      const meeting = filteredMeetings.find(m =>
-        dayjs(m.startDateTime).isSame(start, 'minute') &&
-        dayjs(m.endDateTime).isSame(end, 'minute')
-      );
-      slots.push({
-        id: meeting ? meeting.id : `${date.format('YYYY-MM-DD')}-${hour}`,
-        startTime: start.format('HH:mm'),
-        endTime: end.format('HH:mm'),
-        dayInWeek: date.day() === 0 ? 1 : date.day() + 1, // Map 0=Sunday to 1, 1=Monday to 2, etc.
-        staffProfileId: meeting?.staffProfileId ?? 0,
-        type: meeting ? 'booked' : 'available',
-        meeting: meeting ?? null,
-      });
-    }
-    return slots;
-  };
-
-  // Tạo workSlots cho week/day view
-  const getWorkSlots = (date: Dayjs) => {
-    if (viewMode === 'week') {
-      const weekStart = date.startOf('week');
-      const days = Array.from({ length: 7 }, (_, i) => weekStart.add(i, 'day'));
-      return days.flatMap(day => generateAllSlots(day));
-    } else {
-      return generateAllSlots(date);
-    }
-  };
 
   // Khi click slot, chỉ cho click slot đã book
   const handleSlotClick = async (slot: any, date: Dayjs) => {
@@ -89,8 +62,8 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({ meeting
   const goToNextWeek = () => setSelectedDate(selectedDate.startOf('week').add(1, 'week'));
   const weekRange = `${selectedDate.startOf('week').format('DD MMM YYYY')} - ${selectedDate.endOf('week').format('DD MMM YYYY')}`;
 
-  // Summary: danh sách booking từ hôm nay trở đi
-  const upcomingBookings = filteredMeetings.sort((a, b) => dayjs(a.startDateTime).valueOf() - dayjs(b.startDateTime).valueOf());
+  const upcomingBookings = bookingsList.filter(b => dayjs(b.startDateTime).isSameOrAfter(dayjs(), 'day'))
+    .sort((a, b) => dayjs(a.startDateTime).valueOf() - dayjs(b.startDateTime).valueOf());
 
   // Custom calendarView chỉ render slot đã book
   const CustomCalendarView = () => (
@@ -114,7 +87,11 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({ meeting
             <span className="text-xl font-bold text-blue-900">Bookings</span>
             <span className="bg-blue-100 text-blue-700 font-semibold rounded-full px-3 py-1 text-xs ml-2">{upcomingBookings.length}</span>
           </div>
-          {upcomingBookings.length === 0 ? (
+          {bookingsLoading ? (
+            <div className="flex justify-center items-center h-32">
+              <Spin size="small" />
+            </div>
+          ) : upcomingBookings.length === 0 ? (
             <div className="text-gray-400 italic text-sm pl-2">No bookings</div>
           ) : (
             <div className="flex flex-col gap-2 w-full max-h-[400px] overflow-y-auto">
@@ -177,6 +154,7 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({ meeting
           onClose={() => { setSelectedMeeting(null); setDetail(null); }}
           detail={detail}
           loading={detailLoading || !detail}
+          onActionComplete={onDataRefresh}
         />
       </div>
     </div>
