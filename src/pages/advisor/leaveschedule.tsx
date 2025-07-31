@@ -38,7 +38,6 @@ const LeaveSchedulePage: React.FC = () => {
   const { data, isLoading, error } = useLeaveScheduleList(currentPage, effectivePageSize);
   const leaveList = data?.items || [];
   const totalCount = data?.totalCount || 0;
-  console.log(data)
 
   // Refetch when viewMode changes
   useEffect(() => {
@@ -77,7 +76,7 @@ const LeaveSchedulePage: React.FC = () => {
       width: 180,
       align: 'center' as const,
       render: (value: string) => (
-        <Text>{dayjs(value).format('YYYY-MM-DD HH:mm')}</Text>
+        <Text>{dayjs.utc(value).format('YYYY-MM-DD HH:mm')}</Text>
       ),
     },
     {
@@ -87,7 +86,7 @@ const LeaveSchedulePage: React.FC = () => {
       width: 180,
       align: 'center' as const,
       render: (value: string) => (
-        <Text>{dayjs(value).format('YYYY-MM-DD HH:mm')}</Text>
+        <Text>{dayjs.utc(value).format('YYYY-MM-DD HH:mm')}</Text>
       ),
     },
     {
@@ -117,10 +116,40 @@ const LeaveSchedulePage: React.FC = () => {
     }
   };
 
-  // Search logic
+  // Search logic - Fix filtering for day and week views
   const filteredLeaves = viewMode === 'day'
-    ? leaveList.filter(l => dayjs(l.startDateTime).isSame(selectedDate, 'day'))
-    : leaveList;
+    ? leaveList.filter(l => {
+        const leaveStart = dayjs(l.startDateTime);
+        const leaveEnd = dayjs(l.endDateTime);
+        const selectedDayStart = selectedDate.startOf('day');
+        const selectedDayEnd = selectedDate.endOf('day');
+        
+        // Check if leave overlaps with the selected day
+        const overlaps = (leaveStart.isBefore(selectedDayEnd) && leaveEnd.isAfter(selectedDayStart));
+        console.log(`Day view filter - Leave: ${leaveStart.format('YYYY-MM-DD HH:mm')} to ${leaveEnd.format('YYYY-MM-DD HH:mm')}, Selected: ${selectedDayStart.format('YYYY-MM-DD')}, Overlaps: ${overlaps}`);
+        return overlaps;
+      })
+    : viewMode === 'week'
+    ? leaveList.filter(l => {
+        const leaveStart = dayjs(l.startDateTime);
+        const leaveEnd = dayjs(l.endDateTime);
+        const weekStart = selectedDate.startOf('week');
+        const weekEnd = selectedDate.endOf('week');
+        
+        // Check if leave overlaps with the selected week
+        const overlaps = (leaveStart.isBefore(weekEnd) && leaveEnd.isAfter(weekStart));
+        console.log(`Week view filter - Leave: ${leaveStart.format('YYYY-MM-DD HH:mm')} to ${leaveEnd.format('YYYY-MM-DD HH:mm')}, Week: ${weekStart.format('YYYY-MM-DD')} to ${weekEnd.format('YYYY-MM-DD')}, Overlaps: ${overlaps}`);
+        return overlaps;
+      })
+    : leaveList; // Show all for other views
+
+  // Debug logging
+  console.log('=== LEAVE SCHEDULE DEBUG ===');
+  console.log('Total leave data:', leaveList.length);
+  console.log('View mode:', viewMode);
+  console.log('Selected date:', selectedDate.format('YYYY-MM-DD'));
+  console.log('Filtered leaves count:', filteredLeaves.length);
+  console.log('=== END DEBUG ===');
 
   return (
     <div className={styles.workScheduleContainer}>
@@ -167,13 +196,23 @@ const LeaveSchedulePage: React.FC = () => {
         selectedDate={selectedDate}
         onViewModeChange={setViewMode}
         onDateChange={setSelectedDate}
+        isWorkSchedule={false} // Mark as leave schedule (default behavior)
         onSlotClick={(slot, date) => {
           setSelectedSlotInfo({ date, start: slot.start, end: slot.end });
           setIsAddModalVisible(true);
           setSelectedDate(date);
         }}
         onEdit={event => {
-          setSelectedLeaveId(Number(event.id));
+          console.log('=== CALENDAR EDIT DEBUG ===');
+          console.log('Event clicked for edit:', event);
+          console.log('Event ID:', event.id);
+          console.log('Event startDateTime:', event.startDateTime);
+          console.log('Event endDateTime:', event.endDateTime);
+          console.log('Event type:', event.type);
+          console.log('=== END CALENDAR DEBUG ===');
+          
+          const leaveId = typeof event.id === 'string' ? parseInt(event.id) : event.id;
+          setSelectedLeaveId(leaveId);
           setIsEditModalVisible(true);
         }}
         onDelete={async (event) => {
