@@ -165,36 +165,37 @@ const ProgramPage: React.FC = () => {
 
       {/* Program Cards */}
       {!isLoading && (
-        <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
-          {programList.map(program => (
-            <Panel
-              header={
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                  <span style={{fontWeight: 700, fontSize: '1.2rem', color: '#1E40AF'}}>
-                    {program.programName} <span style={{color: '#f97316', fontWeight: 400, marginLeft: 8}}>[{program.programCode}]</span>
-                  </span>
-                  <Button
-                    type="text"
-                    icon={<EditOutlined />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditProgram(program.id);
-                    }}
-                    style={{ 
-                      color: '#1E40AF',
-                      borderRadius: 8,
-                      height: 32,
-                      padding: '0 12px'
-                    }}
-                  >
-                    Edit
-                  </Button>
-                </div>
-              }
-              key={program.id}
-              style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}}
-            >
-              {/* Program details with curriculum info */}
+        <Collapse 
+          accordion 
+          bordered={false} 
+          className={styles.sttFreshTable} 
+          style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}
+          items={programList.map(program => ({
+            key: program.id,
+            label: (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <span style={{fontWeight: 700, fontSize: '1.2rem', color: '#1E40AF'}}>
+                  {program.programName} <span style={{color: '#f97316', fontWeight: 400, marginLeft: 8}}>[{program.programCode}]</span>
+                </span>
+                <Button
+                  type="text"
+                  icon={<EditOutlined />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditProgram(program.id);
+                  }}
+                  style={{ 
+                    color: '#1E40AF',
+                    borderRadius: 8,
+                    height: 32,
+                    padding: '0 12px'
+                  }}
+                >
+                  Edit
+                </Button>
+              </div>
+            ),
+            children: (
               <div style={{padding: 16, color: '#1E40AF', fontWeight: 500}}>
                 <b>Program ID:</b> {program.id}<br/>
                 <b>Program Code:</b> {program.programCode}<br/>
@@ -204,9 +205,10 @@ const ProgramPage: React.FC = () => {
                   Click to view curriculum details...
                 </div>
               </div>
-            </Panel>
-          ))}
-        </Collapse>
+            ),
+            style: {background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}
+          }))}
+        />
       )}
 
       {/* Empty State */}

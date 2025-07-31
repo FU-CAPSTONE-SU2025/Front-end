@@ -1,15 +1,14 @@
 // src/router/authLoader.ts
 import { redirect, useNavigate } from 'react-router';
 import { getAuthState } from '../hooks/useAuths';
-import { jwtDecode } from 'jwt-decode';
 
 export const protectedLoader = (allowedRoles: string[]) => {
+  // const navigate = useNavigate()
+  // if(sessionStorage.getItem("auth-storage")==null){
+  //   navigate("/")
+  // }
   return () => {
     const { userRole,accessToken } = getAuthState();
-    const navigate = useNavigate()
-    if(sessionStorage.getItem("auth-storage")==null){
-      navigate("/")
-    }
     if (!userRole) {
       return redirect('/404');
     }

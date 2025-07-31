@@ -162,16 +162,17 @@ const SemesterPlannerDetail = () => {
             <Button type="primary" className="bg-orange-500 border-none font-semibold shadow hover:bg-orange-600">AI Academic Evaluation</Button>
           </div>
         </div>
-        <Collapse ghost className="mt-4 bg-transparent">
-          <Panel
-            header={<span className="text-white text-base flex items-center gap-2"><InfoCircleOutlined /> What is {roadmap ? decodeURIComponent(roadmap) : 'Backend Developer'}?</span>}
-            key="1"
-            className="bg-white/10 border-none text-white"
-            showArrow={false}
-          >
-            <div className="text-white/90">{roadmap ? decodeURIComponent(roadmap) : 'Backend Developer'} là người xây dựng và duy trì logic, database, server, API cho ứng dụng web hoặc mobile.</div>
-          </Panel>
-        </Collapse>
+        <Collapse 
+          ghost 
+          className="mt-4 bg-transparent"
+          items={[{
+            key: "1",
+            label: <span className="text-white text-base flex items-center gap-2"><InfoCircleOutlined /> What is {roadmap ? decodeURIComponent(roadmap) : 'Backend Developer'}?</span>,
+            children: <div className="text-white/90">{roadmap ? decodeURIComponent(roadmap) : 'Backend Developer'} là người xây dựng và duy trì logic, database, server, API cho ứng dụng web hoặc mobile.</div>,
+            className: "bg-white/10 border-none text-white",
+            showArrow: false
+          }]}
+        />
       </motion.div>
       <div className="w-full flex flex-row items-center gap-4 mb-4 px-2">
         <DragOutlined className="text-orange-300 text-xl" />

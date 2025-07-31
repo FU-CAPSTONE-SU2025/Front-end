@@ -260,44 +260,41 @@ const CurriculumPage: React.FC = () => {
           className={styles.sttFreshTable} 
           style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}
           onChange={handlePanelChange}
-        >
-          {curriculumList && curriculumList.length > 0 ? curriculumList.map((curriculum: Curriculum) => {
+          items={curriculumList && curriculumList.length > 0 ? curriculumList.map((curriculum: Curriculum) => {
             const subjectVersions = curriculumSubjectVersionsMap[curriculum.id] || [];
             const isLoadingSubjectVersions = expandedCurriculum === curriculum.id && fetchCurriculumSubjectVersionsMutation.isPending;
             
-            return (
-              <Panel
-                header={
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{fontWeight: 700, fontSize: '1.2rem', color: '#1E40AF'}}>
-                        {curriculum.curriculumName} 
-                        <span style={{color: '#f97316', fontWeight: 400, marginLeft: 8}}>
-                          [{curriculum.curriculumCode}]
-                        </span>
+            return {
+              key: curriculum.id,
+              label: (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{fontWeight: 700, fontSize: '1.2rem', color: '#1E40AF'}}>
+                      {curriculum.curriculumName} 
+                      <span style={{color: '#f97316', fontWeight: 400, marginLeft: 8}}>
+                        [{curriculum.curriculumCode}]
                       </span>
-                    </div>
-                    <Button
-                      type="text"
-                      icon={<EditOutlined />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditCurriculum(curriculum.id);
-                      }}
-                      style={{ 
-                        color: '#1E40AF',
-                        borderRadius: 8,
-                        height: 32,
-                        padding: '0 12px'
-                      }}
-                    >
-                      Edit
-                    </Button>
+                    </span>
                   </div>
-                }
-                key={curriculum.id}
-                style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}}
-              >
+                  <Button
+                    type="text"
+                    icon={<EditOutlined />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditCurriculum(curriculum.id);
+                    }}
+                    style={{ 
+                      color: '#1E40AF',
+                      borderRadius: 8,
+                      height: 32,
+                      padding: '0 12px'
+                    }}
+                  >
+                    Edit
+                  </Button>
+                </div>
+              ),
+              children: (
                 <div style={{ padding: '16px 0' }}>
                   {/* Curriculum Details */}
                   <div style={{ 
@@ -380,12 +377,12 @@ const CurriculumPage: React.FC = () => {
                     )}
                   </div>
                 </div>
-              </Panel>
-            );
-          }) : (
-            !isLoading && <Empty description="No curricula found" style={{margin: '40px 0'}} />
-          )}
-        </Collapse>
+              ),
+              style: {background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}
+            };
+          }) : []}
+        />
+      </Spin>
         
         {/* Pagination */}
         {paginationCurriculum && paginationCurriculum.total > 0 && (

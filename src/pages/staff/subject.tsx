@@ -406,15 +406,17 @@ const SubjectPage: React.FC = () => {
       </Spin>
       {/* Combo List Below Table */}
       <div style={{ marginTop: 48 }}>
-        <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}} onChange={handleComboPanelChange}>
-          {comboList.map(combo => (
-            <Panel
-              header={<span style={{fontWeight: 700, fontSize: '1.1rem', color: '#1E40AF'}}>Combo: {combo.comboName}</span>}
-              key={combo.id}
-              style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF'}}
-              extra={<Button icon={<EditOutlined />} size="small" style={{borderRadius: 999, background: '#f97316', color: '#fff', border: 'none'}} onClick={(e) => { e.stopPropagation(); handleEditCombo(combo.id); }}>{'Edit'}</Button>}
-            >
-              {loadingComboSubjects && expandedCombo === combo.id ? (
+        <Collapse 
+          accordion 
+          bordered={false} 
+          className={styles.sttFreshTable} 
+          style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}} 
+          onChange={handleComboPanelChange}
+          items={comboList.map(combo => ({
+            key: combo.id,
+            label: <span style={{fontWeight: 700, fontSize: '1.1rem', color: '#1E40AF'}}>Combo: {combo.comboName}</span>,
+            children: (
+              loadingComboSubjects && expandedCombo === combo.id ? (
                 <div style={{ textAlign: 'center', padding: 24 }}><Spin /> Loading subjects...</div>
               ) : (
                 <ul style={{margin: 0, paddingLeft: 20}}>
@@ -430,10 +432,12 @@ const SubjectPage: React.FC = () => {
                     <li style={{color: '#aaa'}}>No subjects</li>
                   )}
                 </ul>
-              )}
-            </Panel>
-          ))}
-        </Collapse>
+              )
+            ),
+            extra: <Button icon={<EditOutlined />} size="small" style={{borderRadius: 999, background: '#f97316', color: '#fff', border: 'none'}} onClick={(e) => { e.stopPropagation(); handleEditCombo(combo.id); }}>{'Edit'}</Button>,
+            style: {background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF'}
+          }))}
+        />
       </div>
       
       {/* Data Import Modal */}

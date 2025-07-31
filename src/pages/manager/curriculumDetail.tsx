@@ -203,78 +203,80 @@ const CurriculumManagerPage: React.FC = () => {
           </div>
         </Affix>
         {/* Curriculum Cards */}
-        <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}>
-          {filteredCurriculums.map(curriculum => (
-            <Panel
-              header={
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                  <div>
-                    <span style={{fontWeight: 700, fontSize: '1.2rem', color: '#1E40AF'}}>
-                      {curriculum.curriculumName} <span style={{color: '#f97316', fontWeight: 400, marginLeft: 8}}>[{curriculum.curriculumCode}]</span>
-                    </span>
-                    {/* Approval Info */}
-                    <div style={{ fontSize: 12, marginTop: 4 }}>
-                      {curriculum.approvalStatus === 1 ? (
-                        <span style={{ color: '#52c41a' }}>
-                          Approved by: {curriculum.approvedBy || 'Unknown'} • {curriculum.approvedAt ? new Date(curriculum.approvedAt).toLocaleDateString() : 'Unknown date'}
-                        </span>
-                      ) : curriculum.rejectionReason ? (
-                        <span style={{ color: '#ff4d4f' }}>
-                          Rejected • {curriculum.rejectionReason}
-                        </span>
-                      ) : (
-                        <span style={{ color: '#faad14' }}>
-                          Created by: {curriculum.createdBy || 'Unknown'} • Pending approval
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
-                    {/* Approval Progress Bar */}
-                    <Progress
-                      percent={curriculum.approvalStatus === 1 ? 100 : 50}
-                      steps={2}
-                      showInfo={false}
-                      strokeColor={['#f59e42', '#52c41a']}
-                      style={{width: 60}}
-                    />
-                    <Button
-                      type={curriculum.approvalStatus === 1 ? 'default' : 'primary'}
-                      icon={<CheckOutlined />}
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        if (curriculum.approvalStatus === 1) {
-                          // Unapprove
-                          await handleApproval('curriculum', curriculum.id, 0, null);
-                        } else {
-                          // Approve
-                          handleApprove(curriculum.id, curriculum.curriculumName);
-                        }
-                        // Refresh the curriculum list to get updated approval status
-                        window.location.reload(); // Temporary solution until we have proper API integration
-                      }}
-                      style={{borderRadius: 8, height: 32, padding: '0 12px'}}
-                    >
-                      {curriculum.approvalStatus === 1 ? 'Approved' : 'Approve'}
-                    </Button>
-                    <Button
-                      type="text"
-                      icon={<EditOutlined />}
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleEditCurriculum(curriculum.id);
-                      }}
-                      style={{ color: '#1E40AF', borderRadius: 8, height: 32, padding: '0 12px' }}
-                    >
-                      Edit
-                    </Button>
+        <Collapse 
+          accordion 
+          bordered={false} 
+          className={styles.sttFreshTable} 
+          style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}
+          items={filteredCurriculums.map(curriculum => ({
+            key: curriculum.id,
+            label: (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <div>
+                  <span style={{fontWeight: 700, fontSize: '1.2rem', color: '#1E40AF'}}>
+                    {curriculum.curriculumName} <span style={{color: '#f97316', fontWeight: 400, marginLeft: 8}}>[{curriculum.curriculumCode}]</span>
+                  </span>
+                  {/* Approval Info */}
+                  <div style={{ fontSize: 12, marginTop: 4 }}>
+                    {curriculum.approvalStatus === 1 ? (
+                      <span style={{ color: '#52c41a' }}>
+                        Approved by: {curriculum.approvedBy || 'Unknown'} • {curriculum.approvedAt ? new Date(curriculum.approvedAt).toLocaleDateString() : 'Unknown date'}
+                      </span>
+                    ) : curriculum.rejectionReason ? (
+                      <span style={{ color: '#ff4d4f' }}>
+                        Rejected • {curriculum.rejectionReason}
+                      </span>
+                    ) : (
+                      <span style={{ color: '#faad14' }}>
+                        Created by: {curriculum.createdBy || 'Unknown'} • Pending approval
+                      </span>
+                    )}
                   </div>
                 </div>
-              }
-              key={curriculum.id}
-              style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}}
-            >
-              {/* Timeline for 9 Semesters */}
+                <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
+                  {/* Approval Progress Bar */}
+                  <Progress
+                    percent={curriculum.approvalStatus === 1 ? 100 : 50}
+                    steps={2}
+                    showInfo={false}
+                    strokeColor={['#f59e42', '#52c41a']}
+                    style={{width: 60}}
+                  />
+                  <Button
+                    type={curriculum.approvalStatus === 1 ? 'default' : 'primary'}
+                    icon={<CheckOutlined />}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (curriculum.approvalStatus === 1) {
+                        // Unapprove
+                        await handleApproval('curriculum', curriculum.id, 0, null);
+                      } else {
+                        // Approve
+                        handleApprove(curriculum.id, curriculum.curriculumName);
+                      }
+                      // Refresh the curriculum list to get updated approval status
+                      window.location.reload(); // Temporary solution until we have proper API integration
+                    }}
+                    style={{borderRadius: 8, height: 32, padding: '0 12px'}}
+                  >
+                    {curriculum.approvalStatus === 1 ? 'Approved' : 'Approve'}
+                  </Button>
+                  <Button
+                    type="text"
+                    icon={<EditOutlined />}
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleEditCurriculum(curriculum.id);
+                    }}
+                    style={{ color: '#1E40AF', borderRadius: 8, height: 32, padding: '0 12px' }}
+                  >
+                    Edit
+                  </Button>
+                </div>
+              </div>
+            ),
+            children: (
+              /* Timeline for 9 Semesters */
               <div style={{display: 'grid', gridTemplateColumns: `${nodeSize + lineWidth + 18}px 1fr`, gap: 0, position: 'relative', marginLeft: 8}}>
                 {/* Vertical line: absolute, centered behind all nodes */}
                 <div style={{position: 'absolute', left: (nodeSize + lineWidth + 18) / 2 - lineWidth / 2, top: 0, width: lineWidth, height: '100%', background: lineColor, zIndex: 0, borderRadius: 2}} />
@@ -322,9 +324,10 @@ const CurriculumManagerPage: React.FC = () => {
                   );
                 })}
               </div>
-            </Panel>
-          ))}
-        </Collapse>
+            ),
+            style: {background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}
+          }))}
+        />
         {/* Data Import Modal */}
         {isImportOpen && (
           <BulkDataImport 
