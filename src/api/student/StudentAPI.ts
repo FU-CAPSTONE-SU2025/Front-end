@@ -341,7 +341,7 @@ export const cancelConfirmedMeeting = async (meetingId: number, note: string): P
     url: `${baseUrl}/Meeting/stu-cancel-the-confirmed/${meetingId}`,
     headers: GetHeader(),
   };
-  const result = await axiosDelete(props);
+  const result = await axiosUpdate(props);
   if (result.success) {
     return result.data;
   } else {

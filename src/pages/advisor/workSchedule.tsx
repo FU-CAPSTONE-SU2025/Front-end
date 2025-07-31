@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Typography, Space, Tag, Button, message } from 'antd';
 import { CalendarOutlined, ClockCircleOutlined, UserOutlined, PlusOutlined } from '@ant-design/icons';
-import DataTable from '../../components/common/dataTable';
-import SearchBar from '../../components/common/searchBar';
 import AddWorkSchedule from '../../components/advisor/addWorkSchedule';
 import EditWorkSchedule from '../../components/advisor/editWorkSchedule';
 import { 
@@ -26,13 +24,13 @@ const WorkSchedule: React.FC = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
-  const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [selectedDate, setSelectedDate] = useState(dayjs().startOf('week')); // Always start with current week
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [viewScheduleId, setViewScheduleId] = useState<number | null>(null);
   const [selectedSlotInfo, setSelectedSlotInfo] = useState<{ date: Dayjs; start: Dayjs; end: Dayjs } | null>(null);
   
   // Tính toán pageSize dựa trên viewMode cho work schedule
-  const effectivePageSize = viewMode === 'week' ? 1000 : 10; // Week view = hết data, Day view = 10
+  const effectivePageSize = 10000; // Lấy hết data
 
   const {
     getAllBookingAvailability,
@@ -45,21 +43,26 @@ const WorkSchedule: React.FC = () => {
   } = useBookingAvailability(effectivePageSize);
 
   useEffect(() => {
+    // Force refetch to get all data
     refetchBookingAvailability();
-  }, [refetchBookingAvailability, viewMode]);
+  }, [refetchBookingAvailability]);
 
   const updateBookingAvailability = useUpdateBookingAvailability();
   const deleteBookingAvailability = useDeleteBookingAvailability();
 
-  // Use full data for search, paginated data for normal display
-  const dataToUse = searchQuery && searchQuery.trim() !== '' ? allSortedData : bookingAvailabilityList;
+  // Use full data for work schedule since we only show week view
+  const dataToUse = allSortedData;
   
   // Ensure dataToUse is always an array
   const safeDataToUse = Array.isArray(dataToUse) ? dataToUse : [];
 
-  // Debug logging to check sorting
+  // Debug logging to check data
+  console.log('=== WORK SCHEDULE DEBUG ===');
+  console.log('All sorted data:', allSortedData);
+  console.log('Booking availability list:', bookingAvailabilityList);
   console.log('Data to use:', safeDataToUse);
-  console.log('Search query:', searchQuery);
+  console.log('Data count:', safeDataToUse.length);
+  console.log('=== END DEBUG ===');
 
 
  
@@ -246,13 +249,34 @@ const WorkSchedule: React.FC = () => {
   // Apply custom search filter
   const filteredData = customSearchFilter(safeDataToUse, searchQuery);
 
-  const filteredSchedules = viewMode === 'day'
-    ? safeDataToUse.filter(item => {
-        const today = dayjs(selectedDate).startOf('day');
-        const itemDay = dayjs().startOf('week').add(item.dayInWeek, 'day');
-        return itemDay.isSame(today, 'day');
-      })
-    : safeDataToUse;
+  // Use all data for calendar, no filtering by viewMode
+  const filteredSchedules = safeDataToUse;
+
+  // Debug logs for calendar events
+  console.log('=== CALENDAR EVENTS DEBUG ===');
+  console.log('All data count:', safeDataToUse.length);
+  console.log('Filtered schedules:', filteredSchedules);
+  console.log('Filtered schedules count:', filteredSchedules.length);
+  
+  const calendarEvents = filteredSchedules.map(item => {
+    // Map dayInWeek: 1=Sunday, 2=Monday, ..., 7=Saturday
+    const dayOffset = item.dayInWeek === 1 ? 0 : item.dayInWeek - 1; // Sunday = 0, Monday = 1, etc.
+    const today = dayjs().startOf('week');
+    const day = today.add(dayOffset, 'day');
+    const event = {
+      id: item.id,
+      startDateTime: day.format('YYYY-MM-DD') + 'T' + item.startTime,
+      endDateTime: day.format('YYYY-MM-DD') + 'T' + item.endTime,
+      type: 'work' as const,
+      note: '',
+    };
+    console.log(`Mapping item ${item.id}: dayInWeek=${item.dayInWeek}, dayOffset=${dayOffset}, day=${day.format('YYYY-MM-DD')}, start=${item.startTime}, end=${item.endTime}`);
+    return event;
+  });
+  
+  console.log('Calendar events:', calendarEvents);
+  console.log('Calendar events count:', calendarEvents.length);
+  console.log('=== END CALENDAR EVENTS DEBUG ===');
 
   return (
     <div className={styles.workScheduleContainer}>
@@ -308,23 +332,13 @@ const WorkSchedule: React.FC = () => {
         </Space>
       </Card>
       <AdvisorCalendar
-        events={filteredSchedules.map(item => {
-          // Map dayInWeek: 1=Sunday, 2=Monday, ..., 7=Saturday
-          const dayOffset = item.dayInWeek === 1 ? 0 : item.dayInWeek - 1; // Sunday = 0, Monday = 1, etc.
-          const today = dayjs().startOf('week');
-          const day = today.add(dayOffset, 'day');
-          return {
-            id: item.id,
-            startDateTime: day.format('YYYY-MM-DD') + 'T' + item.startTime,
-            endDateTime: day.format('YYYY-MM-DD') + 'T' + item.endTime,
-            type: 'work',
-            note: '',
-          };
-        })}
-        viewMode={viewMode}
+        events={calendarEvents}
+        viewMode={'week'}
         selectedDate={selectedDate}
-        onViewModeChange={setViewMode}
-        onDateChange={setSelectedDate}
+        onViewModeChange={() => {}}
+        // Disable view mode change
+        onDateChange={() => {}} // Disable date change for work schedule
+        isWorkSchedule={true} // Mark as work schedule
         onSlotClick={(slot, date) => {
           setSelectedSlotInfo({ date, start: slot.start, end: slot.end });
           setIsAddModalVisible(true);
