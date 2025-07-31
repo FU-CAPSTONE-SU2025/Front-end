@@ -98,7 +98,7 @@ export const throwApiError = (result: AxiosResult): never => {
         }
         
         // Add additional context for validation errors
-        if (result.error && typeof result.error === 'object' && 'errors' in result.error) {
+        if (result.error && typeof result.error === 'object' && result.error && 'errors' in (result.error as object)) {
             (error as any).validationErrors = (result.error as any).errors;
         }
         

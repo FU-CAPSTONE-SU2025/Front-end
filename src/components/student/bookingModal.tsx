@@ -4,6 +4,7 @@ import { Dayjs } from 'dayjs';
 import { AdvisorData } from '../../api/student/StudentAPI';
 import { useState } from 'react';
 import { Input, Button, Form } from 'antd';
+import { dayOptions } from '../../interfaces/IDayOptions';
 
 interface WorkSlot {
   id: number | string;
@@ -23,8 +24,6 @@ interface BookingModalProps {
   onConfirm: (formData: { titleStudentIssue: string; contentIssue: string }) => void;
   onCancel: () => void;
 }
-
-const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const BookingModal = ({
   visible,
@@ -82,7 +81,7 @@ const BookingModal = ({
                   <div>
                     <div className="text-gray-500 text-xs font-medium">Date</div>
                     <div className="font-semibold text-lg">
-                      {dayLabels[selectedSlot.dayInWeek % 7]} ({selectedDate.format('MMM DD, YYYY')})
+                      {dayOptions.find(day => day.value === selectedSlot.dayInWeek)?.label} ({selectedDate.format('MMM DD, YYYY')})
                     </div>
                   </div>
                 </div>

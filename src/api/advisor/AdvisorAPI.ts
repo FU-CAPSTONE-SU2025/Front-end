@@ -111,6 +111,10 @@ export const FetchBookingAvailability = async (
 };
 
 export const CreateBookingAvailability = async (data: CreateBookingAvailabilityRequest): Promise<BookingAvailability> => {
+  // Debug: Log data before sending to API
+  console.log('CreateBookingAvailability - Data to send:', data);
+  console.log('CreateBookingAvailability - dayInWeek value:', data.dayInWeek);
+  
   const props = {
     data: data,
     url: baseUrl + "/BookingAvailability",
@@ -126,6 +130,14 @@ export const CreateBookingAvailability = async (data: CreateBookingAvailabilityR
 };
 
 export const CreateBulkBookingAvailability = async (data: CreateBulkBookingAvailabilityRequest): Promise<BookingAvailability[]> => {
+  // Debug: Log data before sending to API
+  console.log('CreateBulkBookingAvailability - Data to send:', data);
+  console.log('CreateBulkBookingAvailability - dayInWeek values:', data.map(item => ({
+    dayInWeek: item.dayInWeek,
+    startTime: item.startTime,
+    endTime: item.endTime
+  })));
+  
   const props = {
     data: data,
     url: baseUrl + "/BookingAvailability/bulk",

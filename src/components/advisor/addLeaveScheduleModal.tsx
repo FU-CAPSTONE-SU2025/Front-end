@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Modal, Form, TimePicker, Select, Button, message, Space, Tabs, Card, Typography, Divider, Row, Col, DatePicker, Alert } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Modal, Form, TimePicker, Select, Button, message, Space, Tabs, Card, Typography, Divider, Row, Col, DatePicker, Alert, Tag } from 'antd';
 import { PlusOutlined, ClockCircleOutlined, CalendarOutlined, DeleteOutlined, CopyOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useCreateLeaveSchedule, useCreateBulkLeaveSchedule } from '../../hooks/useCRUDLeaveSchedule';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -12,6 +12,7 @@ interface AddLeaveScheduleProps {
   visible: boolean;
   onCancel: () => void;
   onSuccess: () => void;
+  selectedSlotInfo?: { date: Dayjs; start: Dayjs; end: Dayjs } | null;
 }
 
 interface LeaveSlot {
@@ -21,20 +22,29 @@ interface LeaveSlot {
   endTime: any;
 }
 
-const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCancel, onSuccess }) => {
+const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCancel, onSuccess, selectedSlotInfo }) => {
   const [singleForm] = Form.useForm();
   const [bulkForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState('single');
   const [leaveSlots, setLeaveSlots] = useState<LeaveSlot[]>([
     { key: '1', date: dayjs(), startTime: dayjs('09:00', 'HH:mm'), endTime: dayjs('17:00', 'HH:mm') }
   ]);
-  const [showSplitModal, setShowSplitModal] = useState(false);
-  const [splitSlots, setSplitSlots] = useState<LeaveSlot[]>([]);
-  const [pendingSingleValues, setPendingSingleValues] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedDates, setSelectedDates] = useState<Dayjs[]>([dayjs()]);
 
   const createLeave = useCreateLeaveSchedule();
   const createBulkLeave = useCreateBulkLeaveSchedule();
+
+  // Set form values when selectedSlotInfo changes
+  useEffect(() => {
+    if (selectedSlotInfo && visible) {
+      singleForm.setFieldsValue({
+        startTime: selectedSlotInfo.start,
+        endTime: selectedSlotInfo.end,
+      });
+      setSelectedDates([selectedSlotInfo.date]);
+    }
+  }, [selectedSlotInfo, visible, singleForm]);
 
   const validateTimeRange = (_: any, value: any) => {
     const startTime = singleForm.getFieldValue('startTime');
@@ -61,31 +71,53 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
     return true;
   };
 
-  // Helper: split long slot into 1-hour slots, last slot may be shorter
-  const splitLargeSlot = (date: any, start: any, end: any) => {
+  // Helper: split date range into daily slots
+  const splitDateRange = (startDate: any, endDate: any, startTime: any, endTime: any) => {
     const slots: LeaveSlot[] = [];
-    let current = dayjs(start);
+    let currentDate = dayjs(startDate);
+    const endDateObj = dayjs(endDate);
     let idx = 1;
-    while (current.add(1, 'hour').isBefore(end) || current.add(1, 'hour').isSame(end)) {
-      const next = current.add(1, 'hour');
+
+    while (currentDate.isBefore(endDateObj) || currentDate.isSame(endDateObj, 'day')) {
       slots.push({
         key: idx.toString(),
-        date,
-        startTime: current,
-        endTime: next
+        date: currentDate,
+        startTime: startTime,
+        endTime: endTime
       });
-      current = next;
+      currentDate = currentDate.add(1, 'day');
       idx++;
     }
-    if (current.isBefore(end)) {
-      slots.push({
-        key: idx.toString(),
-        date,
-        startTime: current,
-        endTime: end
-      });
-    }
     return slots;
+  };
+
+  // Helper: check if date range spans multiple days
+  const isMultiDayRange = (startDate: any, endDate: any) => {
+    const start = dayjs(startDate);
+    const end = dayjs(endDate);
+    return end.diff(start, 'day') > 0;
+  };
+
+  // Helper: create slots from multiple selected dates
+  const createSlotsFromDates = (dates: Dayjs[], startTime: any, endTime: any) => {
+    return dates.map((date, index) => ({
+      key: (index + 1).toString(),
+      date: date,
+      startTime: startTime,
+      endTime: endTime
+    }));
+  };
+
+  // Handle date selection in Single tab
+  const handleDateSelect = (date: Dayjs | null) => {
+    if (date) {
+      setSelectedDates([date]);
+    }
+  };
+
+  // Handle multiple date selection
+  const handleMultipleDateSelect = (dates: Dayjs[]) => {
+    setSelectedDates(dates);
   };
 
   // SINGLE TAB
@@ -97,18 +129,38 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
       message.error('Leave slot must be at least 30 minutes.');
       return;
     }
-    if (duration > 60) {
-      setSplitSlots(splitLargeSlot(values.date, start, end));
-      setPendingSingleValues(values);
-      setShowSplitModal(true);
+
+    // If multiple dates are selected, switch to bulk tab
+    if (selectedDates.length > 1) {
+      const splitSlots = createSlotsFromDates(selectedDates, start, end);
+      setLeaveSlots(splitSlots);
+      setActiveTab('bulk');
+      message.info(`Multiple dates detected (${selectedDates.length} days). Switched to Multiple tab with daily breakdown.`);
       return;
     }
+
     try {
+      // Create datetime strings in 24-hour format without timezone conversion
+      const startDateTime = dayjs(selectedDates[0])
+        .hour(start.hour())
+        .minute(start.minute())
+        .second(0)
+        .millisecond(0)
+        .format('YYYY-MM-DDTHH:mm:ss');
+      
+      const endDateTime = dayjs(selectedDates[0])
+        .hour(end.hour())
+        .minute(end.minute())
+        .second(0)
+        .millisecond(0)
+        .format('YYYY-MM-DDTHH:mm:ss');
+
       await createLeave.mutateAsync({
-        startDateTime: dayjs(values.date).hour(start.hour()).minute(start.minute()).second(0).toISOString(),
-        endDateTime: dayjs(values.date).hour(end.hour()).minute(end.minute()).second(0).toISOString(),
+        startDateTime: startDateTime,
+        endDateTime: endDateTime,
       });
       singleForm.resetFields();
+      setSelectedDates([dayjs()]);
       onSuccess();
       onCancel();
     } catch (error) {
@@ -124,18 +176,29 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
         message.error('Please check that all end times are after start times.');
         return;
       }
-      // Nếu có slot dài > 1 tiếng, chia nhỏ
-      const needSplit = leaveSlots.find(item => dayjs(item.endTime).diff(dayjs(item.startTime), 'minute') > 60);
-      if (needSplit) {
-        setSplitSlots(splitLargeSlot(needSplit.date, needSplit.startTime, needSplit.endTime));
-        setPendingSingleValues(null);
-        setShowSplitModal(true);
-        return;
-      }
-      const bulkData = leaveSlots.map(item => ({
-        startDateTime: dayjs(item.date).hour(item.startTime.hour()).minute(item.startTime.minute()).second(0).toISOString(),
-        endDateTime: dayjs(item.date).hour(item.endTime.hour()).minute(item.endTime.minute()).second(0).toISOString(),
-      }));
+
+      const bulkData = leaveSlots.map(item => {
+        // Create datetime strings in 24-hour format without timezone conversion
+        const startDateTime = dayjs(item.date)
+          .hour(item.startTime.hour())
+          .minute(item.startTime.minute())
+          .second(0)
+          .millisecond(0)
+          .format('YYYY-MM-DDTHH:mm:ss');
+        
+        const endDateTime = dayjs(item.date)
+          .hour(item.endTime.hour())
+          .minute(item.endTime.minute())
+          .second(0)
+          .millisecond(0)
+          .format('YYYY-MM-DDTHH:mm:ss');
+
+        return {
+          startDateTime: startDateTime,
+          endDateTime: endDateTime,
+        };
+      });
+      
       await createBulkLeave.mutateAsync(bulkData);
       setLeaveSlots([{ key: '1', date: dayjs(), startTime: dayjs('09:00', 'HH:mm'), endTime: dayjs('17:00', 'HH:mm') }]);
       onSuccess();
@@ -143,33 +206,6 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
     } catch (error) {
       setErrorMessage('An error occurred while creating the leave schedules.');
     }
-  };
-
-  // Confirm split slots
-  const handleConfirmSplitSlots = async () => {
-    try {
-      const bulkData = splitSlots.map(item => ({
-        startDateTime: dayjs(item.date).hour(item.startTime.hour()).minute(item.startTime.minute()).second(0).toISOString(),
-        endDateTime: dayjs(item.date).hour(item.endTime.hour()).minute(item.endTime.minute()).second(0).toISOString(),
-      }));
-      await createBulkLeave.mutateAsync(bulkData);
-      setShowSplitModal(false);
-      setSplitSlots([]);
-      setPendingSingleValues(null);
-      setLeaveSlots([{ key: '1', date: dayjs(), startTime: dayjs('09:00', 'HH:mm'), endTime: dayjs('17:00', 'HH:mm') }]);
-      singleForm.resetFields();
-      onSuccess();
-      onCancel();
-    } catch (error) {
-      setErrorMessage('An error occurred while creating the leave schedules.');
-    }
-  };
-
-  // Cancel split modal
-  const handleCancelSplitSlots = () => {
-    setShowSplitModal(false);
-    setSplitSlots([]);
-    setPendingSingleValues(null);
   };
 
   // Bulk item helpers
@@ -191,29 +227,22 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
       setLeaveSlots([...leaveSlots, { ...item, key: newKey }]);
     }
   };
-  // Split slot helpers
-  const updateSplitSlot = (key: string, field: keyof LeaveSlot, value: any) => {
-    setSplitSlots(slots => slots.map(slot => slot.key === key ? { ...slot, [field]: value } : slot));
-  };
-  const removeSplitSlot = (key: string) => {
-    if (splitSlots.length > 1) setSplitSlots(slots => slots.filter(slot => slot.key !== key));
-    else message.warning('At least one slot is required.');
-  };
-  const addSplitSlot = () => {
-    const last = splitSlots[splitSlots.length - 1];
-    const newKey = (splitSlots.length + 1).toString();
-    setSplitSlots([...splitSlots, {
-      key: newKey,
-      date: last.date,
-      startTime: dayjs(last.endTime),
-      endTime: dayjs(last.endTime).add(30, 'minute')
-    }]);
+
+  // New function to handle date range input
+  const handleDateRangeInput = (startDate: any, endDate: any, startTime: any, endTime: any) => {
+    if (isMultiDayRange(startDate, endDate)) {
+      const splitSlots = splitDateRange(startDate, endDate, startTime, endTime);
+      setLeaveSlots(splitSlots);
+      setActiveTab('bulk');
+      message.info(`Created ${splitSlots.length} daily leave slots from ${dayjs(startDate).format('YYYY-MM-DD')} to ${dayjs(endDate).format('YYYY-MM-DD')}`);
+    }
   };
 
   const handleCancel = () => {
     singleForm.resetFields();
     bulkForm.resetFields();
     setLeaveSlots([{ key: '1', date: dayjs(), startTime: dayjs('09:00', 'HH:mm'), endTime: dayjs('17:00', 'HH:mm') }]);
+    setSelectedDates([dayjs()]);
     onCancel();
     setErrorMessage(null);
   };
@@ -243,17 +272,88 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
               layout="vertical"
               onFinish={handleSingleSubmit}
               initialValues={{
-                date: dayjs(),
                 startTime: dayjs('09:00', 'HH:mm'),
                 endTime: dayjs('17:00', 'HH:mm'),
               }}
             >
               <Form.Item
-                label={<Space><CalendarOutlined />Date</Space>}
-                name="date"
-                rules={[{ required: true, message: 'Please select date' }]}
+                label={<Space><CalendarOutlined />Select Date(s)</Space>}
+                required
               >
-                <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+                <div style={{ marginBottom: 8 }}>
+                  <Text type="secondary">Select one or multiple dates. If multiple dates are selected, it will automatically switch to Multiple tab.</Text>
+                </div>
+                
+                {/* Date Selection */}
+                <div style={{ marginBottom: 16 }}>
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item label="Start Date" style={{ marginBottom: 8 }}>
+                        <DatePicker
+                          style={{ width: '100%' }}
+                          format="YYYY-MM-DD"
+                          placeholder="Start date"
+                          onChange={(startDate) => {
+                            if (startDate) {
+                              setSelectedDates([startDate]);
+                            }
+                          }}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item label="End Date (Optional)" style={{ marginBottom: 8 }}>
+                        <DatePicker
+                          style={{ width: '100%' }}
+                          format="YYYY-MM-DD"
+                          placeholder="End date (for range)"
+                          onChange={(endDate) => {
+                            if (endDate && selectedDates.length > 0) {
+                              const startDate = selectedDates[0];
+                              const newDates = [];
+                              let current = dayjs(startDate);
+                              const end = dayjs(endDate);
+                              while (current.isBefore(end) || current.isSame(end, 'day')) {
+                                newDates.push(current);
+                                current = current.add(1, 'day');
+                              }
+                              setSelectedDates(newDates);
+                            }
+                          }}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </div>
+
+                {/* Selected Dates Display */}
+                {selectedDates.length > 0 && (
+                  <div style={{ marginTop: 8 }}>
+                    <Text strong>Selected Dates ({selectedDates.length}):</Text>
+                    <div style={{ marginTop: 4, maxHeight: 120, overflowY: 'auto' }}>
+                      {selectedDates.map((date, index) => (
+                        <Tag 
+                          key={index} 
+                          closable 
+                          onClose={() => setSelectedDates(selectedDates.filter((_, i) => i !== index))}
+                          style={{ marginBottom: 4, marginRight: 4 }}
+                        >
+                          {date.format('YYYY-MM-DD')}
+                        </Tag>
+                      ))}
+                    </div>
+                    {selectedDates.length > 1 && (
+                      <Button 
+                        type="link" 
+                        size="small" 
+                        onClick={() => setSelectedDates([])}
+                        style={{ padding: 0, marginTop: 4 }}
+                      >
+                        Clear all dates
+                      </Button>
+                    )}
+                  </div>
+                )}
               </Form.Item>
               <Row gutter={16}>
                 <Col span={12}>
@@ -281,7 +381,9 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
               <Form.Item>
                 <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
                   <Button onClick={handleCancel}>Cancel</Button>
-                  <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>Create Leave</Button>
+                  <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>
+                    Create Leave{selectedDates.length > 1 ? `s (${selectedDates.length})` : ''}
+                  </Button>
                 </Space>
               </Form.Item>
             </Form>
@@ -289,15 +391,92 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
           <TabPane tab="Multiple Leaves" key="bulk">
             <div style={{ marginBottom: 16 }}>
               <Text type="secondary">
-                Create multiple leave slots at once. You can add, remove, or duplicate leave slots.
+                Create multiple leave slots at once. You can add, remove, or duplicate leave slots. 
+                For date ranges, the system will automatically break down into daily slots.
               </Text>
             </div>
+            
+            {/* Date Range Input Section */}
+            <Card size="small" style={{ marginBottom: 16 }} title="Quick Date Range Input">
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item label="Start Date" style={{ marginBottom: 8 }}>
+                    <DatePicker
+                      style={{ width: '100%' }}
+                      format="YYYY-MM-DD"
+                      placeholder="Start date"
+                      onChange={(startDate) => {
+                        const endDate = bulkForm.getFieldValue('endDate');
+                        const startTime = bulkForm.getFieldValue('rangeStartTime') || dayjs('09:00', 'HH:mm');
+                        const endTime = bulkForm.getFieldValue('rangeEndTime') || dayjs('17:00', 'HH:mm');
+                        if (startDate && endDate) {
+                          handleDateRangeInput(startDate, endDate, startTime, endTime);
+                        }
+                      }}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="End Date" style={{ marginBottom: 8 }}>
+                    <DatePicker
+                      style={{ width: '100%' }}
+                      format="YYYY-MM-DD"
+                      placeholder="End date"
+                      onChange={(endDate) => {
+                        const startDate = bulkForm.getFieldValue('startDate');
+                        const startTime = bulkForm.getFieldValue('rangeStartTime') || dayjs('09:00', 'HH:mm');
+                        const endTime = bulkForm.getFieldValue('rangeEndTime') || dayjs('17:00', 'HH:mm');
+                        if (startDate && endDate) {
+                          handleDateRangeInput(startDate, endDate, startTime, endTime);
+                        }
+                      }}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="Time Range" style={{ marginBottom: 8 }}>
+                    <Space>
+                      <TimePicker
+                        format="HH:mm"
+                        placeholder="Start"
+                        minuteStep={15}
+                        use12Hours={false}
+                        onChange={(startTime) => {
+                          const startDate = bulkForm.getFieldValue('startDate');
+                          const endDate = bulkForm.getFieldValue('endDate');
+                          const endTime = bulkForm.getFieldValue('rangeEndTime') || dayjs('17:00', 'HH:mm');
+                          if (startDate && endDate && startTime) {
+                            handleDateRangeInput(startDate, endDate, startTime, endTime);
+                          }
+                        }}
+                      />
+                      <span>-</span>
+                      <TimePicker
+                        format="HH:mm"
+                        placeholder="End"
+                        minuteStep={15}
+                        use12Hours={false}
+                        onChange={(endTime) => {
+                          const startDate = bulkForm.getFieldValue('startDate');
+                          const endDate = bulkForm.getFieldValue('endDate');
+                          const startTime = bulkForm.getFieldValue('rangeStartTime') || dayjs('09:00', 'HH:mm');
+                          if (startDate && endDate && endTime) {
+                            handleDateRangeInput(startDate, endDate, startTime, endTime);
+                          }
+                        }}
+                      />
+                    </Space>
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Card>
+
             {leaveSlots.map((item, index) => (
               <Card
                 key={item.key}
                 size="small"
                 style={{ marginBottom: 16 }}
-                title={<Space><CalendarOutlined />Leave {index + 1}</Space>}
+                title={<Space><CalendarOutlined />Leave {index + 1} - {dayjs(item.date).format('YYYY-MM-DD')}</Space>}
                 extra={
                   <Space>
                     <Button
@@ -318,37 +497,61 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
                   </Space>
                 }
               >
-                <Row gutter={16}>
+                <Row gutter={[16, 16]} align="bottom" style={{ alignItems: 'flex-start' }}>
                   <Col span={8}>
-                    <DatePicker
-                      value={item.date}
-                      onChange={val => updateLeaveSlot(item.key, 'date', val)}
-                      style={{ width: '100%' }}
-                      format="YYYY-MM-DD"
-                      placeholder="Date"
-                    />
+                    <Form.Item
+                      label="Date"
+                      required
+                      style={{ marginBottom: 0 }}
+                      labelCol={{ span: 24 }}
+                      wrapperCol={{ span: 24 }}
+                    >
+                      <DatePicker
+                        value={item.date}
+                        onChange={val => updateLeaveSlot(item.key, 'date', val)}
+                        style={{ width: '100%' }}
+                        format="YYYY-MM-DD"
+                        placeholder="Date"
+                      />
+                    </Form.Item>
                   </Col>
                   <Col span={8}>
-                    <TimePicker
-                      value={item.startTime}
-                      onChange={val => updateLeaveSlot(item.key, 'startTime', val)}
-                      format="HH:mm"
-                      style={{ width: '100%' }}
-                      placeholder="Start time"
-                      minuteStep={15}
-                      use12Hours={false}
-                    />
+                    <Form.Item
+                      label="Start Time"
+                      required
+                      style={{ marginBottom: 0 }}
+                      labelCol={{ span: 24 }}
+                      wrapperCol={{ span: 24 }}
+                    >
+                      <TimePicker
+                        value={item.startTime}
+                        onChange={val => updateLeaveSlot(item.key, 'startTime', val)}
+                        format="HH:mm"
+                        style={{ width: '100%' }}
+                        placeholder="Start time"
+                        minuteStep={15}
+                        use12Hours={false}
+                      />
+                    </Form.Item>
                   </Col>
                   <Col span={8}>
-                    <TimePicker
-                      value={item.endTime}
-                      onChange={val => updateLeaveSlot(item.key, 'endTime', val)}
-                      format="HH:mm"
-                      style={{ width: '100%' }}
-                      placeholder="End time"
-                      minuteStep={15}
-                      use12Hours={false}
-                    />
+                    <Form.Item
+                      label="End Time"
+                      required
+                      style={{ marginBottom: 0 }}
+                      labelCol={{ span: 24 }}
+                      wrapperCol={{ span: 24 }}
+                    >
+                      <TimePicker
+                        value={item.endTime}
+                        onChange={val => updateLeaveSlot(item.key, 'endTime', val)}
+                        format="HH:mm"
+                        style={{ width: '100%' }}
+                        placeholder="End time"
+                        minuteStep={15}
+                        use12Hours={false}
+                      />
+                    </Form.Item>
                   </Col>
                 </Row>
                 {!validateBulkTimeRange(index) && (
@@ -379,62 +582,6 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
             </Space>
           </TabPane>
         </Tabs>
-      </Modal>
-      <Modal
-        open={showSplitModal}
-        onCancel={handleCancelSplitSlots}
-        title={
-          <Space>
-            <ExclamationCircleOutlined style={{ color: '#faad14' }} />
-            Leave slot is longer than 1 hour. Please review and edit the split slots below.
-          </Space>
-        }
-        width={600}
-        destroyOnClose
-        footer={[
-          <Button key="cancel" onClick={handleCancelSplitSlots} style={{ minWidth: 100 }} type="default">
-            Cancel
-          </Button>,
-          <Button key="confirm" type="primary" onClick={handleConfirmSplitSlots} style={{ minWidth: 120 }}>
-            Confirm
-          </Button>
-        ]}
-      >
-        <div style={{ marginBottom: 16 }}>
-          <span style={{ color: '#faad14' }}>
-            The original slot will be split into multiple slots (each 1 hour, last one may be shorter). You can edit, remove, or add slots as needed before confirming.
-          </span>
-        </div>
-        {splitSlots.map((slot, idx) => (
-          <Row gutter={8} key={slot.key} align="middle" style={{ marginBottom: 8 }}>
-            <Col span={8}>
-              <TimePicker
-                value={dayjs(slot.startTime)}
-                onChange={val => updateSplitSlot(slot.key, 'startTime', val)}
-                format="HH:mm"
-                minuteStep={5}
-                style={{ width: '100%' }}
-                use12Hours={false}
-              />
-            </Col>
-            <Col span={8}>
-              <TimePicker
-                value={dayjs(slot.endTime)}
-                onChange={val => updateSplitSlot(slot.key, 'endTime', val)}
-                format="HH:mm"
-                minuteStep={5}
-                style={{ width: '100%' }}
-                use12Hours={false}
-              />
-            </Col>
-            <Col span={6}>
-              <Button danger type="text" icon={<DeleteOutlined />} onClick={() => removeSplitSlot(slot.key)} />
-            </Col>
-          </Row>
-        ))}
-        <Button type="dashed" onClick={addSplitSlot} icon={<PlusOutlined />} style={{ width: '100%', marginTop: 8 }}>
-          Add Another Slot
-        </Button>
       </Modal>
     </>
   );

@@ -45,21 +45,22 @@ const CompleteMeetingModal: React.FC<CompleteMeetingModalProps> = ({
       }
       centered
       width={500}
-      footer={
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button 
-            type="primary"
-            loading={actionLoading} 
-            onClick={handleCompleteConfirm}
-            disabled={actionLoading || !checkInCode.trim()}
-          >
-            Complete Meeting
-          </Button>
-        </div>
-      }
+      footer={[
+    <div className='flex justify-between'>
+          <Button key="cancel" onClick={handleCancel}>
+          Cancel
+        </Button>,
+        <Button 
+          key="confirm" 
+          type="primary"
+          loading={actionLoading} 
+          onClick={handleCompleteConfirm}
+          disabled={actionLoading || !checkInCode.trim()}
+        >
+          Complete Meeting
+        </Button>
+    </div>
+      ]}
     >
       <div className="space-y-4">
         <p className="text-gray-700">
