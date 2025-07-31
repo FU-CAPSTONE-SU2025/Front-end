@@ -27,6 +27,16 @@ const Header: React.FC = () => {
     setIsMenuOpen(false);
   };
 
+  const handleDropdownClick = (path: string) => {
+    // Navigate immediately and reload the page
+    window.location.href = path;
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/';
+  };
+
   const isActiveRoute = (path: string) => {
     return location.pathname === path;
   };
@@ -46,32 +56,22 @@ const Header: React.FC = () => {
     exit: { opacity: 0, x: -100, transition: { duration: 0.3 } },
   };
 
-  // Dropdown menu for avatar (chuẩn mới Ant Design v5+)
+  // Dropdown menu for avatar (updated to English and optimized navigation)
   const avatarMenuItems = [
     {
       key: 'history-meeting',
-      label: (
-        <span onClick={() => navigate('/student/historyMeeting')}>History Meeting</span>
-      ),
+      label: 'History Meeting',
+      onClick: () => handleDropdownClick('/student/historyMeeting'),
     },
     {
       key: 'change-password',
-      label: (
-        <span onClick={() => navigate('/student/change-password')}>Đổi mật khẩu</span>
-      ),
+      label: 'Change Password',
+      onClick: () => handleDropdownClick('/student/change-password'),
     },
     {
       key: 'logout',
-      label: (
-        <span
-          onClick={async () => {
-            await logout();
-            navigate('/');
-          }}
-        >
-          Đăng xuất
-        </span>
-      ),
+      label: 'Logout',
+      onClick: handleLogout,
     },
   ];
 
@@ -155,7 +155,7 @@ const Header: React.FC = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <span className="lg:inline hidden">FPTU - HỒ CHÍ MINH</span>
+            <span className="lg:inline hidden">FPTU - HO CHI MINH</span>
             <span className="lg:hidden">FPTU - HCM</span>
           </motion.a>
           <Notification />

@@ -1,15 +1,35 @@
-import React, { useState } from 'react';
-import { useAdvisorSelfMeetings } from '../../hooks/useAdvisorSelfMeetings';
+import React, { useState, useCallback } from 'react';
+import { useAdvisorSelfMeetings, useAdvisorActiveMeetings } from '../../hooks/useAdvisorSelfMeetings';
 import HistoryCalendarView from '../../components/student/historyCalendarView';
 import MeetingDetailModal from '../../components/student/meetingDetailModal';
 import dayjs, { Dayjs } from 'dayjs';
 import { Segmented, Button, List, Tag } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { getMeetingDetail } from '../../api/student/StudentAPI';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function MeetingPage() {
-  const { data, isLoading, refetch } = useAdvisorSelfMeetings(1, 50);
-  const meetings = data?.items || [];
+  const queryClient = useQueryClient();
+  
+  // Hook cho calendar data (cột phải)
+  const { data: calendarData, isLoading: calendarLoading, refetch: refetchCalendar } = useAdvisorActiveMeetings(1, 50);
+  const calendarMeetings = calendarData?.items || [];
+  
+  // Hook cho meetings list (cột trái)
+  const { data: meetingsData, isLoading: meetingsLoading, refetch: refetchMeetings } = useAdvisorSelfMeetings(1, 50);
+  const meetings = meetingsData?.items || [];
+  
+  // Callback để refresh data sau khi có CRUD operation
+  const handleDataRefresh = useCallback(() => {
+    // Invalidate và refetch cả hai queries
+    queryClient.invalidateQueries({ queryKey: ['advisorActiveMeetings'] });
+    queryClient.invalidateQueries({ queryKey: ['advisorSelfMeetings'] });
+    
+    // Refetch ngay lập tức
+    refetchCalendar();
+    refetchMeetings();
+  }, [queryClient, refetchCalendar, refetchMeetings]);
+  
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
@@ -20,7 +40,10 @@ export default function MeetingPage() {
   // Limit meetings display
   const displayedMeetings = showAllMeetings ? meetings : meetings.slice(0, 10);
   const hasMoreMeetings = meetings.length > 10;
-console.log(meetings)
+  
+  console.log('Advisor Calendar Meetings:', calendarMeetings);
+  console.log('Advisor Meetings List:', meetings);
+  
   // Khi click meeting block
   const handleSlotClick = async (slot: any, date: Dayjs) => {
     if (!slot.meeting) return;
@@ -123,7 +146,7 @@ console.log(meetings)
         <HistoryCalendarView
           viewMode={viewMode}
           selectedDate={selectedDate}
-          meetings={meetings}
+          meetings={calendarMeetings}
           onDateChange={setSelectedDate}
           onSlotClick={handleSlotClick}
           onViewModeChange={mode => { if (mode === 'day' || mode === 'week') setViewMode(mode); }}
@@ -133,7 +156,7 @@ console.log(meetings)
           onClose={() => { setSelectedMeeting(null); setDetail(null); }}
           detail={detail}
           loading={detailLoading || !detail}
-          onActionComplete={() => refetch()}
+          onActionComplete={handleDataRefresh}
         />
       </div>
     </div>

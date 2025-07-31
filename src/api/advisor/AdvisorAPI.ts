@@ -326,6 +326,39 @@ export const getAdvisorSelfMeetings = async (pageNumber = 1, pageSize = 50): Pro
   }
 }; 
 
+// Lấy danh sách active meeting của advisor (API riêng cho calendar)
+export const getAdvisorActiveMeetings = async (pageNumber = 1, pageSize = 50): Promise<any> => {
+  const params = new URLSearchParams({
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString(),
+  });
+  const props = {
+    data: null,
+    url: baseUrl +'/Meeting/all-adv-self/active/paged?' + params.toString(),
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    const calendarData = {
+      ...result.data,
+      items: result.data.items.map((item: any) => ({
+        id: item.id,
+        startDateTime: item.startDateTime,
+        endDateTime: item.endDateTime,
+        status: item.status,
+        titleStudentIssue: item.titleStudentIssue,
+        studentProfileId: item.studentProfileId,
+        studentFirstName: item.studentFirstName,
+        studentLastName: item.studentLastName,
+      }))
+    };
+    return calendarData;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
 export const confirmMeeting = async (id: number): Promise<any> => {
   const props = {
     data: null,
