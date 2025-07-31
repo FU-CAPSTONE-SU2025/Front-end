@@ -6,9 +6,9 @@ import StatusBadge from '../../components/manager/statusBadge';
 import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
-import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
-import { SubjectWithCurriculumInfo, Subject } from '../../interfaces/ISchoolProgram';
-import { AddSubjectToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
+import { useCRUDCurriculum, useCRUDSubjectVersion } from '../../hooks/useCRUDSchoolMaterial';
+import { SubjectVersionWithCurriculumInfo, Subject, SubjectVersion } from '../../interfaces/ISchoolProgram';
+import { AddSubjectVersionToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 const { Option } = Select;
 
@@ -34,26 +34,33 @@ const HomePage: React.FC = () => {
     getCurriculumMutation,
     addCurriculumMutation,
     updateCurriculumMutation,
-    fetchCurriculumSubjectsMutation,
+    fetchCurriculumSubjectVersionsMutation,
     fetchSubjectsMutation,
     curriculumList,
     paginationCurriculum,
     isLoading
   } = useCRUDCurriculum();
 
-  // State for subjects in the selected curriculum
-  const [curriculumSubjects, setCurriculumSubjects] = useState<SubjectWithCurriculumInfo[]>([]);
-  const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
+  const { getSubjectVersionMutation } = useCRUDSubjectVersion();
+
+  // State for subject versions in the selected curriculum
+  const [curriculumSubjectVersions, setCurriculumSubjectVersions] = useState<SubjectVersionWithCurriculumInfo[]>([]);
+  const [isLoadingSubjectVersions, setIsLoadingSubjectVersions] = useState(false);
   
-  // State for add subject functionality
-  const [addSubjectModalOpen, setAddSubjectModalOpen] = useState(false);
-  const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
-  const [addSubjectForm, setAddSubjectForm] = useState<{
-    subjectId?: number;
+  // State for add subject version functionality
+  const [addSubjectVersionModalOpen, setAddSubjectVersionModalOpen] = useState(false);
+  const [allSubjectVersions, setAllSubjectVersions] = useState<SubjectVersion[]>([]);
+  const [addSubjectVersionForm, setAddSubjectVersionForm] = useState<{
+    subjectVersionId?: number;
     semesterNumber?: number;
     isMandatory?: boolean;
   }>({});
-  const [isAddingSubject, setIsAddingSubject] = useState(false);
+  const [isAddingSubjectVersion, setIsAddingSubjectVersion] = useState(false);
+  
+  // Pagination state for subject versions
+  const [subjectVersionPage, setSubjectVersionPage] = useState(1);
+  const [subjectVersionPageSize] = useState(10);
+  const [hasMoreSubjectVersions, setHasMoreSubjectVersions] = useState(true);
 
   // Fetch curriculums on mount and when search/page changes
   React.useEffect(() => {
@@ -64,23 +71,47 @@ const HomePage: React.FC = () => {
     });
   }, [currentPage, pageSize, search]);
 
-  // Fetch all subjects when subjects modal opens
+  // Fetch subject versions when subjects modal opens
   React.useEffect(() => {
     if (subjectsModalOpen) {
-      fetchSubjectsMutation.mutate();
+      getSubjectVersionMutation.mutate({ 
+        pageNumber: subjectVersionPage, 
+        pageSize: subjectVersionPageSize 
+      });
     }
-  }, [subjectsModalOpen]);
+  }, [subjectsModalOpen, subjectVersionPage]);
 
-  // Update all subjects when fetched
+  // Update all subject versions when fetched
   React.useEffect(() => {
-    if (fetchSubjectsMutation.data) {
-      setAllSubjects(fetchSubjectsMutation.data.items || []);
+    if (getSubjectVersionMutation.data) {
+      const newVersions = getSubjectVersionMutation.data.items || [];
+      if (subjectVersionPage === 1) {
+        setAllSubjectVersions(newVersions);
+      } else {
+        setAllSubjectVersions(prev => {
+          // Create a Set of existing IDs to avoid duplicates
+          const existingIds = new Set(prev.map(v => `${v.subjectId}-${v.id}`));
+          const uniqueNewVersions = newVersions.filter(v => !existingIds.has(`${v.subjectId}-${v.id}`));
+          return [...prev, ...uniqueNewVersions];
+        });
+      }
+      
+      // Check if there are more pages
+      const totalPages = Math.ceil(getSubjectVersionMutation.data.totalCount / subjectVersionPageSize);
+      setHasMoreSubjectVersions(subjectVersionPage < totalPages);
     }
-  }, [fetchSubjectsMutation.data]);
+  }, [getSubjectVersionMutation.data, subjectVersionPage]);
 
-  // Compute available subjects to add (subjects not already in curriculum)
-  const availableSubjects = allSubjects.filter(
-    subj => !curriculumSubjects.some(cs => cs.id === subj.id)
+  // Load more subject versions
+  const loadMoreSubjectVersions = () => {
+    if (hasMoreSubjectVersions && !getSubjectVersionMutation.isPending) {
+      setSubjectVersionPage(prev => prev + 1);
+    }
+  };
+
+  // Compute available subject versions to add (subject versions not already in curriculum)
+  const availableSubjectVersions = allSubjectVersions.filter(
+    version => !curriculumSubjectVersions.some(csv => csv.id === version.id)
   );
 
   // Table columns - simplified structure
@@ -107,7 +138,7 @@ const HomePage: React.FC = () => {
       align: 'left' as const,
     },
     {
-      title: 'View Subjects',
+      title: 'View Subject Versions',
       key: 'addSubjects',
       align: 'center' as const,
       width: 120,
@@ -123,14 +154,14 @@ const HomePage: React.FC = () => {
           }}
           size="small"
         >
-          View Subjects
+          View Subject Versions
         </Button>
       ),
     },
   ];
 
-  // Subject table columns for the subjects modal
-  const subjectColumns = [
+  // Subject version table columns for the subjects modal
+  const subjectVersionColumns = [
     {
       title: 'Subject Code',
       dataIndex: 'subjectCode',
@@ -145,6 +176,16 @@ const HomePage: React.FC = () => {
       key: 'subjectName',
     },
     {
+      title: 'Version',
+      dataIndex: 'versionName',
+      key: 'versionName',
+      render: (text: string, record: SubjectVersionWithCurriculumInfo) => (
+        <span style={{ fontWeight: '600', color: '#059669' }}>
+          {record.versionName} ({record.versionCode})
+        </span>
+      ),
+    },
+    {
       title: 'Credits',
       dataIndex: 'credits',
       key: 'credits',
@@ -157,7 +198,7 @@ const HomePage: React.FC = () => {
     {
       title: 'Semester',
       key: 'semester',
-      render: (_: any, record: SubjectWithCurriculumInfo) => (
+      render: (_: any, record: SubjectVersionWithCurriculumInfo) => (
         <Tag color="green" style={{ fontWeight: '600' }}>
           Semester {record.semesterNumber}
         </Tag>
@@ -166,7 +207,7 @@ const HomePage: React.FC = () => {
     {
       title: 'Mandatory',
       key: 'isMandatory',
-      render: (_: any, record: SubjectWithCurriculumInfo) => (
+      render: (_: any, record: SubjectVersionWithCurriculumInfo) => (
         <Tag color={record.isMandatory ? 'red' : 'orange'} style={{ fontWeight: '600' }}>
           {record.isMandatory ? 'Mandatory' : 'Optional'}
         </Tag>
@@ -195,56 +236,56 @@ const HomePage: React.FC = () => {
   const onManageSubjects = async (curriculum: any) => {
     setSelectedCurriculum(curriculum);
     setSubjectsModalOpen(true);
-    setIsLoadingSubjects(true);
+    setIsLoadingSubjectVersions(true);
     
     try {
-      const subjects = await fetchCurriculumSubjectsMutation.mutateAsync(curriculum.id);
-      setCurriculumSubjects(subjects || []);
+      const versions = await fetchCurriculumSubjectVersionsMutation.mutateAsync(curriculum.id);
+      setCurriculumSubjectVersions(versions || []);
     } catch (error) {
       console.error('Failed to fetch curriculum subjects:', error);
       const errorMessage = getUserFriendlyErrorMessage(error);
       message.error(errorMessage);
-      setCurriculumSubjects([]);
+      setCurriculumSubjectVersions([]);
     } finally {
-      setIsLoadingSubjects(false);
+      setIsLoadingSubjectVersions(false);
     }
   };
 
-  const onAddSubject = () => {
-    setAddSubjectForm({});
-    setAddSubjectModalOpen(true);
+  const onAddSubjectVersion = () => {
+    setAddSubjectVersionForm({});
+    setAddSubjectVersionModalOpen(true);
   };
 
-  const handleAddSubject = async () => {
-    if (!addSubjectForm.subjectId || !addSubjectForm.semesterNumber) {
-      message.error('Please select a subject and semester.');
+  const handleAddSubjectVersion = async () => {
+    if (!addSubjectVersionForm.subjectVersionId || !addSubjectVersionForm.semesterNumber) {
+      message.error('Please select a subject version and semester.');
       return;
     }
     
-    setIsAddingSubject(true);
+    setIsAddingSubjectVersion(true);
     try {
       // Import the API function
      
       
-      await AddSubjectToCurriculum(selectedCurriculum.id, {
-        subjectId: addSubjectForm.subjectId,
-        semesterNumber: addSubjectForm.semesterNumber,
-        isMandatory: !!addSubjectForm.isMandatory,
+      await AddSubjectVersionToCurriculum(selectedCurriculum.id, {
+        subjectVersionId: addSubjectVersionForm.subjectVersionId,
+        semesterNumber: addSubjectVersionForm.semesterNumber,
+        isMandatory: !!addSubjectVersionForm.isMandatory,
       });
       
-      message.success('Subject added successfully!');
-      setAddSubjectModalOpen(false);
-      setAddSubjectForm({});
+      message.success('Subject version added successfully!');
+      setAddSubjectVersionModalOpen(false);
+      setAddSubjectVersionForm({});
       
       // Refresh curriculum subjects
-      const subjects = await fetchCurriculumSubjectsMutation.mutateAsync(selectedCurriculum.id);
-      setCurriculumSubjects(subjects || []);
+      const versions = await fetchCurriculumSubjectVersionsMutation.mutateAsync(selectedCurriculum.id);
+      setCurriculumSubjectVersions(versions || []);
     } catch (error) {
-      console.error('Failed to add subject:', error);
+      console.error('Failed to add subject version:', error);
       const errorMessage = getUserFriendlyErrorMessage(error);
       message.error(errorMessage);
     } finally {
-      setIsAddingSubject(false);
+      setIsAddingSubjectVersion(false);
     }
   };
 
@@ -431,7 +472,7 @@ const HomePage: React.FC = () => {
             fontWeight: '600'
           }}>
             <BookOutlined style={{ fontSize: '18px' }} />
-            View Subjects - {selectedCurriculum?.curriculumName || 'Curriculum'}
+            View Subject Versions - {selectedCurriculum?.curriculumName || 'Curriculum'}
           </div>
         }
         onCancel={() => setSubjectsModalOpen(false)}
@@ -469,7 +510,7 @@ const HomePage: React.FC = () => {
             }}>
               <BookOutlined style={{ color: '#1E40AF', fontSize: '18px' }} />
               <span style={{ fontWeight: '600', color: '#1E40AF' }}>
-                Curriculum Subjects ({curriculumSubjects.length})
+                Curriculum Subject Versions ({curriculumSubjectVersions.length})
               </span>
             </div>
           </div>
@@ -499,19 +540,19 @@ const HomePage: React.FC = () => {
                 fontSize: '11px',
                 fontWeight: '500'
               }}>
-                {curriculumSubjects.length}
+                {curriculumSubjectVersions.length}
               </span>
-              subjects in curriculum
+              subject versions in curriculum
             </div>
           </div>
-          {isLoadingSubjects ? (
+          {isLoadingSubjectVersions ? (
             <div style={{ textAlign: 'center', padding: '40px' }}>
               <Spin tip="Loading subjects..." />
             </div>
-          ) : curriculumSubjects.length > 0 ? (
+          ) : curriculumSubjectVersions.length > 0 ? (
             <Table
-              dataSource={curriculumSubjects}
-              columns={subjectColumns}
+              dataSource={curriculumSubjectVersions}
+              columns={subjectVersionColumns}
               rowKey="id"
               pagination={false}
               size="small"
@@ -533,10 +574,10 @@ const HomePage: React.FC = () => {
             }}>
               <BookOutlined style={{ fontSize: '48px', marginBottom: 16, opacity: 0.5, color: '#1E40AF' }} />
               <div style={{ fontSize: '16px', fontWeight: '500', color: '#374151', marginBottom: 8 }}>
-                No subjects assigned to this curriculum yet.
+                No subject versions assigned to this curriculum yet.
               </div>
               <div style={{ fontSize: '14px', opacity: 0.7, color: '#64748b' }}>
-                No subjects to display.
+                No subject versions to display.
               </div>
             </div>
           )}
@@ -545,7 +586,7 @@ const HomePage: React.FC = () => {
 
       {/* Add Subject Modal */}
       <Modal
-        open={addSubjectModalOpen}
+        open={addSubjectVersionModalOpen}
         title={
           <div style={{ 
             display: 'flex', 
@@ -555,16 +596,16 @@ const HomePage: React.FC = () => {
             fontWeight: '600'
           }}>
             <PlusOutlined style={{ fontSize: '18px' }} />
-            Add Subject to Curriculum
+            Add Subject Version to Curriculum
           </div>
         }
-        onCancel={() => setAddSubjectModalOpen(false)}
-        onOk={handleAddSubject}
-        okText="Add Subject"
+        onCancel={() => setAddSubjectVersionModalOpen(false)}
+        onOk={handleAddSubjectVersion}
+        okText="Add Subject Version"
         cancelText="Cancel"
-        confirmLoading={isAddingSubject}
+        confirmLoading={isAddingSubjectVersion}
         okButtonProps={{ 
-          disabled: !addSubjectForm.subjectId || !addSubjectForm.semesterNumber,
+          disabled: !addSubjectVersionForm.subjectVersionId || !addSubjectVersionForm.semesterNumber,
           style: {
             backgroundColor: '#10b981',
             borderColor: '#10b981',
@@ -608,10 +649,10 @@ const HomePage: React.FC = () => {
               fontWeight: '600'
             }}>
               <BookOutlined style={{ fontSize: '16px' }} />
-              Available Subjects: {availableSubjects.length}
+              Available Subject Versions: {availableSubjectVersions.length}
             </div>
             <div style={{ fontSize: '14px', color: '#64748b' }}>
-              Select a subject to add to {selectedCurriculum?.curriculumName || 'this curriculum'}
+              Select a subject version to add to {selectedCurriculum?.curriculumName || 'this curriculum'}
             </div>
           </div>
 
@@ -619,38 +660,52 @@ const HomePage: React.FC = () => {
             <Form.Item
               label={
                 <span style={{ fontWeight: '600', color: '#374151' }}>
-                  Select Subject <span style={{ color: '#ef4444' }}>*</span>
+                  Select Subject Version <span style={{ color: '#ef4444' }}>*</span>
                 </span>
               }
               required
             >
               <Select
                 showSearch
-                placeholder="Search and choose a subject to add..."
-                value={addSubjectForm.subjectId}
-                onChange={(value) => setAddSubjectForm(prev => ({ ...prev, subjectId: value }))}
+                placeholder="Search and choose a subject version to add..."
+                value={addSubjectVersionForm.subjectVersionId}
+                onChange={(value) => setAddSubjectVersionForm(prev => ({ ...prev, subjectVersionId: value }))}
                 optionFilterProp="label"
                 filterOption={(input, option) => {
                   const label = option?.label || '';
                   return label.toString().toLowerCase().includes(input.toLowerCase());
                 }}
+                onPopupScroll={(e) => {
+                  const { target } = e;
+                  const { scrollTop, scrollHeight, clientHeight } = target as HTMLElement;
+                  if (scrollTop + clientHeight >= scrollHeight - 5) {
+                    loadMoreSubjectVersions();
+                  }
+                }}
+                loading={getSubjectVersionMutation.isPending}
                 style={{ 
                   width: '100%',
                   borderRadius: 8
                 }}
                 size="large"
                 notFoundContent={
-                  <div style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>
-                    <BookOutlined style={{ fontSize: '24px', marginBottom: '8px', opacity: 0.5 }} />
-                    <div>No subjects found</div>
-                  </div>
+                  getSubjectVersionMutation.isPending ? (
+                    <div style={{ padding: '8px', textAlign: 'center' }}>
+                      <Spin size="small" />
+                    </div>
+                  ) : (
+                    <div style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>
+                      <BookOutlined style={{ fontSize: '24px', marginBottom: '8px', opacity: 0.5 }} />
+                      <div>No subject versions found</div>
+                    </div>
+                  )
                 }
               >
-                {availableSubjects.map(subj => (
+                {availableSubjectVersions.map(version => (
                   <Option 
-                    key={subj.id} 
-                    value={subj.id} 
-                    label={`${subj.subjectName} (${subj.subjectCode})`}
+                    key={`${version.subjectId}-${version.id}`} 
+                    value={version.id} 
+                    label={`${version.subject.subjectName} (${version.subject.subjectCode}) - ${version.versionName}`}
                   >
                     <div style={{ padding: '4px 0' }}>
                       <div style={{ 
@@ -658,7 +713,7 @@ const HomePage: React.FC = () => {
                         color: '#1E40AF',
                         fontSize: '14px'
                       }}>
-                        {subj.subjectName}
+                        {version.subject.subjectName}
                       </div>
                       <div style={{ 
                         fontSize: '12px', 
@@ -675,25 +730,35 @@ const HomePage: React.FC = () => {
                           fontSize: '11px',
                           fontWeight: '500'
                         }}>
-                          {subj.subjectCode}
+                          {version.subject.subjectCode}
                         </span>
                         <span>•</span>
                         <span style={{ 
-                          background: '#dbeafe', 
-                          color: '#1e40af', 
-                          padding: '2px 6px', 
-                          borderRadius: 4,
-                          fontSize: '11px',
+                          color: '#059669',
                           fontWeight: '500'
                         }}>
-                          {subj.credits} credits
+                          {version.versionName} ({version.versionCode})
+                        </span>
+                        <span>•</span>
+                        <span style={{ 
+                          color: '#f59e0b',
+                          fontWeight: '500'
+                        }}>
+                          {version.subject.credits} credits
                         </span>
                       </div>
                     </div>
                   </Option>
                 ))}
+                {hasMoreSubjectVersions && (
+                  <Option key="load-more" value="load-more" disabled>
+                    <div style={{ textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
+                      {getSubjectVersionMutation.isPending ? 'Loading...' : 'Scroll to load more'}
+                    </div>
+                  </Option>
+                )}
               </Select>
-              {availableSubjects.length === 0 && (
+              {availableSubjectVersions.length === 0 && (
                 <div style={{ 
                   background: 'rgba(34,197,94,0.1)', 
                   border: '1px solid rgba(34,197,94,0.2)', 
@@ -703,10 +768,10 @@ const HomePage: React.FC = () => {
                   textAlign: 'center'
                 }}>
                   <div style={{ color: '#059669', fontSize: '14px', fontWeight: '500' }}>
-                    🎉 All subjects are already added to this curriculum!
+                    🎉 All subject versions are already added to this curriculum!
                   </div>
                   <div style={{ color: '#047857', fontSize: '12px', marginTop: 4 }}>
-                    No more subjects available to add.
+                    No more subject versions available to add.
                   </div>
                 </div>
               )}
@@ -725,8 +790,8 @@ const HomePage: React.FC = () => {
                 min={1}
                 max={20}
                 placeholder="Enter semester number (1-9)"
-                value={addSubjectForm.semesterNumber}
-                onChange={(e) => setAddSubjectForm(prev => ({ 
+                value={addSubjectVersionForm.semesterNumber}
+                onChange={(e) => setAddSubjectVersionForm(prev => ({ 
                   ...prev, 
                   semesterNumber: Number(e.target.value) 
                 }))}
@@ -746,8 +811,8 @@ const HomePage: React.FC = () => {
                 padding: '12px'
               }}>
                 <Checkbox
-                  checked={!!addSubjectForm.isMandatory}
-                  onChange={(e: any) => setAddSubjectForm(prev => ({ 
+                  checked={!!addSubjectVersionForm.isMandatory}
+                  onChange={(e: any) => setAddSubjectVersionForm(prev => ({ 
                     ...prev, 
                     isMandatory: e.target.checked 
                   }))}
@@ -757,7 +822,7 @@ const HomePage: React.FC = () => {
                   }}
                 >
                   <span style={{ marginLeft: 8 }}>
-                    Mark as <strong>Mandatory Subject</strong>
+                    Mark as <strong>Mandatory Subject Version</strong>
                   </span>
                 </Checkbox>
                 <div style={{ 
@@ -766,7 +831,7 @@ const HomePage: React.FC = () => {
                   marginTop: 4, 
                   marginLeft: 24 
                 }}>
-                  Mandatory subjects are required for all students in this curriculum
+                  Mandatory subject versions are required for all students in this curriculum
                 </div>
               </div>
             </Form.Item>

@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
-import { CreateCurriculum, CreateSubject, Curriculum, Subject, UpdateCurriculum, CurriculumSubject, SubjectWithCurriculumInfo, Program, CreateProgram, SubjectPrerequisite } from '../interfaces/ISchoolProgram';
-import { AddCurriculum, FetchCurriculumById, FetchCurriculumList, UpdateCurriculumById, FetchSubjectToCurriculum, RegisterMultipleCurriculum } from '../api/SchoolAPI/curriculumAPI';
+import { CreateCurriculum, CreateSubject, Curriculum, Subject, UpdateCurriculum, Program, CreateProgram, SubjectPrerequisite, SubjectVersionWithCurriculumInfo } from '../interfaces/ISchoolProgram';
+import { AddCurriculum, FetchCurriculumById, FetchCurriculumList, UpdateCurriculumById, RegisterMultipleCurriculum, FetchSubjectVersionsToCurriculum, AddSubjectVersionToCurriculum, RemoveSubjectVersionFromCurriculum } from '../api/SchoolAPI/curriculumAPI';
 import { PagedData } from '../interfaces/ISchoolProgram';
 import { AddSubject, FetchSubjectById, FetchSubjectList, UpdateSubjectById, AddPrerequisitesSubject, RegisterMultipleSubject } from '../api/SchoolAPI/subjectAPI';
 import { AddProgram, FetchProgramList, FetchProgramById, UpdateProgramById, DisableProgram, RegisterMultiplePrograms } from '../api/SchoolAPI/programAPI';
@@ -38,7 +38,8 @@ import {
   GetDependentsBySubjectVersion, 
   DeletePrerequisiteFromSubjectVersion, 
   GetPrerequisitesBySubject, 
-  CopyPrerequisitesBetweenVersions 
+  CopyPrerequisitesBetweenVersions,
+  SetDefaultSubjectVersion
 } from '../api/SchoolAPI/subjectVersionAPI';
 import { SubjectVersion, CreateSubjectVersion, UpdateSubjectVersion } from '../interfaces/ISchoolProgram';
 
@@ -102,9 +103,10 @@ export function useCRUDCurriculum() {
     },
   });
 
-  const fetchCurriculumSubjectsMutation = useMutation<SubjectWithCurriculumInfo[] | null, unknown, number>({
+  // Fetch subject versions in curriculum
+  const fetchCurriculumSubjectVersionsMutation = useMutation<SubjectVersionWithCurriculumInfo[] | null, unknown, number>({
     mutationFn: async (curriculumId: number) => {
-      const result = await FetchSubjectToCurriculum(curriculumId);
+      const result = await FetchSubjectVersionsToCurriculum(curriculumId);
       return result;
     },
     onError: (error) => {
@@ -141,7 +143,7 @@ export function useCRUDCurriculum() {
     addCurriculumMutation,
     addMultipleCurriculumsMutation,
     getCurriculumMutation,
-    fetchCurriculumSubjectsMutation,
+    fetchCurriculumSubjectVersionsMutation,
     fetchSubjectsMutation,
     getAllCurriculums: getCurriculumMutation.mutate,
     curriculumList,
@@ -739,6 +741,17 @@ export function useCRUDSubjectVersion() {
     },
   });
 
+  // Set default subject version
+  const setDefaultSubjectVersionMutation = useMutation<SubjectVersion | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await SetDefaultSubjectVersion(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
   // Add prerequisite to subject version
   const addPrerequisiteToSubjectVersionMutation = useMutation<SubjectVersion | null, unknown, { subjectVersionId: number; prerequisiteId: number }>({
     mutationFn: async ({ subjectVersionId, prerequisiteId }) => {
@@ -815,6 +828,7 @@ export function useCRUDSubjectVersion() {
   const isSuccessDeletePrerequisite = deletePrerequisiteFromSubjectVersionMutation.isSuccess;
   const isSuccessGetPrerequisitesBySubject = getPrerequisitesBySubjectMutation.isSuccess;
   const isSuccessCopyPrerequisites = copyPrerequisitesBetweenVersionsMutation.isSuccess;
+  const isSuccessSetDefault = setDefaultSubjectVersionMutation.isSuccess;
 
   const subjectVersionById = getSubjectVersionById.data || null;
   const metaData = getSubjectVersionMutation.data || null;
@@ -831,6 +845,7 @@ export function useCRUDSubjectVersion() {
     updateSubjectVersionMutation,
     deleteSubjectVersionMutation,
     toggleActiveSubjectVersionMutation,
+    setDefaultSubjectVersionMutation,
     addPrerequisiteToSubjectVersionMutation,
     getPrerequisitesBySubjectVersionMutation,
     getDependentsBySubjectVersionMutation,
@@ -855,6 +870,7 @@ export function useCRUDSubjectVersion() {
     isSuccessDeletePrerequisite,
     isSuccessGetPrerequisitesBySubject,
     isSuccessCopyPrerequisites,
+    isSuccessSetDefault,
     subjectVersionById
   };
 }

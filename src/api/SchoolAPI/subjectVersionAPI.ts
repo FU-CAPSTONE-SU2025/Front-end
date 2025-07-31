@@ -228,10 +228,25 @@ export const UpdateSubjectVersionById = async (id: number, data: UpdateSubjectVe
 export const ActiveSubjectVersion = async (id: number): Promise<any | null> => {
   const props = {
     data: null,
-    url: subjectVersionURL + `/${id}/active`,
+    url: subjectVersionURL + `/${id}/toggle-active`,
     headers: GetHeader(),
   };
-  const result = await axiosUpdate(props);
+  const result = await axiosCreate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
+  }
+}; 
+
+export const SetDefaultSubjectVersion = async (id: number): Promise<any | null> => {
+  const props = {
+    data: null,
+    url: subjectVersionURL + `/${id}/set-default`,
+    headers: GetHeader(),
+  };
+  const result = await axiosCreate(props);
   if (result.success) {
     return result.data;
   } else {

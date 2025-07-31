@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Select, Affix, Collapse, Pagination, Spin, Empty, message } from 'antd';
-import { PlusOutlined, EditOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
+import { Table, Input, Button, Select, Affix, Collapse, Pagination, Spin, Empty, message, Tag } from 'antd';
+import { PlusOutlined, EditOutlined, SearchOutlined, UploadOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { curriculums, combos, comboSubjects } from '../../data/schoolData';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -169,19 +169,94 @@ const SubjectPage: React.FC = () => {
     }
   };
 
+  // Helper function to render approval status
+  const renderApprovalStatus = (record: any) => {
+    const approvalStatus = record.approvalStatus;
+    const isApproved = approvalStatus === 1;
+    const isRejected = approvalStatus === 0;
+    const isPending = approvalStatus === null || approvalStatus === undefined;
+
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {isApproved && (
+          <Tag color="green" icon={<CheckOutlined />}>
+            Approved
+          </Tag>
+        )}
+        {isRejected && (
+          <Tag color="red" icon={<CloseOutlined />}>
+            Rejected
+          </Tag>
+        )}
+        {isPending && (
+          <Tag color="orange">
+            Pending
+          </Tag>
+        )}
+      </div>
+    );
+  };
+
+  // Helper function to render approval details
+  const renderApprovalDetails = (record: any) => {
+    const approvalStatus = record.approvalStatus;
+    const isApproved = approvalStatus === 1;
+    const isRejected = approvalStatus === 0;
+    const isPending = approvalStatus === null || approvalStatus === undefined;
+
+    if (isPending) {
+      return (
+        <div style={{ fontSize: '12px', color: '#999', fontStyle: 'italic' }}>
+          Awaiting approval
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {record.approvedBy && (
+          <div style={{ fontSize: '12px', color: '#666' }}>
+            By: {record.approvedBy}
+          </div>
+        )}
+        {record.approvedAt && (
+          <div style={{ fontSize: '12px', color: '#666' }}>
+            {new Date(record.approvedAt).toLocaleDateString()}
+          </div>
+        )}
+        {record.rejectionReason && (
+          <div style={{ fontSize: '12px', color: '#ff4d4f', marginTop: 2 }}>
+            Reason: {record.rejectionReason}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', align: 'left' as 'left', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
     { title: 'Subject Name', dataIndex: 'subjectName', key: 'subjectName', align: 'left' as 'left', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
-    { title: 'Subject Code', dataIndex: 'subjectCode', key: 'subjectCode', align: 'left' as 'left', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
+    { 
+      title: 'Subject Code', 
+      dataIndex: 'subjectCode', 
+      key: 'subjectCode', 
+      align: 'center' as 'center', 
+      render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word', textAlign: 'center'}}>{text}</div> 
+    },
     { title: 'Credits', dataIndex: 'credits', key: 'credits', align: 'center' as 'center', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
     {
-      title: 'Version',
-      key: 'version',
+      title: <span style={{ display: 'block', textAlign: 'center' }}>APPROVAL STATUS</span>,
+      key: 'approvalStatus',
       align: 'center' as 'center',
-      render: (_: any, record: any) => {
-        // Since we don't have real version data in the subject list, show a placeholder
-        return 'View Versions';
-      }
+      render: (_: any, record: any) => (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>{renderApprovalStatus(record)}</div>
+      ),
+    },
+    {
+      title: <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: 0.5, color: '#1E40AF', display: 'block', textAlign: 'center' }}>APPROVAL DETAILS</span>,
+      key: 'approvalDetails',
+      align: 'center' as 'center',
+      render: (_: any, record: any) => renderApprovalDetails(record),
     },
     {
       title: 'Actions',
@@ -331,15 +406,17 @@ const SubjectPage: React.FC = () => {
       </Spin>
       {/* Combo List Below Table */}
       <div style={{ marginTop: 48 }}>
-        <Collapse accordion bordered={false} className={styles.sttFreshTable} style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}} onChange={handleComboPanelChange}>
-          {comboList.map(combo => (
-            <Panel
-              header={<span style={{fontWeight: 700, fontSize: '1.1rem', color: '#1E40AF'}}>Combo: {combo.comboName}</span>}
-              key={combo.id}
-              style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF'}}
-              extra={<Button icon={<EditOutlined />} size="small" style={{borderRadius: 999, background: '#f97316', color: '#fff', border: 'none'}} onClick={(e) => { e.stopPropagation(); handleEditCombo(combo.id); }}>{'Edit'}</Button>}
-            >
-              {loadingComboSubjects && expandedCombo === combo.id ? (
+        <Collapse 
+          accordion 
+          bordered={false} 
+          className={styles.sttFreshTable} 
+          style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}} 
+          onChange={handleComboPanelChange}
+          items={comboList.map(combo => ({
+            key: combo.id,
+            label: <span style={{fontWeight: 700, fontSize: '1.1rem', color: '#1E40AF'}}>Combo: {combo.comboName}</span>,
+            children: (
+              loadingComboSubjects && expandedCombo === combo.id ? (
                 <div style={{ textAlign: 'center', padding: 24 }}><Spin /> Loading subjects...</div>
               ) : (
                 <ul style={{margin: 0, paddingLeft: 20}}>
@@ -355,10 +432,12 @@ const SubjectPage: React.FC = () => {
                     <li style={{color: '#aaa'}}>No subjects</li>
                   )}
                 </ul>
-              )}
-            </Panel>
-          ))}
-        </Collapse>
+              )
+            ),
+            extra: <Button icon={<EditOutlined />} size="small" style={{borderRadius: 999, background: '#f97316', color: '#fff', border: 'none'}} onClick={(e) => { e.stopPropagation(); handleEditCombo(combo.id); }}>{'Edit'}</Button>,
+            style: {background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF'}
+          }))}
+        />
       </div>
       
       {/* Data Import Modal */}

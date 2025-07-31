@@ -1,6 +1,6 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, extractErrorMessage, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { CreateSyllabus, Curriculum, Subject, Syllabus, UpdateSyllabus, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from "../../interfaces/ISchoolProgram";
+import { CreateSyllabus, Curriculum, Subject, Syllabus, UpdateSyllabus, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession, SyllabusApproval } from "../../interfaces/ISchoolProgram";
 
 const syllabusURL = baseUrl + "/Syllabus";
 
@@ -208,3 +208,18 @@ export const DisableSyllabus = async (id: number): Promise<any> => {
     return null as never;
   }
 }; 
+
+export const ApproveSyllabus = async (syllabusId: number, data: SyllabusApproval): Promise<Syllabus | null> => {
+  const props = {
+    data: data,
+    url: baseUrl + `/Approval/syllabus/${syllabusId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosUpdate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
+  }
+};

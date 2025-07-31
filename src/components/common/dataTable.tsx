@@ -29,7 +29,7 @@ type DataProps = {
 
 export default function DataTable({columns, data, rowSelection, pagination, onPageChange, onRow, loading, searchQuery, searchFields}: DataProps) {
   const [currentPage, setCurrentPage] = useState<number>(pagination?.current || 1);
-  
+  console.log(data)
   // Client-side search filtering
   const filteredData = useMemo(() => {
     if (!searchQuery || !searchFields || searchFields.length === 0) {

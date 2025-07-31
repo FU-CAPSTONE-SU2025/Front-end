@@ -6,7 +6,7 @@ import styles from '../../css/staff/staffTranscript.module.css';
 import { useSearchParams, useNavigate } from 'react-router';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
-import { Curriculum, SubjectWithCurriculumInfo, CreateCurriculum } from '../../interfaces/ISchoolProgram';
+import { Curriculum, SubjectVersionWithCurriculumInfo, CreateCurriculum } from '../../interfaces/ISchoolProgram';
 import { ErrorResponse, isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import dayjs from 'dayjs';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
@@ -32,12 +32,12 @@ const CurriculumPage: React.FC = () => {
     curriculumList,
     paginationCurriculum,
     isLoading,
-    fetchCurriculumSubjectsMutation,
+    fetchCurriculumSubjectVersionsMutation,
     addMultipleCurriculumsMutation
   } = useCRUDCurriculum();
 
-  // State to store subjects for each curriculum
-  const [curriculumSubjectsMap, setCurriculumSubjectsMap] = useState<{[key: number]: SubjectWithCurriculumInfo[]}>({});
+  // State to store subject versions for each curriculum
+  const [curriculumSubjectVersionsMap, setCurriculumSubjectVersionsMap] = useState<{[key: number]: SubjectVersionWithCurriculumInfo[]}>({});
 
   // Fetch data on mount, page, pageSize, or search change
   useEffect(() => {
@@ -52,24 +52,24 @@ const CurriculumPage: React.FC = () => {
   // Remove the automatic success handling effect to prevent false positives
   // Success handling is now only done in the mutation's onSuccess callback
 
-  // Fetch subjects when a curriculum is expanded
+  // Fetch subject versions when a curriculum is expanded
   const handlePanelChange = async (key: string | string[]) => {
     if (Array.isArray(key) && key.length > 0) {
       const curriculumId = parseInt(key[0]);
       setExpandedCurriculum(curriculumId);
       
       // Only fetch if we haven't already
-      if (!curriculumSubjectsMap[curriculumId]) {
+      if (!curriculumSubjectVersionsMap[curriculumId]) {
         try {
-          const subjects = await fetchCurriculumSubjectsMutation.mutateAsync(curriculumId);
-          if (subjects) {
-            setCurriculumSubjectsMap(prev => ({
+          const subjectVersions = await fetchCurriculumSubjectVersionsMutation.mutateAsync(curriculumId);
+          if (subjectVersions) {
+            setCurriculumSubjectVersionsMap(prev => ({
               ...prev,
-              [curriculumId]: subjects
+              [curriculumId]: subjectVersions
             }));
           }
         } catch (error) {
-          console.error('Failed to fetch curriculum subjects:', error);
+          console.error('Failed to fetch curriculum subject versions:', error);
         }
       }
     } else {
@@ -166,8 +166,8 @@ const CurriculumPage: React.FC = () => {
     }
   };
 
-  // Table columns for subjects
-  const subjectColumns = [
+  // Table columns for subject versions
+  const subjectVersionColumns = [
     {
       title: 'Subject Code',
       dataIndex: 'subjectCode',
@@ -182,6 +182,16 @@ const CurriculumPage: React.FC = () => {
       key: 'subjectName',
     },
     {
+      title: 'Version',
+      dataIndex: 'versionName',
+      key: 'versionName',
+      render: (text: string, record: SubjectVersionWithCurriculumInfo) => (
+        <span style={{ fontWeight: '600', color: '#059669' }}>
+          {record.versionName} ({record.versionCode})
+        </span>
+      ),
+    },
+    {
       title: 'Credits',
       dataIndex: 'credits',
       key: 'credits',
@@ -194,7 +204,7 @@ const CurriculumPage: React.FC = () => {
     {
       title: 'Semester',
       key: 'semester',
-      render: (_: any, record: SubjectWithCurriculumInfo) => (
+      render: (_: any, record: SubjectVersionWithCurriculumInfo) => (
         <Tag color="green" style={{ fontWeight: '600' }}>
           Semester {record.semesterNumber}
         </Tag>
@@ -203,7 +213,7 @@ const CurriculumPage: React.FC = () => {
     {
       title: 'isMandatory',
       key: 'isMandatory',
-      render: (_: any, record: SubjectWithCurriculumInfo) => (
+      render: (_: any, record: SubjectVersionWithCurriculumInfo) => (
         <Tag color={record.isMandatory ? 'red' : 'orange'} style={{ fontWeight: '600' }}>
           {record.isMandatory ? 'Mandatory' : 'Optional'}
         </Tag>
@@ -250,44 +260,41 @@ const CurriculumPage: React.FC = () => {
           className={styles.sttFreshTable} 
           style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}
           onChange={handlePanelChange}
-        >
-          {curriculumList && curriculumList.length > 0 ? curriculumList.map((curriculum: Curriculum) => {
-            const subjects = curriculumSubjectsMap[curriculum.id] || [];
-            const isLoadingSubjects = expandedCurriculum === curriculum.id && fetchCurriculumSubjectsMutation.isPending;
+          items={curriculumList && curriculumList.length > 0 ? curriculumList.map((curriculum: Curriculum) => {
+            const subjectVersions = curriculumSubjectVersionsMap[curriculum.id] || [];
+            const isLoadingSubjectVersions = expandedCurriculum === curriculum.id && fetchCurriculumSubjectVersionsMutation.isPending;
             
-            return (
-              <Panel
-                header={
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{fontWeight: 700, fontSize: '1.2rem', color: '#1E40AF'}}>
-                        {curriculum.curriculumName} 
-                        <span style={{color: '#f97316', fontWeight: 400, marginLeft: 8}}>
-                          [{curriculum.curriculumCode}]
-                        </span>
+            return {
+              key: curriculum.id,
+              label: (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{fontWeight: 700, fontSize: '1.2rem', color: '#1E40AF'}}>
+                      {curriculum.curriculumName} 
+                      <span style={{color: '#f97316', fontWeight: 400, marginLeft: 8}}>
+                        [{curriculum.curriculumCode}]
                       </span>
-                    </div>
-                    <Button
-                      type="text"
-                      icon={<EditOutlined />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditCurriculum(curriculum.id);
-                      }}
-                      style={{ 
-                        color: '#1E40AF',
-                        borderRadius: 8,
-                        height: 32,
-                        padding: '0 12px'
-                      }}
-                    >
-                      Edit
-                    </Button>
+                    </span>
                   </div>
-                }
-                key={curriculum.id}
-                style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}}
-              >
+                  <Button
+                    type="text"
+                    icon={<EditOutlined />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditCurriculum(curriculum.id);
+                    }}
+                    style={{ 
+                      color: '#1E40AF',
+                      borderRadius: 8,
+                      height: 32,
+                      padding: '0 12px'
+                    }}
+                  >
+                    Edit
+                  </Button>
+                </div>
+              ),
+              children: (
                 <div style={{ padding: '16px 0' }}>
                   {/* Curriculum Details */}
                   <div style={{ 
@@ -310,12 +317,12 @@ const CurriculumPage: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <strong style={{ color: '#64748b' }}>Total Subjects:</strong>
-                      <div style={{ color: '#1E40AF', fontWeight: '600' }}>{subjects.length}</div>
+                      <strong style={{ color: '#64748b' }}>Total Subject Versions:</strong>
+                      <div style={{ color: '#1E40AF', fontWeight: '600' }}>{subjectVersions.length}</div>
                     </div>
                   </div>
 
-                  {/* Subjects Table */}
+                  {/* Subject Versions Table */}
                   <div>
                     <div style={{ 
                       display: 'flex', 
@@ -326,18 +333,18 @@ const CurriculumPage: React.FC = () => {
                     }}>
                       <BookOutlined style={{ color: '#1E40AF', fontSize: '18px' }} />
                       <Title level={5} style={{ margin: 0, color: '#1E40AF' }}>
-                        Curriculum Subjects
+                        Curriculum Subject Versions
                       </Title>
                     </div>
                     
-                    {isLoadingSubjects ? (
+                    {isLoadingSubjectVersions ? (
                       <div style={{ textAlign: 'center', padding: '40px' }}>
-                        <Spin tip="Loading subjects..." />
+                        <Spin tip="Loading subject versions..." />
                       </div>
-                    ) : subjects.length > 0 ? (
+                    ) : subjectVersions.length > 0 ? (
                       <Table
-                        dataSource={subjects}
-                        columns={subjectColumns}
+                        dataSource={subjectVersions}
+                        columns={subjectVersionColumns}
                         rowKey="id"
                         pagination={false}
                         size="small"
@@ -357,25 +364,25 @@ const CurriculumPage: React.FC = () => {
                         margin: '0 16px'
                       }}>
                         <BookOutlined style={{ fontSize: '48px', marginBottom: 16, opacity: 0.5 }} />
-                        <div>No subjects assigned to this curriculum yet.</div>
+                        <div>No subject versions assigned to this curriculum yet.</div>
                         <Button 
                           type="primary" 
                           size="small" 
                           style={{ marginTop: 12 }}
                           onClick={() => handleEditCurriculum(curriculum.id)}
                         >
-                          Add Subjects
+                          Add Subject Versions
                         </Button>
                       </div>
                     )}
                   </div>
                 </div>
-              </Panel>
-            );
-          }) : (
-            !isLoading && <Empty description="No curricula found" style={{margin: '40px 0'}} />
-          )}
-        </Collapse>
+              ),
+              style: {background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}
+            };
+          }) : []}
+        />
+      </Spin>
         
         {/* Pagination */}
         {paginationCurriculum && paginationCurriculum.total > 0 && (
@@ -391,7 +398,6 @@ const CurriculumPage: React.FC = () => {
             />
           </div>
         )}
-      </Spin>
       
       {/* Data Import Modal */}
       {isImportOpen && (

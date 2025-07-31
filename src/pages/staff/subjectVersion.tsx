@@ -99,6 +99,7 @@ const SubjectVersionPage: React.FC = () => {
     addSubjectVersionMutation, 
     deleteSubjectVersionMutation,
     toggleActiveSubjectVersionMutation,
+    setDefaultSubjectVersionMutation,
     addPrerequisiteToSubjectVersionMutation,
     getPrerequisitesBySubjectVersionMutation,
     deletePrerequisiteFromSubjectVersionMutation,
@@ -393,34 +394,21 @@ const SubjectVersionPage: React.FC = () => {
     }
   }, [toggleActiveSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId]);
 
-  // Handler to add a prerequisite
-  const handleAddPrerequisite = (versionId: number) => {
-    setEditingVersionId(versionId);
-    setPrereqModalOpen(true);
-  };
-
-  const handlePrereqModalOk = async () => {
-    if (selectedPrereqSubject && editingVersionId) {
-      try {
-        // Use the real API to add prerequisite
-        await addPrerequisiteToSubjectVersionMutation.mutateAsync({
-          subjectVersionId: editingVersionId,
-          prerequisiteId: selectedPrereqSubject.id
-        });
-        
-        // Refetch prerequisites for this version to ensure UI reflects server state
-        await fetchPrerequisitesForVersion(editingVersionId);
-        
-        message.success('Prerequisite added successfully!');
-      } catch (error) {
-        console.error('Failed to add prerequisite:', error);
-        message.error('Failed to add prerequisite');
+  // Handler to set default version
+  const handleSetDefault = useCallback(async (versionId: number) => {
+    try {
+      await setDefaultSubjectVersionMutation.mutateAsync(versionId);
+      message.success('Version set as default successfully!');
+      
+      // Refresh versions list
+      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+      if (updatedVersions) {
+        setSubjectVersions(updatedVersions);
       }
+    } catch (err: any) {
+      message.error('Failed to set version as default: ' + err.message);
     }
-    setPrereqModalOpen(false);
-    setSelectedPrereqSubject(null);
-    setEditingVersionId(null);
-  };
+  }, [setDefaultSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId]);
 
   // Handler to delete a prerequisite
   const handleDeletePrerequisite = async (versionId: number, prerequisite_subject_id: number) => {
@@ -758,7 +746,7 @@ const SubjectVersionPage: React.FC = () => {
                       Version {index + 1}
                     </span>
                     <Space size={4}>
-                      {version.isActive && <Tag color="green">Active</Tag>}
+                      {version.isActive ? <Tag color="green">Active</Tag> : <Tag color="default">Inactive</Tag>}
                       {version.isDefault && <Tag color="blue">Default</Tag>}
                       {isEditing && (
                         <Space>
@@ -800,6 +788,26 @@ const SubjectVersionPage: React.FC = () => {
                 ),
                 children: (
                   <div className={styles.syllabusContent} style={{ width: '100%', maxWidth: 'none', minWidth: 0, margin: '0 auto' }}>
+                    {/* Set as Default Button */}
+                    {isEditing && !version.isDefault && (
+                      <div style={{ marginBottom: 16, textAlign: 'center' }}>
+                        <Button
+                          type="primary"
+                          size="large"
+                          onClick={() => handleSetDefault(version.id)}
+                          style={{
+                            backgroundColor: '#10b981',
+                            borderColor: '#10b981',
+                            borderRadius: 8,
+                            fontWeight: 600,
+                            boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
+                          }}
+                        >
+                          Set as Default Version
+                        </Button>
+                      </div>
+                    )}
+                    
                     {/* Version Info Section */}
                     <div style={{ marginBottom: 32 }}>
                       <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', marginBottom: 16, letterSpacing: '-0.5px' }}>
@@ -827,7 +835,7 @@ const SubjectVersionPage: React.FC = () => {
                           <div>
                             <strong>Status:</strong> 
                             <Space style={{ marginLeft: 8 }}>
-                              {version.isActive && <Tag color="green">Active</Tag>}
+                              {version.isActive ? <Tag color="green">Active</Tag> : <Tag color="default">Inactive</Tag>}
                               {version.isDefault && <Tag color="blue">Default</Tag>}
                             </Space>
                           </div>

@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, InputNumber, Button, message, Space, Typography, Select } from 'antd';
-import { SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { SaveOutlined } from '@ant-design/icons';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
-import { GetPrerequisitesSubject, DeletePrerequisitesSubject } from '../../api/SchoolAPI/subjectAPI';
 import { CreateSubject, Subject } from '../../interfaces/ISchoolProgram';
-import SubjectSelect from '../common/SubjectSelect';
 
 const { Title } = Typography;
 const { TextArea } = Input;
-const { Option } = Select;
 
 interface SubjectEditProps {
   id?: number;
@@ -16,9 +13,6 @@ interface SubjectEditProps {
 
 const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
   const [form] = Form.useForm();
-  const [prereqIds, setPrereqIds] = useState<number[]>([]);
-  const [currentPrerequisites, setCurrentPrerequisites] = useState<Subject[]>([]);
-  const [deletingPrereqId, setDeletingPrereqId] = useState<number | null>(null);
   const isCreateMode = !id;
   const isEditMode = !!id;
 
@@ -29,39 +23,22 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
     updateSubjectMutation,
     isLoading,
     addPrerequisiteMutation,
-    subjectList,
-    getAllSubjects
   } = useCRUDSubject();
 
   // Fetch subject by ID on mount (edit mode)
   useEffect(() => {
     if (isEditMode && id) {
-      getSubjectById.mutate(id);
+      getSubjectById.mutate(id); 
     }
   }, [id, isEditMode]);
 
-  // Set form fields when data is loaded
+  // Set form fields when data is loaded 
   useEffect(() => {
     if (isEditMode && getSubjectById.data) {
       const s = getSubjectById.data;
       form.setFieldsValue(s);
     }
   }, [getSubjectById.data, isEditMode, form]);
-
-  // Fetch all subjects for prerequisites select
-  useEffect(() => {
-    getAllSubjects('NONE');
-  }, []);
-
-  // Fetch current prerequisites for this subject (edit mode)
-  useEffect(() => {
-    if (isEditMode && id) {
-      GetPrerequisitesSubject(id).then((data) => {
-        if (data) setCurrentPrerequisites(data);
-      });
-    }
-  }, [isEditMode, id]);
-
   const onFinish = async (values: any) => {
     try {
       const subjectData: Partial<Subject> = {
@@ -85,7 +62,6 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
           }
         }
         form.resetFields();
-        setPrereqIds([]);
       } else if (id) {
         // Ensure subjectCode is a string (not undefined) to satisfy UpdateSubject type
         if (!subjectData.subjectCode) {
@@ -98,7 +74,7 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
           return;
         }
         // Remove undefined status to satisfy UpdateSubject type
-        const { id: _omit, ...restSubjectData } = subjectData;
+        const { id: _omit } = subjectData;
         await updateSubjectMutation.mutateAsync({ 
           id, 
           data: {
@@ -106,40 +82,21 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
             subjectCode: subjectData.subjectCode as string,
             subjectName: subjectData.subjectName as string,
             credits: subjectData.credits as number,
-            description: subjectData.description as string
+            description: subjectData.description as string,
+            createdBy: '',
+            approvalStatus: 0,
+            approvedBy: '',
+            approvedAt: '',
+            rejectionReason: ''
           } 
         });
-        // Add prerequisites if any
-        if (selectedPrereqs.length > 0) {
-          for (const prereqId of selectedPrereqs) {
-            await addPrerequisiteMutation.mutateAsync({ id, prerequisitesId: prereqId });
-          }
-        }
+       
         message.success('Subject updated successfully!');
       }
     } catch (error) {
       message.error('An error occurred. Please try again.');
     }
   };
-
-  // Delete a prerequisite subject
-  const handleDeletePrerequisite = async (prereqId: number) => {
-    if (!id) return;
-    setDeletingPrereqId(prereqId);
-    try {
-      await DeletePrerequisitesSubject(id, prereqId);
-      setCurrentPrerequisites(prev => prev.filter(subj => subj.id !== prereqId));
-      message.success('Prerequisite removed successfully!');
-    } catch (error) {
-      message.error('Failed to remove prerequisite.');
-    } finally {
-      setDeletingPrereqId(null);
-    }
-  };
-
-  // All other subjects except this one (for prerequisites)
-  const otherSubjects = subjectList.filter(s => s.id !== id);
-
   return (
     <div style={{ padding: '1rem' }}>
       <Title level={4} style={{ color: '#1E40AF', marginBottom: '2rem', textAlign: 'center' }}>
@@ -206,43 +163,6 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
             rows={4}
             style={{ borderRadius: 8 }}
           />
-        </Form.Item>
-        <Form.Item
-          label="Prerequisite Subjects"
-          name="prerequisites"
-          extra="Select one or more subjects that must be completed before this subject."
-        >
-          <>
-            {isEditMode && currentPrerequisites.length > 0 && (
-              <div style={{ marginBottom: 8 }}>
-                <strong>Current Prerequisite Subjects:</strong>
-                <ul style={{ margin: 0, paddingLeft: 20 }}>
-                  {currentPrerequisites.map(subj => (
-                    <li key={subj.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {subj.subjectName} ({subj.subjectCode})
-                      <Button
-                        type="text"
-                        icon={<CloseOutlined style={{ color: '#f5222d' }} />}
-                        size="small"
-                        loading={deletingPrereqId === subj.id}
-                        onClick={() => handleDeletePrerequisite(subj.id)}
-                        style={{ marginLeft: 4 }}
-                        aria-label="Remove prerequisite"
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <SubjectSelect
-              multiple
-              placeholder="Select prerequisite subjects"
-              value={prereqIds}
-              onChange={val => setPrereqIds(Array.isArray(val) ? val as number[] : val === undefined ? [] : [val as number])}
-              style={{ borderRadius: 8, width: '100%' }}
-              disabledIds={[id, ...prereqIds].filter(Boolean) as number[]}
-            />
-          </>
         </Form.Item>
         <Form.Item style={{ marginTop: '2rem', textAlign: 'center' }}>
           <Space size="large">

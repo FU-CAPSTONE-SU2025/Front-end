@@ -1,5 +1,5 @@
-import { StaffDataUpdateRequest, StaffProfileData } from "./IStaff"
-import { StudentDataUpdateRequest, StudentProfileData } from "./IStudent"
+import { CreateStaffProfileData, StaffDataUpdateRequest, StaffProfileData } from "./IStaff"
+import { CreateStudentProfileData, StudentDataUpdateRequest, StudentProfileData } from "./IStudent"
 
 export type ActiveCategoriesProp = {
   admin: ActiveAccountProps[];
@@ -69,19 +69,19 @@ export interface AccountPropsCreate{
     lastName:string,
     dateOfBirth:string|Date,
     roleId:number,
-    studentProfileData: StudentProfileData | null,
-    staffProfileData: StaffProfileData | null,
+    studentProfileData: CreateStudentProfileData | null,
+    staffProfileData: CreateStaffProfileData | null,
 }
 
 export interface BulkAccountPropsCreate{
   email: string,
-  username: string,
+  username: string,  
   password: string,
   firstName:string,
   lastName:string,
   dateOfBirth:string|Date,
-  studentProfileData: StudentProfileData | null,
-  staffProfileData: StaffProfileData | null
+  studentProfileData: CreateStudentProfileData | null,
+  staffProfileData: CreateStaffProfileData | null
 }
 
 export interface GoogleAccountRequestProps {
