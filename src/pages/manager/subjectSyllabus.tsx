@@ -8,7 +8,8 @@ import {
 import { 
   EditOutlined,
   SaveOutlined,
-  ArrowLeftOutlined
+  ArrowLeftOutlined,
+  CheckOutlined
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router';
 import styles from '../../css/manager/managerSyllabus.module.css';
@@ -20,6 +21,8 @@ import MaterialTable from '../../components/staff/MaterialTable';
 import OutcomeTable from '../../components/staff/OutcomeTable';
 import SessionTable from '../../components/staff/SessionTable';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import ApprovalModal from '../../components/manager/approvalModal';
+import { useApprovalActions } from '../../hooks/useApprovalActions';
 
 const { Title } = Typography;
 
@@ -42,10 +45,15 @@ const ManagerSubjectSyllabus: React.FC = () => {
   const { getSubjectById } = useCRUDSubject();
   const [subject, setSubject] = useState<any | null>(null);
 
+  // Approval hook
+  const { handleApproval, isApproving } = useApprovalActions();
+
   // State for syllabus data
   const [syllabus, setSyllabus] = useState<Syllabus | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [approvalModalVisible, setApprovalModalVisible] = useState(false);
+  const [approvalStatus, setApprovalStatus] = useState<'pending' | 'approved'>('pending');
 
   useEffect(() => {
     if (!subjectId) return;
@@ -245,6 +253,25 @@ const ManagerSubjectSyllabus: React.FC = () => {
     }
   };
 
+  const handleApprove = () => {
+    setApprovalModalVisible(true);
+  };
+
+  const handleApprovalConfirm = async (approvalStatus: number, rejectionReason?: string) => {
+    if (!syllabus) return;
+    
+    try {
+      await handleApproval('syllabus', syllabus.id, approvalStatus, rejectionReason);
+      // Update local state to reflect the approval
+      if (approvalStatus === 1) {
+        setApprovalStatus('approved');
+      }
+      setApprovalModalVisible(false);
+    } catch (error) {
+      // Error is already handled in the hook
+    }
+  };
+
   if (loading || !syllabus || !subject) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -270,27 +297,36 @@ const ManagerSubjectSyllabus: React.FC = () => {
             </p>
           </div>
           <div className={styles.syllabusHeaderRight}>
-          {isEditing ? (
             <Button 
-              type="primary" 
-              icon={<SaveOutlined />} 
-              onClick={handleSaveSyllabus}
-              loading={loading}
-              className={styles.saveButton}
+              type={approvalStatus === 'approved' ? 'default' : 'primary'}
+              icon={<CheckOutlined />}
+              disabled={approvalStatus === 'approved'}
+              onClick={handleApprove}
+              style={{ marginRight: 8 }}
             >
-              Save Syllabus
+              {approvalStatus === 'approved' ? 'Approved' : 'Approve Syllabus'}
             </Button>
-          ) : (
-            <Button 
-              type="primary" 
-              icon={<EditOutlined />} 
-              onClick={() => setIsEditing(true)}
-              className={styles.editButton}
-            >
-              Edit Syllabus
-            </Button>
-          )}
-        </div>
+            {isEditing ? (
+              <Button 
+                type="primary" 
+                icon={<SaveOutlined />} 
+                onClick={handleSaveSyllabus}
+                loading={loading}
+                className={styles.saveButton}
+              >
+                Save Syllabus
+              </Button>
+            ) : (
+              <Button 
+                type="primary" 
+                icon={<EditOutlined />} 
+                onClick={() => setIsEditing(true)}
+                className={styles.editButton}
+              >
+                Edit Syllabus
+              </Button>
+            )}
+          </div>
         </div>
 
       </div>
@@ -336,6 +372,19 @@ const ManagerSubjectSyllabus: React.FC = () => {
           onAddOutcomeToSession={handleAddOutcomeToSession}
         />
       </div>
+
+      {/* Approval Modal */}
+      <ApprovalModal
+        visible={approvalModalVisible}
+        onCancel={() => {
+          setApprovalModalVisible(false);
+        }}
+        onConfirm={handleApprovalConfirm}
+        type="syllabus"
+        itemId={syllabus?.id || 0}
+        itemName={subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Syllabus'}
+        loading={isApproving}
+      />
     </div>
   );
 };

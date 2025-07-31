@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Select, Affix, Tag, message, Pagination, Spin, Empty } from 'antd';
-import {SearchOutlined, CheckOutlined, UploadOutlined } from '@ant-design/icons';
+import { Table, Input, Button, Select, Affix, Tag, Pagination, Spin, Empty } from 'antd';
+import {SearchOutlined, CheckOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { curriculums, combos } from '../../data/schoolData';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import ApprovalModal from '../../components/manager/approvalModal';
+import { useApprovalActions } from '../../hooks/useApprovalActions';
 
 const { Option } = Select;
 
@@ -13,9 +15,11 @@ const SubjectManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [curriculumFilter, setCurriculumFilter] = useState<number | undefined>();
   const [comboFilter, setComboFilter] = useState<number | undefined>();
-  const [approvalStatus, setApprovalStatus] = useState<{ [id: number]: 'pending' | 'approved' }>({});
+  // Remove local approval status state since we'll use backend data
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [approvalModalVisible, setApprovalModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<{ id: number; name: string } | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -28,6 +32,9 @@ const SubjectManagerPage: React.FC = () => {
     addMultipleSubjectsMutation
   } = useCRUDSubject();
 
+  // Approval hook
+  const { handleApproval, isApproving } = useApprovalActions();
+
   useEffect(() => {
     getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
   }, [page, pageSize, search]);
@@ -37,28 +44,25 @@ const SubjectManagerPage: React.FC = () => {
     if (title) setSearch(title);
   }, [searchParams]);
 
-  // Remove the automatic success handling effect to prevent false positives
-  // Success handling is now only done in the mutation's onSuccess callback
 
-  const handleAddSubject = () => {
-    navigate('/manager/subject/add');
+
+  const handleApprove = (id: number, name: string) => {
+    setSelectedItem({ id, name });
+    setApprovalModalVisible(true);
   };
 
-  const handleAddCombo = () => {
-    navigate('/manager/combo/add');
-  };
-
-  const handleEditSubject = (subjectId: number) => {
-    navigate(`/manager/subject/edit/${subjectId}`);
-  };
-
-  const handleCreateSyllabus = (subjectId: number) => {
-    navigate(`/manager/subject/${subjectId}/syllabus`);
-  };
-
-  const handleApprove = (id: number) => {
-    setApprovalStatus(prev => ({ ...prev, [id]: 'approved' }));
-    message.success('Subject approved!');
+  const handleApprovalConfirm = async (approvalStatus: number, rejectionReason?: string) => {
+    if (!selectedItem) return;
+    
+    try {
+      await handleApproval('subject', selectedItem.id, approvalStatus, rejectionReason);
+      // Refresh the subject list to get updated approval status
+      getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+      setApprovalModalVisible(false);
+      setSelectedItem(null);
+    } catch (error) {
+      // Error is already handled in the hook
+    }
   };
 
   const handleViewVersion = (subjectId: number) => {
@@ -68,37 +72,76 @@ const SubjectManagerPage: React.FC = () => {
   const columns = [
     { title: 'Title', dataIndex: 'subjectName', key: 'subjectName', align: 'left' as 'left', width: 260 },
     { title: 'Subject Code', dataIndex: 'subjectCode', key: 'subjectCode', align: 'left' as 'left', width: 140 },
-    { title: 'Combo Description', dataIndex: 'comboDescription', key: 'comboDescription', align: 'left' as 'left', width: 380, ellipsis: true },
+    {
+      title: 'Approval Info',
+      key: 'approvalInfo',
+      align: 'left' as 'left',
+      width: 200,
+      render: (_: any, record: any) => {
+        if (record.approvalStatus === 1) {
+          return (
+            <div style={{ fontSize: 12, color: '#52c41a' }}>
+              <div>Approved by: {record.approvedBy || 'Unknown'}</div>
+              <div>Date: {record.approvedAt ? new Date(record.approvedAt).toLocaleDateString() : 'Unknown'}</div>
+            </div>
+          );
+        } else if (record.rejectionReason) {
+          return (
+            <div style={{ fontSize: 12, color: '#ff4d4f' }}>
+              <div>Rejected</div>
+              <div style={{ fontStyle: 'italic' }}>{record.rejectionReason}</div>
+            </div>
+          );
+        }
+        return (
+          <div style={{ fontSize: 12, color: '#faad14' }}>
+            <div>Created by: {record.createdBy || 'Unknown'}</div>
+            <div>Pending approval</div>
+          </div>
+        );
+      },
+    },
     {
       title: 'Status',
       key: 'status',
       align: 'center' as 'center',
       width: 180,
-      render: (_: any, record: any) => (
-        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-          <Tag color={approvalStatus[record.id] === 'approved' ? 'green' : 'orange'} style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6, marginBottom: 0 }}>
-            {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Waiting'}
-          </Tag>
-          <Button
-            type={approvalStatus[record.id] === 'approved' ? 'default' : 'primary'}
-            icon={<CheckOutlined style={{ fontSize: 12 }} />}
-            size="small"
-            disabled={approvalStatus[record.id] === 'approved'}
-            onClick={() => handleApprove(record.id)}
-            style={{borderRadius: 6, height: 22, padding: '0 6px', fontSize: 12, marginBottom: 0}}
-          >
-            {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Approve'}
-          </Button>
-          <Button
-            type="default"
-            size="small"
-            style={{ borderRadius: 6, height: 22, padding: '0 10px', fontSize: 12, marginBottom: 0 }}
-            onClick={() => handleViewVersion(record.id)}
-          >
-            View Version
-          </Button>
-        </div>
-      ),
+      render: (_: any, record: any) => {
+        const isApproved = record.approvalStatus === 1;
+        return (
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+            <Tag color={isApproved ? 'green' : 'orange'} style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6, marginBottom: 0 }}>
+              {isApproved ? 'Approved' : 'Waiting'}
+            </Tag>
+                    <Button
+          type={isApproved ? 'default' : 'primary'}
+          icon={<CheckOutlined style={{ fontSize: 12 }} />}
+          size="small"
+          onClick={async () => {
+            if (isApproved) {
+              // Unapprove
+              await handleApproval('subject', record.id, 0, null);
+            } else {
+              // Approve
+              handleApprove(record.id, record.subjectName);
+            }
+            getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+          }}
+          style={{borderRadius: 6, height: 22, padding: '0 6px', fontSize: 12, marginBottom: 0}}
+        >
+          {isApproved ? 'Approved' : 'Approve'}
+        </Button>
+            <Button
+              type="default"
+              size="small"
+              style={{ borderRadius: 6, height: 22, padding: '0 10px', fontSize: 12, marginBottom: 0 }}
+              onClick={() => handleViewVersion(record.id)}
+            >
+              View Version
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -173,6 +216,20 @@ const SubjectManagerPage: React.FC = () => {
             </div>
           )}
         </Spin>
+        
+        {/* Approval Modal */}
+        <ApprovalModal
+          visible={approvalModalVisible}
+          onCancel={() => {
+            setApprovalModalVisible(false);
+            setSelectedItem(null);
+          }}
+          onConfirm={handleApprovalConfirm}
+          type="subject"
+          itemId={selectedItem?.id || 0}
+          itemName={selectedItem?.name || ''}
+          loading={isApproving}
+        />
         
       </div>
     </div>

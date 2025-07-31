@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Button, Tabs, message, Table } from 'antd';
-import {  ArrowLeftOutlined,CheckOutlined} from '@ant-design/icons';
+import { Button, Tabs, Typography, message, Card, Tag, Space} from 'antd';
+import {  ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons';
 
 import AddVersionModal from '../../components/staff/AddVersionModal';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
-import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 
 import AssessmentTable from '../../components/staff/AssessmentTable';
 import MaterialTable from '../../components/staff/MaterialTable';
@@ -75,9 +74,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
   const { subjectId } = useParams();
   const [modalVisible, setModalVisible] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [isApproved, setIsApproved] = useState(false);
-  const [approveModalOpen, setApproveModalOpen] = useState(false);
-  const [approveHover, setApproveHover] = useState(false);
   const [activeKey, setActiveKey] = useState<string>('');
 
   // State for Add Prerequisite Modal
@@ -554,6 +550,90 @@ const ManagerSubjectVersionPage: React.FC = () => {
 
   const handleBulkModalClose = () => setBulkModal(null);
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <Typography.Text>Loading...</Typography.Text>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <Typography.Text type="danger">{error}</Typography.Text>
+      </div>
+    );
+  }
+
+  if (subjectVersions.length === 0) {
+    return (
+      <div className={styles.syllabusContainer} style={{ width: '100%', maxWidth: 'none', minWidth: 0 }}>
+        {/* Header */}
+        <div className={styles.syllabusHeader}>
+          <div className={styles.syllabusHeaderLeft}>
+            <button className={styles.backButton} onClick={() => navigate(-1)}>
+              <ArrowLeftOutlined /> Back to Subjects
+            </button>
+            <div className={styles.syllabusTitleCard}>
+              <h2 className={styles.syllabusTitle}>
+                {subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Subject'}
+              </h2>
+              <h3 className={styles.syllabusSubtitle}>
+                {subject?.description}
+              </h3>
+              <p className={styles.syllabusSubtitle}>
+                Subject Versions & Learning Management
+              </p>
+            </div>
+          </div>
+          <div className={styles.syllabusHeaderRight}>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              onClick={() => setModalVisible(true)}
+            >
+              Add Version
+            </Button>
+          </div>
+        </div>
+
+        {/* No Versions Message */}
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '50vh',
+          textAlign: 'center'
+        }}>
+          <Typography.Title level={3} style={{ color: '#666', marginBottom: 16 }}>
+            No Versions Found
+          </Typography.Title>
+          <Typography.Text style={{ color: '#999', marginBottom: 24 }}>
+            This subject doesn't have any versions yet. Create the first version to get started.
+          </Typography.Text>
+          <Button 
+            type="primary" 
+            size="large"
+            icon={<PlusOutlined />} 
+            onClick={() => setModalVisible(true)}
+          >
+            Create First Version
+          </Button>
+        </div>
+
+        <AddVersionModal
+          visible={modalVisible}
+          onCancel={() => setModalVisible(false)}
+          onAdd={handleAddVersion}
+          confirmLoading={adding}
+          subjectId={Number(subjectId)}
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       <style>
@@ -572,149 +652,106 @@ const ManagerSubjectVersionPage: React.FC = () => {
       </style>
       <div className={styles.syllabusContainer} style={{ width: '100%', maxWidth: 'none', minWidth: 0 }}>
         {/* Header */}
-        <div className={`${styles.syllabusHeader} ${glassStyles.appleGlassCard}`}>
+        <div className={styles.syllabusHeader}>
           <div className={styles.syllabusHeaderLeft}>
             <button className={styles.backButton} onClick={() => navigate(-1)}>
               <ArrowLeftOutlined /> Back to Subjects
             </button>
             <div className={styles.syllabusTitleCard}>
               <h2 className={styles.syllabusTitle}>
-                {loading ? 'Loading...' : error ? error : subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Subject'}
+                {subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Subject'}
               </h2>
               <h3 className={styles.syllabusSubtitle}>
                 {subject?.description}
               </h3>
               <p className={styles.syllabusSubtitle}>
-                Course Syllabus & Learning Management
+                Subject Versions & Learning Management
               </p>
             </div>
           </div>
           <div className={styles.syllabusHeaderRight}>
-            <Button
-              type="default"
-              onClick={() => setApproveModalOpen(true)}
-              disabled={isApproved}
-              onMouseEnter={() => setApproveHover(true)}
-              onMouseLeave={() => setApproveHover(false)}
-              className={glassStyles.appleGlassButton}
-              style={
-                isApproved
-                  ? {
-                      minWidth: 120,
-                      backgroundColor: '#22c55e',
-                      color: '#fff',
-                      borderColor: '#22c55e',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 700,
-                    }
-                  : approveHover
-                  ? {
-                      minWidth: 120,
-                      backgroundColor: '#4ade80',
-                      color: '#fff',
-                      borderColor: '#4ade80',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 700,
-                    }
-                  : {
-                      minWidth: 120,
-                      backgroundColor: '#fff',
-                      color: '#4ade80',
-                      borderColor: '#4ade80',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 700,
-                    }
-              }
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              style={{ marginLeft: 16 }} 
+              onClick={() => setModalVisible(true)}
             >
-              {isApproved && <CheckOutlined style={{ color: '#fff', marginRight: 8, fontSize: 18 }} />}
-              {isApproved ? 'Approved' : 'APPROVE'}
+              Add Version
             </Button>
-            <Modal
-              open={approveModalOpen}
-              onOk={() => { setIsApproved(true); setApproveModalOpen(false); message.success('Subject version approved! (mock)'); }}
-              onCancel={() => setApproveModalOpen(false)}
-              okText="Confirm"
-              cancelText="Cancel"
-              title="Approve Subject Version"
-            >
-              <p>Are you sure you want to approve this subject version?</p>
-            </Modal>
           </div>
         </div>
+
         {/* Tabs for Versions */}
-        <div>
+        <div style={{ width: '100%' }}>
           <Tabs
             activeKey={activeKey}
             onChange={handleTabChange}
             type="card"
             tabBarStyle={{ background: 'transparent', borderRadius: 12, boxShadow: 'none', display: 'flex', justifyContent: 'center' }}
-            items={subjectVersions.map((v) => {
-              const isActive = v.isActive;
-              const syllabus = syllabusMap[v.id];
-              const prerequisites = prereqMap[v.id];
+            items={subjectVersions.map((version, index) => {
+              const isActive = activeKey === String(version.id);
+              const syllabus = syllabusMap[version.id];
+              const prerequisites = prereqMap[version.id];
               return {
-                key: String(v.id),
+                key: String(version.id),
                 label: (
-                  <span
-                    style={{
-                      color: activeKey === String(v.id) ? '#f97316' : '#fff',
-                      fontWeight: activeKey === String(v.id) ? 700 : 600,
-                      borderRadius: '8px 8px 0 0',
-                      fontSize: '16px',
-                      padding: '8px 16px',
-                      display: 'inline-block',
-                      transition: 'background 0.2s, color 0.2s',
-                    }}
-                  >
-                    {`Version ${v.versionCode}`}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span
+                      style={{
+                        color: isActive ? '#f97316' : '#fff',
+                        fontWeight: isActive ? 700 : 600,
+                        borderRadius: '8px 8px 0 0',
+                        fontSize: '16px',
+                        padding: '8px 16px',
+                        display: 'inline-block',
+                        transition: 'background 0.2s, color 0.2s',
+                      }}
+                    >
+                      Version {index + 1}
+                    </span>
+                    <Space size={4}>
+                      {version.isActive && <Tag color="green">Active</Tag>}
+                      {version.isDefault && <Tag color="blue">Default</Tag>}
+                    </Space>
+                  </div>
                 ),
                 children: (
                   <div className={styles.syllabusContent} style={{ width: '100%', maxWidth: 'none', minWidth: 0, margin: '0 auto' }}>
-                    {/* Syllabus Section */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-                      <Button
-                        type="default"
-                        onClick={() => {
-                          if (!isActive) {
-                            handleToggleActive(v.id);
-                          }
-                        }}
-                        disabled={isActive}
-                        style={
-                          isActive
-                            ? {
-                                minWidth: 120,
-                                backgroundColor: '#22c55e',
-                                color: '#fff',
-                                borderColor: '#22c55e',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 700,
-                              }
-                            : {
-                                minWidth: 120,
-                                backgroundColor: '#fff',
-                                color: '#4ade80',
-                                borderColor: '#4ade80',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 700,
-                              }
-                        }
-                      >
-                        {isActive && <CheckOutlined style={{ color: '#fff', marginRight: 8, fontSize: 18 }} />}
-                        {isActive ? 'Active' : 'Set Active'}
-                      </Button>
+                    {/* Version Info Section */}
+                    <div style={{ marginBottom: 32 }}>
+                      <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', marginBottom: 16, letterSpacing: '-0.5px' }}>
+                        📄 Version Information
+                      </h3>
+                      <Card>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+                          <div>
+                            <strong>Version Code:</strong> {version.versionCode}
+                          </div>
+                          <div>
+                            <strong>Version Name:</strong> {version.versionName}
+                          </div>
+                          <div>
+                            <strong>Description:</strong> {version.description}
+                          </div>
+                          <div>
+                            <strong>Effective From:</strong> {new Date(version.effectiveFrom).toLocaleDateString()}
+                          </div>
+                          {version.effectiveTo && (
+                            <div>
+                              <strong>Effective To:</strong> {new Date(version.effectiveTo).toLocaleDateString()}
+                            </div>
+                          )}
+                          <div>
+                            <strong>Status:</strong> 
+                            <Space style={{ marginLeft: 8 }}>
+                              {version.isActive && <Tag color="green">Active</Tag>}
+                              {version.isDefault && <Tag color="blue">Default</Tag>}
+                            </Space>
+                          </div>
+                        </div>
+                      </Card>
                     </div>
+
                     {/* Syllabus Section */}
                     <div style={{ marginBottom: 32 }}>
                       <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', marginBottom: 16, letterSpacing: '-0.5px' }}>
@@ -724,14 +761,15 @@ const ManagerSubjectVersionPage: React.FC = () => {
                         {syllabus ? syllabus.content : 'No syllabus data for this version.'}
                       </div>
                     </div>
+
                     {/* Prerequisite Subjects Section */}
-                    <div style={{ marginBottom: 32 }}>
+                    <Card style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                         <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
                           📚 Prerequisite Subjects
                         </h3>
                         <ExcelImportButton
-                          onClick={() => handleAddPrerequisite(v.id)}
+                          onClick={() => handleAddPrerequisite(version.id)}
                           style={{
                             borderColor: '#1E40AF',
                             color: '#1E40AF',
@@ -746,21 +784,123 @@ const ManagerSubjectVersionPage: React.FC = () => {
                           Add Prerequisite
                         </ExcelImportButton>
                       </div>
-                      <Table
-                        columns={[
-                          { title: 'Subject Code', dataIndex: 'subjectCode', key: 'subjectCode', width: 160 },
-                          { title: 'Subject Name', dataIndex: 'subjectName', key: 'subjectName' },
-                        ].filter(Boolean)}
-                        dataSource={prerequisites}
-                        rowKey={r => r.prerequisite_subject_id}
-                        pagination={false}
-                        style={{ marginTop: 12 }}
-                      />
+                      {/* Prerequisite chips */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, minHeight: '40px', alignItems: 'center' }}>
+                        {(prerequisites || []).length === 0 ? (
+                          <Typography.Text type="secondary" style={{ fontStyle: 'italic' }}>No prerequisites added yet.</Typography.Text>
+                        ) : (
+                          (prerequisites || []).map((prereq: any) => (
+                            <span key={prereq.prerequisite_subject_id} style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              background: '#f0f9ff',
+                              border: '1px solid #0ea5e9',
+                              borderRadius: '6px',
+                              padding: '6px 12px',
+                              fontSize: '13px',
+                              fontWeight: '500',
+                              color: '#0369a1',
+                              marginRight: 8,
+                              marginBottom: 8,
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            }}>
+                              <b>{prereq.subject?.subjectCode || prereq.subjectCode}</b> v{prereq.versionCode}
+                            </span>
+                          ))
+                        )}
+                      </div>
+                    </Card>
+
+                    {/* Assessment Table Section */}
+                    <div style={{ marginBottom: 32 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
+                          📊 Assessments
+                        </h3>
+                        <ExcelImportButton onClick={() => handleBulkImport('ASSESSMENT', version.id)}>
+                          Import Excel
+                        </ExcelImportButton>
+                      </div>
+                      <div style={{ overflow: 'auto' }}>
+                        <AssessmentTable
+                          assessments={assessmentMap[version.id] || []}
+                          isEditing={false}
+                          onAddAssessment={a => handleAddAssessment(version.id, a)}
+                          onDeleteAssessment={id => handleDeleteAssessment(version.id, id)}
+                          onUpdateAssessment={(id, a) => handleUpdateAssessment(version.id, id, a)}
+                        />
+                      </div>
                     </div>
+
+                    {/* Material Table Section */}
+                    <div style={{ marginBottom: 32 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
+                          📚 Learning Materials
+                        </h3>
+                        <ExcelImportButton onClick={() => handleBulkImport('MATERIAL', version.id)}>
+                          Import Excel
+                        </ExcelImportButton>
+                      </div>
+                      <div style={{ overflow: 'auto' }}>
+                        <MaterialTable
+                          materials={materialMap[version.id] || []}
+                          isEditing={false}
+                          onAddMaterial={m => handleAddMaterial(version.id, m)}
+                          onDeleteMaterial={id => handleDeleteMaterial(version.id, id)}
+                          onUpdateMaterial={(id, m) => handleUpdateMaterial(version.id, id, m)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Outcome Table Section */}
+                    <div style={{ marginBottom: 32 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
+                          🎯 Learning Outcomes
+                        </h3>
+                        <ExcelImportButton onClick={() => handleBulkImport('OUTCOME', version.id)}>
+                          Import Excel
+                        </ExcelImportButton>
+                      </div>
+                      <div style={{ overflow: 'auto' }}>
+                        <OutcomeTable
+                          outcomes={outcomeMap[version.id] || []}
+                          isEditing={false}
+                          onAddOutcome={o => handleAddOutcome(version.id, o)}
+                          onDeleteOutcome={id => handleDeleteOutcome(version.id, id)}
+                          onUpdateOutcome={(id, o) => handleUpdateOutcome(version.id, id, o)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Session Table Section */}
+                    <div style={{ marginBottom: 32 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
+                          📅 Course Sessions
+                        </h3>
+                        <ExcelImportButton onClick={() => handleBulkImport('SESSION', version.id)}>
+                          Import Excel
+                        </ExcelImportButton>
+                      </div>
+                      <div style={{ overflow: 'auto' }}>
+                        <SessionTable
+                          sessions={sessionMap[version.id] || []}
+                          outcomes={outcomeMap[version.id] || []}
+                          isEditing={false}
+                          onAddSession={s => handleAddSession(version.id, s)}
+                          onDeleteSession={id => handleDeleteSession(version.id, id)}
+                          onUpdateSession={(id, s) => handleUpdateSession(version.id, id, s)}
+                          onAddOutcomeToSession={(sessionId, outcomeId) => handleAddOutcomeToSession(version.id, sessionId, outcomeId)}
+                        />
+                      </div>
+                    </div>
+
                     {/* Add Prerequisite Modal */}
                     <Modal
                       title="Add Prerequisite Subject"
-                      open={prereqModalOpen && editingVersionId === v.id}
+                      open={prereqModalOpen && editingVersionId === version.id}
                       onOk={handlePrereqModalOk}
                       onCancel={handlePrereqModalCancel}
                       okButtonProps={{ disabled: !selectedPrereqSubject }}
@@ -773,83 +913,10 @@ const ManagerSubjectVersionPage: React.FC = () => {
                         style={{ width: '100%' }}
                       />
                     </Modal>
-                    {/* Assessment Table Section */}
-                    <div style={{ marginBottom: 32 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          📊 Assessments
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('ASSESSMENT', v.id)}>
-                          Import Excel
-                        </ExcelImportButton>
-                      </div>
-                      <AssessmentTable
-                        assessments={assessmentMap[v.id]}
-                        isEditing={false}
-                        onAddAssessment={a => handleAddAssessment(v.id, a)}
-                        onDeleteAssessment={id => handleDeleteAssessment(v.id, id)}
-                        onUpdateAssessment={(id, a) => handleUpdateAssessment(v.id, id, a)}
-                      />
-                    </div>
-                    {/* Material Table Section */}
-                    <div style={{ marginBottom: 32 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          📚 Learning Materials
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('MATERIAL', v.id)}>
-                          Import Excel
-                        </ExcelImportButton>
-                      </div>
-                      <MaterialTable
-                        materials={materialMap[v.id]}
-                        isEditing={false}
-                        onAddMaterial={m => handleAddMaterial(v.id, m)}
-                        onDeleteMaterial={id => handleDeleteMaterial(v.id, id)}
-                        onUpdateMaterial={(id, m) => handleUpdateMaterial(v.id, id, m)}
-                      />
-                    </div>
-                    {/* Outcome Table Section */}
-                    <div style={{ marginBottom: 32 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          🎯 Learning Outcomes
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('OUTCOME', v.id)}>
-                          Import Excel
-                        </ExcelImportButton>
-                      </div>
-                      <OutcomeTable
-                        outcomes={outcomeMap[v.id]}
-                        isEditing={false}
-                        onAddOutcome={o => handleAddOutcome(v.id, o)}
-                        onDeleteOutcome={id => handleDeleteOutcome(v.id, id)}
-                        onUpdateOutcome={(id, o) => handleUpdateOutcome(v.id, id, o)}
-                      />
-                    </div>
-                    {/* Session Table Section */}
-                    <div style={{ marginBottom: 32 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          📅 Course Sessions
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('SESSION', v.id)}>
-                          Import Excel
-                        </ExcelImportButton>
-                      </div>
-                      <SessionTable
-                        sessions={sessionMap[v.id]}
-                        outcomes={outcomeMap[v.id]}
-                        isEditing={false}
-                        onAddSession={s => handleAddSession(v.id, s)}
-                        onDeleteSession={id => handleDeleteSession(v.id, id)}
-                        onUpdateSession={(id, s) => handleUpdateSession(v.id, id, s)}
-                        onAddOutcomeToSession={(sessionId, outcomeId) => handleAddOutcomeToSession(v.id, sessionId, outcomeId)}
-                      />
-                    </div>
+
                     {/* Bulk Import Modal */}
                     <Modal
-                      open={!!bulkModal && bulkModal.versionId === v.id}
+                      open={!!bulkModal && bulkModal.versionId === version.id}
                       onCancel={handleBulkModalClose}
                       footer={null}
                       title={`Bulk Import ${bulkModal?.type || ''}`}
@@ -858,7 +925,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                         onClose={handleBulkModalClose}
                         onDataImported={data => {
                           const imported = data[bulkModal?.type || ''] || [];
-                          handleBulkDataImported(bulkModal?.type || '', v.id, imported);
+                          handleBulkDataImported(bulkModal?.type || '', version.id, imported);
                         }}
                         supportedTypes={[bulkModal?.type as any]}
                       />
@@ -869,6 +936,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
             })}
           />
         </div>
+
         <AddVersionModal
           visible={modalVisible}
           onCancel={() => setModalVisible(false)}

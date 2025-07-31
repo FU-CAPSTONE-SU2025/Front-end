@@ -228,7 +228,7 @@ export const UpdateSubjectVersionById = async (id: number, data: UpdateSubjectVe
 export const ActiveSubjectVersion = async (id: number): Promise<any | null> => {
   const props = {
     data: null,
-    url: subjectVersionURL + `/${id}/active`,
+    url: subjectVersionURL + `/${id}/toggle-active`,
     headers: GetHeader(),
   };
   const result = await axiosUpdate(props);

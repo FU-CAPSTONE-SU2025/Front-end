@@ -1,7 +1,7 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate,throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps } from "../../interfaces/IAccount";
-import { CreateCurriculum, CreateSubjectToCurriculum, Curriculum,SubjectWithCurriculumInfo } from "../../interfaces/ISchoolProgram";
+import { CreateCurriculum, CreateSubjectToCurriculum, Curriculum,SubjectWithCurriculumInfo, CurriculumApproval } from "../../interfaces/ISchoolProgram";
 import { PagedData } from "../../interfaces/ISchoolProgram";
 
 const curriculumURL = baseUrl + "/Curriculum";
@@ -163,3 +163,18 @@ export const DisableCurriculum = async (userId: number): Promise<AccountProps | 
     return null;
   }
 }; 
+
+export const ApproveCurriculum = async (curriculumId: number, data: CurriculumApproval): Promise<Curriculum | null> => {
+  const props = {
+    data: data,
+    url: baseUrl + `/Approval/curriculum/${curriculumId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosUpdate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
+  }
+};
