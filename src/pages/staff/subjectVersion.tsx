@@ -393,34 +393,6 @@ const SubjectVersionPage: React.FC = () => {
     }
   }, [toggleActiveSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId]);
 
-  // Handler to add a prerequisite
-  const handleAddPrerequisite = (versionId: number) => {
-    setEditingVersionId(versionId);
-    setPrereqModalOpen(true);
-  };
-
-  const handlePrereqModalOk = async () => {
-    if (selectedPrereqSubject && editingVersionId) {
-      try {
-        // Use the real API to add prerequisite
-        await addPrerequisiteToSubjectVersionMutation.mutateAsync({
-          subjectVersionId: editingVersionId,
-          prerequisiteId: selectedPrereqSubject.id
-        });
-        
-        // Refetch prerequisites for this version to ensure UI reflects server state
-        await fetchPrerequisitesForVersion(editingVersionId);
-        
-        message.success('Prerequisite added successfully!');
-      } catch (error) {
-        console.error('Failed to add prerequisite:', error);
-        message.error('Failed to add prerequisite');
-      }
-    }
-    setPrereqModalOpen(false);
-    setSelectedPrereqSubject(null);
-    setEditingVersionId(null);
-  };
 
   // Handler to delete a prerequisite
   const handleDeletePrerequisite = async (versionId: number, prerequisite_subject_id: number) => {

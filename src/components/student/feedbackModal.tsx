@@ -48,20 +48,21 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
       }
       centered
       width={600}
-      footer={[
-        <Button key="cancel" onClick={handleCancel}>
-          Cancel
-        </Button>,
-        <Button 
-          key="submit" 
-          type="primary"
-          loading={actionLoading} 
-          onClick={handleSubmitFeedback}
-          disabled={actionLoading}
-        >
-          Send Feedback
-        </Button>
-      ]}
+      footer={
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Button onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button 
+            type="primary"
+            loading={actionLoading} 
+            onClick={handleSubmitFeedback}
+            disabled={actionLoading}
+          >
+            Send Feedback
+          </Button>
+        </div>
+      }
     >
       <div className="space-y-6">
         <p className="text-gray-700">

@@ -29,6 +29,7 @@ const StudentList: React.FC = () => {
   const [pageSize, setPageSize] = useState<number>(10);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadMessage, setUploadMessage] = useState<string>('');
+  const [resetBanStudentId, setResetBanStudentId] = useState<number | null>(null);
   
   const { categorizedData, refetch } = useActiveUserData();
   const { studentList, getAllStudent, pagination, isLoading } = useCRUDStudent();
@@ -52,10 +53,17 @@ const StudentList: React.FC = () => {
       filterType: filterType || undefined,
       filterValue: filterValue || undefined
     });
+
   };
 
   // Redirect to edit page when a student row is clicked
-  const handleRowClick = (data: AccountProps) => {
+  const handleRowClick = (data: AccountProps, event: React.MouseEvent) => {
+    // Check if the click was on a button or its children
+    const target = event.target as HTMLElement;
+    if (target.closest('button') || target.closest('.ant-popconfirm')) {
+      return; // Don't navigate if clicking on buttons or popconfirm
+    }
+    
     if (!isDeleteMode) {
       nav(`/admin/edit/student/${data.id}`);
     }
@@ -224,7 +232,11 @@ const StudentList: React.FC = () => {
     try {
       await ResetBanNumberForStudent(studentId);
       message.success('Ban number reset successfully');
-      loadStudentData(); // Refresh the data
+      // Refresh the data and refetch active user data
+      loadStudentData();
+      refetch();
+      // Close the popconfirm by clearing the student ID
+      setResetBanStudentId(null);
     } catch (err) {
       const errorMessage = getUserFriendlyErrorMessage(err);
       message.error(errorMessage);
@@ -297,22 +309,36 @@ const StudentList: React.FC = () => {
         );
       }},
     { title: 'Action', key: 'action', width: 150,
-      render: (_: any, record: StudentBase) => (
-        <Popconfirm
-          title="Reset Ban Number"
-          description="Are you sure you want to reset the ban number for this student?"
-          onConfirm={() => handleResetBanNumber(record.id)}
-          okText="Yes"
-          cancelText="No"
-          okType="danger"
-          overlayStyle={{
-            backgroundColor: '#ffffff',
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            border: '1px solid #f0f0f0',
-          }}
-          overlayClassName="reset-ban-popconfirm"
-        >
+      render: (_: any, record: StudentBase) => {
+        // Check if studentDataListResponse exists before rendering
+        if (!record.studentDataListResponse) {
+          return null; // Don't render the button if data is not loaded
+        }
+        
+        return (
+          <Popconfirm
+            title="Reset Ban Number"
+            description="Are you sure you want to reset the ban number for this student?"
+            open={resetBanStudentId === record.studentDataListResponse.id}
+            onOpenChange={(visible) => {
+              if (visible) {
+                setResetBanStudentId(record.studentDataListResponse.id);
+              } else {
+                setResetBanStudentId(null);
+              }
+            }}
+            onConfirm={() => handleResetBanNumber(record.studentDataListResponse.id)}
+            okText="Yes"
+            cancelText="No"
+            okType="danger"
+            overlayStyle={{
+              backgroundColor: '#ffffff',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              border: '1px solid #f0f0f0',
+            }}
+            overlayClassName="reset-ban-popconfirm"
+          >
           <Button
             type="default"
             size="small"
@@ -346,7 +372,8 @@ const StudentList: React.FC = () => {
             Reset Ban
           </Button>
         </Popconfirm>
-      ),
+        );
+      },
     },
   ];
 
@@ -502,7 +529,7 @@ const StudentList: React.FC = () => {
               pagination={pagination}
               onPageChange={handlePageChange}
               onRow={(record: StudentBase) => ({
-                onClick: () => handleRowClick(record),
+                onClick: (event: React.MouseEvent) => handleRowClick(record, event),
               })}
               loading={isLoading}
               searchQuery={searchQuery}

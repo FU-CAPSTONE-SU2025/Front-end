@@ -26,12 +26,19 @@ export interface CreateStudent {
   currentGpa:number
 }
 export interface StudentProfileData{
+    id:number
     numberOfBan: number | null
     enrolledAt: Date
     careerGoal: string
 }
+export interface CreateStudentProfileData{
+  numberOfBan: number | null
+  enrolledAt: Date
+  careerGoal: string
+}
 
 export interface StudentDataListResponse {
+    id:number
     enrolledAt:Date
     doGraduate: boolean
     careerGoal: string
@@ -39,7 +46,7 @@ export interface StudentDataListResponse {
 }
 
 export interface StudentDataUpdateRequest {
-    enrolledAt: "2025-07-11T14:56:47.207Z" | Date,
+    enrolledAt: string | Date,
     doGraduate: true,
     careerGoal: string
 }

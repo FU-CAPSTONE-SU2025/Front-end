@@ -49,20 +49,21 @@ const CancelMeetingModal: React.FC<CancelMeetingModalProps> = ({
       title="Cancel Meeting"
       centered
       width={500}
-      footer={[
-        <Button key="cancel" onClick={handleCancelCancel}>
-          Cancel
-        </Button>,
-        <Button 
-          key="confirm" 
-          danger 
-          loading={actionLoading} 
-          onClick={handleCancelConfirm}
-          disabled={actionLoading}
-        >
-          Confirm Cancellation
-        </Button>
-      ]}
+      footer={
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Button onClick={handleCancelCancel}>
+            Cancel
+          </Button>
+          <Button 
+            danger 
+            loading={actionLoading} 
+            onClick={handleCancelConfirm}
+            disabled={actionLoading}
+          >
+            Confirm Cancellation
+          </Button>
+        </div>
+      }
     >
       <div className="space-y-4">
         <p className="text-gray-700">
