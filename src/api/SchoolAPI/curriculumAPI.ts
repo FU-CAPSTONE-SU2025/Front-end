@@ -1,7 +1,7 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate,throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps } from "../../interfaces/IAccount";
-import { CreateCurriculum, CreateSubjectToCurriculum, Curriculum,SubjectWithCurriculumInfo } from "../../interfaces/ISchoolProgram";
+import { CreateCurriculum, CreateSubjectToCurriculum, Curriculum, CurriculumApproval, SubjectVersionWithCurriculumInfo } from "../../interfaces/ISchoolProgram";
 import { PagedData } from "../../interfaces/ISchoolProgram";
 
 const curriculumURL = baseUrl + "/Curriculum";
@@ -21,7 +21,8 @@ export const AddCurriculum = async (data: CreateCurriculum): Promise<Curriculum 
   }
 };
 
-export const FetchSubjectToCurriculum = async (id: number): Promise<SubjectWithCurriculumInfo[] | null> => {
+// Fetch subject versions in curriculum
+export const FetchSubjectVersionsToCurriculum = async (id: number): Promise<SubjectVersionWithCurriculumInfo[] | null> => {
   const props = {
     data: null,
     url: curriculumURL+"/"+id+"/subjects",
@@ -36,7 +37,8 @@ export const FetchSubjectToCurriculum = async (id: number): Promise<SubjectWithC
   }
 };
 
-export const AddSubjectToCurriculum = async (id: number, data: CreateSubjectToCurriculum): Promise<CreateSubjectToCurriculum | null> => {
+// Add subject version to curriculum
+export const AddSubjectVersionToCurriculum = async (id: number, data: CreateSubjectToCurriculum): Promise<CreateSubjectToCurriculum | null> => {
     const props = {
       data: data,
       url: curriculumURL+"/"+id+"/subjects",
@@ -52,10 +54,11 @@ export const AddSubjectToCurriculum = async (id: number, data: CreateSubjectToCu
     }
   };
 
-export const RemoveSubjectToCurriculum = async (subjectId: number, curriculumId: number): Promise<any | null> => {
+// Remove subject version from curriculum
+export const RemoveSubjectVersionFromCurriculum = async (subjectVersionId: number, curriculumId: number): Promise<any | null> => {
     const props = {
       data: null,
-      url: curriculumURL+"/"+curriculumId+"/subjects/"+subjectId,
+      url: curriculumURL+"/"+curriculumId+"/subjects/"+subjectVersionId,
       headers: GetHeader(),
     };
     const result = await axiosDelete(props);

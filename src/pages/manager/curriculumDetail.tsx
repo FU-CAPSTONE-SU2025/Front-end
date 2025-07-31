@@ -7,8 +7,8 @@ import { useNavigate } from 'react-router';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateCurriculum } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
-import { subjects, combos, comboSubjects, curriculums, curriculumSubjects } from '../../data/schoolData';
-import { AddSubjectToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
+import { subjects, combos, comboSubjects, curriculums } from '../../data/schoolData';
+import { AddSubjectVersionToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
 import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Panel } = Collapse;
@@ -25,8 +25,8 @@ const CurriculumManagerPage: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<{ [id: number]: 'pending' | 'approved' }>({});
   const navigate = useNavigate();
-  const [addSubjectModal, setAddSubjectModal] = useState<{ open: boolean, curriculumId: number | null, semester: number | null }>({ open: false, curriculumId: null, semester: null });
-  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
+  const [addSubjectVersionModal, setAddSubjectVersionModal] = useState<{ open: boolean, curriculumId: number | null, semester: number | null }>({ open: false, curriculumId: null, semester: null });
+  const [selectedSubjectVersionId, setSelectedSubjectVersionId] = useState<number | null>(null);
 
   // Add CRUD hooks
   const {
@@ -122,22 +122,22 @@ const CurriculumManagerPage: React.FC = () => {
     message.success('Curriculum approved!');
   };
 
-  const handleAddSubjectToSemester = (curriculumId: number, semester: number) => {
-    setAddSubjectModal({ open: true, curriculumId, semester });
+  const handleAddSubjectVersionToSemester = (curriculumId: number, semester: number) => {
+    setAddSubjectVersionModal({ open: true, curriculumId, semester });
   };
 
-  const handleAddSubjectConfirm = async () => {
-    if (!addSubjectModal.curriculumId || !addSubjectModal.semester || !selectedSubjectId) return;
+  const handleAddSubjectVersionConfirm = async () => {
+    if (!addSubjectVersionModal.curriculumId || !addSubjectVersionModal.semester || !selectedSubjectVersionId) return;
     try {
-      await AddSubjectToCurriculum(addSubjectModal.curriculumId, {
-        subjectId: selectedSubjectId,
-        semesterNumber: addSubjectModal.semester,
+      await AddSubjectVersionToCurriculum(addSubjectVersionModal.curriculumId, {
+        subjectVersionId: selectedSubjectVersionId,
+        semesterNumber: addSubjectVersionModal.semester,
         isMandatory: true
       });
-      message.success('Subject added to curriculum!');
-      // TODO: Refresh curriculumSubjects from API when available
-      setAddSubjectModal({ open: false, curriculumId: null, semester: null });
-      setSelectedSubjectId(null);
+      message.success('Subject version added to curriculum!');
+      // TODO: Refresh curriculumSubjectVersions from API when available
+      setAddSubjectVersionModal({ open: false, curriculumId: null, semester: null });
+      setSelectedSubjectVersionId(null);
     } catch (err) {
       const errorMessage = getUserFriendlyErrorMessage(err);
       message.error(errorMessage);
@@ -232,60 +232,44 @@ const CurriculumManagerPage: React.FC = () => {
                 {/* Vertical line: absolute, centered behind all nodes */}
                 <div style={{position: 'absolute', left: (nodeSize + lineWidth + 18) / 2 - lineWidth / 2, top: 0, width: lineWidth, height: '100%', background: lineColor, zIndex: 0, borderRadius: 2}} />
                 {/* Timeline and semester content rows */}
-                {[...Array(9)].map((_, semIdx) => {
+                {Array.from({ length: 9 }, (_, semIdx) => {
                   const semesterNumber = semIdx + 1;
-                  // Subjects for this semester
-                  const semesterSubjects = curriculumSubjects.filter(cs => cs.curriculumId === curriculum.id && cs.semesterNumber === semesterNumber && cs.isMandatory);
-                  // Combos for this semester
-                  const semesterCombos = curriculumSubjects.filter(cs => cs.curriculumId === curriculum.id && cs.semesterNumber === semesterNumber && !cs.isMandatory);
+                  // TODO: Replace with actual API data when available
+                  // For now, show empty semester structure
                   return (
                     <React.Fragment key={semesterNumber}>
-                      {/* Timeline node: perfectly centered with semester card */}
-                      <div style={{position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%'}}>
-                        <div style={{width: nodeSize, height: nodeSize, borderRadius: '50%', background: nodeColor, border: nodeBorder, boxShadow: '0 2px 8px #1E40AF33', zIndex: 2}} />
-                      </div>
-                      {/* Semester content */}
-                      <div style={{marginBottom: 12, background: 'rgba(255, 255, 255, 0.90)', borderRadius: 12, padding: 16, boxShadow: '0 1px 6px rgba(30,64,175,0.07)', minHeight: 64}}>
+                      <div style={{
+                        background: 'rgba(255,255,255,0.85)',
+                        borderRadius: 16,
+                        padding: 16,
+                        marginBottom: 12,
+                        border: '1px solid rgba(30,64,175,0.1)',
+                        boxShadow: '0 2px 8px rgba(30,64,175,0.1)'
+                      }}>
                         <Title level={5} style={{color: '#1E40AF', marginBottom: 8}}>Semester {semesterNumber}</Title>
                         {/* Normal Subjects */}
                         <div style={{marginBottom: 8}}>
-                          <b style={{color: '#1E90FF'}}>Subjects:</b>
+                          <b style={{color: '#1E90FF'}}>Subject Versions:</b>
                           <ul style={{margin: 0, paddingLeft: 20}}>
-                            {semesterSubjects.map(cs => {
-                              const subj = subjects.find(s => s.id === cs.subjectId);
-                              return subj ? (
-                                <li
-                                  key={subj.id}
-                                  style={{color: '#1E40AF', cursor: 'pointer', textDecoration: 'underline'}}
-                                  onClick={() => navigate(`/manager/subject?title=${encodeURIComponent(subj.subjectName)}`)}
-                                >
-                                  {subj.subjectName} ({subj.subjectCode})
-                                </li>
-                              ) : null;
-                            })}
+                            <li style={{color: '#64748b', fontStyle: 'italic'}}>
+                              No subject versions assigned yet
+                            </li>
                           </ul>
                         </div>
                         {/* Combos (from semester 5+) */}
                         {semesterNumber >= 5 && (
                           <div>
-                            {semesterCombos.map(cs => {
-                              const combo = combos.find(cb => cb.id === cs.subjectId); // subjectId is comboId for combos
-                              if (!combo) return null;
-                              return (
-                                <div key={combo.id} style={{marginTop: 8, background: 'rgba(30,64,175,0.13)', borderRadius: 8, padding: 8}}>
-                                  <b style={{color: '#f97316'}}>Combo: {combo.comboName}</b>
-                                  <ul style={{margin: 0, paddingLeft: 20}}>
-                                    {comboSubjects.filter(cbs => cbs.comboId === combo.id).map(cbs => {
-                                      const subj = subjects.find(s => s.id === cbs.subjectId);
-                                      return subj ? <li key={subj.id} style={{color: '#1E40AF'}}>{subj.subjectName} ({subj.subjectCode})</li> : null;
-                                    })}
-                                  </ul>
-                                </div>
-                              );
-                            })}
+                            <div style={{marginTop: 8, background: 'rgba(30,64,175,0.13)', borderRadius: 8, padding: 8}}>
+                              <b style={{color: '#f97316'}}>Combos:</b>
+                              <ul style={{margin: 0, paddingLeft: 20}}>
+                                <li style={{color: '#64748b', fontStyle: 'italic'}}>
+                                  No combos assigned yet
+                                </li>
+                              </ul>
+                            </div>
                           </div>
                         )}
-                        <Button type="dashed" icon={<PlusOutlined />} onClick={() => handleAddSubjectToSemester(curriculum.id, semesterNumber)} style={{ marginTop: 8 }}>Add Subject</Button>
+                        <Button type="dashed" icon={<PlusOutlined />} onClick={() => handleAddSubjectVersionToSemester(curriculum.id, semesterNumber)} style={{ marginTop: 8 }}>Add Subject</Button>
                       </div>
                     </React.Fragment>
                   );
@@ -304,26 +288,25 @@ const CurriculumManagerPage: React.FC = () => {
         )}
         {/* Add Subject Modal */}
         <Modal
-          title="Add Subject to Semester"
-          open={addSubjectModal.open}
-          onOk={handleAddSubjectConfirm}
-          onCancel={() => setAddSubjectModal({ open: false, curriculumId: null, semester: null })}
-          okButtonProps={{ disabled: !selectedSubjectId }}
+          title="Add Subject Version to Semester"
+          open={addSubjectVersionModal.open}
+          onOk={handleAddSubjectVersionConfirm}
+          onCancel={() => setAddSubjectVersionModal({ open: false, curriculumId: null, semester: null })}
+          okButtonProps={{ disabled: !selectedSubjectVersionId }}
         >
           <Select
             showSearch
-            placeholder="Select a subject"
+            placeholder="Select a subject version"
             style={{ width: '100%' }}
-            value={selectedSubjectId}
-            onChange={setSelectedSubjectId}
+            value={selectedSubjectVersionId}
+            onChange={setSelectedSubjectVersionId}
             optionFilterProp="label"
             filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
           >
-            {subjects.map(subj => (
-              <Select.Option key={subj.id} value={subj.id} label={`${subj.subjectName} (${subj.subjectCode})`}>
-                {subj.subjectName} ({subj.subjectCode})
-              </Select.Option>
-            ))}
+            {/* TODO: Replace with actual subject versions data */}
+            <Select.Option key="placeholder" value={null} label="Subject versions not available in mock data" disabled>
+              Subject versions not available in mock data
+            </Select.Option>
           </Select>
         </Modal>
       </div>

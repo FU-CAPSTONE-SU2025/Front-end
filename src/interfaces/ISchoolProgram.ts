@@ -63,18 +63,32 @@ export interface ComboSubject {
   subjectId: number; // Foreign key referencing Subject.id, part of composite primary key
 }
 
-// Interface for Curriculum_Subject table (junction table)
-export interface CurriculumSubject {
-  curriculumId: number; // Foreign key referencing Curriculum.id, part of composite primary key
-  subjectId: number; // Foreign key referencing Subject.id, part of composite primary key
-  semesterNumber: number; // int
-  isMandatory: boolean; // bool
+// Interface for Curriculum_SubjectVersion table (junction table) - NEW
+export interface CurriculumSubjectVersion {
+  subjectId: number,
+  subjectVersionId: number,
+  subjectCode: string,
+  subjectName: string,
+  versionCode: string,
+      versionName: string,
+      credits: number,
+      semesterNumber: number,
+      isMandatory: boolean,
+      description: string
 }
 
-// Interface for displaying subject with curriculum relationship data
-export interface SubjectWithCurriculumInfo extends Subject {
+// Interface for displaying subject version with curriculum relationship data - NEW
+export interface SubjectVersionWithCurriculumInfo {
+  subjectId: number;
+  subjectVersionId: number;
+  subjectCode: string;
+  subjectName: string;
+  versionCode: string;
+  versionName: string;
+  credits: number;
   semesterNumber: number;
   isMandatory: boolean;
+  description: string;
 }
 
 // Interface for Subject_Prerequisites table (junction table)
@@ -92,7 +106,7 @@ export interface CreateCurriculum {
 }
 
 export interface CreateSubjectToCurriculum {
-  subjectId: number,
+  subjectVersionId: number, // Changed from subjectId to subjectVersionId
   semesterNumber: number,
   isMandatory: boolean
 }

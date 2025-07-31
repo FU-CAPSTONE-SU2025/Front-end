@@ -1,4 +1,4 @@
-import { Program, Curriculum, Subject, Syllabus, Combo, CurriculumSubject, ComboSubject, SubjectPrerequisite } from '../interfaces/ISchoolProgram';
+import { Program, Curriculum, Subject, Syllabus, Combo, ComboSubject, SubjectPrerequisite } from '../interfaces/ISchoolProgram';
 
 export const programs: Program[] = [
   { id: 1, programName: 'Computer Science', programCode: 'CS101' },
@@ -55,18 +55,6 @@ export const combos: Combo[] = [
   { id: 2, comboName: 'Data Science Track', comboDescription: 'Data Science electives.' },
 ];
 
-export const curriculumSubjects: CurriculumSubject[] = [
-  // Semester 1
-  { curriculumId: 1, subjectId: 1, semesterNumber: 1, isMandatory: true },
-  { curriculumId: 1, subjectId: 2, semesterNumber: 1, isMandatory: true },
-  { curriculumId: 1, subjectId: 5, semesterNumber: 1, isMandatory: true },
-  // Semester 5 with combo
-  { curriculumId: 1, subjectId: 1, semesterNumber: 5, isMandatory: true },
-  { curriculumId: 1, subjectId: 2, semesterNumber: 5, isMandatory: true },
-  { curriculumId: 1, subjectId: 1, semesterNumber: 5, isMandatory: false }, // Combo (comboId=1)
-  { curriculumId: 1, subjectId: 2, semesterNumber: 5, isMandatory: false }, // Combo (comboId=2)
-];
-
 export const comboSubjects: ComboSubject[] = [
   { comboId: 1, subjectId: 3 },
   { comboId: 1, subjectId: 4 },
@@ -84,6 +72,5 @@ export const fetchPrograms = () => new Promise<Program[]>(res => setTimeout(() =
 export const fetchCurriculums = () => new Promise<Curriculum[]>(res => setTimeout(() => res(curriculums), 300));
 export const fetchSubjects = () => new Promise<Subject[]>(res => setTimeout(() => res(subjects), 300));
 export const fetchCombos = () => new Promise<Combo[]>(res => setTimeout(() => res(combos), 300));
-export const fetchCurriculumSubjects = () => new Promise<CurriculumSubject[]>(res => setTimeout(() => res(curriculumSubjects), 300));
 export const fetchComboSubjects = () => new Promise<ComboSubject[]>(res => setTimeout(() => res(comboSubjects), 300));
 export const fetchSubjectPrerequisites = () => new Promise<SubjectPrerequisite[]>(res => setTimeout(() => res(subjectPrerequisites), 300)); 

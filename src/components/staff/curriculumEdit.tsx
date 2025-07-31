@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Select, DatePicker, Button, message, Space, Typography, Spin, Card, Table, Checkbox, Modal } from 'antd';
 import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Curriculum, Subject, SubjectWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
+import { Curriculum, Subject, SubjectVersion, SubjectVersionWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
 import { programs } from '../../data/schoolData';
 import dayjs from 'dayjs';
-import {useCRUDCurriculum} from '../../hooks/useCRUDSchoolMaterial';
-import { AddSubjectToCurriculum, RemoveSubjectToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
+import {useCRUDCurriculum, useCRUDSubjectVersion} from '../../hooks/useCRUDSchoolMaterial';
+import { AddSubjectVersionToCurriculum, RemoveSubjectVersionFromCurriculum } from '../../api/SchoolAPI/curriculumAPI';
 import styles from '../../css/staff/curriculumEdit.module.css';
 
 const { Title } = Typography;
@@ -25,18 +25,24 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
     addCurriculumMutation,
     updateCurriculumMutation,
     getCurriculumById,
-    fetchCurriculumSubjectsMutation,
-    fetchSubjectsMutation
+    fetchCurriculumSubjectVersionsMutation,
   } = useCRUDCurriculum();
+
+  const { getSubjectVersionMutation } = useCRUDSubjectVersion();
 
   const [loading, setLoading] = useState(false);
 
-  // Subject management state
-  const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
-  const [curriculumSubjects, setCurriculumSubjects] = useState<SubjectWithCurriculumInfo[]>([]);
-  const [addForm, setAddForm] = useState<{ subjectId?: number; semesterNumber?: number; isMandatory?: boolean }>({});
+  // Subject version management state
+  const [allSubjectVersions, setAllSubjectVersions] = useState<SubjectVersion[]>([]);
+  const [curriculumSubjectVersions, setCurriculumSubjectVersions] = useState<SubjectVersionWithCurriculumInfo[]>([]);
+  const [addForm, setAddForm] = useState<{ subjectVersionId?: number; semesterNumber?: number; isMandatory?: boolean }>({});
   const [addLoading, setAddLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
+  
+  // Pagination state for subject versions
+  const [subjectVersionPage, setSubjectVersionPage] = useState(1);
+  const [subjectVersionPageSize] = useState(10);
+  const [hasMoreSubjectVersions, setHasMoreSubjectVersions] = useState(true);
 
   // Fetch curriculum by ID on mount (edit mode)
   useEffect(() => {
@@ -56,39 +62,62 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
     }
   }, [getCurriculumById.data, isEditMode, form]);
 
-  // Fetch all subjects and curriculum subjects on mount or when id changes
+  // Fetch subject versions on mount or when page changes
   useEffect(() => {
-    // Always fetch all subjects (needed for both create and edit modes)
-    fetchSubjectsMutation.mutate();
-    // If in edit mode, fetch subjects already in this curriculum
+    getSubjectVersionMutation.mutate({ 
+      pageNumber: subjectVersionPage, 
+      pageSize: subjectVersionPageSize 
+    });
+    // If in edit mode, fetch subject versions already in this curriculum
     if (id) {
-      fetchCurriculumSubjectsMutation.mutate(id);
+      fetchCurriculumSubjectVersionsMutation.mutate(id);
     }
-  }, [id]);
+  }, [id, subjectVersionPage]);
 
-  // Update all subjects when fetched
+  // Update all subject versions when fetched
   useEffect(() => {
-    if (fetchSubjectsMutation.data) {
-      setAllSubjects(fetchSubjectsMutation.data.items || []);
+    if (getSubjectVersionMutation.data) {
+      const newVersions = getSubjectVersionMutation.data.items || [];
+      if (subjectVersionPage === 1) {
+        setAllSubjectVersions(newVersions);
+      } else {
+        setAllSubjectVersions(prev => {
+          // Create a Set of existing IDs to avoid duplicates
+          const existingIds = new Set(prev.map(v => `${v.subjectId}-${v.id}`));
+          const uniqueNewVersions = newVersions.filter(v => !existingIds.has(`${v.subjectId}-${v.id}`));
+          return [...prev, ...uniqueNewVersions];
+        });
+      }
+      
+      // Check if there are more pages
+      const totalPages = Math.ceil(getSubjectVersionMutation.data.totalCount / subjectVersionPageSize);
+      setHasMoreSubjectVersions(subjectVersionPage < totalPages);
     }
-  }, [fetchSubjectsMutation.data]);
+  }, [getSubjectVersionMutation.data, subjectVersionPage]);
 
-  // Update curriculum subjects when fetched
+  // Update curriculum subject versions when fetched
   useEffect(() => {
-    if (fetchCurriculumSubjectsMutation.data) {
-      setCurriculumSubjects(fetchCurriculumSubjectsMutation.data);
+    if (fetchCurriculumSubjectVersionsMutation.data) {
+      setCurriculumSubjectVersions(fetchCurriculumSubjectVersionsMutation.data);
     }
-  }, [fetchCurriculumSubjectsMutation.data]);
+  }, [fetchCurriculumSubjectVersionsMutation.data]);
 
-  // Compute available subjects to add
-  const availableSubjects = allSubjects.filter(
-    subj => !curriculumSubjects.some(cs => cs.id === subj.id)
+  // Load more subject versions
+  const loadMoreSubjectVersions = () => {
+    if (hasMoreSubjectVersions && !getSubjectVersionMutation.isPending) {
+      setSubjectVersionPage(prev => prev + 1);
+    }
+  };
+
+  // Compute available subject versions to add
+  const availableSubjectVersions = allSubjectVersions.filter(
+    version => !curriculumSubjectVersions.some(csv => csv.subjectVersionId === version.id)
   );
 
-  // Refresh curriculum subjects after adding/removing
-  const refreshCurriculumSubjects = () => {
+  // Refresh curriculum subject versions after adding/removing
+  const refreshCurriculumSubjectVersions = () => {
     if (id) {
-      fetchCurriculumSubjectsMutation.mutate(id);
+      fetchCurriculumSubjectVersionsMutation.mutate(id);
     }
   };
 
@@ -124,53 +153,76 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
     }
   };
 
-  // Add subject handler (using curriculum API)
-  const handleAddSubject = async () => {
-    if (!addForm.subjectId || !addForm.semesterNumber) {
-      message.error('Please select a subject and semester.');
+  // Add subject version handler (using curriculum API)
+  const handleAddSubjectVersion = async () => {
+    if (!addForm.subjectVersionId || !addForm.semesterNumber ){
+      message.error('Please select a subject version and semester.');
+      return;
+    }
+    if(addForm.semesterNumber > 9 || addForm.semesterNumber < 1){
+      message.error('Invalid semester number. Semester must be from 1 to 9');
       return;
     }
     setAddLoading(true);
     try {
-      await AddSubjectToCurriculum(id!, {
-        subjectId: addForm.subjectId,
+      await AddSubjectVersionToCurriculum(id!, {
+        subjectVersionId: addForm.subjectVersionId,
         semesterNumber: addForm.semesterNumber,
         isMandatory: !!addForm.isMandatory,
       });
       message.success('Add successful');
       
       setAddForm({});
-      // Refresh curriculum subjects
-      refreshCurriculumSubjects();
+      // Refresh curriculum subject versions
+      refreshCurriculumSubjectVersions();
     } catch (e) {
-      message.error('Failed to add subject.');
+      message.error('Failed to add subject version.');
     } finally {
       setAddLoading(false);
     }
   };
 
-  // Delete subject handler (using curriculum API)
-  const handleDeleteSubject = (subjectId: number) => {
+  // Delete subject version handler (using curriculum API)
+  const handleDeleteSubjectVersion = (subjectVersionId: number) => {
     Modal.confirm({
-      title: 'Remove Subject',
-      content: 'Are you sure you want to remove this subject from the curriculum?',
+      title: 'Remove Subject Version',
+      content: 'Are you sure you want to remove this subject version from the curriculum?',
       okText: 'Remove',
       okType: 'danger',
       cancelText: 'Cancel',
-      onOk: async () => {
-        setDeleteLoading(subjectId);
-        try {
-          await RemoveSubjectToCurriculum(subjectId, id!);
-          message.success('Subject removed');
-          
-          // Refresh curriculum subjects
-          refreshCurriculumSubjects();
-        } catch (e) {
-          message.error('Failed to remove subject.');
-        } finally {
-          setDeleteLoading(null);
-        }
-      },
+      centered: true,
+      width: 400,
+      footer: (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          width: '100%'
+        }}>
+          <Button onClick={() => Modal.destroyAll()}>
+            Cancel
+          </Button>
+          <Button 
+            danger 
+            onClick={async () => {
+              setDeleteLoading(subjectVersionId);
+              try {
+                await RemoveSubjectVersionFromCurriculum(subjectVersionId, id!);
+                message.success('Subject version removed');
+                
+                // Refresh curriculum subject versions
+                refreshCurriculumSubjectVersions();
+              } catch (e) {
+                message.error('Failed to remove subject version.');
+              } finally {
+                setDeleteLoading(null);
+              }
+              Modal.destroyAll();
+            }}
+          >
+            Remove
+          </Button>
+        </div>
+      ),
     });
   };
 
@@ -264,7 +316,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
       <Card 
         title={
           <div className={styles.cardTitle}>
-            📚 Manage Subjects in Curriculum
+            📚 Manage Subject Versions in Curriculum
           </div>
         } 
         className={styles.subjectsCard}
@@ -283,20 +335,46 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
             <Select
               showSearch
               className={styles.subjectSelect}
-              placeholder="Select subject"
-              value={addForm.subjectId}
-              onChange={v => setAddForm(f => ({ ...f, subjectId: v }))}
+              placeholder="Select subject version"
+              value={addForm.subjectVersionId}
+              onChange={v => setAddForm(f => ({ ...f, subjectVersionId: v }))}
               optionFilterProp="label"
               filterOption={(input, option) => {
                 const label = option?.label || '';
                 return label.toString().toLowerCase().includes(input.toLowerCase());
               }}
+              onPopupScroll={(e) => {
+                const { target } = e;
+                const { scrollTop, scrollHeight, clientHeight } = target as HTMLElement;
+                if (scrollTop + clientHeight >= scrollHeight - 5) {
+                  loadMoreSubjectVersions();
+                }
+              }}
+              loading={getSubjectVersionMutation.isPending}
+              notFoundContent={
+                getSubjectVersionMutation.isPending ? (
+                  <div style={{ padding: '8px', textAlign: 'center' }}>
+                    <Spin size="small" />
+                  </div>
+                ) : (
+                  <div style={{ padding: '8px', textAlign: 'center', color: '#64748b' }}>
+                    No subject versions found
+                  </div>
+                )
+              }
             >
-              {availableSubjects.map(subj => (
-                <Option key={subj.id} value={subj.id} label={`${subj.subjectName} (${subj.subjectCode})`}>
-                  {subj.subjectName} ({subj.subjectCode})
+              {availableSubjectVersions.map(version => (
+                <Option key={`${version.subjectId}-${version.id}`} value={version.id} label={`${version.subject.subjectName} - ${version.versionName} (${version.subject.subjectCode})`}>
+                  {version.subject.subjectName} - {version.versionName} ({version.subject.subjectCode})
                 </Option>
               ))}
+              {hasMoreSubjectVersions && (
+                <Option key="load-more" value="load-more" disabled>
+                  <div style={{ textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
+                    {getSubjectVersionMutation.isPending ? 'Loading...' : 'Scroll to load more'}
+                  </div>
+                </Option>
+              )}
             </Select>
             <Input
               type="number"
@@ -316,18 +394,18 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
             </Checkbox>
             <Button
               type="primary"
-              onClick={handleAddSubject}
+              onClick={handleAddSubjectVersion}
               loading={addLoading}
-              disabled={!addForm.subjectId || !addForm.semesterNumber}
+              disabled={!addForm.subjectVersionId || !addForm.semesterNumber}
               className={styles.addSubjectButton}
             >
-              Add Subject
+              Add Subject Version
             </Button>
           </Space>
         </div>
         <Table
-          dataSource={curriculumSubjects}
-          rowKey="id"
+          dataSource={curriculumSubjectVersions}
+          rowKey="subjectVersionId"
           columns={[
             {
               title: 'Subject Code',
@@ -340,6 +418,16 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
               key: 'subjectName',
             },
             {
+              title: 'Version',
+              dataIndex: 'versionName',
+              key: 'versionName',
+              render: (text: string, record: SubjectVersionWithCurriculumInfo) => (
+                <span style={{ fontWeight: '600', color: '#059669' }}>
+                  {record.versionName} ({record.versionCode})
+                </span>
+              ),
+            },
+            {
               title: 'Credits',
               dataIndex: 'credits',
               key: 'credits',
@@ -347,7 +435,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
             {
               title: 'Semester',
               key: 'semester',
-              render: (_: any, record: SubjectWithCurriculumInfo) => (
+              render: (_: any, record: SubjectVersionWithCurriculumInfo) => (
                 <span className={styles.semesterCell}>
                   {record.semesterNumber}
                 </span>
@@ -356,7 +444,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
             {
               title: 'isMandatory',
               key: 'isMandatory',
-              render: (_: any, record: SubjectWithCurriculumInfo) => (
+              render: (_: any, record: SubjectVersionWithCurriculumInfo) => (
                 <span style={{ 
                   color: record.isMandatory ? '#dc2626' : '#ea580c',
                   fontWeight: '600'
@@ -368,13 +456,13 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
             {
               title: 'Action',
               key: 'action',
-              render: (_: any, record: SubjectWithCurriculumInfo) => (
+              render: (_: any, record: SubjectVersionWithCurriculumInfo) => (
                 <Button
                   type="text"
                   danger
                   icon={<DeleteOutlined />}
-                  loading={deleteLoading === record.id}
-                  onClick={() => handleDeleteSubject(record.id)}
+                  loading={deleteLoading === record.subjectVersionId}
+                  onClick={() => handleDeleteSubjectVersion(record.subjectVersionId)}
                   className={styles.deleteButton}
                 />
               ),

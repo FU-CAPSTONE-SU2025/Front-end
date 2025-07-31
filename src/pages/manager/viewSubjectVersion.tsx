@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Button, Tabs, message, Table } from 'antd';
-import {  ArrowLeftOutlined,CheckOutlined} from '@ant-design/icons';
+import { Button, Tabs, Typography, message, Card, Tag, Space, Tooltip} from 'antd';
+import {  ArrowLeftOutlined, PlusOutlined, EyeOutlined } from '@ant-design/icons';
 
 import AddVersionModal from '../../components/staff/AddVersionModal';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
@@ -661,59 +661,73 @@ const ManagerSubjectVersionPage: React.FC = () => {
               return {
                 key: String(v.id),
                 label: (
-                  <span
-                    style={{
-                      color: activeKey === String(v.id) ? '#f97316' : '#fff',
-                      fontWeight: activeKey === String(v.id) ? 700 : 600,
-                      borderRadius: '8px 8px 0 0',
-                      fontSize: '16px',
-                      padding: '8px 16px',
-                      display: 'inline-block',
-                      transition: 'background 0.2s, color 0.2s',
-                    }}
-                  >
-                    {`Version ${v.versionCode}`}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span
+                      style={{
+                        color: isActive ? '#f97316' : '#fff',
+                        fontWeight: isActive ? 700 : 600,
+                        borderRadius: '8px 8px 0 0',
+                        fontSize: '16px',
+                        padding: '8px 16px',
+                        display: 'inline-block',
+                        transition: 'background 0.2s, color 0.2s',
+                      }}
+                    >
+                      Version {index + 1}
+                    </span>
+                    <Space size={4}>
+                      {version.isActive ? <Tag color="green">Active</Tag> : <Tag color="default">Inactive</Tag>}
+                      {version.isDefault && <Tag color="blue">Default</Tag>}
+                      <Tooltip title="Toggle Active Status">
+                        <Button
+                          size="small"
+                          type="text"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleActive(version.id);
+                          }}
+                        >
+                          <EyeOutlined />
+                        </Button>
+                      </Tooltip>
+                    </Space>
+                  </div>
                 ),
                 children: (
                   <div className={styles.syllabusContent} style={{ width: '100%', maxWidth: 'none', minWidth: 0, margin: '0 auto' }}>
-                    {/* Syllabus Section */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-                      <Button
-                        type="default"
-                        onClick={() => {
-                          if (!isActive) {
-                            handleToggleActive(v.id);
-                          }
-                        }}
-                        disabled={isActive}
-                        style={
-                          isActive
-                            ? {
-                                minWidth: 120,
-                                backgroundColor: '#22c55e',
-                                color: '#fff',
-                                borderColor: '#22c55e',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 700,
-                              }
-                            : {
-                                minWidth: 120,
-                                backgroundColor: '#fff',
-                                color: '#4ade80',
-                                borderColor: '#4ade80',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 700,
-                              }
-                        }
-                      >
-                        {isActive && <CheckOutlined style={{ color: '#fff', marginRight: 8, fontSize: 18 }} />}
-                        {isActive ? 'Active' : 'Set Active'}
-                      </Button>
+                    {/* Version Info Section */}
+                    <div style={{ marginBottom: 32 }}>
+                      <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', marginBottom: 16, letterSpacing: '-0.5px' }}>
+                        📄 Version Information
+                      </h3>
+                      <Card>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+                          <div>
+                            <strong>Version Code:</strong> {version.versionCode}
+                          </div>
+                          <div>
+                            <strong>Version Name:</strong> {version.versionName}
+                          </div>
+                          <div>
+                            <strong>Description:</strong> {version.description}
+                          </div>
+                          <div>
+                            <strong>Effective From:</strong> {new Date(version.effectiveFrom).toLocaleDateString()}
+                          </div>
+                          {version.effectiveTo && (
+                            <div>
+                              <strong>Effective To:</strong> {new Date(version.effectiveTo).toLocaleDateString()}
+                            </div>
+                          )}
+                          <div>
+                            <strong>Status:</strong> 
+                            <Space style={{ marginLeft: 8 }}>
+                              {version.isActive ? <Tag color="green">Active</Tag> : <Tag color="default">Inactive</Tag>}
+                              {version.isDefault && <Tag color="blue">Default</Tag>}
+                            </Space>
+                          </div>
+                        </div>
+                      </Card>
                     </div>
                     {/* Syllabus Section */}
                     <div style={{ marginBottom: 32 }}>
