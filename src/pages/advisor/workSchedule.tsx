@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Typography, Space, Tag, Button, message } from 'antd';
 import { CalendarOutlined, ClockCircleOutlined, UserOutlined, PlusOutlined } from '@ant-design/icons';
-import DataTable from '../../components/common/dataTable';
-import SearchBar from '../../components/common/searchBar';
 import AddWorkSchedule from '../../components/advisor/addWorkSchedule';
 import EditWorkSchedule from '../../components/advisor/editWorkSchedule';
 import { 
@@ -14,7 +12,9 @@ import { BookingAvailability } from '../../interfaces/IBookingAvailability';
 import styles from '../../css/advisor/workSchedule.module.css';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import AdvisorCalendar, { AdvisorCalendarEvent } from '../../components/advisor/advisorCalendar';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import ViewWorkScheduleModal from '../../components/advisor/viewWorkScheduleModal';
+import { dayOptions } from '../../interfaces/IDayOptions';
 
 const { Title, Text } = Typography;
 
@@ -24,42 +24,52 @@ const WorkSchedule: React.FC = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
-  const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [selectedDate, setSelectedDate] = useState(dayjs().startOf('week')); // Always start with current week
+  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
+  const [viewScheduleId, setViewScheduleId] = useState<number | null>(null);
+  const [selectedSlotInfo, setSelectedSlotInfo] = useState<{ date: Dayjs; start: Dayjs; end: Dayjs } | null>(null);
   
+  // Tính toán pageSize dựa trên viewMode cho work schedule
+  const effectivePageSize = 10000; // Lấy hết data
+
   const {
     getAllBookingAvailability,
     bookingAvailabilityList,
     allSortedData,
     pagination,
     isLoading,
-    handlePageChange
-  } = useBookingAvailability();
+    handlePageChange,
+    refetch: refetchBookingAvailability
+  } = useBookingAvailability(effectivePageSize);
+
+  useEffect(() => {
+    // Force refetch to get all data
+    refetchBookingAvailability();
+  }, [refetchBookingAvailability]);
 
   const updateBookingAvailability = useUpdateBookingAvailability();
   const deleteBookingAvailability = useDeleteBookingAvailability();
 
-  useEffect(() => {
-    getAllBookingAvailability();
-  }, [getAllBookingAvailability]);
-
-  // Use full data for search, paginated data for normal display
-  const dataToUse = searchQuery && searchQuery.trim() !== '' ? allSortedData : bookingAvailabilityList;
+  // Use full data for work schedule since we only show week view
+  const dataToUse = allSortedData;
   
   // Ensure dataToUse is always an array
   const safeDataToUse = Array.isArray(dataToUse) ? dataToUse : [];
 
-  // Debug logging to check sorting
+  // Debug logging to check data
+  console.log('=== WORK SCHEDULE DEBUG ===');
+  console.log('All sorted data:', allSortedData);
+  console.log('Booking availability list:', bookingAvailabilityList);
   console.log('Data to use:', safeDataToUse);
-  console.log('Search query:', searchQuery);
+  console.log('Data count:', safeDataToUse.length);
+  console.log('=== END DEBUG ===');
 
 
-  const handlePageChangeWrapper = (page: number, size: number) => {
-    handlePageChange(page, size);
-  };
+ 
 
   const handleAddSuccess = () => {
-    // Refresh the data after adding new schedule
-    getAllBookingAvailability();
+    setIsAddModalVisible(false);
+    message.success('Work schedule added successfully!');
   };
 
   const handleEditSchedule = (record: BookingAvailability) => {
@@ -73,7 +83,7 @@ const WorkSchedule: React.FC = () => {
       // If no error is thrown, consider it successful
       message.success('Schedule deleted successfully!');
       // Refresh data after deletion
-      getAllBookingAvailability();
+      // getAllBookingAvailability(); // Removed as per edit hint
     } catch (error) {
       console.error('Error deleting schedule:', error);
       const errorMessage = getUserFriendlyErrorMessage(error);
@@ -82,8 +92,7 @@ const WorkSchedule: React.FC = () => {
   };
 
   const getDayName = (dayInWeek: number): string => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[dayInWeek] || 'Unknown';
+    return dayOptions.find(day => day.value === dayInWeek)?.label || 'Unknown';
   };
 
   const formatTime = (time: string): string => {
@@ -92,13 +101,13 @@ const WorkSchedule: React.FC = () => {
 
   const getDayColor = (dayInWeek: number): string => {
     const colors = {
-      0: 'magenta', // Sunday
-      1: 'blue',    // Monday
-      2: 'green',   // Tuesday
-      3: 'orange',  // Wednesday
-      4: 'purple',  // Thursday
-      5: 'red',     // Friday
-      6: 'cyan'     // Saturday
+      1: 'magenta', // Sunday
+      2: 'blue',    // Monday
+      3: 'green',   // Tuesday
+      4: 'orange',  // Wednesday
+      5: 'purple',  // Thursday
+      6: 'red',     // Friday
+      7: 'cyan'     // Saturday
     };
     return colors[dayInWeek as keyof typeof colors] || 'default';
   };
@@ -126,8 +135,9 @@ const WorkSchedule: React.FC = () => {
         </Tag>
       ),
       sorter: (a: BookingAvailability, b: BookingAvailability) => {
-        const dayA = a.dayInWeek === 0 ? 7 : a.dayInWeek;
-        const dayB = b.dayInWeek === 0 ? 7 : b.dayInWeek;
+        // dayInWeek: 1=Sunday, 2=Monday, ..., 7=Saturday
+        const dayA = a.dayInWeek === 1 ? 8 : a.dayInWeek; // Convert Sunday from 1 to 8 for proper sorting
+        const dayB = b.dayInWeek === 1 ? 8 : b.dayInWeek;
         return dayA - dayB;
       },
       defaultSortOrder: 'ascend' as const
@@ -239,6 +249,35 @@ const WorkSchedule: React.FC = () => {
   // Apply custom search filter
   const filteredData = customSearchFilter(safeDataToUse, searchQuery);
 
+  // Use all data for calendar, no filtering by viewMode
+  const filteredSchedules = safeDataToUse;
+
+  // Debug logs for calendar events
+  console.log('=== CALENDAR EVENTS DEBUG ===');
+  console.log('All data count:', safeDataToUse.length);
+  console.log('Filtered schedules:', filteredSchedules);
+  console.log('Filtered schedules count:', filteredSchedules.length);
+  
+  const calendarEvents = filteredSchedules.map(item => {
+    // Map dayInWeek: 1=Sunday, 2=Monday, ..., 7=Saturday
+    const dayOffset = item.dayInWeek === 1 ? 0 : item.dayInWeek - 1; // Sunday = 0, Monday = 1, etc.
+    const today = dayjs().startOf('week');
+    const day = today.add(dayOffset, 'day');
+    const event = {
+      id: item.id,
+      startDateTime: day.format('YYYY-MM-DD') + 'T' + item.startTime,
+      endDateTime: day.format('YYYY-MM-DD') + 'T' + item.endTime,
+      type: 'work' as const,
+      note: '',
+    };
+    console.log(`Mapping item ${item.id}: dayInWeek=${item.dayInWeek}, dayOffset=${dayOffset}, day=${day.format('YYYY-MM-DD')}, start=${item.startTime}, end=${item.endTime}`);
+    return event;
+  });
+  
+  console.log('Calendar events:', calendarEvents);
+  console.log('Calendar events count:', calendarEvents.length);
+  console.log('=== END CALENDAR EVENTS DEBUG ===');
+
   return (
     <div className={styles.workScheduleContainer}>
       <Card className={styles.headerCard}>
@@ -293,35 +332,39 @@ const WorkSchedule: React.FC = () => {
         </Space>
       </Card>
       <AdvisorCalendar
-        events={safeDataToUse.map(item => {
-          // Chuyển đổi dữ liệu sang event dạng work
-          const today = dayjs().startOf('week');
-          const day = today.add(item.dayInWeek, 'day');
-          return {
-            id: item.id,
-            startDateTime: day.format('YYYY-MM-DD') + 'T' + item.startTime,
-            endDateTime: day.format('YYYY-MM-DD') + 'T' + item.endTime,
-            type: 'work',
-            note: '',
-          };
-        })}
-        viewMode={viewMode}
+        events={calendarEvents}
+        viewMode={'week'}
         selectedDate={selectedDate}
-        onViewModeChange={setViewMode}
-        onDateChange={setSelectedDate}
-        onSlotClick={(_slot, date) => {
+        onViewModeChange={() => {}}
+        // Disable view mode change
+        onDateChange={() => {}} // Disable date change for work schedule
+        isWorkSchedule={true} // Mark as work schedule
+        onSlotClick={(slot, date) => {
+          setSelectedSlotInfo({ date, start: slot.start, end: slot.end });
           setIsAddModalVisible(true);
           setSelectedDate(date);
         }}
-        onEventClick={event => {
+        onEdit={event => {
           setSelectedScheduleId(Number(event.id));
           setIsEditModalVisible(true);
+        }}
+        onDelete={async (event) => {
+          try {
+            await deleteBookingAvailability.mutateAsync(Number(event.id));
+            message.success('Work schedule deleted successfully!');
+          } catch (error) {
+            message.error('Failed to delete work schedule.');
+          }
         }}
       />
       <AddWorkSchedule
         visible={isAddModalVisible}
-        onCancel={() => setIsAddModalVisible(false)}
+        onCancel={() => {
+          setIsAddModalVisible(false);
+          setSelectedSlotInfo(null);
+        }}
         onSuccess={handleAddSuccess}
+        selectedSlotInfo={selectedSlotInfo}
       />
       <EditWorkSchedule
         visible={isEditModalVisible}
@@ -331,6 +374,21 @@ const WorkSchedule: React.FC = () => {
         }}
         onSuccess={handleAddSuccess}
         scheduleId={selectedScheduleId}
+      />
+      <ViewWorkScheduleModal
+        visible={isViewModalVisible}
+        onCancel={() => { setIsViewModalVisible(false); setViewScheduleId(null); }}
+        scheduleId={viewScheduleId}
+        onEdit={id => {
+          setIsViewModalVisible(false);
+          setSelectedScheduleId(id);
+          setIsEditModalVisible(true);
+        }}
+        onDeleted={() => {
+          setIsViewModalVisible(false);
+          setViewScheduleId(null);
+          // reload lại lịch nếu cần (có thể gọi lại API hoặc refetch)
+        }}
       />
     </div>
   );

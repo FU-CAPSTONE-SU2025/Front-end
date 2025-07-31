@@ -10,6 +10,8 @@ import BulkDataImport from '../../components/common/bulkDataImport';
 import { subjects, combos, comboSubjects, curriculums } from '../../data/schoolData';
 import { AddSubjectVersionToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
 import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import ApprovalModal from '../../components/manager/approvalModal';
+import { useApprovalActions } from '../../hooks/useApprovalActions';
 
 const { Panel } = Collapse;
 const { Title } = Typography;
@@ -23,7 +25,9 @@ const lineColor = 'rgba(30,64,175,0.18)';
 const CurriculumManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [approvalStatus, setApprovalStatus] = useState<{ [id: number]: 'pending' | 'approved' }>({});
+  // Remove local approval status state since we'll use backend data
+  const [approvalModalVisible, setApprovalModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<{ id: number; name: string } | null>(null);
   const navigate = useNavigate();
   const [addSubjectVersionModal, setAddSubjectVersionModal] = useState<{ open: boolean, curriculumId: number | null, semester: number | null }>({ open: false, curriculumId: null, semester: null });
   const [selectedSubjectVersionId, setSelectedSubjectVersionId] = useState<number | null>(null);
@@ -32,6 +36,9 @@ const CurriculumManagerPage: React.FC = () => {
   const {
     addMultipleCurriculumsMutation
   } = useCRUDCurriculum();
+
+  // Approval hook
+  const { handleApproval, isApproving } = useApprovalActions();
 
   const filteredCurriculums = curriculums.filter(
     c => c.curriculumName.toLowerCase().includes(search.toLowerCase()) || c.id.toString().includes(search)
@@ -117,9 +124,24 @@ const CurriculumManagerPage: React.FC = () => {
     }
   };
 
-  const handleApprove = (id: number) => {
-    setApprovalStatus(prev => ({ ...prev, [id]: 'approved' }));
-    message.success('Curriculum approved!');
+  const handleApprove = (id: number, name: string) => {
+    setSelectedItem({ id, name });
+    setApprovalModalVisible(true);
+  };
+
+  const handleApprovalConfirm = async (approvalStatus: number, rejectionReason?: string) => {
+    if (!selectedItem) return;
+    
+    try {
+      await handleApproval('curriculum', selectedItem.id, approvalStatus, rejectionReason);
+      // Refresh the curriculum list to get updated approval status
+      // Note: Since this page uses mock data, we'll need to refresh the page or implement proper refresh
+      window.location.reload(); // Temporary solution until we have proper API integration
+      setApprovalModalVisible(false);
+      setSelectedItem(null);
+    } catch (error) {
+      // Error is already handled in the hook
+    }
   };
 
   const handleAddSubjectVersionToSemester = (curriculumId: number, semester: number) => {
@@ -186,29 +208,54 @@ const CurriculumManagerPage: React.FC = () => {
             <Panel
               header={
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                  <span style={{fontWeight: 700, fontSize: '1.2rem', color: '#1E40AF'}}>
-                    {curriculum.curriculumName} <span style={{color: '#f97316', fontWeight: 400, marginLeft: 8}}>[{curriculum.curriculumCode}]</span>
-                  </span>
+                  <div>
+                    <span style={{fontWeight: 700, fontSize: '1.2rem', color: '#1E40AF'}}>
+                      {curriculum.curriculumName} <span style={{color: '#f97316', fontWeight: 400, marginLeft: 8}}>[{curriculum.curriculumCode}]</span>
+                    </span>
+                    {/* Approval Info */}
+                    <div style={{ fontSize: 12, marginTop: 4 }}>
+                      {curriculum.approvalStatus === 1 ? (
+                        <span style={{ color: '#52c41a' }}>
+                          Approved by: {curriculum.approvedBy || 'Unknown'} • {curriculum.approvedAt ? new Date(curriculum.approvedAt).toLocaleDateString() : 'Unknown date'}
+                        </span>
+                      ) : curriculum.rejectionReason ? (
+                        <span style={{ color: '#ff4d4f' }}>
+                          Rejected • {curriculum.rejectionReason}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#faad14' }}>
+                          Created by: {curriculum.createdBy || 'Unknown'} • Pending approval
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
                     {/* Approval Progress Bar */}
                     <Progress
-                      percent={approvalStatus[curriculum.id] === 'approved' ? 100 : 50}
+                      percent={curriculum.approvalStatus === 1 ? 100 : 50}
                       steps={2}
                       showInfo={false}
                       strokeColor={['#f59e42', '#52c41a']}
                       style={{width: 60}}
                     />
                     <Button
-                      type={approvalStatus[curriculum.id] === 'approved' ? 'default' : 'primary'}
+                      type={curriculum.approvalStatus === 1 ? 'default' : 'primary'}
                       icon={<CheckOutlined />}
-                      disabled={approvalStatus[curriculum.id] === 'approved'}
-                      onClick={e => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        handleApprove(curriculum.id);
+                        if (curriculum.approvalStatus === 1) {
+                          // Unapprove
+                          await handleApproval('curriculum', curriculum.id, 0, null);
+                        } else {
+                          // Approve
+                          handleApprove(curriculum.id, curriculum.curriculumName);
+                        }
+                        // Refresh the curriculum list to get updated approval status
+                        window.location.reload(); // Temporary solution until we have proper API integration
                       }}
                       style={{borderRadius: 8, height: 32, padding: '0 12px'}}
                     >
-                      {approvalStatus[curriculum.id] === 'approved' ? 'Approved' : 'Approve'}
+                      {curriculum.approvalStatus === 1 ? 'Approved' : 'Approve'}
                     </Button>
                     <Button
                       type="text"
@@ -309,6 +356,20 @@ const CurriculumManagerPage: React.FC = () => {
             </Select.Option>
           </Select>
         </Modal>
+
+        {/* Approval Modal */}
+        <ApprovalModal
+          visible={approvalModalVisible}
+          onCancel={() => {
+            setApprovalModalVisible(false);
+            setSelectedItem(null);
+          }}
+          onConfirm={handleApprovalConfirm}
+          type="curriculum"
+          itemId={selectedItem?.id || 0}
+          itemName={selectedItem?.name || ''}
+          loading={isApproving}
+        />
       </div>
     </div>
   );

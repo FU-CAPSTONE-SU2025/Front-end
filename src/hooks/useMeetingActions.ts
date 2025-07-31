@@ -1,46 +1,45 @@
-import { useState } from 'react';
 import { message } from 'antd';
-import { confirmMeeting, cancelPendingMeeting, completeMeeting } from '../api/advisor/AdvisorAPI';
-import { sendMeetingFeedback, cancelConfirmedMeeting, cancelPendingMeeting as cancelPendingMeetingStudent, markAdvisorMissed } from '../api/student/StudentAPI';
 import { getUserFriendlyErrorMessage } from '../api/AxiosCRUD';
+import { useCancelPendingMeeting, useCancelConfirmedMeeting, useSendMeetingFeedback, useMarkAdvisorMissed, useConfirmMeeting, useCancelPendingMeetingAdvisor, useCompleteMeeting } from './useStudentHistoryMeetings';
 
 interface UseMeetingActionsProps {
   onActionComplete?: () => void;
 }
 
 export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps = {}) => {
-  const [actionLoading, setActionLoading] = useState(false);
+  // React Query mutations
+  const cancelPendingMutation = useCancelPendingMeeting();
+  const cancelConfirmedMutation = useCancelConfirmedMeeting();
+  const sendFeedbackMutation = useSendMeetingFeedback();
+  const markMissedMutation = useMarkAdvisorMissed();
+  const confirmMeetingMutation = useConfirmMeeting();
+  const cancelPendingAdvisorMutation = useCancelPendingMeetingAdvisor();
+  const completeMeetingMutation = useCompleteMeeting();
 
   const handleConfirmMeeting = async (meetingId: number) => {
     if (!meetingId) return;
     
-    setActionLoading(true);
     try {
-      await confirmMeeting(meetingId);
+      await confirmMeetingMutation.mutateAsync(meetingId);
       message.success('Meeting confirmed successfully!');
       onActionComplete?.();
     } catch (err) {
       const errorMessage = getUserFriendlyErrorMessage(err);
       message.error(errorMessage);
-    } finally {
-      setActionLoading(false);
     }
   };
 
   const handleCancelMeeting = async (meetingId: number, note?: string) => {
     if (!meetingId) return;
     
-    setActionLoading(true);
     try {
-      await cancelPendingMeeting(meetingId, note);
+      await cancelPendingAdvisorMutation.mutateAsync({ meetingId, note: note || '' });
       message.success('Meeting cancelled successfully!');
       onActionComplete?.();
     } catch (err) {
       console.error('Error cancelling meeting:', err);
       const errorMessage = getUserFriendlyErrorMessage(err);
       message.error(errorMessage);
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -50,17 +49,14 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       return;
     }
     
-    setActionLoading(true);
     try {
-      await completeMeeting(meetingId, checkInCode.trim());
+      await completeMeetingMutation.mutateAsync({ meetingId, checkInCode: checkInCode.trim() });
       message.success('Meeting completed successfully!');
       onActionComplete?.();
     } catch (err) {
       console.error('Error completing meeting:', err);
       const errorMessage = getUserFriendlyErrorMessage(err);
       message.error(errorMessage);
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -70,29 +66,29 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       return;
     }
     
-    setActionLoading(true);
     try {
-      await sendMeetingFeedback(meetingId, feedback.trim(), suggestionFromAdvisor.trim());
+      await sendFeedbackMutation.mutateAsync({ 
+        meetingId, 
+        feedback: feedback.trim(), 
+        suggestionFromAdvisor: suggestionFromAdvisor.trim() 
+      });
       message.success('Feedback sent successfully!');
       onActionComplete?.();
     } catch (err) {
       console.error('Error sending feedback:', err);
       const errorMessage = getUserFriendlyErrorMessage(err);
       message.error(errorMessage);
-    } finally {
-      setActionLoading(false);
     }
   };
 
   const handleStudentCancelMeeting = async (meetingId: number, note: string, status: number) => {
     if (!meetingId) return;
     
-    setActionLoading(true);
     try {
       if (status === 2) { // Confirmed
-        await cancelConfirmedMeeting(meetingId, note);
+        await cancelConfirmedMutation.mutateAsync({ meetingId, note });
       } else if (status === 1) { // Pending
-        await cancelPendingMeetingStudent(meetingId, note);
+        await cancelPendingMutation.mutateAsync({ meetingId, note });
       } else {
         throw new Error('Invalid meeting status for student cancellation');
       }
@@ -102,29 +98,24 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       console.error('Error cancelling meeting:', err);
       const errorMessage = getUserFriendlyErrorMessage(err);
       message.error(errorMessage);
-    } finally {
-      setActionLoading(false);
     }
   };
 
   const handleMarkAdvisorMissed = async (meetingId: number, note: string) => {
     if (!meetingId) return;
     
-    setActionLoading(true);
     try {
-      await markAdvisorMissed(meetingId, note);
+      await markMissedMutation.mutateAsync({ meetingId, note });
       message.success('Advisor marked as missed successfully!');
       onActionComplete?.();
     } catch (err) {
       console.error('Error marking advisor missed:', err);
       message.error('Failed to mark advisor missed. Please try again.');
-    } finally {
-      setActionLoading(false);
     }
   };
 
   return {
-    actionLoading,
+    actionLoading: cancelPendingMutation.isPending || cancelConfirmedMutation.isPending || sendFeedbackMutation.isPending || markMissedMutation.isPending || confirmMeetingMutation.isPending || cancelPendingAdvisorMutation.isPending || completeMeetingMutation.isPending,
     handleConfirmMeeting,
     handleCancelMeeting,
     handleCompleteMeeting,

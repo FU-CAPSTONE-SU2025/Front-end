@@ -11,13 +11,17 @@ import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { GetSubjectsInCombo } from '../../api/SchoolAPI/comboAPI';
 import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import SubjectSelect from '../../components/common/SubjectSelect';
+import ApprovalModal from '../../components/manager/approvalModal';
+import { useApprovalActions } from '../../hooks/useApprovalActions';
 
 const ComboManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [approvalStatus, setApprovalStatus] = useState<{ [id: number]: 'pending' | 'approved' }>({});
+  // Remove local approval status state since we'll use backend data
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
+  const [approvalModalVisible, setApprovalModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<{ id: number; name: string } | null>(null);
   const navigate = useNavigate();
 
   // CRUD hook
@@ -39,6 +43,9 @@ const ComboManagerPage: React.FC = () => {
   const [comboSubjects, setComboSubjects] = useState<any[]>([]); // Will hold SubjectInCombo[]
   const [addSubjectId, setAddSubjectId] = useState<number | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
+
+  // Approval hook
+  const { handleApproval, isApproving } = useApprovalActions();
 
   useEffect(() => {
     // Backend search: pass search as filterValue
@@ -109,11 +116,23 @@ const ComboManagerPage: React.FC = () => {
   };
 
   // Approve combo (backend)
-  const handleApprove = (id: number) => {
-    // For now, just update the local state since UpdateCombo doesn't support status
-    setApprovalStatus(prev => ({ ...prev, [id]: 'approved' }));
-    message.success('Combo approved!');
-    // TODO: If backend supports status updates, implement API call here
+  const handleApprove = (id: number, name: string) => {
+    setSelectedItem({ id, name });
+    setApprovalModalVisible(true);
+  };
+
+  const handleApprovalConfirm = async (approvalStatus: number, rejectionReason?: string) => {
+    if (!selectedItem) return;
+    
+    try {
+      await handleApproval('combo', selectedItem.id, approvalStatus, rejectionReason);
+      // Refresh the combo list to get updated approval status
+      getAllCombos({ pageNumber: page, pageSize, filterValue: search });
+      setApprovalModalVisible(false);
+      setSelectedItem(null);
+    } catch (error) {
+      // Error is already handled in the hook
+    }
   };
 
   const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
@@ -186,14 +205,46 @@ const ComboManagerPage: React.FC = () => {
       align: 'left' as const,
     },
     {
+      title: 'Approval Info',
+      key: 'approvalInfo',
+      align: 'left' as const,
+      width: 200,
+      render: (_: any, record: any) => {
+        if (record.approvalStatus === 1) {
+          return (
+            <div style={{ fontSize: 12, color: '#52c41a' }}>
+              <div>Approved by: {record.approvedBy || 'Unknown'}</div>
+              <div>Date: {record.approvedAt ? new Date(record.approvedAt).toLocaleDateString() : 'Unknown'}</div>
+            </div>
+          );
+        } else if (record.rejectionReason) {
+          return (
+            <div style={{ fontSize: 12, color: '#ff4d4f' }}>
+              <div>Rejected</div>
+              <div style={{ fontStyle: 'italic' }}>{record.rejectionReason}</div>
+            </div>
+          );
+        }
+        return (
+          <div style={{ fontSize: 12, color: '#faad14' }}>
+            <div>Created by: {record.createdBy || 'Unknown'}</div>
+            <div>Pending approval</div>
+          </div>
+        );
+      },
+    },
+    {
       title: 'Status',
       key: 'status',
       align: 'center' as const,
-      render: (_: any, record: any) => (
-        <Tag color={approvalStatus[record.id] === 'approved' ? 'green' : 'orange'} style={{ fontWeight: 600, fontSize: 14 }}>
-          {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Waiting for Approval'}
-        </Tag>
-      ),
+      render: (_: any, record: any) => {
+        const isApproved = record.approvalStatus === 1;
+        return (
+          <Tag color={isApproved ? 'green' : 'orange'} style={{ fontWeight: 600, fontSize: 14 }}>
+            {isApproved ? 'Approved' : 'Waiting for Approval'}
+          </Tag>
+        );
+      },
     },
     {
       title: 'View Subjects',
@@ -221,17 +272,28 @@ const ComboManagerPage: React.FC = () => {
       key: 'actions',
       align: 'center' as const,
       width: 200,
-      render: (_: any, record: any) => (
-        <Button
-          type={approvalStatus[record.id] === 'approved' ? 'default' : 'primary'}
-          icon={<CheckOutlined />}
-          disabled={approvalStatus[record.id] === 'approved'}
-          onClick={() => handleApprove(record.id)}
-          style={{borderRadius: 8, height: 28, padding: '0 8px', marginLeft: 8}}
-        >
-          {approvalStatus[record.id] === 'approved' ? 'Approved' : 'Approve'}
-        </Button>
-      ),
+      render: (_: any, record: any) => {
+        const isApproved = record.approvalStatus === 1;
+        return (
+          <Button
+            type={isApproved ? 'default' : 'primary'}
+            icon={<CheckOutlined />}
+            onClick={async () => {
+              if (isApproved) {
+                // Unapprove
+                await handleApproval('combo', record.id, 0, null);
+              } else {
+                // Approve
+                handleApprove(record.id, record.comboName);
+              }
+              getAllCombos({ pageNumber: page, pageSize, filterValue: search });
+            }}
+            style={{borderRadius: 8, height: 28, padding: '0 8px', marginLeft: 8}}
+          >
+            {isApproved ? 'Approved' : 'Approve'}
+          </Button>
+        );
+      },
     },
   ];
 
@@ -359,6 +421,20 @@ const ComboManagerPage: React.FC = () => {
           </div>
         </Spin>
       </Modal>
+
+      {/* Approval Modal */}
+      <ApprovalModal
+        visible={approvalModalVisible}
+        onCancel={() => {
+          setApprovalModalVisible(false);
+          setSelectedItem(null);
+        }}
+        onConfirm={handleApprovalConfirm}
+        type="combo"
+        itemId={selectedItem?.id || 0}
+        itemName={selectedItem?.name || ''}
+        loading={isApproving}
+      />
     </div>
   );
 };

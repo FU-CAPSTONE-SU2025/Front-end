@@ -1,6 +1,6 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { CreateSubject, PagedData, Subject, UpdateSubject } from "../../interfaces/ISchoolProgram";
+import { CreateSubject, PagedData, Subject, UpdateSubject, SubjectApproval } from "../../interfaces/ISchoolProgram";
 
 const subjectURL = baseUrl + "/Subject";
 
@@ -174,3 +174,18 @@ export const DisableSubject = async (userId: number): Promise<any | null> => {
     return null; // This will never be reached, but TypeScript needs it
   }
 }; 
+
+export const ApproveSubject = async (subjectId: number, data: SubjectApproval): Promise<Subject | null> => {
+  const props = {
+    data: data,
+    url: baseUrl + `/Approval/subject/${subjectId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosUpdate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
+  }
+};

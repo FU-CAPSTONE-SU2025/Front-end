@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useParams, useNavigate } from 'react-router';
 import { Card, Typography, Button, Space } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';

@@ -166,3 +166,18 @@ export const DisableCurriculum = async (userId: number): Promise<AccountProps | 
     return null;
   }
 }; 
+
+export const ApproveCurriculum = async (curriculumId: number, data: CurriculumApproval): Promise<Curriculum | null> => {
+  const props = {
+    data: data,
+    url: baseUrl + `/Approval/curriculum/${curriculumId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosUpdate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null; // This will never be reached, but TypeScript needs it
+  }
+};

@@ -16,6 +16,11 @@ export interface Curriculum {
   curriculumCode: string; // varchar(50), unique
   curriculumName: string; // varchar(255)
   effectiveDate: Date; // datetime2(0)
+  createdBy: string | null;
+  approvalStatus: number;
+  approvedBy: string | null;
+  approvedAt: Date | null;
+  rejectionReason: string | null;
 }
 
 // Interface for Subject table
@@ -25,6 +30,11 @@ export interface Subject {
   subjectName: string; // nvarchar(255)
   credits: number; // int
   description: string; // text
+  createdBy: string | null;
+  approvalStatus: number | 1 | 0;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  rejectionReason: string | null;
 }
 export interface SubjectInCombo {
   subjectId: number; // Primary key
@@ -55,6 +65,14 @@ export interface Combo {
   id: number; // Primary key
   comboName: string; // nvarchar(255)
   comboDescription: string; // text
+  subjectCount: number;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string | null;
+  approvalStatus: number | 1 | 0;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  rejectionReason: string | null;
 }
 
 // Interface for Combo_Subject table (junction table)
@@ -220,6 +238,26 @@ export interface UpdateSubjectVersion {
   effectiveTo: string | null,
   createdAt: string,
   updatedAt: string | null,
+}
+
+export interface SubjectApproval{
+  approvalStatus: number | 1 | 0
+  rejectionReason: string | null
+}
+
+export interface CurriculumApproval{
+  approvalStatus: number | 1 | 0
+  rejectionReason: string | null
+}
+
+export interface SyllabusApproval{
+  approvalStatus: number | 1 | 0
+  rejectionReason: string | null
+}
+
+export interface ComboApproval{
+  approvalStatus: number | 1 | 0
+  rejectionReason: string | null
 }
 
 // ==================== RESPONSE TYPES ====================

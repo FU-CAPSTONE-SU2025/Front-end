@@ -48,7 +48,7 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({ meeting
         id: meeting ? meeting.id : `${date.format('YYYY-MM-DD')}-${hour}`,
         startTime: start.format('HH:mm'),
         endTime: end.format('HH:mm'),
-        dayInWeek: date.day(),
+        dayInWeek: date.day() === 0 ? 1 : date.day() + 1, // Map 0=Sunday to 1, 1=Monday to 2, etc.
         staffProfileId: meeting?.staffProfileId ?? 0,
         type: meeting ? 'booked' : 'available',
         meeting: meeting ?? null,
