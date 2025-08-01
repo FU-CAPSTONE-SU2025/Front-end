@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from './header';
 import Footer from './footer';
+import GlobalChatBox from './globalChatBox';
 import { Outlet } from 'react-router';
 
 
@@ -12,6 +13,7 @@ const StudentLayout = () => {
         <Outlet />
       </main>
       <Footer />
+      <GlobalChatBox />
     </div>
   );
 };

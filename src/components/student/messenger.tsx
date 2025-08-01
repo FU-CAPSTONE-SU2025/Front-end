@@ -4,19 +4,22 @@ import { MessageOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import AiAssistance from './aiAssistance';
 import AdvisorChatTab from './advisorChatTab';
-import { useAdvisorChatSignalR } from '../../hooks/useAdvisorChatSignalR';
 
 const Messenger: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('ai');
   const navigate = useNavigate();
 
-  // Quản lý state chat ở Messenger
-  const chat = useAdvisorChatSignalR();
-
   const handleAIClick = () => {
     setOpen(false);
     navigate('/student/chat-ai');
+  };
+
+  const handleChatBoxOpen = (advisor: any) => {
+    // Close drawer and trigger main chat box
+    setOpen(false);
+    // Emit custom event to open main chat box
+    window.dispatchEvent(new CustomEvent('openMainChatBox', { detail: advisor }));
   };
 
   const items = [
@@ -38,8 +41,7 @@ const Messenger: React.FC = () => {
           <span>Advisor</span>
         </div>
       ),
-      // Truyền toàn bộ state/hàm chat xuống AdvisorChatTab qua prop chat
-      children: <AdvisorChatTab chat={chat} />,
+      children: <AdvisorChatTab onChatBoxOpen={handleChatBoxOpen} drawerOpen={open} />,
     },
   ];
 

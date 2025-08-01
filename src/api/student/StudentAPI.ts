@@ -2,8 +2,8 @@ import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from 
 import { baseUrl, GetHeader } from "../template";
 import axios from "axios";
 import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
-import { pagedStudentData, StudentBase, CreateBookingMeetingRequest, BookingMeetingResponse, AdvisorMeetingItem, AdvisorMeetingPaged } from "../../interfaces/IStudent";
-import { IStudentBookingResponse, IStudentBookingCalendarResponse } from '../../interfaces/IChat';
+import { pagedStudentData, StudentBase, CreateBookingMeetingRequest, BookingMeetingResponse, AdvisorMeetingItem, AdvisorMeetingPaged, IStudentBookingResponse, IStudentBookingCalendarResponse } from "../../interfaces/IStudent";
+
 
 const userURL = baseUrl+"/User/student"
 

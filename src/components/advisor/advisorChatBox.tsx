@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Avatar, Button, Input, Modal } from 'antd';
 import { CloseOutlined, ExpandOutlined, SendOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSendMessageToAdvisor } from '../../hooks/useSendMessageToAdvisor';
 
 interface Student {
   id: string;
