@@ -3,6 +3,7 @@ import { Form, Input, InputNumber, Button, message, Space, Typography, Select } 
 import { SaveOutlined } from '@ant-design/icons';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateSubject, Subject } from '../../interfaces/ISchoolProgram';
+import styles from '../../css/staff/subjectEdit.module.css';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -98,15 +99,15 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
     }
   };
   return (
-    <div style={{ padding: '1rem' }}>
-      <Title level={4} style={{ color: '#1E40AF', marginBottom: '2rem', textAlign: 'center' }}>
+    <div className={styles.subjectContainer}>
+      <Title level={4} className={styles.subjectTitle}>
         {isCreateMode ? 'Create New Subject' : 'Edit Subject'}
       </Title>
       <Form
         form={form}
         layout="vertical"
         onFinish={onFinish}
-        style={{ maxWidth: 600, margin: '0 auto' }}
+        className={styles.subjectForm}
       >
         <Form.Item
           label="Subject Code"
@@ -119,7 +120,7 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
         >
           <Input 
             placeholder="e.g., CS101" 
-            style={{ borderRadius: 8 }}
+            className={styles.subjectFormInput}
           />
         </Form.Item>
         <Form.Item
@@ -132,7 +133,7 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
         >
           <Input 
             placeholder="e.g., Introduction to Computer Science" 
-            style={{ borderRadius: 8 }}
+            className={styles.subjectFormInput}
           />
         </Form.Item>
         <Form.Item
@@ -145,7 +146,7 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
         >
           <InputNumber
             placeholder="e.g., 3"
-            style={{ width: '100%', borderRadius: 8 }}
+            className={styles.subjectFormInput}
             min={1}
             max={6}
           />
@@ -161,22 +162,17 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
           <TextArea 
             placeholder="Enter a detailed description of the subject..."
             rows={4}
-            style={{ borderRadius: 8 }}
+            className={styles.subjectFormTextArea}
           />
         </Form.Item>
-        <Form.Item style={{ marginTop: '2rem', textAlign: 'center' }}>
+        <Form.Item className={styles.subjectFormActions}>
           <Space size="large">
             <Button
               type="primary"
               htmlType="submit"
               icon={<SaveOutlined />}
               loading={isLoading}
-              style={{
-                borderRadius: 999,
-                height: 48,
-                paddingLeft: 32,
-                paddingRight: 32,
-              }}
+              className={styles.subjectFormButton}
             >
               {isCreateMode ? 'Create Subject' : 'Update Subject'}
             </Button>

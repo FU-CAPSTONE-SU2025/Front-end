@@ -13,12 +13,10 @@ import {
   EditOutlined,
   DeleteOutlined,
   SaveOutlined,
-  FileExcelOutlined,
   UploadOutlined
 } from '@ant-design/icons';
 import { SyllabusMaterial, CreateSyllabusMaterial } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../common/bulkDataImport';
-import { getHeaderConfig } from '../../data/importConfigurations';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 import dayjs from 'dayjs';
 import { useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
@@ -114,10 +112,7 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
             onChange={e => setMaterialEdit({ ...materialEdit, materialName: e.target.value })}
           />
         ) : (
-          <div style={{ 
-            fontWeight: '600',
-            color: '#1E40AF'
-          }}>
+          <div className={styles.materialTableCell}>
             {record.materialName}
           </div>
         )
@@ -134,7 +129,7 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
             onChange={e => setMaterialEdit({ ...materialEdit, authorName: e.target.value })}
           />
         ) : (
-          <div style={{ color: '#64748B' }}>
+          <div className={styles.materialTableCellEmpty}>
             {record.authorName}
           </div>
         )
@@ -149,12 +144,10 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
           <DatePicker
             value={materialEdit.publishedDate ? dayjs(materialEdit.publishedDate) : undefined}
             onChange={date => setMaterialEdit({ ...materialEdit, publishedDate: date ? date.toDate() : undefined })}
+            className={styles.materialFormDatePicker}
           />
         ) : (
-          <div style={{ 
-            color: '#64748B',
-            fontSize: '0.9rem'
-          }}>
+          <div className={styles.materialTableCellEmpty}>
             {record.publishedDate ? new Date(record.publishedDate).toLocaleDateString() : '-'}
           </div>
         )
@@ -171,17 +164,10 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
             value={materialEdit.description}
             onChange={e => setMaterialEdit({ ...materialEdit, description: e.target.value })}
             autoSize={{ minRows: 2, maxRows: 4 }}
-            style={{ wordBreak: 'break-word' }}
+            className={styles.materialTableCell}
           />
         ) : (
-          <div style={{ 
-            wordBreak: 'break-word', 
-            whiteSpace: 'pre-wrap',
-            maxHeight: '80px',
-            overflow: 'auto',
-            fontSize: '0.9rem',
-            lineHeight: '1.4'
-          }}>
+          <div className={styles.materialTableCell}>
             {record.description || '-'}
           </div>
         )
@@ -213,17 +199,8 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
             placeholder="Enter file path or URL"
           />
         ) : record.filepathOrUrl ? (
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px',
-            wordBreak: 'break-all',
-            fontSize: '0.85rem'
-          }}>
-            <span style={{ 
-              fontSize: '1rem',
-              color: isUrl ? '#3B82F6' : isFile ? '#10B981' : '#64748B'
-            }}>
+          <div className={styles.materialTableCellFlex}>
+            <span className={styles.materialTableCellEmpty}>
               {isUrl ? '🔗' : isFile ? '📄' : '📁'}
             </span>
             {isUrl ? (
@@ -231,12 +208,7 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
                 href={record.filepathOrUrl.startsWith('www.') ? `https://${record.filepathOrUrl}` : record.filepathOrUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  color: '#3B82F6',
-                  textDecoration: 'none',
-                  wordBreak: 'break-all',
-                  lineHeight: '1.3'
-                }}
+                className={styles.materialTableCell}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.textDecoration = 'underline';
                 }}
@@ -247,17 +219,13 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
                 {record.filepathOrUrl}
               </a>
             ) : (
-              <span style={{ 
-                color: isFile ? '#10B981' : '#64748B',
-                wordBreak: 'break-all',
-                lineHeight: '1.3'
-              }}>
+              <span className={styles.materialTableCellEmpty}>
                 {record.filepathOrUrl}
               </span>
             )}
           </div>
         ) : (
-          <span style={{ color: '#9CA3AF', fontStyle: 'italic' }}>-</span>
+          <span className={styles.materialTableCellEmpty}>-</span>
         );
       }
     },
@@ -266,49 +234,29 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
       key: 'actions',
       render: (_: any, record: SyllabusMaterial) =>
         isEditing && editingMaterialId === record.id ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className={styles.materialTableCellActions}>
             <Button 
               icon={<SaveOutlined />} 
               onClick={saveEditMaterial}
-              style={{ 
-                background: '#10b981', 
-                borderColor: '#10b981', 
-                color: 'white',
-                fontWeight: '600'
-              }}
+              className={styles.materialTableCellActionsButtonSave}
             />
             <Button 
               icon={<DeleteOutlined />} 
               onClick={cancelEditMaterial}
-              style={{ 
-                background: '#ef4444', 
-                borderColor: '#ef4444', 
-                color: 'white',
-                fontWeight: '600'
-              }}
+              className={styles.materialTableCellActionsButtonCancel}
             />
           </div>
         ) : isEditing ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className={styles.materialTableCellActions}>
             <Button 
               icon={<EditOutlined />} 
               onClick={() => startEditMaterial(record)}
-              style={{ 
-                background: '#3b82f6', 
-                borderColor: '#3b82f6', 
-                color: 'white',
-                fontWeight: '600'
-              }}
+              className={styles.materialTableCellActionsButtonEdit}
             />
             <Button 
               icon={<DeleteOutlined />} 
               onClick={() => handleDeleteItem(record.id)}
-              style={{ 
-                background: '#ef4444', 
-                borderColor: '#ef4444', 
-                color: 'white',
-                fontWeight: '600'
-              }}
+              className={styles.materialTableCellActionsButtonDelete}
             />
           </div>
         ) : null

@@ -108,7 +108,12 @@ const SubjectVersionPage: React.FC = () => {
   } = useCRUDSubjectVersion();
   const {
     fetchSyllabusBySubjectVersionMutation,
-    addSyllabusMutation
+    addSyllabusMutation,
+    addSyllabusAssessmentMutation,
+    addSyllabusMaterialMutation,
+    addSyllabusOutcomeMutation,
+    addSyllabusSessionMutation,
+    addSyllabusOutcomesToSessionMutation
   } = useCRUDSyllabus();
 
   const [subject, setSubject] = useState<any | null>(null);
@@ -440,94 +445,276 @@ const SubjectVersionPage: React.FC = () => {
   };
   // Handlers for AssessmentTable
   const handleAddAssessment = async (versionId: number, assessment: any): Promise<void> => {
-    setAssessmentMap(prev => ({ 
-      ...prev, 
-      [versionId]: [...(prev[versionId] || []), { ...assessment, id: Date.now() }] 
-    }));
+    try {
+      const syllabus = syllabusMap[versionId];
+      if (!syllabus) {
+        message.error('Syllabus not found for this version');
+        return;
+      }
+
+      await addSyllabusAssessmentMutation.mutateAsync({
+        ...assessment,
+        syllabusId: syllabus.id
+      });
+
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update assessment map with new data
+        setAssessmentMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.assessments || []
+        }));
+      }
+      
+      message.success('Assessment added successfully!');
+    } catch (error) {
+      console.error('Error adding assessment:', error);
+      message.error('Failed to add assessment');
+      throw error;
+    }
   };
 
   const handleDeleteAssessment = async (versionId: number, id: number): Promise<void> => {
-    setAssessmentMap(prev => ({ 
-      ...prev, 
-      [versionId]: (prev[versionId] || []).filter(a => a.id !== id) 
-    }));
+    try {
+      // Since there's no delete API, we'll use local state management
+      setAssessmentMap(prev => ({ 
+        ...prev, 
+        [versionId]: (prev[versionId] || []).filter(a => a.id !== id) 
+      }));
+      message.success('Assessment deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting assessment:', error);
+      message.error('Failed to delete assessment');
+    }
   };
 
   const handleUpdateAssessment = async (versionId: number, id: number, update: any): Promise<void> => {
-    setAssessmentMap(prev => ({ 
-      ...prev, 
-      [versionId]: (prev[versionId] || []).map(a => a.id === id ? { ...a, ...update } : a) 
-    }));
+    try {
+      // Since there's no update API, we'll use local state management
+      setAssessmentMap(prev => ({ 
+        ...prev, 
+        [versionId]: (prev[versionId] || []).map(a => a.id === id ? { ...a, ...update } : a) 
+      }));
+      message.success('Assessment updated successfully!');
+    } catch (error) {
+      console.error('Error updating assessment:', error);
+      message.error('Failed to update assessment');
+    }
   };
 
   // Handlers for MaterialTable
   const handleAddMaterial = async (versionId: number, material: any): Promise<void> => {
-    setMaterialMap(prev => ({ 
-      ...prev, 
-      [versionId]: [...(prev[versionId] || []), { ...material, id: Date.now() }] 
-    }));
+    try {
+      const syllabus = syllabusMap[versionId];
+      if (!syllabus) {
+        message.error('Syllabus not found for this version');
+        return;
+      }
+
+      await addSyllabusMaterialMutation.mutateAsync({
+        ...material,
+        syllabusId: syllabus.id
+      });
+
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update material map with new data
+        setMaterialMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.learningMaterials || []
+        }));
+      }
+      
+      message.success('Material added successfully!');
+    } catch (error) {
+      console.error('Error adding material:', error);
+      message.error('Failed to add material');
+      throw error;
+    }
   };
 
   const handleDeleteMaterial = async (versionId: number, id: number): Promise<void> => {
-    setMaterialMap(prev => ({ 
-      ...prev, 
-      [versionId]: (prev[versionId] || []).filter(m => m.id !== id) 
-    }));
+    try {
+      // Since there's no delete API, we'll use local state management
+      setMaterialMap(prev => ({ 
+        ...prev, 
+        [versionId]: (prev[versionId] || []).filter(m => m.id !== id) 
+      }));
+      message.success('Material deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting material:', error);
+      message.error('Failed to delete material');
+    }
   };
 
   const handleUpdateMaterial = async (versionId: number, id: number, update: any): Promise<void> => {
-    setMaterialMap(prev => ({ 
-      ...prev, 
-      [versionId]: (prev[versionId] || []).map(m => m.id === id ? { ...m, ...update } : m) 
-    }));
+    try {
+      // Since there's no update API, we'll use local state management
+      setMaterialMap(prev => ({ 
+        ...prev, 
+        [versionId]: (prev[versionId] || []).map(m => m.id === id ? { ...m, ...update } : m) 
+      }));
+      message.success('Material updated successfully!');
+    } catch (error) {
+      console.error('Error updating material:', error);
+      message.error('Failed to update material');
+    }
   };
 
   // Handlers for OutcomeTable
   const handleAddOutcome = async (versionId: number, outcome: any): Promise<void> => {
-    setOutcomeMap(prev => ({ 
-      ...prev, 
-      [versionId]: [...(prev[versionId] || []), { ...outcome, id: Date.now() }] 
-    }));
+    try {
+      const syllabus = syllabusMap[versionId];
+      if (!syllabus) {
+        message.error('Syllabus not found for this version');
+        return;
+      }
+
+      await addSyllabusOutcomeMutation.mutateAsync({
+        ...outcome,
+        syllabusId: syllabus.id
+      });
+
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update outcome map with new data
+        setOutcomeMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.learningOutcomes || []
+        }));
+      }
+      
+      message.success('Outcome added successfully!');
+    } catch (error) {
+      console.error('Error adding outcome:', error);
+      message.error('Failed to add outcome');
+      throw error;
+    }
   };
 
   const handleDeleteOutcome = async (versionId: number, id: number): Promise<void> => {
-    setOutcomeMap(prev => ({ 
-      ...prev, 
-      [versionId]: (prev[versionId] || []).filter(o => o.id !== id) 
-    }));
+    try {
+      // Since there's no delete API, we'll use local state management
+      setOutcomeMap(prev => ({ 
+        ...prev, 
+        [versionId]: (prev[versionId] || []).filter(o => o.id !== id) 
+      }));
+      message.success('Outcome deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting outcome:', error);
+      message.error('Failed to delete outcome');
+    }
   };
 
   const handleUpdateOutcome = async (versionId: number, id: number, update: any): Promise<void> => {
-    setOutcomeMap(prev => ({ 
-      ...prev, 
-      [versionId]: (prev[versionId] || []).map(o => o.id === id ? { ...o, ...update } : o) 
-    }));
+    try {
+      // Since there's no update API, we'll use local state management
+      setOutcomeMap(prev => ({ 
+        ...prev, 
+        [versionId]: (prev[versionId] || []).map(o => o.id === id ? { ...o, ...update } : o) 
+      }));
+      message.success('Outcome updated successfully!');
+    } catch (error) {
+      console.error('Error updating outcome:', error);
+      message.error('Failed to update outcome');
+    }
   };
 
   // Handlers for SessionTable
   const handleAddSession = async (versionId: number, session: any): Promise<void> => {
-    setSessionMap(prev => ({ 
-      ...prev, 
-      [versionId]: [...(prev[versionId] || []), { ...session, id: Date.now() }] 
-    }));
+    try {
+      const syllabus = syllabusMap[versionId];
+      if (!syllabus) {
+        message.error('Syllabus not found for this version');
+        return;
+      }
+
+      await addSyllabusSessionMutation.mutateAsync({
+        ...session,
+        syllabusId: syllabus.id
+      });
+
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update session map with new data
+        setSessionMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.sessions || []
+        }));
+      }
+      
+      message.success('Session added successfully!');
+    } catch (error) {
+      console.error('Error adding session:', error);
+      message.error('Failed to add session');
+      throw error;
+    }
   };
 
   const handleDeleteSession = async (versionId: number, id: number): Promise<void> => {
-    setSessionMap(prev => ({ 
-      ...prev, 
-      [versionId]: (prev[versionId] || []).filter(s => s.id !== id) 
-    }));
+    try {
+      // Since there's no delete API, we'll use local state management
+      setSessionMap(prev => ({ 
+        ...prev, 
+        [versionId]: (prev[versionId] || []).filter(s => s.id !== id) 
+      }));
+      message.success('Session deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      message.error('Failed to delete session');
+    }
   };
 
   const handleUpdateSession = async (versionId: number, id: number, update: any): Promise<void> => {
-    setSessionMap(prev => ({ 
-      ...prev, 
-      [versionId]: (prev[versionId] || []).map(s => s.id === id ? { ...s, ...update } : s) 
-    }));
+    try {
+      // Since there's no update API, we'll use local state management
+      setSessionMap(prev => ({ 
+        ...prev, 
+        [versionId]: (prev[versionId] || []).map(s => s.id === id ? { ...s, ...update } : s) 
+      }));
+      message.success('Session updated successfully!');
+    } catch (error) {
+      console.error('Error updating session:', error);
+      message.error('Failed to update session');
+    }
   };
 
   const handleAddOutcomeToSession = async (versionId: number, sessionId: number, outcomeId: number): Promise<void> => {
-    // For demo, no-op or add to session's outcomes array if present
+    try {
+      await addSyllabusOutcomesToSessionMutation.mutateAsync({
+        sessionId,
+        outcomeId
+      });
+      
+      message.success('Outcome added to session successfully!');
+    } catch (error) {
+      console.error('Error adding outcome to session:', error);
+      message.error('Failed to add outcome to session');
+    }
   };
 
   // Bulk import handlers

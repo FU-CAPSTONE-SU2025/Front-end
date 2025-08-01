@@ -1,7 +1,7 @@
 import React from 'react';
-import { Modal, Form, Input, DatePicker, Switch, Button } from 'antd';
-import dayjs from 'dayjs';
+import { Modal, Form, Input, DatePicker, Switch } from 'antd';
 import { CreateSubjectVersion } from '../../interfaces/ISchoolProgram';
+import styles from '../../css/staff/staffEditSyllabus.module.css';
 
 interface AddVersionModalProps {
   visible: boolean;
@@ -51,45 +51,51 @@ const AddVersionModal: React.FC<AddVersionModalProps> = ({
       cancelText="Cancel"
       destroyOnClose
       width={600}
+      className={styles.versionModal}
     >
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" className={styles.versionForm}>
         <Form.Item
           label="Version Code"
           name="versionCode"
           rules={[{ required: true, message: 'Please input the version code!' }]}
+          className={styles.versionFormItem}
         >
-          <Input placeholder="e.g., v1.0, 2024.1" />
+          <Input placeholder="e.g., v1.0, 2024.1" className={styles.versionFormInput} />
         </Form.Item>
         
         <Form.Item
           label="Version Name"
           name="versionName"
           rules={[{ required: true, message: 'Please input the version name!' }]}
+          className={styles.versionFormItem}
         >
-          <Input placeholder="e.g., Spring 2024, Updated Curriculum" />
+          <Input placeholder="e.g., Spring 2024, Updated Curriculum" className={styles.versionFormInput} />
         </Form.Item>
         
         <Form.Item
           label="Description"
           name="description"
           rules={[{ required: true, message: 'Please input the description!' }]}
+          className={styles.versionFormItem}
         >
-          <Input.TextArea rows={3} placeholder="Describe the changes in this version..." />
+          <Input.TextArea rows={3} placeholder="Describe the changes in this version..." className={styles.versionFormTextArea} />
         </Form.Item>
         
         <Form.Item
           label="Effective From"
           name="effectiveFrom"
           rules={[{ required: true, message: 'Please select the effective from date!' }]}
+          className={styles.versionFormItem}
         >
-          <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+          <DatePicker className={styles.versionFormDatePicker} format="YYYY-MM-DD" />
         </Form.Item>
         
         <Form.Item
           label="Effective To"
           name="effectiveTo"
+          className={styles.versionFormItem}
         >
-          <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+          <DatePicker className={styles.versionFormDatePicker} format="YYYY-MM-DD" />
         </Form.Item>
         
         <Form.Item 
@@ -97,6 +103,7 @@ const AddVersionModal: React.FC<AddVersionModalProps> = ({
           name="isActive" 
           valuePropName="checked" 
           initialValue={true}
+          className={styles.versionFormItem}
         >
           <Switch />
         </Form.Item>
@@ -106,6 +113,7 @@ const AddVersionModal: React.FC<AddVersionModalProps> = ({
           name="isDefault" 
           valuePropName="checked" 
           initialValue={false}
+          className={styles.versionFormItem}
         >
           <Switch />
         </Form.Item>
