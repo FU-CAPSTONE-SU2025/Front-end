@@ -193,11 +193,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
       centered: true,
       width: 400,
       footer: (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between',
-          width: '100%'
-        }}>
+        <div className={styles.modalFooter}>
           <Button onClick={() => Modal.destroyAll()}>
             Cancel
           </Button>
@@ -228,7 +224,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
 
   // Show loading spinner if fetching data
   if (isEditMode && getCurriculumById.isPending) {
-    return <Spin tip="Loading curriculum..." style={{ width: '100%', margin: '2rem 0' }} />;
+    return <Spin tip="Loading curriculum..." className={styles.loadingSpinner} />;
   }
 
   return (
@@ -236,83 +232,100 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
       <Title level={4} className={styles.curriculumTitle}>
         {isCreateMode ? 'Create New Curriculum' : 'Edit Curriculum'}
       </Title>
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={onFinish}
-        className={styles.curriculumForm}
+      
+      {/* Curriculum Information Card */}
+      <Card 
+        title={
+          <div className={styles.cardTitle}>
+            📋 Curriculum Information
+          </div>
+        } 
+        className={styles.curriculumInfoCard}
+        classNames={{
+          header: styles.cardHeader,
+          body: styles.cardBody
+        }}
       >
-        <Form.Item
-          label="Program"
-          name="programId"
-          rules={[{ required: true, message: 'Please select a program!' }]}
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          className={styles.curriculumForm}
         >
-          <Select
-            placeholder="Select a program"
-            className={styles.formSelect}
-            disabled={isEditMode} // Program shouldn't be changed after creation
+          <Form.Item
+            label="Program"
+            name="programId"
+            rules={[{ required: true, message: 'Please select a program!' }]}
           >
-            {programs.map(program => (
-              <Option key={program.id} value={program.id}>
-                {program.programName} ({program.programCode})
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-
-        <Form.Item
-          label="Curriculum Code"
-          name="curriculumCode"
-          rules={[
-            { required: true, message: 'Please enter curriculum code!' },
-            { min: 2, message: 'Curriculum code must be at least 2 characters!' }
-          ]}
-        >
-          <Input 
-            placeholder="e.g., CS2023" 
-            className={styles.formInput}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label="Curriculum Name"
-          name="curriculumName"
-          rules={[
-            { required: true, message: 'Please enter curriculum name!' },
-            { min: 3, message: 'Curriculum name must be at least 3 characters!' }
-          ]}
-        >
-          <Input 
-            placeholder="e.g., Computer Science 2023 Curriculum" 
-            className={styles.formInput}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label="Effective Date"
-          name="effectiveDate"
-          rules={[{ required: true, message: 'Please select effective date!' }]}
-        >
-          <DatePicker 
-            className={styles.datePicker}
-            placeholder="Select effective date"
-          />
-        </Form.Item>
-
-        <Form.Item className={styles.formActions}>
-          <Space size="large">
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={<SaveOutlined />}
-              loading={loading}
-              className={styles.saveButton}
+            <Select
+              placeholder="Select a program"
+              className={styles.formSelect}
+              disabled={isEditMode} // Program shouldn't be changed after creation
             >
-              {isCreateMode ? 'Create Curriculum' : 'Update Curriculum'}
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
+              {programs.map(program => (
+                <Option key={program.id} value={program.id}>
+                  {program.programName} ({program.programCode})
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Curriculum Code"
+            name="curriculumCode"
+            rules={[
+              { required: true, message: 'Please enter curriculum code!' },
+              { min: 2, message: 'Curriculum code must be at least 2 characters!' }
+            ]}
+          >
+            <Input 
+              placeholder="e.g., CS2023" 
+              className={styles.formInput}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Curriculum Name"
+            name="curriculumName"
+            rules={[
+              { required: true, message: 'Please enter curriculum name!' },
+              { min: 3, message: 'Curriculum name must be at least 3 characters!' }
+            ]}
+          >
+            <Input 
+              placeholder="e.g., Computer Science 2023 Curriculum" 
+              className={styles.formInput}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Effective Date"
+            name="effectiveDate"
+            rules={[{ required: true, message: 'Please select effective date!' }]}
+          >
+            <DatePicker 
+              className={styles.datePicker}
+              placeholder="Select effective date"
+            />
+          </Form.Item>
+
+          <Form.Item className={styles.formActions}>
+            <Space size="large">
+              <Button
+                type="primary"
+                htmlType="submit"
+                icon={<SaveOutlined />}
+                loading={loading}
+                className={styles.saveButton}
+              >
+                {isCreateMode ? 'Create Curriculum' : 'Update Curriculum'}
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Card>
+
+      {/* Subject Versions Management Card */}
       <Card 
         title={
           <div className={styles.cardTitle}>
@@ -320,14 +333,9 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
           </div>
         } 
         className={styles.subjectsCard}
-        headStyle={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
-          borderRadius: '12px 12px 0 0',
-          borderBottom: 'none'
-        }}
-        bodyStyle={{
-          padding: '24px'
+        classNames={{
+          header: styles.cardHeader,
+          body: styles.cardBody
         }}
       >
         <div className={styles.addSubjectControls}>
@@ -353,11 +361,11 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
               loading={getSubjectVersionMutation.isPending}
               notFoundContent={
                 getSubjectVersionMutation.isPending ? (
-                  <div style={{ padding: '8px', textAlign: 'center' }}>
+                  <div className={styles.notFoundContentLoading}>
                     <Spin size="small" />
                   </div>
                 ) : (
-                  <div style={{ padding: '8px', textAlign: 'center', color: '#64748b' }}>
+                  <div className={styles.notFoundContentEmpty}>
                     No subject versions found
                   </div>
                 )
@@ -370,7 +378,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
               ))}
               {hasMoreSubjectVersions && (
                 <Option key="load-more" value="load-more" disabled>
-                  <div style={{ textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
+                  <div className={styles.loadMoreOption}>
                     {getSubjectVersionMutation.isPending ? 'Loading...' : 'Scroll to load more'}
                   </div>
                 </Option>

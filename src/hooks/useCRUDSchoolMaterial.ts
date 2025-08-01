@@ -10,16 +10,15 @@ import { useState } from 'react';
 import { 
   AddSyllabus, 
   AddSyllabusAssessments, 
-  AddSyllabusAssessmentsBulk, 
   AddSyllabusMaterial, 
-  AddSyllabusMaterialsBulk, 
   AddSyllabusOutcomes, 
-  AddSyllabusOutcomesBulk, 
   AddSyllabusSessions, 
-  AddSyllabusSessionsBulk, 
-  AddSyllabusOutcomesToSession, 
-  FetchSyllabusBySubjectVersion,
-  FetchSyllabusBySubject,
+  AddSyllabusOutcomesToSession,
+  AddSyllabusMaterialsBulk,
+  AddSyllabusOutcomesBulk,
+  AddSyllabusSessionsBulk,
+  FetchSyllabusBySubjectVersion, 
+  FetchSyllabusBySubject, 
   UpdateSyllabusById, 
   DisableSyllabus 
 } from '../api/SchoolAPI/syllabusAPI';

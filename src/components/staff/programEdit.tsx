@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, message, Space, Typography, Modal } from 'antd';
-import { SaveOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import { Program, CreateProgram } from '../../interfaces/ISchoolProgram';
+import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
+import { CreateProgram, Program } from '../../interfaces/ISchoolProgram';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import styles from '../../css/staff/staffEditSyllabus.module.css';
 
 const { Title } = Typography;
 
@@ -13,118 +13,68 @@ interface ProgramEditProps {
 
 const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
   const [form] = Form.useForm();
-  const [initialData, setInitialData] = useState<Program | null>(null);
   const isCreateMode = !id;
   const isEditMode = !!id;
 
-  // Use the Program CRUD hook
+  // API hooks
   const {
-    getProgramById,
     addProgramMutation,
     updateProgramMutation,
-    disableProgramMutation,
-    isSuccessCreateProgram,
-    isSuccessUpdateProgram
+    getProgramById,
+    disableProgramMutation
   } = useCRUDProgram();
 
-  // Load existing data if in edit mode
+  const [initialData, setInitialData] = useState<Program | null>(null);
+
+  // Fetch program by ID on mount (edit mode)
   useEffect(() => {
-    if (isEditMode && id && !initialData) {
-      getProgramById.mutate(id, {
-        onSuccess: (program) => {
-          if (program) {
-            setInitialData(program);
-            form.setFieldsValue({
-              programCode: program.programCode,
-              programName: program.programName
-            });
-          } else {
-            message.error('Program not found');
-          }
-        },
-        onError: (error) => {
-          console.error('Failed to fetch program:', error);
-          message.error('Failed to load program data');
-        }
+    if (isEditMode && id) {
+      getProgramById.mutate(id);
+    }
+  }, [id, isEditMode]);
+
+  // Set form fields when data is loaded
+  useEffect(() => {
+    if (isEditMode && getProgramById.data) {
+      const program = getProgramById.data;
+      setInitialData(program);
+      form.setFieldsValue({
+        programCode: program.programCode,
+        programName: program.programName
       });
     }
-  }, [id, isEditMode, form, initialData]); // Removed getProgramById from dependencies
-
-  // Reset initialData when ID changes to handle navigation between different programs
-  useEffect(() => {
-    setInitialData(null);
-  }, [id]);
-
-  // Handle successful operations
-  useEffect(() => {
-    if (isSuccessCreateProgram) {
-      message.success('Program created successfully!');
-      if (isCreateMode) {
-        form.resetFields();
-      }
-    }
-  }, [isSuccessCreateProgram, isCreateMode, form]);
-
-  useEffect(() => {
-    if (isSuccessUpdateProgram) {
-      message.success('Program updated successfully!');
-    }
-  }, [isSuccessUpdateProgram]);
+  }, [getProgramById.data, isEditMode, form]);
 
   const onFinish = async (values: CreateProgram) => {
     try {
       if (isCreateMode) {
-        // Create new program
-        addProgramMutation.mutate(values, {
-          onError: (error) => {
-            console.error('Create error:', error);
-            const errorMessage = getUserFriendlyErrorMessage(error);
-            message.error(errorMessage);
-          }
-        });
-      } else {
-        // Update existing program
-        updateProgramMutation.mutate({
-          id: id!,
-          data: values
-        }, {
-          onError: (error) => {
-            console.error('Update error:', error);
-            const errorMessage = getUserFriendlyErrorMessage(error);
-            message.error(errorMessage);
-          }
-        });
+        await addProgramMutation.mutateAsync(values);
+        message.success('Program created successfully!');
+        form.resetFields();
+      } else if (id) {
+        await updateProgramMutation.mutateAsync({ id, data: values });
+        message.success('Program updated successfully!');
       }
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      message.error('An error occurred. Please try again.');
     }
   };
 
   const handleDelete = async () => {
-    if (!id || !initialData) return;
-    
     Modal.confirm({
       title: 'Delete Program',
-      icon: <ExclamationCircleOutlined />,
-      content: `Are you sure you want to delete "${initialData.programName}"? This action cannot be undone and may affect related curriculums.`,
+      content: 'Are you sure you want to delete this program? This action cannot be undone.',
       okText: 'Delete',
       okType: 'danger',
       cancelText: 'Cancel',
-      onOk: () => {
-        disableProgramMutation.mutate(id, {
-          onSuccess: () => {
-            message.success('Program deleted successfully!');
-            // Navigate back or reset form
-            form.resetFields();
-          },
-          onError: (error) => {
-            console.error('Delete error:', error);
-            const errorMessage = getUserFriendlyErrorMessage(error);
-            message.error(errorMessage);
-          }
-        });
-      },
+      onOk: async () => {
+        try {
+          await disableProgramMutation.mutateAsync(id!);
+          message.success('Program deleted successfully!');
+        } catch (error) {
+          message.error('Failed to delete program.');
+        }
+      }
     });
   };
 
@@ -134,8 +84,8 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
 
   if (isEditMode && isLoadingData) {
     return (
-      <div style={{ padding: '1rem', textAlign: 'center' }}>
-        <Title level={4} style={{ color: '#1E40AF', marginBottom: '2rem' }}>
+      <div className={styles.formContainer}>
+        <Title level={4} className={styles.formTitle}>
           Loading program data...
         </Title>
       </div>
@@ -143,8 +93,8 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
   } 
 
   return (
-    <div style={{ padding: '1rem' }}>
-      <Title level={4} style={{ color: '#1E40AF', marginBottom: '2rem', textAlign: 'center' }}>
+    <div className={styles.programContainer}>
+      <Title level={4} className={styles.programTitle}>
         {isCreateMode ? 'Create New Program' : `Edit Program: ${initialData?.programName || ''}`}
       </Title>
       
@@ -152,7 +102,7 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
         form={form}
         layout="vertical"
         onFinish={onFinish}
-        style={{ maxWidth: 600, margin: '0 auto' }}
+        className={styles.programForm}
       >
         <Form.Item
           label="Program Code"
@@ -165,7 +115,7 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
         >
           <Input 
             placeholder="e.g., SE, IT, BA" 
-            style={{ borderRadius: 8 }}
+            className={styles.programFormInput}
             maxLength={30}
           />
         </Form.Item>
@@ -181,27 +131,19 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
         >
           <Input 
             placeholder="e.g., Software Engineering, Information Technology" 
-            style={{ borderRadius: 8 }}
+            className={styles.programFormInput}
             maxLength={100}
           />
         </Form.Item>
 
-        <Form.Item style={{ marginTop: '2rem', textAlign: 'center' }}>
+        <Form.Item className={styles.programFormActions}>
           <Space size="large">
             <Button
               type="primary"
               htmlType="submit"
               icon={<SaveOutlined />}
               loading={isLoading}
-              style={{
-                borderRadius: 999,
-                height: 48,
-                paddingLeft: 32,
-                paddingRight: 32,
-                background: '#1E40AF',
-                border: 'none',
-                fontWeight: 600
-              }}
+              className={styles.programFormButton}
             >
               {isCreateMode ? 'Create Program' : 'Update Program'}
             </Button>
@@ -212,13 +154,7 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
                 icon={<DeleteOutlined />}
                 onClick={handleDelete}
                 loading={isLoading}
-                style={{
-                  borderRadius: 999,
-                  height: 48,
-                  paddingLeft: 32,
-                  paddingRight: 32,
-                  fontWeight: 600
-                }}
+                className={styles.programFormButton}
               >
                 Delete Program
               </Button>
@@ -227,15 +163,9 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
         </Form.Item>
 
         {isEditMode && initialData && (
-          <div style={{ 
-            marginTop: '2rem', 
-            padding: '16px', 
-            background: '#f8fafc', 
-            borderRadius: '8px',
-            border: '1px solid #e2e8f0'
-          }}>
-            <Title level={5} style={{ margin: 0, color: '#64748b' }}>Program Information</Title>
-            <p style={{ margin: '8px 0 0 0', color: '#64748b' }}>
+          <div className={styles.programInfo}>
+            <Title level={5} className={styles.programInfoTitle}>Program Information</Title>
+            <p className={styles.programInfoDescription}>
               <strong>ID:</strong> {initialData.id} | 
               <strong> Code:</strong> {initialData.programCode} | 
               <strong> Name:</strong> {initialData.programName}

@@ -1,5 +1,7 @@
 .curriculumContainer {
   padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .curriculumTitle {
@@ -41,8 +43,17 @@
   font-weight: 600;
 }
 
-.subjectsCard {
+.curriculumInfoCard {
   max-width: 800px;
+  margin: 0 auto 2rem auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.subjectsCard {
+  width: 90vw;
+  max-width: none;
   margin: 2rem auto 0 auto;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -71,6 +82,14 @@
 
 .addSubjectControls {
   margin-bottom: 24px;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  padding: 16px 0;
+  border-bottom: 1px solid #e2e8f0;
+  margin: 0 -24px 24px -24px;
+  padding: 16px 24px;
 }
 
 .subjectSelect {
@@ -97,6 +116,7 @@
 .subjectsTable {
   border-radius: 8px;
   overflow: hidden;
+  width: 100%;
 }
 
 .semesterCell {
@@ -107,4 +127,37 @@
 .deleteButton {
   color: #ef4444;
   font-weight: 600;
+}
+
+.loadingSpinner {
+  width: 100%;
+  margin: 2rem 0;
+}
+
+.notFoundContent {
+  padding: 8px;
+  text-align: center;
+}
+
+.notFoundContentLoading {
+  padding: 8px;
+  text-align: center;
+}
+
+.notFoundContentEmpty {
+  padding: 8px;
+  text-align: center;
+  color: #64748b;
+}
+
+.loadMoreOption {
+  text-align: center;
+  color: #64748b;
+  font-style: italic;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
 } 

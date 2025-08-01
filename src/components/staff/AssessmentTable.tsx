@@ -14,12 +14,10 @@ import {
   EditOutlined,
   DeleteOutlined,
   SaveOutlined,
-  FileExcelOutlined,
   UploadOutlined
 } from '@ant-design/icons';
 import { SyllabusAssessment, CreateSyllabusAssessment } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../common/bulkDataImport';
-import { getHeaderConfig } from '../../data/importConfigurations';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 
 const { Option } = Select;
@@ -111,7 +109,7 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
           <Select
             value={assessmentEdit.category}
             onChange={v => setAssessmentEdit(e => ({ ...e, category: v }))}
-            style={{ width: 120 }}
+            className={styles.assessmentFormInputNumberSmall}
           >
             <Option value="Assignment">Assignment</Option>
             <Option value="Quiz">Quiz</Option>
@@ -156,7 +154,7 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
           <Select
             value={assessmentEdit.questionType}
             onChange={v => setAssessmentEdit(e => ({ ...e, questionType: v }))}
-            style={{ width: 140 }}
+            className={styles.assessmentFormInputNumberMedium}
           >
             <Option value="essay">Essay</Option>
             <Option value="multiple-choice">Multiple Choice</Option>
@@ -172,49 +170,29 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
       key: 'actions',
       render: (_: any, record: SyllabusAssessment) =>
         isEditing && editingAssessmentId === record.id ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className={styles.assessmentTableCellActions}>
             <Button 
               icon={<SaveOutlined />} 
               onClick={saveEditAssessment}
-              style={{ 
-                background: '#10b981', 
-                borderColor: '#10b981', 
-                color: 'white',
-                fontWeight: '600'
-              }}
+              className={styles.assessmentTableCellActionsButtonSave}
             />
             <Button 
               icon={<DeleteOutlined />} 
               onClick={cancelEditAssessment}
-              style={{ 
-                background: '#ef4444', 
-                borderColor: '#ef4444', 
-                color: 'white',
-                fontWeight: '600'
-              }}
+              className={styles.assessmentTableCellActionsButtonCancel}
             />
           </div>
         ) : isEditing ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className={styles.assessmentTableCellActions}>
             <Button 
               icon={<EditOutlined />} 
               onClick={() => startEditAssessment(record)}
-              style={{ 
-                background: '#3b82f6', 
-                borderColor: '#3b82f6', 
-                color: 'white',
-                fontWeight: '600'
-              }}
+              className={styles.assessmentTableCellActionsButtonEdit}
             />
             <Button 
               icon={<DeleteOutlined />} 
               onClick={() => handleDeleteItem(record.id)}
-              style={{ 
-                background: '#ef4444', 
-                borderColor: '#ef4444', 
-                color: 'white',
-                fontWeight: '600'
-              }}
+              className={styles.assessmentTableCellActionsButtonDelete}
             />
           </div>
         ) : null
@@ -229,12 +207,12 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
             📊 Assessments
           </h3>
           {isEditing && (
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className={styles.assessmentTableActions}>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => setAssessmentModalVisible(true)}
-                style={{ background: '#f97316', borderColor: '#f97316' }}
+                className={styles.assessmentTableButtonDanger}
               >
                 Add Assessment
               </Button>
@@ -242,7 +220,7 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
                 type="default"
                 icon={<UploadOutlined />}
                 onClick={() => setAssessmentImportVisible(true)}
-                style={{ borderRadius: 999, borderColor: '#10B981', color: '#10B981' }}
+                className={styles.assessmentTableButtonSecondary}
               >
                 Import from Excel
               </Button>
@@ -288,15 +266,15 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
               </Select>
             </Form.Item>
             <Form.Item name="quantity" label="Quantity" rules={[{ required: true }]}>
-              <InputNumber min={1} placeholder="Number of items" style={{ width: '100%' }} />
+              <InputNumber min={1} placeholder="Number of items" className={styles.assessmentFormInputNumber} />
             </Form.Item>
           </div>
           <div className={styles.formRow}>
             <Form.Item name="weight" label="Weight (%)" rules={[{ required: true }]}>
-              <InputNumber min={0} max={100} placeholder="Percentage" style={{ width: '100%' }} />
+              <InputNumber min={0} max={100} placeholder="Percentage" className={styles.assessmentFormInputNumber} />
             </Form.Item>
             <Form.Item name="duration" label="Duration (minutes)" rules={[{ required: true }]}>
-              <InputNumber min={1} placeholder="Duration" style={{ width: '100%' }} />
+              <InputNumber min={1} placeholder="Duration" className={styles.assessmentFormInputNumber} />
             </Form.Item>
           </div>
           <Form.Item name="questionType" label="Question Type" rules={[{ required: true }]}>

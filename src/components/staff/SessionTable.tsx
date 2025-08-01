@@ -7,19 +7,18 @@ import {
   message,
   Modal,
   Form,
-  Select
+  Select,
+  Tag
 } from 'antd';
 import { 
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
   SaveOutlined,
-  FileExcelOutlined,
   UploadOutlined
 } from '@ant-design/icons';
 import { SyllabusSession, CreateSyllabusSession, SyllabusOutcome } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../common/bulkDataImport';
-import { getHeaderConfig } from '../../data/importConfigurations';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 import { useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
 
@@ -174,15 +173,10 @@ const SessionTable: React.FC<SessionTableProps> = ({
             value={sessionEdit.mission}
             onChange={e => setSessionEdit(se => ({ ...se, mission: e.target.value }))}
             autoSize={{ minRows: 2, maxRows: 4 }}
-            style={{ wordBreak: 'break-word' }}
+            className={styles.sessionTableCell}
           />
         ) : (
-          <div style={{ 
-            wordBreak: 'break-word', 
-            whiteSpace: 'pre-wrap',
-            maxHeight: '100px',
-            overflow: 'auto'
-          }}>
+          <div className={styles.sessionTableCell}>
             {record.mission}
           </div>
         )
@@ -193,16 +187,29 @@ const SessionTable: React.FC<SessionTableProps> = ({
       key: 'outcomes',
       width: 250,
       render: (_: any, record: SyllabusSession) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {(/* record.outcomes || */ []).length > 0 ? (
-            /* record.outcomes */ [].map((outcome: any) => (
-              <div key={outcome.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span>{outcome.outcomeCode || outcome.description || 'Outcome'}</span>
-                <Button size="small" disabled title="Remove not implemented">Remove</Button>
-              </div>
-            ))
+        <div className={styles.sessionTableCellColumn}>
+          {record.learningOutcomeCodes && record.learningOutcomeCodes.length > 0 ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+              {record.learningOutcomeCodes.map((code: string, index: number) => (
+                <Tag
+                  key={index}
+                  color="blue"
+                  style={{
+                    margin: '2px',
+                    borderRadius: '12px',
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    padding: '2px 8px',
+                    border: '1px solid #1890ff',
+                    backgroundColor: '#f0f8ff'
+                  }}
+                >
+                  {code}
+                </Tag>
+              ))}
+            </div>
           ) : (
-            <span style={{ color: '#888' }}>No outcomes</span>
+            <span className={styles.sessionTableCellOutcomeEmpty}>No outcomes</span>
           )}
         </div>
       )
@@ -212,40 +219,22 @@ const SessionTable: React.FC<SessionTableProps> = ({
       key: 'actions',
       render: (_: any, record: SyllabusSession) =>
         isEditing && editingSessionId !== record.id ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className={styles.sessionTableCellActions}>
             <Button 
               icon={<EditOutlined />} 
               onClick={() => startEditSession(record)}
-              style={{ 
-                padding: '0.5rem',
-                background: '#3b82f6', 
-                borderColor: '#3b82f6', 
-                color: 'white',
-                fontWeight: '600',
-              }}
+              className={styles.sessionTableCellActionsButtonEdit}
             />
             <Button 
               icon={<DeleteOutlined />} 
               onClick={() => handleDeleteItem(record.id)}
-              style={{ 
-                padding: '0.5rem',
-                background: '#ef4444', 
-                borderColor: '#ef4444', 
-                color: 'white',
-                fontWeight: '600'
-              }}
+              className={styles.sessionTableCellActionsButtonDelete}
             />
             <Button
               type="primary"
               icon={<PlusOutlined />}
               onClick={() => openAddOutcomeModal(record.id)}
-              style={{ 
-                color: 'white',
-                padding: '0.5rem',
-                background: '#f97316', 
-                borderColor: '#f97316',
-                fontWeight: '600'
-              }}
+              className={styles.sessionTableCellActionsButtonDanger}
             >
               Add Outcomes
             </Button>
