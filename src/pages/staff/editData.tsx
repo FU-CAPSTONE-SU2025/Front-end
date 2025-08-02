@@ -2,10 +2,12 @@ import { useParams, useNavigate } from 'react-router';
 import { Card, Typography, Button, Space } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
+import glassStyle from '../../css/manager/appleGlassEffect.module.css';
 import CurriculumEdit from '../../components/staff/curriculumEdit';
 import SubjectEdit from '../../components/staff/subjectEdit';
 import ProgramEdit from '../../components/staff/programEdit';
 import ComboEdit from '../../components/staff/comboEdit';
+
 
 const { Title } = Typography;
 
@@ -67,7 +69,7 @@ export default function EditData({}: Props) {
   return (
     <div className={styles.sttContainer}>
       {/* Background */}
-      <div className={styles.sttBackground} />
+      <div/>
       
       {/* Header */}
       <div className={styles.sttHeader}>
@@ -97,14 +99,10 @@ export default function EditData({}: Props) {
       </div>
       
       {/* Edit Component */}
-      <div style={{ width: '100%', maxWidth: 800, margin: '0 auto' }}>
+      <div>
         <Card 
-          style={{ 
-            background: 'rgba(255,255,255,0.85)', 
-            borderRadius: 20, 
-            boxShadow: '0 10px 40px rgba(30,64,175,0.13)',
-            border: '1.5px solid rgba(255,255,255,0.18)'
-          }}
+        className={glassStyle.appleGlassCard}
+        
         >
           {renderEditComponent()}
         </Card>

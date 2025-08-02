@@ -1,7 +1,5 @@
 .curriculumContainer {
-  padding: 1rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 90vw;
 }
 
 .curriculumTitle {
@@ -44,17 +42,19 @@
 }
 
 .curriculumInfoCard {
-  max-width: 800px;
+  min-width: fit-content;
+  width: 600px;
   margin: 0 auto 2rem auto;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e2e8f0;
 }
-
+.subjectsCardContainer {
+  width: fit-content !important;
+}
 .subjectsCard {
-  width: 90vw;
-  max-width: none;
-  margin: 2rem auto 0 auto;
+  width: auto;
+  margin: auto;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e2e8f0;

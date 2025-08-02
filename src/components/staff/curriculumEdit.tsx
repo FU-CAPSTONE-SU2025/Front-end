@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Select, DatePicker, Button, message, Space, Typography, Spin, Card, Table, Checkbox, Modal } from 'antd';
 import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Curriculum, Subject, SubjectVersion, SubjectVersionWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
+import { Curriculum, SubjectVersion, SubjectVersionWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
 import { programs } from '../../data/schoolData';
 import dayjs from 'dayjs';
 import {useCRUDCurriculum, useCRUDSubjectVersion} from '../../hooks/useCRUDSchoolMaterial';
@@ -229,10 +229,6 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
 
   return (
     <div className={styles.curriculumContainer}>
-      <Title level={4} className={styles.curriculumTitle}>
-        {isCreateMode ? 'Create New Curriculum' : 'Edit Curriculum'}
-      </Title>
-      
       {/* Curriculum Information Card */}
       <Card 
         title={
@@ -326,7 +322,8 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
       </Card>
 
       {/* Subject Versions Management Card */}
-      <Card 
+      <Card
+      rootClassName={styles.subjectsCardContainer} 
         title={
           <div className={styles.cardTitle}>
             📚 Manage Subject Versions in Curriculum

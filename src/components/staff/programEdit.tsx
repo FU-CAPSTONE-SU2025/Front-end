@@ -94,10 +94,6 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
 
   return (
     <div className={styles.programContainer}>
-      <Title level={4} className={styles.programTitle}>
-        {isCreateMode ? 'Create New Program' : `Edit Program: ${initialData?.programName || ''}`}
-      </Title>
-      
       <Form
         form={form}
         layout="vertical"

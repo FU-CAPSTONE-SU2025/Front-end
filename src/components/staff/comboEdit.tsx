@@ -149,9 +149,6 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
 
   return (
     <div className={styles.comboContainer}>
-      <Title level={4} className={styles.comboTitle}>
-        {isCreateMode ? 'Create New Combo' : 'Edit Combo'}
-      </Title>
       <Form
         form={form}
         layout="vertical"

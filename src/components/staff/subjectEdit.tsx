@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Input, InputNumber, Button, message, Space, Typography, Select } from 'antd';
+import React, { useEffect } from 'react';
+import { Form, Input, InputNumber, Button, message, Space, Typography } from 'antd';
 import { SaveOutlined } from '@ant-design/icons';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateSubject, Subject } from '../../interfaces/ISchoolProgram';
@@ -100,9 +100,6 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
   };
   return (
     <div className={styles.subjectContainer}>
-      <Title level={4} className={styles.subjectTitle}>
-        {isCreateMode ? 'Create New Subject' : 'Edit Subject'}
-      </Title>
       <Form
         form={form}
         layout="vertical"
