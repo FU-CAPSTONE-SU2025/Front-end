@@ -5,12 +5,6 @@ import { motion } from 'framer-motion';
 import styles from "../css/notFound.module.css";
 import BackgroundWrapper from '../components/common/backgroundWrapper';
 
-// Animation variants for the container
-const containerVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: 'easeOut' } },
-};
-
 // Animation variants for text and button
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -24,7 +18,14 @@ const NotFound: React.FC = () => {
     <BackgroundWrapper variant="transparent" className={styles.container}>
       <motion.div
         className={styles.card}
-        variants={containerVariants}
+        variants={{
+          hidden: { opacity: 0, scale: 0.8 },
+          visible: { 
+            opacity: 1, 
+            scale: 1, 
+            transition: { duration: 0.5, ease: [0.17, 0.67, 0.83, 0.67] } // cubic-bezier as Easing
+          }
+        }}
         initial="hidden"
         animate="visible"
       >

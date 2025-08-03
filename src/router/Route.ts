@@ -290,4 +290,8 @@ export const routes = createBrowserRouter([
     path: "/404",
     Component: NotFound,
   },
+  {
+    path: "*",
+    Component: NotFound,
+  }
 ]); 

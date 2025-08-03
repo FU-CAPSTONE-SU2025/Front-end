@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { Form, Input, Button, ConfigProvider, Modal } from 'antd';
 import { Mail, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
@@ -40,7 +40,6 @@ const cardVariants = {
     y: 0,
     transition: { 
       duration: 0.6, 
-      ease: [0.25, 0.46, 0.45, 0.94],
       staggerChildren: 0.1
     } 
   },
@@ -58,8 +57,7 @@ const itemVariants = {
     opacity: 1, 
     y: 0, 
     transition: { 
-      duration: 0.5, 
-      ease: [0.25, 0.46, 0.45, 0.94] 
+      duration: 0.5
     } 
   }
 };
@@ -72,8 +70,7 @@ const iconVariants = {
     scale: 1,
     transition: { 
       duration: 0.7, 
-      delay: 0.3,
-      ease: [0.25, 0.46, 0.45, 0.94]
+      delay: 0.3
     } 
   }
 };
@@ -83,8 +80,7 @@ const floatingVariants = {
     y: [-10, 10, -10],
     transition: {
       duration: 3,
-      repeat: Infinity,
-      ease: "easeInOut"
+      repeat: Infinity
     }
   }
 };
@@ -235,7 +231,7 @@ const ForgetPassword: React.FC = () => {
             </Form.Item>
           </Form>
           
-          <motion.div className={styles.emailTip} variants={itemVariants}>
+          <motion.div className={styles.emailTip}>
             <InfoCircleOutlined />
             <span>Make sure to check your spam or promotions folder if you don't see the email in your inbox.</span>
           </motion.div>
@@ -371,12 +367,7 @@ const ForgetPassword: React.FC = () => {
     <ConfigProvider>
       <BackgroundWrapper variant="animated">
         {/* Back Button */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className={styles.backButtonContainer}
-        >
+        <div className={styles.backButtonContainer}>
           <Button
             type="text"
             icon={<ArrowLeft size={20} />}
@@ -385,7 +376,7 @@ const ForgetPassword: React.FC = () => {
           >
             Back to Login
           </Button>
-        </motion.div>
+        </div>
 
         <motion.div className={styles.stepIndicatorContainer}>
           <motion.span 

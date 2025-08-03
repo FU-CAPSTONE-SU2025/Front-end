@@ -1,5 +1,4 @@
 import axios, { AxiosRequestConfig, Method } from "axios";
-import { useMutation } from "@tanstack/react-query";
 import { GetHeader } from "./template";
 import { RefreshToken } from './Account/AuthAPI';
 
