@@ -97,7 +97,7 @@ export function useNotificationHub() {
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(NOTI_HUB_URL, { 
         accessTokenFactory: () => accessToken,
-        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
+        transport: signalR.HttpTransportType.WebSockets 
       })
       .withAutomaticReconnect([0, 2000, 10000, 30000]) // Custom retry intervals
       .configureLogging(signalR.LogLevel.Warning) // Production logging

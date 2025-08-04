@@ -108,7 +108,7 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
                 </div>
                 <div>
                   <div className="font-semibold text-gray-800">{selectedStudent.name}</div>
-                  <div className="text-xs text-gray-500">Student</div>
+
                 </div>
               </div>
               <div className="flex items-center">
@@ -130,16 +130,16 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-1">
               {messages.length === 0 && (
-                <div className="text-center text-gray-500 text-sm py-8">
-                  Start a conversation with {selectedStudent.name}
-                </div>
+                                  <div className="text-center text-gray-500 text-sm py-8">
+                    Start a conversation
+                  </div>
               )}
               {messages.map((msg, idx) => {
-                const isMine = msg.senderId === currentUserId;
+                const isStudentMessage = String(msg.senderId) === "13"; // Student message (senderId = 13)
                 return (
-                  <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
+                  <div key={msg.id} className={`flex ${isStudentMessage ? 'justify-start' : 'justify-end'} mb-1`}>
                     {/* Avatar và tên người gửi */}
-                    {!isMine && isFirstOfGroup(idx) && (
+                    {isStudentMessage && isFirstOfGroup(idx) && (
                       <div className="flex flex-col items-center mr-2">
                         <Avatar src={selectedStudent.avatar} size={28} />
                         <span className="text-xs text-gray-400 mt-1">{msg.senderName || selectedStudent.name}</span>
@@ -148,19 +148,19 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
                     <div className="flex flex-col items-end max-w-[75%]">
                       {/* Bong bóng chat */}
                       <div className={`px-3 py-2 rounded-2xl text-sm shadow-sm ${
-                        isMine
-                          ? 'bg-blue-500 text-white rounded-br-md'
-                          : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                        isStudentMessage
+                          ? 'bg-gray-100 text-gray-800 rounded-bl-md'
+                          : 'bg-blue-500 text-white rounded-br-md'
                       }`}>
                         {msg.content}
                       </div>
                       {/* Thời gian gửi */}
                       {isLastOfGroup(idx) && (
-                        <div className={`text-[10px] mt-1 opacity-60 ${isMine ? 'text-right text-blue-400' : 'text-left text-gray-500'}`}>{msg.timestamp}</div>
+                        <div className={`text-[10px] mt-1 opacity-60 ${isStudentMessage ? 'text-left text-gray-500' : 'text-right text-blue-400'}`}>{msg.timestamp}</div>
                       )}
                     </div>
-                    {/* Avatar user bên phải nếu muốn */}
-                    {isMine && isFirstOfGroup(idx) && (
+                    {/* Avatar advisor bên phải nếu muốn */}
+                    {!isStudentMessage && isFirstOfGroup(idx) && (
                       <div className="flex flex-col items-center ml-2">
                         <Avatar src={currentAdvisor.avatar} size={28} />
                         <span className="text-xs text-gray-400 mt-1">You</span>
@@ -178,7 +178,7 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type a message..."
+                placeholder="Message..."
                 className="rounded-full bg-white"
                 maxLength={1000}
                 disabled={loading}
@@ -221,7 +221,7 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
                 </div>
                 <div>
                   <div className="font-semibold text-lg">{selectedStudent.name}</div>
-                  <div className="text-sm text-gray-500">Student • {selectedStudent.isOnline ? 'Online' : selectedStudent.lastSeen}</div>
+                  <div className="text-sm text-gray-500">{selectedStudent.isOnline ? 'Online' : 'Offline'}</div>
                 </div>
               </div>
               <Button type="text" onClick={() => setIsExpanded(false)}>Close</Button>
@@ -233,15 +233,15 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
                 <div className="flex flex-col items-center justify-center h-full text-gray-500">
                   <Avatar src={selectedStudent.avatar} size={64} />
                   <h2 className="text-xl font-semibold mt-4">{selectedStudent.name}</h2>
-                  <p className="text-sm mt-2">Start a conversation</p>
+
                 </div>
               )}
               {messages.map((msg, idx) => {
-                const isMine = msg.senderId === currentUserId;
+                const isStudentMessage = String(msg.senderId) === "13"; // Student message
                 return (
-                  <div key={msg.id} className={`flex items-end gap-2 ${isMine ? 'justify-end' : ''} mb-1`}>
+                  <div key={msg.id} className={`flex items-end gap-2 ${isStudentMessage ? '' : 'justify-end'} mb-1`}>
                     {/* Avatar và tên người gửi */}
-                    {!isMine && isFirstOfGroup(idx) && (
+                    {isStudentMessage && isFirstOfGroup(idx) && (
                       <div className="flex flex-col items-center mr-2">
                         <Avatar src={selectedStudent.avatar} size={32} />
                         <span className="text-xs text-gray-400 mt-1">{msg.senderName || selectedStudent.name}</span>
@@ -249,17 +249,17 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
                     )}
                     <div className="flex flex-col items-end max-w-[75%]">
                       <div className={`px-4 py-2 rounded-xl text-sm ${
-                        isMine
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-800'
+                        isStudentMessage
+                          ? 'bg-gray-100 text-gray-800'
+                          : 'bg-blue-500 text-white'
                       }`}>
                         {msg.content}
                       </div>
                       {isLastOfGroup(idx) && (
-                        <div className={`text-xs mt-1 opacity-60 ${isMine ? 'text-right text-blue-400' : 'text-left text-gray-500'}`}>{msg.timestamp}</div>
+                        <div className={`text-xs mt-1 opacity-60 ${isStudentMessage ? 'text-left text-gray-500' : 'text-right text-blue-400'}`}>{msg.timestamp}</div>
                       )}
                     </div>
-                    {isMine && isFirstOfGroup(idx) && (
+                    {!isStudentMessage && isFirstOfGroup(idx) && (
                       <div className="flex flex-col items-center ml-2">
                         <Avatar src={currentAdvisor.avatar} size={32} />
                         <span className="text-xs text-gray-400 mt-1">You</span>
@@ -283,7 +283,7 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
                       handleSend();
                     }
                   }}
-                  placeholder="Type a message..."
+                  placeholder="Message..."
                   autoSize={{ minRows: 1, maxRows: 4 }}
                   className="flex-1"
                   disabled={loading}

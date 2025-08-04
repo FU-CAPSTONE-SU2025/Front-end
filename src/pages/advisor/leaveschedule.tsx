@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Typography, Space, Button, message, Tag, Segmented } from 'antd';
-import { CalendarOutlined, PlusOutlined, ClockCircleOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
-import SearchBar from '../../components/common/searchBar';
-import DataTable from '../../components/common/dataTable';
-import { useLeaveScheduleList, useCreateLeaveSchedule, useUpdateLeaveSchedule, useDeleteLeaveSchedule } from '../../hooks/useCRUDLeaveSchedule';
+import { CalendarOutlined, PlusOutlined } from '@ant-design/icons';
+import { useLeaveScheduleList, useDeleteLeaveSchedule } from '../../hooks/useCRUDLeaveSchedule';
 import { LeaveSchedule } from '../../interfaces/ILeaveSchedule';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import dayjs, { Dayjs } from 'dayjs';
-
 import styles from '../../css/advisor/workSchedule.module.css';
 import AddLeaveScheduleModal from '../../components/advisor/addLeaveScheduleModal';
 import EditLeaveScheduleModal from '../../components/advisor/editLeaveScheduleModal';
 import ViewLeaveScheduleModal from '../../components/advisor/viewLeaveScheduleModal';
-import HistoryCalendarView from '../../components/student/historyCalendarView';
-import AdvisorCalendar, { AdvisorCalendarEvent } from '../../components/advisor/advisorCalendar';
+import AdvisorCalendar from '../../components/advisor/advisorCalendar';
 
 
 const { Title, Text } = Typography;
@@ -32,16 +28,13 @@ const LeaveSchedulePage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [selectedSlotInfo, setSelectedSlotInfo] = useState<{ date: Dayjs; start: Dayjs; end: Dayjs } | null>(null);
 
-  // Tính toán pageSize dựa trên viewMode
   const effectivePageSize = viewMode === 'week' ? 50 : 10; // Week view = hết data, Day view = 10
 
   const { data, isLoading, error } = useLeaveScheduleList(currentPage, effectivePageSize);
   const leaveList = data?.items || [];
   const totalCount = data?.totalCount || 0;
 
-  // Refetch when viewMode changes
   useEffect(() => {
-    // React Query will automatically refetch when queryKey changes (pageSize changes)
   }, [viewMode]);
 
   // Modal handlers
@@ -59,7 +52,6 @@ const LeaveSchedulePage: React.FC = () => {
     message.success('Leave schedule updated successfully!');
   };
 
-  // Table columns
   const columns = [
     {
       title: 'ID',
@@ -103,8 +95,6 @@ const LeaveSchedulePage: React.FC = () => {
       ),
     },
   ];
-
-  // Delete logic
   const deleteLeaveSchedule = useDeleteLeaveSchedule();
   const handleDelete = async (id: number) => {
     try {
@@ -115,18 +105,13 @@ const LeaveSchedulePage: React.FC = () => {
       message.error(errorMessage);
     }
   };
-
-  // Search logic - Fix filtering for day and week views
   const filteredLeaves = viewMode === 'day'
     ? leaveList.filter(l => {
         const leaveStart = dayjs(l.startDateTime);
         const leaveEnd = dayjs(l.endDateTime);
         const selectedDayStart = selectedDate.startOf('day');
         const selectedDayEnd = selectedDate.endOf('day');
-        
-        // Check if leave overlaps with the selected day
         const overlaps = (leaveStart.isBefore(selectedDayEnd) && leaveEnd.isAfter(selectedDayStart));
-        console.log(`Day view filter - Leave: ${leaveStart.format('YYYY-MM-DD HH:mm')} to ${leaveEnd.format('YYYY-MM-DD HH:mm')}, Selected: ${selectedDayStart.format('YYYY-MM-DD')}, Overlaps: ${overlaps}`);
         return overlaps;
       })
     : viewMode === 'week'
@@ -135,26 +120,16 @@ const LeaveSchedulePage: React.FC = () => {
         const leaveEnd = dayjs(l.endDateTime);
         const weekStart = selectedDate.startOf('week');
         const weekEnd = selectedDate.endOf('week');
-        
-        // Check if leave overlaps with the selected week
         const overlaps = (leaveStart.isBefore(weekEnd) && leaveEnd.isAfter(weekStart));
-        console.log(`Week view filter - Leave: ${leaveStart.format('YYYY-MM-DD HH:mm')} to ${leaveEnd.format('YYYY-MM-DD HH:mm')}, Week: ${weekStart.format('YYYY-MM-DD')} to ${weekEnd.format('YYYY-MM-DD')}, Overlaps: ${overlaps}`);
         return overlaps;
       })
     : leaveList; // Show all for other views
 
-  // Debug logging
-  console.log('=== LEAVE SCHEDULE DEBUG ===');
-  console.log('Total leave data:', leaveList.length);
-  console.log('View mode:', viewMode);
-  console.log('Selected date:', selectedDate.format('YYYY-MM-DD'));
-  console.log('Filtered leaves count:', filteredLeaves.length);
-  console.log('=== END DEBUG ===');
 
   return (
     <div className={styles.workScheduleContainer}>
       <Card className={styles.headerCard}>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space direction="vertical" size="large"  style={{ width: '100%' }}>
           <div>
             <Title level={2} className={styles.pageTitle}>
               <CalendarOutlined /> Leave Schedule
@@ -196,21 +171,13 @@ const LeaveSchedulePage: React.FC = () => {
         selectedDate={selectedDate}
         onViewModeChange={setViewMode}
         onDateChange={setSelectedDate}
-        isWorkSchedule={false} // Mark as leave schedule (default behavior)
+        isWorkSchedule={false} 
         onSlotClick={(slot, date) => {
           setSelectedSlotInfo({ date, start: slot.start, end: slot.end });
           setIsAddModalVisible(true);
           setSelectedDate(date);
         }}
         onEdit={event => {
-          console.log('=== CALENDAR EDIT DEBUG ===');
-          console.log('Event clicked for edit:', event);
-          console.log('Event ID:', event.id);
-          console.log('Event startDateTime:', event.startDateTime);
-          console.log('Event endDateTime:', event.endDateTime);
-          console.log('Event type:', event.type);
-          console.log('=== END CALENDAR DEBUG ===');
-          
           const leaveId = typeof event.id === 'string' ? parseInt(event.id) : event.id;
           setSelectedLeaveId(leaveId);
           setIsEditModalVisible(true);
@@ -252,7 +219,6 @@ const LeaveSchedulePage: React.FC = () => {
         onDeleted={() => {
           setIsViewModalVisible(false);
           setViewLeaveId(null);
-          // reload lại lịch nếu cần (có thể gọi lại API hoặc refetch)
         }}
       />
     </div>

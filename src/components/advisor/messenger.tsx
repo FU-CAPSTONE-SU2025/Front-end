@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
-import { Avatar, Button, Drawer, Tabs, Input, Badge } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Avatar, Button, Drawer, Tabs, Input, Badge, message } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons';
+import { MessageOutlined, SearchOutlined, UserOutlined, ExclamationCircleOutlined, UserAddOutlined } from '@ant-design/icons';
 import ReactDOM from 'react-dom';
 import AdvisorChatBox from './advisorChatBox';
+import StudentChatTab from './studentChatTab';
+import OpenChatTab from './openChatTab';
+import { useAdvisorChatWithStudent } from '../../hooks/useAdvisorChatWithStudent';
+import { SIGNALR_CONFIG, ConnectionState, getConnectionStatusColor } from '../../config/signalRConfig';
+import { StudentSession, ChatMessage } from '../../interfaces/IChat';
 
 interface Student {
   id: string;
@@ -16,139 +21,42 @@ interface Student {
   unreadCount?: number;
 }
 
-interface ChatMessage {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  content: string;
-  timestamp: string;
-  isRead: boolean;
-  messageType: string;
-  senderName?: string;
-}
-
 const Messenger: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [studentChatBoxOpen, setStudentChatBoxOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('students');
+  const [activeTab, setActiveTab] = useState('open-chat');
 
-  // Mock students data
-  const students: Student[] = [
-    {
-      id: '1',
-      name: 'John Smith',
-      email: 'john.smith@student.com',
-      role: 'Computer Science',
-      avatarUrl: 'https://i.pravatar.cc/150?img=1',
-      isOnline: true,
-      unreadCount: 2
-    },
-    {
-      id: '2',
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@student.com',
-      role: 'Information Technology',
-      avatarUrl: 'https://i.pravatar.cc/150?img=2',
-      isOnline: false,
-      lastSeen: '2 hours ago',
-      unreadCount: 0
-    },
-    {
-      id: '3',
-      name: 'Michael Brown',
-      email: 'michael.brown@student.com',
-      role: 'Software Engineering',
-      avatarUrl: 'https://i.pravatar.cc/150?img=3',
-      isOnline: true,
-      unreadCount: 1
-    },
-    {
-      id: '4',
-      name: 'Emily Davis',
-      email: 'emily.davis@student.com',
-      role: 'Data Science',
-      avatarUrl: 'https://i.pravatar.cc/150?img=4',
-      isOnline: false,
-      lastSeen: '1 day ago',
-      unreadCount: 0
-    },
-    {
-      id: '5',
-      name: 'David Wilson',
-      email: 'david.wilson@student.com',
-      role: 'Computer Science',
-      avatarUrl: 'https://i.pravatar.cc/150?img=5',
-      isOnline: true,
-      unreadCount: 3
-    },
-    {
-      id: '6',
-      name: 'Lisa Anderson',
-      email: 'lisa.anderson@student.com',
-      role: 'Information Technology',
-      avatarUrl: 'https://i.pravatar.cc/150?img=6',
-      isOnline: false,
-      lastSeen: '30 minutes ago',
-      unreadCount: 0
+  // Get connection state and sessions from the hook
+  const { 
+    connectionState, 
+    error: connectionError, 
+    sessions,
+    unassignedSessions,
+    allAssignedSessions,
+    loading,
+    dataFetched,
+    refreshAllData
+  } = useAdvisorChatWithStudent();
+
+  // Pre-load data when component mounts
+  useEffect(() => {
+    // Load data immediately when component mounts
+    refreshAllData();
+  }, [refreshAllData]);
+
+  // Re-fetch data when connection becomes available
+  useEffect(() => {
+    if (connectionState === ConnectionState.Connected && !dataFetched) {
+      // Only fetch if data hasn't been fetched yet
+      refreshAllData();
     }
-  ];
+  }, [connectionState, refreshAllData, dataFetched]);
 
-  // Filter students based on search term
-  const filteredStudents = students.filter((student: Student) =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.role.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
-  // Mock chat data and handlers
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleSendMessage = async (msg: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Mock sending message
-      const newMessage: ChatMessage = {
-        id: Date.now().toString(),
-        senderId: 'current_advisor',
-        receiverId: selectedStudent?.id || '',
-        content: msg,
-        timestamp: new Date().toLocaleTimeString(),
-        isRead: false,
-        messageType: 'text',
-        senderName: 'Dr. Sarah Johnson'
-      };
-      setMessages(prev => [...prev, newMessage]);
-      // Here you would call the actual API
-      await new Promise(resolve => setTimeout(resolve, 500)); // Mock delay
-    } catch (err) {
-      setError('Failed to send message');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  // Render AdvisorChatBox outside root
-  const advisorChatBoxPortal = studentChatBoxOpen && selectedStudent
-    ? ReactDOM.createPortal(
-        <AdvisorChatBox 
-          onClose={() => {
-            setStudentChatBoxOpen(false);
-            setSelectedStudent(null);
-          }} 
-          selectedStudent={selectedStudent}
-          messages={messages}
-          loading={loading}
-          error={error}
-          onSendMessage={handleSendMessage}
-        />,
-        document.body
-      )
-    : null;
 
   const handleStudentClick = (student: Student) => {
     setSelectedStudent(student);
@@ -156,91 +64,99 @@ const Messenger: React.FC = () => {
     setOpen(false);
   };
 
+  // Filter sessions for different tabs
+  const { advisorId } = useAdvisorChatWithStudent();
+  
+  // Open Chat: Show all sessions with staffId = 4 (unassigned)
+  const openChatSessions = [...sessions, ...unassignedSessions].filter(session => 
+    session.staffId === 4 // EmptyStaffProfileId from backend
+  );
+  
+  // My Chat: Show all assigned sessions (including current advisor's sessions and all other assigned sessions)
+  const myChatSessions = allAssignedSessions; // All assigned sessions from backend
+
   const items = [
+    {
+      key: 'open-chat',
+      label: (
+        <div className="flex items-center gap-2">
+          <UserAddOutlined />
+          <span>Open Chat</span>
+          <Badge count={openChatSessions.length} size="small" />
+        </div>
+      ),
+      children: (
+        <OpenChatTab 
+          drawerOpen={open}
+          onCloseDrawer={() => setOpen(false)}
+        />
+      ),
+    },
     {
       key: 'students',
       label: (
         <div className="flex items-center gap-2">
           <UserOutlined />
-          <span>Students</span>
-          <Badge count={students.filter((s: Student) => s.isOnline).length} size="small" />
+          <span>My Chat</span>
+          <Badge count={myChatSessions.length} size="small" />
         </div>
       ),
       children: (
-        <div className="flex flex-col h-full bg-gray-50">
-          {/* Search Bar */}
-          <div className="p-4 border-b border-gray-200">
-            <Input
-              placeholder="Search students..."
-              prefix={<SearchOutlined className="text-gray-400" />}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="rounded-full"
-            />
-          </div>
-          
-          {/* Students List */}
-          <div className="flex-1 overflow-y-auto">
-            <AnimatePresence>
-              {filteredStudents.map((student: Student) => (
-                <motion.div
-                  key={student.id}
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 30 }}
-                  transition={{ duration: 0.2 }}
-                  className={`flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200 cursor-pointer`}
-                  onClick={() => handleStudentClick(student)}
-                >
-                  <div className="relative">
-                    <Avatar src={student.avatarUrl} size={40} />
-                    <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
-                      student.isOnline ? 'bg-green-500' : 'bg-gray-400'
-                    }`} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-800">{student.name}</span>
-                      <span className={`text-xs ml-2 ${
-                        student.isOnline ? 'text-green-500' : 'text-gray-500'
-                      }`}>
-                        {student.isOnline ? 'Online' : student.lastSeen}
-                      </span>
-                    </div>
-                    <div className="text-sm text-gray-600">{student.role}</div>
-                    <div className="text-xs text-gray-500">{student.email}</div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-            
-            {filteredStudents.length === 0 && (
-              <div className="text-center text-gray-500 py-8">
-                No students found
-              </div>
-            )}
-          </div>
-        </div>
+        <StudentChatTab 
+          drawerOpen={open}
+          onCloseDrawer={() => setOpen(false)}
+        />
       ),
     },
   ];
 
   return (
     <>
-      <Button
-        icon={<MessageOutlined className="text-lg" />}
-        shape="circle"
-        onClick={() => setOpen(true)}
-        className="relative"
-      />
+            <div className="relative">
+        <Button
+          icon={loading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div> : <MessageOutlined className="text-lg" />}
+          shape="circle"
+          onClick={() => {
+            setOpen(true);
+          }}
+          className="relative transition-all duration-200 hover:scale-105"
+          loading={loading}
+        />
+      </div>
+      
       <Drawer
-        title={<div className="font-bold text-gray-800">Messages</div>}
+        title={
+          <div className="flex items-center justify-between">
+            <div className="font-bold text-gray-800">Messages</div>
+            {connectionError && (
+              <ExclamationCircleOutlined className="text-red-500" />
+            )}
+          </div>
+        }
         placement="right"
-        width={400}
+        width={SIGNALR_CONFIG.UI.CHAT_BOX_WIDTH}
         onClose={() => setOpen(false)}
         open={open}
         styles={{ body: { padding: 0 }, header: { borderBottom: '1px solid #e5e7eb' } }}
       >
+        {connectionError && (
+          <div className="bg-red-50 border-b border-red-200 p-3">
+            <div className="flex items-center gap-2">
+              <ExclamationCircleOutlined className="text-red-500" />
+              <span className="text-red-700 text-sm">{connectionError}</span>
+            </div>
+          </div>
+        )}
+        
+        {loading && (
+          <div className="bg-blue-50 border-b border-blue-200 p-3">
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+              <span className="text-blue-700 text-sm">Loading sessions...</span>
+            </div>
+          </div>
+        )}
+        
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
@@ -249,7 +165,6 @@ const Messenger: React.FC = () => {
           tabBarStyle={{ margin: 0, padding: '0 16px' }}
         />
       </Drawer>
-      {advisorChatBoxPortal}
     </>
   );
 };

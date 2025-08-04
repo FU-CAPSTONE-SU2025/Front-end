@@ -27,7 +27,6 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({
   const [selectedMeeting, setSelectedMeeting] = useState<AdvisorMeetingItem | null>(null);
   const [detail, setDetail] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  console.log("ádasd",bookingsList);
   const statusMap: Record<number, { color: string; text: string; icon: React.ReactNode }> = {
     1: { color: 'blue', text: 'Pending', icon: <InfoCircleTwoTone twoToneColor="#1890ff" /> },
     2: { color: 'green', text: 'Confirmed', icon: <CheckCircleTwoTone twoToneColor="#52c41a" /> },
