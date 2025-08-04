@@ -2,55 +2,45 @@ import React, { useState } from 'react';
 import { Avatar, Badge, Input, Button } from 'antd';
 import { SendOutlined, MoreOutlined, PhoneOutlined, VideoCameraOutlined, CloseOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-
-interface Advisor {
-  id: string;
-  name: string;
-  avatar: string;
-  isOnline: boolean;
-  role: string;
-}
-
-interface ChatMessage {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  content: string;
-  timestamp: string;
-  isRead: boolean;
-  messageType: string;
-  senderName?: string;
-}
+import { AdvisorSession } from '../../hooks/useAdvisorChat';
+import { ChatMessage } from '../../interfaces/IChat';
+import StaffNameDisplay from './staffNameDisplay';
+import { useAdvisorChat } from '../../hooks/useAdvisorChat';
 
 interface MainChatBoxProps {
-  advisor: Advisor;
+  session: AdvisorSession;
   messages: ChatMessage[];
   onSendMessage: (message: string) => void;
   onClose: () => void;
   isOpen: boolean;
+  loading?: boolean;
 }
 
 const MainChatBox: React.FC<MainChatBoxProps> = ({
-  advisor,
+  session,
   messages,
   onSendMessage,
   onClose,
-  isOpen
+  isOpen,
+  loading = false
 }) => {
+  // Don't render if no session is provided
+  if (!session) return null;
   const [messageInput, setMessageInput] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleSendMessage = async (msg: string) => {
     if (!msg.trim()) return;
     
-    setLoading(true);
     try {
       await onSendMessage(msg);
       setMessageInput('');
     } catch (err) {
       console.error('Failed to send message:', err);
-    } finally {
-      setLoading(false);
+      // Only show error if it's a real network/connection error
+      if (err instanceof Error && !err.message.includes('negotiation') && !err.message.includes('No connection')) {
+        // Don't show error message for temporary connection issues
+        console.warn('Connection issue, message may still be sent:', err);
+      }
     }
   };
 
@@ -59,6 +49,12 @@ const MainChatBox: React.FC<MainChatBoxProps> = ({
       e.preventDefault();
       handleSendMessage(messageInput);
     }
+  };
+
+  // Format timestamp
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   if (!isOpen) return null;
@@ -75,14 +71,27 @@ const MainChatBox: React.FC<MainChatBoxProps> = ({
       <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl border-b border-gray-200">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Avatar src={advisor.avatar} size={36} className="ring-2 ring-white shadow-md" />
-            <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
-              advisor.isOnline ? 'bg-green-400' : 'bg-gray-400'
-            }`} />
+            <Avatar 
+              src={session.staffAvatar || 'https://i.pravatar.cc/150?img=1'} 
+              size={36} 
+              className="ring-2 ring-white shadow-md" 
+            />
+            {session.isOnline && (
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
+            )}
           </div>
-          <div>
-            <div className="font-semibold text-gray-800 text-sm">{advisor.name}</div>
-            <div className="text-xs text-gray-500">{advisor.role}</div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-gray-800 text-sm">
+              {session.staffId ? (
+                <StaffNameDisplay 
+                  staffId={session.staffId}
+                  fallbackName={session.staffName || session.title}
+                />
+              ) : (
+                session.staffName || session.title
+              )}
+            </div>
+            <div className="text-xs text-gray-500">Advisor</div>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -116,36 +125,46 @@ const MainChatBox: React.FC<MainChatBoxProps> = ({
 
       {/* Messages */}
       <div className="h-64 overflow-y-auto p-4 space-y-3 bg-gray-50">
-        {messages.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center text-gray-500">
+              <div className="text-sm">Loading messages...</div>
+            </div>
+          </div>
+        ) : messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center text-gray-500">
               <div className="text-3xl mb-2">💬</div>
-              <div className="text-xs font-medium">Start a conversation with {advisor.name}</div>
+              <div className="text-xs font-medium">Start a conversation with {session.staffName || session.title}</div>
               <div className="text-xs text-gray-400 mt-1">Send a message to begin chatting</div>
             </div>
           </div>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.senderId === 'student' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[85%] rounded-2xl px-3 py-2 text-xs ${
-                  message.senderId === 'student'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-white text-gray-800 border border-gray-200 shadow-sm'
-                }`}
-              >
-                <div className="leading-relaxed">{message.content}</div>
-                <div className={`text-xs mt-1 ${
-                  message.senderId === 'student' ? 'text-blue-200' : 'text-gray-500'
-                }`}>
-                  {message.timestamp}
-                </div>
-              </div>
-            </div>
-          ))
+                        messages.map((message) => {
+                // Determine if this is a student message (senderId = 18)
+                const isStudentMessage = message.senderId === 18; // Current user (student)
+                return (
+                  <div
+                    key={message.id}
+                    className={`flex ${isStudentMessage ? 'justify-start' : 'justify-end'}`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-3 py-2 text-xs ${
+                        isStudentMessage
+                          ? 'bg-white text-gray-800 border border-gray-200 shadow-sm'
+                          : 'bg-blue-600 text-white shadow-md'
+                      }`}
+                    >
+                      <div className="leading-relaxed">{message.content}</div>
+                      <div className={`text-xs mt-1 ${
+                        isStudentMessage ? 'text-gray-500' : 'text-blue-200'
+                      }`}>
+                        {formatTime(message.createdAt)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
         )}
       </div>
 
@@ -159,6 +178,7 @@ const MainChatBox: React.FC<MainChatBoxProps> = ({
             placeholder="Type a message..."
             size="small"
             className="flex-1 rounded-xl"
+            disabled={loading}
           />
           <Button
             type="primary"

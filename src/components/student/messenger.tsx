@@ -34,14 +34,14 @@ const Messenger: React.FC = () => {
       children: <AiAssistance handleAIClick={handleAIClick} />,
     },
     {
-      key: 'users',
+      key: 'advisor',
       label: (
         <div className="flex items-center gap-2">
           <UserOutlined />
           <span>Advisor</span>
         </div>
       ),
-      children: <AdvisorChatTab onChatBoxOpen={handleChatBoxOpen} drawerOpen={open} />,
+      children: <AdvisorChatTab onChatBoxOpen={handleChatBoxOpen} drawerOpen={open} onCloseDrawer={() => setOpen(false)} />,
     },
   ];
 

@@ -23,23 +23,12 @@ const EditLeaveScheduleModal: React.FC<EditLeaveScheduleModalProps> = ({ visible
 
   useEffect(() => {
     if (data && visible) {
-      console.log('=== EDIT MODAL DEBUG ===');
-      console.log('Raw data from API:', data);
-      console.log('Start DateTime (raw):', data.startDateTime);
-      console.log('End DateTime (raw):', data.endDateTime);
-      
-      // Parse UTC time correctly to match backend time
-      const startDate = dayjs.utc(data.startDateTime);
-      const endDate = dayjs.utc(data.endDateTime);
-      
-      console.log('Parsed start date (UTC):', startDate.format('YYYY-MM-DD HH:mm:ss'));
-      console.log('Parsed end date (UTC):', endDate.format('YYYY-MM-DD HH:mm:ss'));
-      console.log('Start hour:', startDate.hour());
-      console.log('End hour:', endDate.hour());
-      console.log('=== END DEBUG ===');
+      const startDate = dayjs(data.startDateTime);
+      const endDate = dayjs(data.endDateTime);
       
       form.setFieldsValue({
         range: [startDate, endDate],
+        reason: data.reason
       });
     } else if (!visible) {
       form.resetFields();
@@ -51,27 +40,19 @@ const EditLeaveScheduleModal: React.FC<EditLeaveScheduleModalProps> = ({ visible
       const values = await form.validateFields();
       if (!leaveId) return;
       
-      console.log('Form values:', values);
-      console.log('Range values:', values.range);
-      
-      // Submit UTC time to match backend format
-      const startDateTime = values.range[0].utc().format('YYYY-MM-DDTHH:mm:ss') + 'Z';
-      const endDateTime = values.range[1].utc().format('YYYY-MM-DDTHH:mm:ss') + 'Z';
-      
-      console.log('Sending to backend - Start (UTC):', startDateTime);
-      console.log('Sending to backend - End (UTC):', endDateTime);
+      const [startDateTime, endDateTime] = values.range;
       
       await updateLeave.mutateAsync({
         id: leaveId,
         data: {
-          startDateTime: startDateTime,
-          endDateTime: endDateTime,
+          startDateTime: startDateTime.utc().format('YYYY-MM-DDTHH:mm:ss') + 'Z',
+          endDateTime: endDateTime.utc().format('YYYY-MM-DDTHH:mm:ss') + 'Z',
+          reason: values.reason
         },
       });
       form.resetFields();
       onSuccess();
     } catch (err) {
-      console.error('Edit error:', err);
       // validation or API error
     }
   };
