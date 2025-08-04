@@ -146,7 +146,7 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       return null as never;
     }
   };
-  
+
 
 export const FetchSyllabusBySubjectVersion = async (subjectVersionId: number): Promise<Syllabus> => {
   const props = {

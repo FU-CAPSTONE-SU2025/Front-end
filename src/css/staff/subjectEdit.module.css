@@ -1,0 +1,44 @@
+.subjectContainer {
+  padding: 1rem;
+  width: 50vw;
+  margin: 0 auto;
+  margin: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  background-color: rgba(255, 255, 255, 0.85);
+}
+
+.subjectTitle {
+  color: #1E40AF;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.subjectForm {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.subjectFormInput {
+  border-radius: 8px;
+}
+
+.subjectFormTextArea {
+  border-radius: 8px;
+}
+
+.subjectFormActions {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.subjectFormButton {
+  border-radius: 999px;
+  height: 48px;
+  padding-left: 32px;
+  padding-right: 32px;
+  background: #1E40AF;
+  border: none;
+  font-weight: 600;
+} 

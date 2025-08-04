@@ -466,3 +466,920 @@
     justify-content: center;
   }
 } 
+
+/* Existing styles */
+.assessmentTable {
+  margin-top: 24px;
+}
+
+.assessmentModal {
+  max-width: 600px;
+}
+
+.assessmentForm {
+  margin-top: 16px;
+}
+
+.assessmentFormItem {
+  margin-bottom: 16px;
+}
+
+.assessmentFormInput {
+  border-radius: 8px;
+}
+
+.assessmentFormSelect {
+  border-radius: 8px;
+}
+
+.assessmentFormTextArea {
+  border-radius: 8px;
+}
+
+.assessmentFormButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.assessmentTableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.assessmentTableTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.assessmentTableActions {
+  display: flex;
+  gap: 8px;
+}
+
+.assessmentTableButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.assessmentTableButtonPrimary {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.assessmentTableButtonSecondary {
+  border-radius: 999px;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.assessmentTableButtonDanger {
+  background: #f97316;
+  border-color: #f97316;
+}
+
+.assessmentTableRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.assessmentTableCell {
+  word-break: break-word;
+}
+
+.assessmentTableCellFlex {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.assessmentTableCellColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.assessmentTableCellOutcome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.assessmentTableCellOutcomeItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.assessmentTableCellOutcomeEmpty {
+  color: #888;
+}
+
+.assessmentTableCellActions {
+  display: flex;
+  gap: 8px;
+}
+
+.assessmentTableCellActionsButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.assessmentTableCellActionsButtonEdit {
+  background: #f97316;
+  border-color: #f97316;
+}
+
+.assessmentTableCellActionsButtonSave {
+  border-radius: 999px;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.assessmentTableCellActionsButtonCancel {
+  border-radius: 999px;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.assessmentTableCellActionsButtonDelete {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.assessmentFormInputNumber {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.assessmentFormInputNumberSmall {
+  width: 120px;
+  border-radius: 8px;
+}
+
+.assessmentFormInputNumberMedium {
+  width: 140px;
+  border-radius: 8px;
+}
+
+/* Material Table Styles */
+.materialTable {
+  margin-top: 24px;
+}
+
+.materialTableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.materialTableTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.materialTableActions {
+  display: flex;
+  gap: 8px;
+}
+
+.materialTableButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.materialTableButtonPrimary {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.materialTableButtonSecondary {
+  border-radius: 999px;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.materialTableButtonDanger {
+  background: #f97316;
+  border-color: #f97316;
+}
+
+.materialTableRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.materialTableCell {
+  word-break: break-word;
+}
+
+.materialTableCellFlex {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.materialTableCellColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.materialTableCellOutcome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.materialTableCellOutcomeItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.materialTableCellOutcomeEmpty {
+  color: #888;
+}
+
+.materialTableCellActions {
+  display: flex;
+  gap: 8px;
+}
+
+.materialTableCellActionsButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.materialTableCellActionsButtonEdit {
+  background: #f97316;
+  border-color: #f97316;
+}
+
+.materialTableCellActionsButtonSave {
+  border-radius: 999px;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.materialTableCellActionsButtonCancel {
+  border-radius: 999px;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.materialTableCellActionsButtonDelete {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.materialTableCellEmpty {
+  color: #9CA3AF;
+  font-style: italic;
+}
+
+.materialFormInputNumber {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.materialFormDatePicker {
+  width: 100%;
+  border-radius: 8px;
+}
+
+/* Session Table Styles */
+.sessionTable {
+  margin-top: 24px;
+}
+
+.sessionTableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sessionTableTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.sessionTableActions {
+  display: flex;
+  gap: 8px;
+}
+
+.sessionTableButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.sessionTableButtonPrimary {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.sessionTableButtonSecondary {
+  border-radius: 999px;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.sessionTableButtonDanger {
+  background: #f97316;
+  border-color: #f97316;
+}
+
+.sessionTableRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sessionTableCell {
+  word-break: break-word;
+}
+
+.sessionTableCellFlex {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sessionTableCellColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sessionTableCellOutcome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sessionTableCellOutcomeItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sessionTableCellOutcomeEmpty {
+  color: #888;
+}
+
+.sessionTableCellActions {
+  display: flex;
+  gap: 8px;
+}
+
+.sessionTableCellActionsButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.sessionTableCellActionsButtonEdit {
+  background: #f97316;
+  border-color: #f97316;
+}
+
+.sessionTableCellActionsButtonSave {
+  border-radius: 999px;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.sessionTableCellActionsButtonCancel {
+  border-radius: 999px;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.sessionTableCellActionsButtonDelete {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.sessionFormInputNumber {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.sessionFormDatePicker {
+  width: 100%;
+  border-radius: 8px;
+}
+
+/* Common Form Styles */
+.formContainer {
+  padding: 1rem;
+}
+
+.formTitle {
+  color: #1E40AF;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.formWrapper {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.formInput {
+  border-radius: 8px;
+}
+
+.formSelect {
+  border-radius: 8px;
+}
+
+.formTextArea {
+  border-radius: 8px;
+}
+
+.formDatePicker {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.formInputNumber {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.formActions {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.formButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.formButtonPrimary {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.formButtonSecondary {
+  border-radius: 999px;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.formButtonDanger {
+  background: #f97316;
+  border-color: #f97316;
+}
+
+/* Loading States */
+.loadingContainer {
+  text-align: center;
+  margin-top: 48px;
+}
+
+.loadingSpinner {
+  width: 100%;
+  margin: 2rem 0;
+}
+
+/* Modal Styles */
+.modalFooter {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.modalHeaderLeft {
+  flex: 1;
+}
+
+.modalHeaderTitle {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.modalHeaderTitleText {
+  font-size: 16px;
+  color: #1890ff;
+}
+
+.modalHeaderSubtitle {
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.modalHeaderDescription {
+  font-size: 14px;
+}
+
+.modalHeaderStatus {
+  color: #52c41a;
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.modalBodyContent {
+  flex: 1;
+  overflow: hidden;
+  height: 350px;
+}
+
+.modalBodyScroll {
+  height: 100%;
+  overflow: auto;
+}
+
+.modalBodyEmpty {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.modalBodyEmptyText {
+  font-size: 12px;
+}
+
+.modalBodyLoading {
+  min-height: 300px;
+}
+
+.modalBodyLoadingText {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.modalSearch {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.modalSearchIcon {
+  color: #8c8c8c;
+}
+
+.modalSearchInput {
+  flex: 1;
+}
+
+.modalFilter {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.modalFilterIcon {
+  color: #8c8c8c;
+}
+
+.modalFilterSelect {
+  flex: 1;
+}
+
+.modalAddButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modalAddButtonIcon {
+  color: #1890ff;
+}
+
+.modalDropdown {
+  top: 20px;
+}
+
+/* Version Modal Styles */
+.versionModal {
+  max-width: 600px;
+}
+
+.versionForm {
+  margin-top: 16px;
+}
+
+.versionFormItem {
+  margin-bottom: 16px;
+}
+
+.versionFormInput {
+  border-radius: 8px;
+}
+
+.versionFormTextArea {
+  border-radius: 8px;
+}
+
+.versionFormDatePicker {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.versionFormButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Combo Edit Styles */
+.comboContainer {
+  padding: 1rem;
+}
+
+.comboTitle {
+  color: #1E40AF;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.comboForm {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.comboFormInput {
+  border-radius: 8px;
+}
+
+.comboFormTextArea {
+  border-radius: 8px;
+}
+
+.comboFormActions {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.comboFormButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.comboSubjects {
+  margin-top: 32px;
+}
+
+.comboSubjectsTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 16px;
+}
+
+.comboSubjectsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.comboSubjectsItem {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #475569;
+}
+
+.comboSubjectsAdd {
+  margin-top: 16px;
+}
+
+.comboSubjectsAddSelect {
+  width: 320px;
+  margin-right: 8px;
+}
+
+/* Program Edit Styles */
+.programContainer {
+  padding: 1rem;
+}
+
+.programTitle {
+  color: #1E40AF;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.programForm {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.programFormInput {
+  border-radius: 8px;
+}
+
+.programFormTextArea {
+  border-radius: 8px;
+}
+
+.programFormActions {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.programFormButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.programInfo {
+  margin-top: 32px;
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.programInfoTitle {
+  margin: 0;
+  color: #64748b;
+}
+
+.programInfoDescription {
+  margin: 8px 0 0 0;
+  color: #64748b;
+}
+
+/* Subject Edit Styles */
+.subjectContainer {
+  padding: 1rem;
+}
+
+.subjectTitle {
+  color: #1E40AF;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.subjectForm {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.subjectFormInput {
+  border-radius: 8px;
+}
+
+.subjectFormSelect {
+  border-radius: 8px;
+}
+
+.subjectFormTextArea {
+  border-radius: 8px;
+}
+
+.subjectFormDatePicker {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.subjectFormActions {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.subjectFormButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Outcome Table Styles */
+.outcomeTable {
+  margin-top: 24px;
+}
+
+.outcomeTableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.outcomeTableTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.outcomeTableActions {
+  display: flex;
+  gap: 8px;
+}
+
+.outcomeTableButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.outcomeTableButtonPrimary {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.outcomeTableButtonSecondary {
+  border-radius: 999px;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.outcomeTableButtonDanger {
+  background: #f97316;
+  border-color: #f97316;
+}
+
+.outcomeTableRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.outcomeTableCell {
+  word-break: break-word;
+}
+
+.outcomeTableCellFlex {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.outcomeTableCellColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.outcomeTableCellActions {
+  display: flex;
+  gap: 8px;
+}
+
+.outcomeTableCellActionsButton {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.outcomeTableCellActionsButtonEdit {
+  background: #f97316;
+  border-color: #f97316;
+}
+
+.outcomeTableCellActionsButtonSave {
+  border-radius: 999px;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.outcomeTableCellActionsButtonCancel {
+  border-radius: 999px;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.outcomeTableCellActionsButtonDelete {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.outcomeFormInput {
+  border-radius: 8px;
+}
+
+.outcomeFormTextArea {
+  border-radius: 8px;
+}
+
+.outcomeFormButton {
+  border-radius: 8px;
+  font-weight: 600;
+} 

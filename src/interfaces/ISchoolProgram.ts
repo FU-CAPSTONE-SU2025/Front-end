@@ -337,6 +337,7 @@ export interface SyllabusSession {
   sessionNumber: number;
   topic: string;
   mission: string;
+  learningOutcomeCodes:string[]
 }
 
 // Creation interfaces for syllabus-related objects

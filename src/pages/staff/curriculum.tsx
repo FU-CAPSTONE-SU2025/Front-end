@@ -1,17 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { Input, Button, Collapse, Typography, Affix, Pagination, Spin, Empty, Table, Tag, message } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined, ImportOutlined, BookOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined, EditOutlined, BookOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { useSearchParams, useNavigate } from 'react-router';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { Curriculum, SubjectVersionWithCurriculumInfo, CreateCurriculum } from '../../interfaces/ISchoolProgram';
-import { ErrorResponse, isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import {  getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import dayjs from 'dayjs';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 
-const { Panel } = Collapse;
 const { Title } = Typography;
 
 const CurriculumPage: React.FC = () => {

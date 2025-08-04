@@ -106,10 +106,6 @@ const SubjectPage: React.FC = () => {
     navigate(`/staff/editData/combo/${comboId}`);
   };
 
-  const handleCreateSyllabus = (subjectId: number) => {
-    navigate(`/staff/subject/${subjectId}/syllabus`);
-  };
-
   const handleViewVersion = (subjectId: number) => {
     navigate(`/staff/subject/${subjectId}/version`);
   };
