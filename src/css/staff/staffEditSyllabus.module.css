@@ -971,111 +971,189 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  padding: 8px 0;
+  min-height: auto;
 }
 
 .modalHeaderLeft {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .modalHeaderTitle {
   display: flex;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  gap: 6px;
 }
 
 .modalHeaderTitleText {
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 600;
   color: #1890ff;
+  line-height: 1.2;
 }
 
 .modalHeaderSubtitle {
-  margin-left: 8px;
-  font-size: 12px;
+  margin-left: 4px;
+  font-size: 11px;
+  color: #8c8c8c;
+  font-style: italic;
 }
 
 .modalHeaderDescription {
-  font-size: 14px;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.3;
+  margin-top: 2px;
 }
 
 .modalHeaderStatus {
   color: #52c41a;
+  font-size: 12px;
 }
 
 .modalBody {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 500px;
+  max-height: 600px;
+  overflow: hidden;
 }
 
 .modalBodyContent {
   flex: 1;
   overflow: hidden;
-  height: 350px;
+  padding: 0;
 }
 
 .modalBodyScroll {
-  height: 100%;
+  flex: 1;
   overflow: auto;
+  padding: 8px 0;
+  min-height: 300px;
 }
 
+.modalBodyScroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modalBodyScroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.modalBodyScroll::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.modalBodyScroll::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Compact search and filter controls */
+.modalSearch,
+.modalFilter {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.modalSearchIcon,
+.modalFilterIcon {
+  color: #8c8c8c;
+  font-size: 14px;
+}
+
+.modalSearchInput,
+.modalFilterSelect {
+  flex: 1;
+}
+
+.modalSearchInput .ant-input {
+  height: 32px;
+  font-size: 13px;
+}
+
+.modalFilterSelect .ant-select-selector {
+  height: 32px !important;
+  font-size: 13px;
+}
+
+.modalFilterSelect .ant-select-selection-item {
+  line-height: 30px !important;
+}
+
+/* Compact add button */
+.modalAddButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  height: 28px;
+  padding: 0 12px;
+}
+
+.modalAddButtonIcon {
+  color: #1890ff;
+  font-size: 12px;
+}
+
+/* Empty state styling */
 .modalBodyEmpty {
   text-align: center;
-  padding: 40px 20px;
+  padding: 20px;
 }
 
 .modalBodyEmptyText {
   font-size: 12px;
-}
-
-.modalBodyLoading {
-  min-height: 300px;
+  color: #8c8c8c;
 }
 
 .modalBodyLoadingText {
   text-align: center;
   padding: 8px 0;
-}
-
-.modalSearch {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.modalSearchIcon {
+  font-size: 12px;
   color: #8c8c8c;
 }
 
-.modalSearchInput {
-  flex: 1;
-}
-
-.modalFilter {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.modalFilterIcon {
+/* Load more option styling */
+.loadMoreOption {
+  text-align: center;
+  padding: 8px;
   color: #8c8c8c;
+  font-size: 12px;
+  font-style: italic;
 }
 
-.modalFilterSelect {
-  flex: 1;
+/* Compact styling for prerequisite modal list items */
+.modalBodyContent .ant-list-item {
+  padding: 8px 12px !important;
+  margin-bottom: 4px !important;
+  border-radius: 6px;
+  border: 1px solid #f0f0f0;
+  background: #fafafa;
+  transition: all 0.2s ease;
 }
 
-.modalAddButton {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modalAddButtonIcon {
-  color: #1890ff;
+.modalBodyContent .ant-list-item:hover {
+  background: #f5f5f5;
+  border-color: #d9d9d9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .modalDropdown {
   top: 20px;
+}
+
+.modalBodyLoading {
+  min-height: 300px;
 }
 
 /* Version Modal Styles */

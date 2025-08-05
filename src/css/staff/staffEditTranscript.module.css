@@ -155,8 +155,41 @@
 
 .sectionTitle {
   color: #1E40AF !important;
-  margin-bottom: 1.5rem !important;
+  margin: 0 !important;
   font-weight: 700 !important;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.addSubjectButton {
+  background: linear-gradient(135deg, #f97316 0%, #1E40AF 100%) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  height: 40px !important;
+  padding: 0 16px !important;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.addSubjectButton:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.4) !important;
+}
+
+.subjectVersionItem {
+  transition: all 0.3s ease !important;
+}
+
+.subjectVersionItem:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 .subjectCard {

@@ -167,8 +167,7 @@ export const getUserFriendlyErrorMessage = (error: any): string => {
 };
 
 const MAX_REFRESH_RETRIES = 3;
-let refresh_counter = 0;
-
+var current_retry = 0
 // Generic Axios request handler with retry logic
 export const makeRequest = async (
     method: Method,
@@ -198,17 +197,22 @@ export const makeRequest = async (
             console.error("Axios error:", error);
             //console.error("Axios error response:", error.response);
             const errorResponse: AxiosErrorResponse | undefined = error.response;
+            
             if (errorResponse && errorResponse.status === 401) {
                 console.error("Unauthorized access - possibly token expired or invalid");
-                if (refresh_counter < MAX_REFRESH_RETRIES) {
-                    //Attempting to refresh token and recall the previous API
-                    const refreshResult = await RefreshToken();
+                if (current_retry < MAX_REFRESH_RETRIES) {
+                    const refreshResult:boolean = await RefreshToken();
                     if (refreshResult) {
-                        refresh_counter += 1;
+                        console.log("New token accquired!")
+                        current_retry = 0;
+                    }else{
+                        current_retry += 1;
                         return await makeRequest(method, url, data);
                     }
-                }else{
-                    alert("Token Refresh Error. Check Log for more info.")
+                }
+                else{
+                    alert("Invalid Request or Token is expired. Please log in again")
+                    window.location.href = "/";
                 }
             }
             

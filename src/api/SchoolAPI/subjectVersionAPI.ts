@@ -146,10 +146,15 @@ export const FetchPagedSubjectVersionList = async (
     params.append("search", search);
   }
 
-  if (filterType && filterValue) {
+  // Handle subjectId filtering specifically
+  if (filterType === 'subjectId' && filterValue) {
+    params.append("subjectId", filterValue);
+  } else if (filterType && filterValue) {
+    // For other filter types, use the generic approach
     params.append("filterType", filterType);
     params.append("filterValue", filterValue);
   }
+  // If filterType and filterValue are undefined, don't append any filter parameters
   }
   const props = {
     data: null,

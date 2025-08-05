@@ -306,7 +306,6 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
             <Select
               placeholder="Select a program"
               className={styles.formSelect}
-              disabled={isEditMode} // Program shouldn't be changed after creation
               loading={programLoading}
               onPopupScroll={(e) => {
                 const { target } = e;

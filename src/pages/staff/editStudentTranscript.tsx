@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Card, Row, Col, Avatar, Typography, Tag, Input, Button, Modal, Progress } from 'antd';
-import { ArrowLeftOutlined, BookOutlined, UserOutlined, CalendarOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Avatar, Typography, Tag, Input, Button, Modal, Progress, List, message, Spin } from 'antd';
+import { ArrowLeftOutlined, BookOutlined, UserOutlined, CalendarOutlined, MailOutlined, PhoneOutlined, PlusOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffEditTranscript.module.css';
 import TranscriptEdit from '../../components/staff/transcriptEdit';
+import { FetchSubjectVersionsToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
+import { SubjectVersionWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -74,6 +76,13 @@ const EditStudentTranscript: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  
+  // Add Subject Modal states
+  const [isAddSubjectModalVisible, setIsAddSubjectModalVisible] = useState(false);
+  const [subjectVersions, setSubjectVersions] = useState<SubjectVersionWithCurriculumInfo[]>([]);
+  const [loadingSubjectVersions, setLoadingSubjectVersions] = useState(false);
+  const [searchSubjectVersion, setSearchSubjectVersion] = useState('');
+  const [selectedSubjectVersion, setSelectedSubjectVersion] = useState<SubjectVersionWithCurriculumInfo | null>(null);
 
   // Filter subjects based on search
   const filteredSubjects = subjects.filter(subject =>
@@ -95,6 +104,85 @@ const EditStudentTranscript: React.FC = () => {
     setIsModalVisible(false);
     setSelectedSubject(null);
   };
+
+  // Handle Add Subject button click
+  const handleAddSubjectClick = async () => {
+    setIsAddSubjectModalVisible(true);
+    setLoadingSubjectVersions(true);
+    
+    try {
+      // Fetch subject versions from curriculum (assuming curriculum ID = 1)
+      const curriculumId = 1; // Mock: all students are in curriculum ID = 1
+      const result = await FetchSubjectVersionsToCurriculum(curriculumId);
+      
+      if (result) {
+        setSubjectVersions(result);
+      } else {
+        message.error('Failed to fetch subject versions');
+      }
+    } catch (error) {
+      console.error('Error fetching subject versions:', error);
+      message.error('Failed to fetch subject versions');
+    } finally {
+      setLoadingSubjectVersions(false);
+    }
+  };
+
+  // Handle Add Subject modal close
+  const handleAddSubjectModalClose = () => {
+    setIsAddSubjectModalVisible(false);
+    setSearchSubjectVersion('');
+    setSelectedSubjectVersion(null);
+  };
+
+  // Handle subject version selection
+  const handleSubjectVersionSelect = (subjectVersion: SubjectVersionWithCurriculumInfo) => {
+    setSelectedSubjectVersion(subjectVersion);
+  };
+
+  // Handle adding student to subject version (mock function)
+  const handleAddStudentToSubjectVersion = async () => {
+    if (!selectedSubjectVersion) {
+      message.warning('Please select a subject version');
+      return;
+    }
+
+    try {
+      // Mock API call - in real implementation, this would call the backend
+      message.loading('Adding student to subject version...', 1);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock success response
+      const newSubject: Subject = {
+        id: Date.now(), // Generate unique ID
+        title: selectedSubjectVersion.subjectName,
+        code: selectedSubjectVersion.subjectCode,
+        credits: selectedSubjectVersion.credits,
+        description: selectedSubjectVersion.description || 'No description available',
+        progress: 0, // New subject starts with 0 progress
+        status: 'Current',
+        semester: selectedSubjectVersion.semesterNumber,
+      };
+
+      // Add to subjects list
+      setSubjects(prev => [...prev, newSubject]);
+      
+      message.success(`Successfully added ${selectedSubjectVersion.subjectName} to student's transcript`);
+      handleAddSubjectModalClose();
+    } catch (error) {
+      console.error('Error adding student to subject version:', error);
+      message.error('Failed to add student to subject version');
+    }
+  };
+
+  // Filter subject versions based on search
+  const filteredSubjectVersions = subjectVersions.filter(subjectVersion =>
+    subjectVersion.subjectName.toLowerCase().includes(searchSubjectVersion.toLowerCase()) ||
+    subjectVersion.subjectCode.toLowerCase().includes(searchSubjectVersion.toLowerCase()) ||
+    subjectVersion.versionName.toLowerCase().includes(searchSubjectVersion.toLowerCase())
+  );
 
   // Function to get progress bar color based on percentage
   const getProgressColor = (progress: number) => {
@@ -191,9 +279,19 @@ const EditStudentTranscript: React.FC = () => {
           >
             {/* Current Subjects Card */}
             <Card className={styles.subjectsCard} style={{ marginBottom: 24 }}>
-              <Title level={4} className={styles.sectionTitle}>
-                Current Studying Subjects
-              </Title>
+              <div className={styles.sectionHeader}>
+                <Title level={4} className={styles.sectionTitle}>
+                  Current Studying Subjects
+                </Title>
+                <Button 
+                  type="primary" 
+                  icon={<PlusOutlined />}
+                  onClick={handleAddSubjectClick}
+                  className={styles.addSubjectButton}
+                >
+                  Add Subject
+                </Button>
+              </div>
               <Row gutter={[16, 16]}>
                 {currentSubjects.map((subject, index) => (
                   <Col span={12} key={subject.id}>
@@ -306,6 +404,89 @@ const EditStudentTranscript: React.FC = () => {
             transcriptId={selectedSubject.id}
             subject={selectedSubject}
             onClose={handleModalClose}
+          />
+        )}
+      </Modal>
+
+      {/* Add Subject Modal */}
+      <Modal
+        open={isAddSubjectModalVisible}
+        onCancel={handleAddSubjectModalClose}
+        title="Add Subject to Student"
+        width="80%"
+        style={{ top: 20 }}
+        footer={[
+          <Button key="cancel" onClick={handleAddSubjectModalClose}>
+            Cancel
+          </Button>,
+          <Button 
+            key="add" 
+            type="primary" 
+            onClick={handleAddStudentToSubjectVersion}
+            disabled={!selectedSubjectVersion}
+          >
+            Add Subject
+          </Button>
+        ]}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Search
+            placeholder="Search subject versions..."
+            value={searchSubjectVersion}
+            onChange={(e) => setSearchSubjectVersion(e.target.value)}
+            style={{ width: '100%' }}
+          />
+        </div>
+
+        {loadingSubjectVersions ? (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <Spin size="large" />
+            <div style={{ marginTop: 16 }}>Loading subject versions...</div>
+          </div>
+        ) : (
+          <List
+            dataSource={filteredSubjectVersions}
+            renderItem={(subjectVersion) => (
+              <List.Item
+                className={styles.subjectVersionItem}
+                style={{
+                  cursor: 'pointer',
+                  backgroundColor: selectedSubjectVersion?.subjectVersionId === subjectVersion.subjectVersionId ? '#f0f9ff' : 'transparent',
+                  border: selectedSubjectVersion?.subjectVersionId === subjectVersion.subjectVersionId ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  marginBottom: '8px',
+                  padding: '16px'
+                }}
+                onClick={() => handleSubjectVersionSelect(subjectVersion)}
+              >
+                <div style={{ width: '100%' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div>
+                      <Text strong style={{ fontSize: '16px' }}>
+                        {subjectVersion.subjectName} ({subjectVersion.subjectCode})
+                      </Text>
+                      <br />
+                      <Text type="secondary">
+                        Version: {subjectVersion.versionName} ({subjectVersion.versionCode})
+                      </Text>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <Tag color="blue">{subjectVersion.credits} credits</Tag>
+                      <Tag color="green">Semester {subjectVersion.semesterNumber}</Tag>
+                      <Tag color={subjectVersion.isMandatory ? 'red' : 'orange'}>
+                        {subjectVersion.isMandatory ? 'Mandatory' : 'Optional'}
+                      </Tag>
+                    </div>
+                  </div>
+                  {subjectVersion.description && (
+                    <Text type="secondary" style={{ fontSize: '14px' }}>
+                      {subjectVersion.description}
+                    </Text>
+                  )}
+                </div>
+              </List.Item>
+            )}
+            locale={{ emptyText: 'No subject versions found in this curriculum.' }}
           />
         )}
       </Modal>

@@ -3,6 +3,9 @@ import { Modal, List, Button, Input, Select, Space, Typography, Spin, Empty } fr
 import { PlusOutlined, CheckOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { message } from 'antd';
+import { FetchSubjectList } from '../../api/SchoolAPI/subjectAPI';
+import { FetchPagedSubjectVersionList } from '../../api/SchoolAPI/subjectVersionAPI';
+import { Subject } from '../../interfaces/ISchoolProgram';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 
 const { Search } = Input;
@@ -38,13 +41,13 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
   const [addingId, setAddingId] = useState<number | null>(null);
   const [searchValue, setSearchValue] = useState('');
   const [subjectOptionsSearch, setSubjectOptionsSearch] = useState('');
-  const [subjectOptions, setSubjectOptions] = useState<{ id: number; subjectName: string; subjectCode: string }[]>([]);
+  const [subjectOptions, setSubjectOptions] = useState<Subject[]>([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | undefined>(undefined);
   const [subjectOptionsLoading, setSubjectOptionsLoading] = useState(false);
   const [subjectOptionsHasMore, setSubjectOptionsHasMore] = useState(true);
   const [subjectOptionsPage, setSubjectOptionsPage] = useState(1);
 
-  // Mock data for demonstration - replace with actual API calls
+  // Fetch subject options with real API
   const fetchSubjectOptions = async (reset = false, searchValue = subjectOptionsSearch) => {
     if (reset) {
       setSubjectOptionsPage(1);
@@ -55,30 +58,41 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
     
     setSubjectOptionsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      const mockData = [
-        { id: 1, subjectName: 'Computer Science', subjectCode: 'CS101' },
-        { id: 2, subjectName: 'Mathematics', subjectCode: 'MATH101' },
-        { id: 3, subjectName: 'Physics', subjectCode: 'PHY101' },
-        { id: 4, subjectName: 'Chemistry', subjectCode: 'CHEM101' },
-        { id: 5, subjectName: 'Biology', subjectCode: 'BIO101' },
-      ].filter(item => 
-        item.subjectName.toLowerCase().includes(searchValue.toLowerCase()) ||
-        item.subjectCode.toLowerCase().includes(searchValue.toLowerCase())
+    try {
+      const result = await FetchSubjectList(
+        reset ? 1 : subjectOptionsPage + 1,
+        10,
+        searchValue
       );
       
-      if (reset) {
-        setSubjectOptions(mockData);
-      } else {
-        setSubjectOptions(prev => [...prev, ...mockData]);
+      if (result) {
+        const newSubjects = result.items || [];
+        if (reset) {
+          setSubjectOptions(newSubjects);
+        } else {
+          setSubjectOptions(prev => {
+            const existingIds = new Set(prev.map(s => s.id));
+            const uniqueNewSubjects = newSubjects.filter(s => !existingIds.has(s.id));
+            return [...prev, ...uniqueNewSubjects];
+          });
+        }
+        
+        // Check if there are more pages
+        const totalPages = Math.ceil(result.totalCount / 10);
+        setSubjectOptionsHasMore((reset ? 1 : subjectOptionsPage + 1) < totalPages);
+        if (!reset) {
+          setSubjectOptionsPage(prev => prev + 1);
+        }
       }
-      
-      setSubjectOptionsHasMore(mockData.length === 5);
+    } catch (error) {
+      console.error('Failed to fetch subjects:', error);
+      message.error('Failed to load subjects');
+    } finally {
       setSubjectOptionsLoading(false);
-    }, 500);
+    }
   };
 
+  // Fetch subject versions with real API
   const fetchData = async (reset = false, customPage?: number) => {
     if (reset) {
       setPage(1);
@@ -89,34 +103,62 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
     
     setLoading(true);
     
-    // Simulate API call with search and filter
-    setTimeout(() => {
-      const mockData = [
-        { id: 1, subjectCode: 'CS101', versionCode: '1.0', subjectName: 'Introduction to Computer Science' },
-        { id: 2, subjectCode: 'CS101', versionCode: '2.0', subjectName: 'Introduction to Computer Science' },
-        { id: 3, subjectCode: 'MATH101', versionCode: '1.0', subjectName: 'Calculus I' },
-        { id: 4, subjectCode: 'PHY101', versionCode: '1.0', subjectName: 'Physics I' },
-        { id: 5, subjectCode: 'CHEM101', versionCode: '1.0', subjectName: 'Chemistry I' },
-      ].filter(item => {
-        const matchesSearch = searchValue === '' || 
-          item.subjectName.toLowerCase().includes(searchValue.toLowerCase()) ||
-          item.subjectCode.toLowerCase().includes(searchValue.toLowerCase());
-        
-        const matchesSubjectFilter = !selectedSubjectId || item.subjectCode === 
-          subjectOptions.find(s => s.id === selectedSubjectId)?.subjectCode;
-        
-        return matchesSearch && matchesSubjectFilter;
-      });
+    try {
+      // Build filter parameters
+      let filterType: string | undefined;
+      let filterValue: string | undefined;
       
-      if (reset) {
-        setData(mockData);
-      } else {
-        setData(prev => [...prev, ...mockData]);
+      if (selectedSubjectId && selectedSubjectId !== undefined) {
+        // Use subjectId for filtering instead of subjectCode
+        filterType = 'subjectId';
+        filterValue = selectedSubjectId.toString();
       }
+      // If selectedSubjectId is undefined (All Subjects), don't send any filter parameters
       
-      setHasMore(mockData.length === 5);
+      const pageNumber = reset ? 1 : customPage || page + 1;
+      
+      const result = await FetchPagedSubjectVersionList(
+        pageNumber,
+        10,
+        searchValue,
+        filterType,
+        filterValue
+      );
+      
+      if (result) {
+        const newVersions = result.items || [];
+        
+        const transformedData: SubjectVersionItem[] = newVersions.map(version => ({
+          id: version.id,
+          subjectCode: version.subject.subjectCode,
+          versionCode: version.versionCode,
+          subjectName: version.subject.subjectName
+        }));
+        
+        if (reset) {
+          setData(transformedData);
+        } else {
+          setData(prev => {
+            const existingIds = new Set(prev.map(v => v.id));
+            const uniqueNewVersions = transformedData.filter(v => !existingIds.has(v.id));
+            return [...prev, ...uniqueNewVersions];
+          });
+        }
+        
+        // Check if there are more pages
+        const totalPages = Math.ceil(result.totalCount / 10);
+        setHasMore(pageNumber < totalPages);
+        
+        if (!reset && !customPage) {
+          setPage(prev => prev + 1);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch subject versions:', error);
+      message.error('Failed to load subject versions');
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   useEffect(() => {
@@ -140,7 +182,10 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
 
   const handleSubjectDropdownSearch = (value: string) => {
     setSubjectOptionsSearch(value);
-    fetchSubjectOptions(true, value);
+    // Add a small delay to prevent too many API calls
+    setTimeout(() => {
+      fetchSubjectOptions(true, value);
+    }, 300);
   };
 
   const handleSubjectDropdownScroll = (e: React.UIEvent<HTMLDivElement, UIEvent>) => {
@@ -254,70 +299,77 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
     >
       <div className={styles.modalContent}>
         <div className={styles.modalBody}>
-          <Space direction="vertical" className={styles.modalBodyContent} size="middle">
-            <div className={styles.modalSearch}>
-              <SearchOutlined className={styles.modalSearchIcon} />
-              <Search
-                placeholder="Search subject versions..."
-                value={searchValue}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className={styles.modalSearchInput}
-              />
-            </div>
-            <div className={styles.modalFilter}>
-              <FilterOutlined className={styles.modalFilterIcon} />
-              <Select
-                placeholder="Filter by subject"
-                value={selectedSubjectId}
-                onChange={handleSubjectFilterChange}
-                className={styles.modalFilterSelect}
-                showSearch
-                filterOption={false}
-                onSearch={handleSubjectDropdownSearch}
-                onPopupScroll={handleSubjectDropdownScroll}
-                loading={subjectOptionsLoading}
-                notFoundContent={
-                  subjectOptionsLoading ? (
-                    <div className={styles.modalBodyLoadingText}>
-                      <Spin size="small" />
-                    </div>
-                  ) : (
-                    <div className={styles.modalBodyEmptyText}>
-                      No subjects found
-                    </div>
-                  )
-                }
-              >
-                {subjectOptions.map(subject => (
-                  <Option key={subject.id} value={subject.id}>
-                    {subject.subjectName} ({subject.subjectCode})
-                  </Option>
-                ))}
-              </Select>
-            </div>
-          </Space>
-          
-          <div className={styles.modalBodyContent}>
-            <div className={styles.modalBodyScroll} onScroll={handleSubjectVersionListScroll}>
-              {data.length > 0 ? (
-                <List
-                  dataSource={data}
-                  renderItem={renderItem}
-                  loading={loading}
-                  className={styles.modalBodyLoading}
-                />
-              ) : (
-                <div className={styles.modalBodyEmpty}>
-                  <Empty
-                    description={
-                      <Text type="secondary" className={styles.modalBodyEmptyText}>
-                        No subject versions found
-                      </Text>
-                    }
-                  />
-                </div>
+          <div className={styles.modalSearch}>
+            <SearchOutlined className={styles.modalSearchIcon} />
+            <Search
+              placeholder="Search subject versions..."
+              value={searchValue}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className={styles.modalSearchInput}
+            />
+          </div>
+          <div className={styles.modalFilter}>
+            <FilterOutlined className={styles.modalFilterIcon} />
+            <Select
+              placeholder={selectedSubjectId ? "Filter by subject" : "All subjects"}
+              value={selectedSubjectId}
+              onChange={handleSubjectFilterChange}
+              className={styles.modalFilterSelect}
+              showSearch
+              filterOption={false}
+              onSearch={handleSubjectDropdownSearch}
+              onPopupScroll={handleSubjectDropdownScroll}
+              loading={subjectOptionsLoading}
+              allowClear
+              notFoundContent={
+                subjectOptionsLoading ? (
+                  <div className={styles.modalBodyLoadingText}>
+                    <Spin size="small" />
+                  </div>
+                ) : (
+                  <div className={styles.modalBodyEmptyText}>
+                    No subjects found
+                  </div>
+                )
+              }
+            >
+              <Option key="all" value={undefined}>
+                All Subjects
+              </Option>
+              {subjectOptions.map(subject => (
+                <Option key={subject.id} value={subject.id}>
+                  {subject.subjectName} ({subject.subjectCode})
+                </Option>
+              ))}
+              {subjectOptionsHasMore && (
+                <Option key="load-more" value="load-more" disabled>
+                  <div className={styles.loadMoreOption}>
+                    {subjectOptionsLoading ? 'Loading...' : 'Scroll to load more'}
+                  </div>
+                </Option>
               )}
-            </div>
+            </Select>
+          </div>
+          
+          <div className={styles.modalBodyScroll} onScroll={handleSubjectVersionListScroll}>
+            {data.length > 0 ? (
+              <List
+                dataSource={data}
+                renderItem={renderItem}
+                loading={loading}
+                className={styles.modalBodyLoading}
+              />
+            ) : (
+              <div className={styles.modalBodyEmpty}>
+                <Empty
+                  description={
+                    <Text type="secondary" className={styles.modalBodyEmptyText}>
+                      No subject versions found
+                    </Text>
+                  }
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

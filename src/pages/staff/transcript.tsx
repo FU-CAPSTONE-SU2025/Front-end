@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Select, Button, Row, Col, ConfigProvider } from 'antd';
+import { Table, Input, Select, Button, Row, Col, ConfigProvider, message } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
+import useCRUDStudent from '../../hooks/useCRUDStudent';
+import { StudentBase } from '../../interfaces/IStudent';
 
 // Interfaces
 interface AccountProps {
@@ -16,60 +18,13 @@ interface StudentDataListResponse {
   careerGoal: string;
 }
 
-interface StudentBase extends AccountProps {
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  dateOfBirth: Date;
-  avatarUrl: string;
-  roleName: string;
-  status: number;
-  studentDataListResponse: StudentDataListResponse;
-}
-
 interface Program {
   id: number;
   programName: string;
   programCode: string;
 }
 
-// Mock data
-const mockStudents: StudentBase[] = [
-  {
-    id: 1,
-    username: 'john_doe',
-    email: 'john.doe@example.com',
-    firstName: 'John',
-    lastName: 'Doe',
-    dateOfBirth: new Date('2000-05-15'),
-    avatarUrl: '/img/avatar-placeholder.png',
-    roleName: 'Student',
-    status: 1,
-    studentDataListResponse: {
-      enrolledAt: new Date('2023-09-01'),
-      doGraduate: false,
-      careerGoal: 'Software Engineer',
-    },
-  },
-  {
-    id: 2,
-    username: 'jane_smith',
-    email: 'jane.smith@example.com',
-    firstName: 'Jane',
-    lastName: 'Smith',
-    dateOfBirth: new Date('1999-08-22'),
-    avatarUrl: '/img/avatar-placeholder.png',
-    roleName: 'Student',
-    status: 1,
-    studentDataListResponse: {
-      enrolledAt: new Date('2022-09-01'),
-      doGraduate: false,
-      careerGoal: 'Data Scientist',
-    },
-  },
-];
-
+// Mock programs data (this could be fetched from API later)
 const mockPrograms: Program[] = [
   { id: 1, programName: 'Computer Science', programCode: 'CS101' },
   { id: 2, programName: 'Artificial Intelligence', programCode: 'AI201' },
@@ -102,27 +57,65 @@ const tableVariants = {
 };
 
 const StaffTranscript: React.FC = () => {
-  const [students, setStudents] = useState<StudentBase[]>(mockStudents);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCampus, setSelectedCampus] = useState<number | null>(null);
+  const [selectedProgram, setSelectedProgram] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const navigate = useNavigate();
 
-  // Simulate fetching students
+  // Use the student CRUD hook
+  const { studentList, getAllStudent, pagination, isLoading } = useCRUDStudent();
+
+  // Load initial data
   useEffect(() => {
- 
-    setStudents(mockStudents);
-    // Replace with API call:
-    // fetch('/api/students').then(res => res.json()).then(setStudents);
+    loadStudentData();
   }, []);
 
-  // Filter students
-  const filteredStudents = students.filter((student) => {
-    const matchesSearch =
-      student.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.id.toString().includes(searchQuery);
-    const matchesCampus = selectedCampus ? student.id % 2 === selectedCampus % 2 : true;
-    return matchesSearch && matchesCampus;
+  // Load data when pagination or filters change
+  useEffect(() => {
+    loadStudentData();
+  }, [currentPage, pageSize, selectedProgram]);
+
+  const loadStudentData = () => {
+    getAllStudent({
+      pageNumber: currentPage,
+      pageSize: pageSize,
+      filterType: selectedProgram ? 'programId' : undefined,
+      filterValue: selectedProgram ? selectedProgram.toString() : undefined
+    });
+  };
+
+  // Handle search (client-side filtering)
+  const filteredStudents = studentList.filter((student) => {
+    if (!searchQuery) return true;
+    
+    return (
+      student.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.id?.toString().includes(searchQuery)
+    );
   });
+
+  // Handle pagination change
+  const handlePageChange = (page: number, size?: number) => {
+    setCurrentPage(page);
+    if (size) {
+      setPageSize(size);
+    }
+  };
+
+  // Handle program filter change
+  const handleProgramFilterChange = (value: number | null) => {
+    setSelectedProgram(value);
+    setCurrentPage(1); // Reset to first page when filter changes
+  };
+
+  // Handle search change
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    // Search is client-side, so we don't need to reload data
+  };
 
   // Handle edit action
   const handleEdit = (studentId: number) => {
@@ -131,14 +124,66 @@ const StaffTranscript: React.FC = () => {
 
   // Table columns
   const columns = [
-    { title: 'Email', dataIndex: 'email', key: 'email', align: 'left' as 'left', render: (text: string) => <span style={{ color: '#1E293B', fontWeight: 500 }}>{text}</span> },
-    { title: 'First Name', dataIndex: 'firstName', key: 'firstName', align: 'left' as 'left', render: (text: string) => <span style={{ color: '#1E293B' }}>{text}</span> },
-    { title: 'Last Name', dataIndex: 'lastName', key: 'lastName', align: 'left' as 'left', render: (text: string) => <span style={{ color: '#1E293B' }}>{text}</span> },
-    { title: 'Date of Birth', dataIndex: 'dateOfBirth', key: 'dateOfBirth', align: 'left' as 'left', render: (date: Date) => <span style={{ color: '#1E293B' }}>{new Date(date).toLocaleDateString('en-GB')}</span> },
-    { title: 'Enrolled At', key: 'enrolledAt', align: 'left' as 'left', render: (record: StudentBase) => <span style={{ color: '#1E293B' }}>{new Date(record.studentDataListResponse.enrolledAt).toLocaleDateString('en-GB')}</span> },
-    { title: 'Actions', key: 'actions', align: 'center' as 'center', render: (_: any, record: StudentBase) => (
-      <Button type="link" icon={<EditOutlined style={{ color: '#f97316' }} />} onClick={() => handleEdit(record.id)} title="Edit Student" className={styles.sttFreshEditButton} style={{ color: '#f97316' }} />
-    )},
+    { 
+      title: 'Email', 
+      dataIndex: 'email', 
+      key: 'email', 
+      align: 'left' as 'left', 
+      render: (text: string) => <span style={{ color: '#1E293B', fontWeight: 500 }}>{text}</span> 
+    },
+    { 
+      title: 'First Name', 
+      dataIndex: 'firstName', 
+      key: 'firstName', 
+      align: 'left' as 'left', 
+      render: (text: string) => <span style={{ color: '#1E293B' }}>{text}</span> 
+    },
+    { 
+      title: 'Last Name', 
+      dataIndex: 'lastName', 
+      key: 'lastName', 
+      align: 'left' as 'left', 
+      render: (text: string) => <span style={{ color: '#1E293B' }}>{text}</span> 
+    },
+    { 
+      title: 'Date of Birth', 
+      dataIndex: 'dateOfBirth', 
+      key: 'dateOfBirth', 
+      align: 'left' as 'left', 
+      render: (date: Date) => <span style={{ color: '#1E293B' }}>{date ? new Date(date).toLocaleDateString('en-GB') : '-'}</span> 
+    },
+    { 
+      title: 'Status', 
+      dataIndex: 'status', 
+      key: 'status', 
+      align: 'center' as 'center', 
+      render: (status: number) => (
+        <span style={{ 
+          color: status === 1 ? '#10b981' : '#ef4444',
+          fontWeight: 600,
+          padding: '4px 8px',
+          borderRadius: '4px',
+          backgroundColor: status === 1 ? '#dcfce7' : '#fee2e2'
+        }}>
+          {status === 1 ? 'Active' : 'Inactive'}
+        </span>
+      ) 
+    },
+    { 
+      title: 'Actions', 
+      key: 'actions', 
+      align: 'center' as 'center', 
+      render: (_: any, record: StudentBase) => (
+        <Button 
+          type="link" 
+          icon={<EditOutlined style={{ color: '#f97316' }} />} 
+          onClick={() => handleEdit(record.id)} 
+          title="Edit Student" 
+          className={styles.sttFreshEditButton} 
+          style={{ color: '#f97316' }} 
+        />
+      )
+    },
   ];
 
   return (
@@ -181,8 +226,6 @@ const StaffTranscript: React.FC = () => {
       }}
     >
       <div className={styles.sttContainer}>
-       
-
         <motion.div className={styles.sttHeader} variants={headerVariants} initial="hidden" animate="visible">
           <Row>
             <Col span={18}>
@@ -192,15 +235,15 @@ const StaffTranscript: React.FC = () => {
               <div className={styles.sttFilterWrapper}>
                 <div className={styles.sttFilterSection}>
                   <Input
-                    placeholder="Search by name or ID"
+                    placeholder="Search by name, email or ID"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     className={styles.sttFreshInput}
                     size="large"
                   />
                   <Select
-                    value={selectedCampus}
-                    onChange={(value) => setSelectedCampus(value)}
+                    value={selectedProgram}
+                    onChange={(value) => handleProgramFilterChange(value)}
                     placeholder="Filter by Program"
                     allowClear
                     className={styles.sttFreshSelect}
@@ -224,9 +267,19 @@ const StaffTranscript: React.FC = () => {
             dataSource={filteredStudents}
             rowKey="id"
             className={styles.sttFreshTable}
-            locale={{ emptyText: 'No records available.' }}
+            locale={{ emptyText: 'No students found.' }}
             scroll={{ x: 'max-content' }}
-            pagination={{ pageSize: 5 }}
+            loading={isLoading}
+            pagination={{
+              current: pagination?.current || 1,
+              pageSize: pagination?.pageSize || 10,
+              total: pagination?.total || 0,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) => `Showing ${range[0]}-${range[1]} of ${total} students`,
+              onChange: handlePageChange,
+              onShowSizeChange: handlePageChange,
+            }}
           />
         </motion.div>
       </div>
