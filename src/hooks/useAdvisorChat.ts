@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useAuths } from './useAuths';
 import { ChatMessage, PagedResult } from '../interfaces/IChat';
+import { SIGNALR_CONFIG, ConnectionState } from '../config/signalRConfig';
 
 export interface AdvisorSession {
   id: number;
@@ -13,21 +14,13 @@ export interface AdvisorSession {
   updatedAt: string;
   lastMessage?: string;
   lastMessageTime?: string;
-  lastMessageSenderId?: number; // Add senderId for last message
+  lastMessageSenderId?: number;
   unreadCount?: number;
   staffName?: string;
   staffAvatar?: string;
   isOnline?: boolean;
 }
 
-enum ConnectionState {
-  Disconnected = 'Disconnected',
-  Connecting = 'Connecting',
-  Connected = 'Connected',
-  Reconnecting = 'Reconnecting',
-}
-
-const ADVISORY_CHAT_HUB_URL = 'http://178.128.31.58:5000/advisoryChat1to1Hub';
 const INIT_SESSION_API_URL = 'http://178.128.31.58:5000/api/AdvisorySession1to1/human';
 
 export function useAdvisorChat() {
@@ -68,7 +61,7 @@ export function useAdvisorChat() {
     }
   }, [accessToken, studentId, getProfileIdFromToken]);
 
-  // Fetch sessions from server using ListAllSessionByStudent
+  // Fetch sessions from server using ListAllSessionByStudent for students
   const fetchSessions = useCallback(async () => {
     if (!connectionRef.current) {
       setError('Connection not available');
@@ -77,8 +70,7 @@ export function useAdvisorChat() {
     
     try {
       setLoading(true);
-      // Sửa tại đây: truyền PaginationRequest
-      await connectionRef.current.invoke('ListAllSessionByStudent', { pageNumber: 1, pageSize: 20 });
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_ALL_SESSIONS_BY_STUDENT, { pageNumber: 1, pageSize: 20 });
     } catch (err) {
       setError(`Failed to fetch sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
@@ -94,7 +86,7 @@ export function useAdvisorChat() {
     }
     
     try {
-      await connectionRef.current.invoke('LoadMoreMessages', sessionId, { pageNumber, pageSize: 20 });
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LOAD_MORE_MESSAGES, sessionId, { pageNumber, pageSize: 20 });
     } catch (err) {
       setError(`Failed to load more messages: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
@@ -108,9 +100,25 @@ export function useAdvisorChat() {
     }
     
     try {
-      await connectionRef.current.invoke('LoadMoreSessions', { pageNumber, pageSize: 20 });
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LOAD_MORE_SESSIONS, { pageNumber, pageSize: 20 });
     } catch (err) {
       setError(`Failed to load more sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  }, []);
+
+  // Load initial messages for a session
+  const loadInitialMessages = useCallback(async (sessionId: number) => {
+    if (!connectionRef.current) {
+      return;
+    }
+    
+    try {
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LOAD_MORE_MESSAGES, sessionId, { 
+        pageNumber: 1, 
+        pageSize: SIGNALR_CONFIG.MESSAGES.DEFAULT_PAGE_SIZE 
+      });
+    } catch (err) {
+      setError(`Failed to load initial messages: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }, []);
 
@@ -148,17 +156,20 @@ export function useAdvisorChat() {
     }
 
     try {
-      await connectionRef.current.invoke('JoinSession', sessionId);
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.JOIN_SESSION, sessionId);
       
       // Find and set current session
       const session = sessions.find(s => s.id === sessionId);
       if (session) {
         setCurrentSession(session);
       }
+
+      // Load initial messages after joining
+      await loadInitialMessages(sessionId);
     } catch (err) {
       throw new Error(`Failed to join session: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
-  }, [sessions]);
+  }, [sessions, loadInitialMessages]);
 
   // Send message
   const sendMessage = useCallback(async (content: string) => {
@@ -167,25 +178,23 @@ export function useAdvisorChat() {
     }
 
     try {
-      await connectionRef.current.invoke('SendMessage', currentSession.id, content);
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.SEND_MESSAGE, currentSession.id, content);
     } catch (err) {
       throw new Error(`Failed to send message: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }, [currentSession]);
-
-
 
   // Setup connection
   const setupConnection = useCallback(() => {
     if (!accessToken) return null;
 
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl(`${ADVISORY_CHAT_HUB_URL}?access_token=${encodeURIComponent(accessToken)}`, { 
-        transport: signalR.HttpTransportType.WebSockets,
-        skipNegotiation: false
+      .withUrl(SIGNALR_CONFIG.ADVISORY_CHAT_HUB_URL, { 
+        accessTokenFactory: () => accessToken,
+        transport: signalR.HttpTransportType.WebSockets
       })
-      .withAutomaticReconnect([0, 2000, 10000, 30000])
-      .configureLogging(signalR.LogLevel.Debug) // Changed to Debug for more details
+      .withAutomaticReconnect(SIGNALR_CONFIG.CONNECTION.RETRY_INTERVALS)
+      .configureLogging(signalR.LogLevel.Warning)
       .build();
 
     // Connection state handlers
@@ -206,19 +215,21 @@ export function useAdvisorChat() {
       }
     });
 
-    // Event listeners
+    // Event listeners - using exact backend method names from ChatSessionSettings
     
-    connection.on('GetSessionsHUBMethod', (data: PagedResult<AdvisorSession>) => {
+    connection.on(SIGNALR_CONFIG.HUB_METHODS.GET_SESSIONS_METHOD, (data: PagedResult<AdvisorSession>) => {
       if (!data || !data.items || !Array.isArray(data.items)) {
         setSessions([]);
         return;
       }
 
+      // For students, this will be the response from ListAllSessionByStudent
       setSessions(data.items);
       setDataFetched(true);
     });
 
-    connection.on('JoinSSMethod', (sessionMessages: PagedResult<ChatMessage>) => {
+    // Join session method - loads message history
+    connection.on(SIGNALR_CONFIG.HUB_METHODS.JOIN_SS_METHOD, (sessionMessages: PagedResult<ChatMessage>) => {
       if (!sessionMessages || !sessionMessages.items || !Array.isArray(sessionMessages.items)) {
         setMessages([]);
         return;
@@ -226,37 +237,8 @@ export function useAdvisorChat() {
       setMessages(sessionMessages.items);
     });
 
-    // Add handler for 'joingradvss' event that backend is sending
-    connection.on('joingradvss', (sessionMessages: PagedResult<ChatMessage>) => {
-      if (!sessionMessages || !sessionMessages.items || !Array.isArray(sessionMessages.items)) {
-        setMessages([]);
-        return;
-      }
-      setMessages(sessionMessages.items);
-    });
-
-    connection.on('SendADVSSMethod', (message: ChatMessage) => {
-      
-      if (!message || !message.content || !message.id) {
-        return;
-      }
-      
-      const currentSessionId = currentSession?.id;
-      
-      if (currentSessionId && message.advisorySession1to1Id === currentSessionId) {
-        setMessages(prev => {
-          const exists = prev.some(m => m.id === message.id);
-          if (!exists) {
-            return [...prev, message];
-          }
-          return prev;
-        });
-      }
-    });
-
-    // Add handler for 'sendadvss' event (lowercase) if backend sends it
-    connection.on('sendadvss', (message: ChatMessage) => {
-      
+    // Main message listener for real-time messages - using exact backend method name
+    connection.on(SIGNALR_CONFIG.HUB_METHODS.SEND_ADVSS_METHOD, (message: ChatMessage) => {
       if (!message || !message.content || !message.id) {
         return;
       }
@@ -273,26 +255,8 @@ export function useAdvisorChat() {
       }
     });
 
-    // Add handler for 'newmessage' event if backend sends it
-    connection.on('newmessage', (message: ChatMessage) => {
-      
-      if (!message || !message.content || !message.id) {
-        return;
-      }
-      
-      const currentSessionId = currentSession?.id;
-      if (currentSessionId && message.advisorySession1to1Id === currentSessionId) {
-        setMessages(prev => {
-          const exists = prev.some(m => m.id === message.id);
-          if (!exists) {
-            return [...prev, message];
-          }
-          return prev;
-        });
-      }
-    });
-
-    connection.on('LoadMoreMessagesMethod', (data: PagedResult<ChatMessage>) => {
+    // Load more messages for infinite scroll
+    connection.on(SIGNALR_CONFIG.HUB_METHODS.LOAD_MORE_MESSAGES_METHOD, (data: PagedResult<ChatMessage>) => {
       if (!data || !data.items || !Array.isArray(data.items)) {
         return;
       }
@@ -307,7 +271,7 @@ export function useAdvisorChat() {
     });
 
     // Handle session assignment events
-    connection.on('AddSessionAsAssigned', (session: AdvisorSession) => {
+    connection.on(SIGNALR_CONFIG.HUB_METHODS.ADD_SESSION_AS_ASSIGNED, (session: AdvisorSession) => {
       setSessions(prev => {
         const exists = prev.some(s => s.id === session.id);
         if (!exists) {
@@ -317,7 +281,7 @@ export function useAdvisorChat() {
       });
     });
 
-    connection.on('RemoveSessionFromUnassigned', (session: AdvisorSession) => {
+    connection.on(SIGNALR_CONFIG.HUB_METHODS.REMOVE_SESSION_FROM_UNASSIGNED, (session: AdvisorSession) => {
       setSessions(prev => prev.filter(s => s.id !== session.id));
     });
 
@@ -384,6 +348,7 @@ export function useAdvisorChat() {
     sendMessage,
     loadMoreMessages,
     loadMoreSessions,
+    loadInitialMessages,
     setCurrentSession,
     setError,
     setMessages,

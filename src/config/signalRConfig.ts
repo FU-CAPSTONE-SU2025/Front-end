@@ -1,28 +1,29 @@
 // SignalR Hub Configuration
 export const SIGNALR_CONFIG = {
-  // Hub URLs
-  ADVISORY_CHAT_HUB_URL: 'http://178.128.31.58:5000/advisoryChat1to1Hub',
+  // Hub URLs - use environment variables for consistency
+  ADVISORY_CHAT_HUB_URL: `${import.meta.env.VITE_API_AISEA_API_HUBURL}/advisoryChat1to1Hub`,
   NOTIFICATION_HUB_URL: `${import.meta.env.VITE_API_AISEA_API_HUBURL}/notificationHub`,
   
-  // Hub method names from backend configuration
+  // Hub method names from backend configuration - matching ChatSessionSettings
   HUB_METHODS: {
-    // Advisory Chat Methods
+    // Advisory Chat Methods - exact names from backend
     SEND_MESSAGE: 'SendMessage',
     JOIN_SESSION: 'JoinSession',
     LIST_SESSIONS_BY_STAFF: 'ListAllSessionByStaff',
     LIST_OPENED_SESSIONS: 'ListOpenedSession',
+    LIST_ALL_ASSIGNED_SESSIONS: 'ListAllAssignedSessions',
+    LIST_ALL_SESSIONS_BY_STUDENT: 'ListAllSessionByStudent', 
     LOAD_MORE_MESSAGES: 'LoadMoreMessages',
     LOAD_MORE_SESSIONS: 'LoadMoreSessions',
     GET_SESSIONS_METHOD: 'GetSessionsHUBMethod',
     SEND_ADVSS_METHOD: 'SendADVSSMethod',
     JOIN_SS_METHOD: 'JoinSSMethod',
-    SESSION_CREATED: 'SessionCreated',
+    SESSION_CREATED: 'SessionCreatedMethod',
     SESSION_DELETED: 'SessionDeletedMethod',
     ADD_SESSION_AS_ASSIGNED: 'AddSessionAsAssigned',
     REMOVE_SESSION_FROM_UNASSIGNED: 'RemoveSessionFromUnassigned',
     LOAD_MORE_MESSAGES_METHOD: 'LoadMoreMessagesMethod',
     ASSIGN_ADVISOR_TO_SESSION: 'AssignAdvisorToSession',
-    LIST_ALL_ASSIGNED_SESSIONS: 'ListAllAssignedSessions',
     
     // Notification Methods
     GET_NOTIFICATIONS: 'GetNotifications',
@@ -36,12 +37,12 @@ export const SIGNALR_CONFIG = {
   CONNECTION: {
     RETRY_INTERVALS: [0, 2000, 10000, 30000],
     LOG_LEVEL: 'Warning',
-    TRANSPORT_TYPE: 'WebSockets', // Changed from LongPolling to WebSockets
+    TRANSPORT_TYPE: 'WebSockets',
     MAX_RETRIES: 3,
     RETRY_DELAY: 1000,
   },
   
-  // Session settings
+  // Session settings - matching ChatSessionSettings
   SESSION: {
     CACHE_PREFIX: 'SenderAdviSession:',
     CACHE_EXPIRY_DAYS: 1,
@@ -49,7 +50,7 @@ export const SIGNALR_CONFIG = {
     INTERVAL_MILLIS: 1800000,
   },
   
-  // Group prefixes
+  // Group prefixes - matching ChatSessionSettings
   GROUPS: {
     CHAT_PREFIX: 'GroupChatADVssPrefix',
     STAFF_PREFIX: 'MulDataSessionsPrefixStaff',
