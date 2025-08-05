@@ -1,6 +1,8 @@
  import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import {BulkAccountPropsCreate, AccountProps, AccountPropsCreate, ActiveAccountProps, UpdateAccountProps, UpdateAvatarProps } from "../../interfaces/IAccount";
+import { PagedData } from "../../interfaces/ISchoolProgram";
+import { StudentBase } from "../../interfaces/IStudent";
 
 
 
@@ -14,6 +16,22 @@ export const GetActiveUser = async ():Promise<ActiveAccountProps|null> => {
     const result = await axiosRead(props)
     if (result.success) {
     
+        return result.data
+    }
+    else {
+        console.log(result.error)
+        throwApiError(result);
+        return null
+    }
+}
+// This is for Staff and Manager
+export const GetPagedActiveStudent = async (pageNumber:number,pageSize:number):Promise<PagedData<StudentBase>> => {
+    const props = {
+        data: null,
+        url: userURL+`/students/active/paged?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+    }
+    const result = await axiosRead(props)
+    if (result.success) {
         return result.data
     }
     else {

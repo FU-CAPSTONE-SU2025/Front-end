@@ -4,7 +4,7 @@ import { EditOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
-import useCRUDStudent from '../../hooks/useCRUDStudent';
+import { GetPagedActiveStudent } from '../../api/Account/UserAPI';
 import { StudentBase } from '../../interfaces/IStudent';
 
 // Interfaces
@@ -61,10 +61,10 @@ const StaffTranscript: React.FC = () => {
   const [selectedProgram, setSelectedProgram] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [studentList, setStudentList] = useState<StudentBase[]>([]);
+  const [pagination, setPagination] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
-  // Use the student CRUD hook
-  const { studentList, getAllStudent, pagination, isLoading } = useCRUDStudent();
 
   // Load initial data
   useEffect(() => {
@@ -76,13 +76,28 @@ const StaffTranscript: React.FC = () => {
     loadStudentData();
   }, [currentPage, pageSize, selectedProgram]);
 
-  const loadStudentData = () => {
-    getAllStudent({
-      pageNumber: currentPage,
-      pageSize: pageSize,
-      filterType: selectedProgram ? 'programId' : undefined,
-      filterValue: selectedProgram ? selectedProgram.toString() : undefined
-    });
+  const loadStudentData = async () => {
+    setIsLoading(true);
+    try {
+      const result = await GetPagedActiveStudent(currentPage, pageSize);
+      
+      if (result) {
+        setStudentList(result.items || []);
+        setPagination({
+          current: result.pageNumber,
+          pageSize: result.pageSize,
+          total: result.totalCount,
+          totalPages: Math.ceil(result.totalCount / result.pageSize)
+        });
+      } else {
+        message.error('Failed to fetch students');
+      }
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      message.error('Failed to fetch students');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle search (client-side filtering)
@@ -161,9 +176,14 @@ const StaffTranscript: React.FC = () => {
         <span style={{ 
           color: status === 1 ? '#10b981' : '#ef4444',
           fontWeight: 600,
-          padding: '4px 8px',
-          borderRadius: '4px',
-          backgroundColor: status === 1 ? '#dcfce7' : '#fee2e2'
+          padding: '4px 12px',
+          borderRadius: '8px',
+          backgroundColor: status === 1 ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+          border: `1.5px solid ${status === 1 ? '#10b981' : '#ef4444'}`,
+          fontSize: '13px',
+          minWidth: 70,
+          display: 'inline-block',
+          textAlign: 'center',
         }}>
           {status === 1 ? 'Active' : 'Inactive'}
         </span>
@@ -186,18 +206,22 @@ const StaffTranscript: React.FC = () => {
     },
   ];
 
+  // Custom row and table styling for Syllabus look
+  const tableClassName = styles.syllabusTable;
+  const rowClassName = () => styles.syllabusTableRow;
+
   return (
     <ConfigProvider
       theme={{
         components: {
           Table: {
-            headerBg: 'linear-gradient(90deg, #f97316 0%, #1E40AF 100%)',
+            headerBg: '#1E40AF',
             headerColor: '#fff',
             borderColor: 'rgba(30, 64, 175, 0.08)',
             colorText: '#1E293B',
-            colorBgContainer: 'rgba(255,255,255,0.8)',
-            colorBgElevated: 'rgba(255,255,255,0.8)',
-            rowHoverBg: 'rgba(30, 64, 175, 0.08)',
+            colorBgContainer: 'rgba(255,255,255,0.95)',
+            colorBgElevated: 'rgba(255,255,255,0.95)',
+            rowHoverBg: 'rgba(249, 115, 22, 0.05)',
             colorPrimary: '#f97316',
             colorPrimaryHover: '#1E40AF',
           },
@@ -266,7 +290,8 @@ const StaffTranscript: React.FC = () => {
             columns={columns}
             dataSource={filteredStudents}
             rowKey="id"
-            className={styles.sttFreshTable}
+            className={tableClassName}
+            rowClassName={rowClassName}
             locale={{ emptyText: 'No students found.' }}
             scroll={{ x: 'max-content' }}
             loading={isLoading}
