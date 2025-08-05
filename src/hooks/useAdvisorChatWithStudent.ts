@@ -249,7 +249,8 @@ export function useAdvisorChatWithStudent() {
     if (!accessToken) return null;
 
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl(`${SIGNALR_CONFIG.ADVISORY_CHAT_HUB_URL}?access_token=${encodeURIComponent(accessToken)}`, { 
+      .withUrl(SIGNALR_CONFIG.ADVISORY_CHAT_HUB_URL, { 
+        accessTokenFactory: () => accessToken,
         transport: signalR.HttpTransportType.WebSockets
       })
       .withAutomaticReconnect(SIGNALR_CONFIG.CONNECTION.RETRY_INTERVALS)
@@ -275,7 +276,7 @@ export function useAdvisorChatWithStudent() {
       }
     });
 
-    // Event listeners for advisor chat
+    // Event listeners for advisor chat - using exact backend method names
     connection.on(SIGNALR_CONFIG.HUB_METHODS.GET_SESSIONS_METHOD, (data: PagedResult<StudentSession>) => {
       if (!data || !data.items || !Array.isArray(data.items)) {
         setSessions([]);
@@ -310,7 +311,6 @@ export function useAdvisorChatWithStudent() {
       
       // Handle LoadMoreSessions response (append to existing sessions)
       if (data.totalCount > 0 && data.items.length > 0) {
-        
         if (data.pageNumber > 1) {
           if (lastFetchType === 'assigned') {
             setSessions(prev => {
@@ -331,7 +331,6 @@ export function useAdvisorChatWithStudent() {
               const newSessions = data.items.filter(s => !existingIds.has(s.id));
               return [...prev, ...newSessions];
             });
-    
           } else {
             // Fallback: try to filter based on staffId
             const currentAdvisorId = getProfileIdFromToken();
@@ -359,13 +358,11 @@ export function useAdvisorChatWithStudent() {
               });
             }
           }
-        } else {
         }
-      } else {
       }
     });
 
-    // Real-time session update events
+    // Real-time session update events - using exact backend method names
     connection.on(SIGNALR_CONFIG.HUB_METHODS.ADD_SESSION_AS_ASSIGNED, (session: StudentSession) => {
       setSessions(prev => {
         const existingSession = prev.find(s => s.id === session.id);
@@ -404,101 +401,99 @@ export function useAdvisorChatWithStudent() {
       setAllAssignedSessions(prev => prev.filter(s => s.id !== sessionId));
     });
 
+    // Main message listener for real-time messages - using exact backend method name
     connection.on(SIGNALR_CONFIG.HUB_METHODS.SEND_ADVSS_METHOD, (message: ChatMessage) => {
-      
       if (!message || !message.content || !message.id) {
         return;
       }
       
-        if (message.senderId !== 999 && advisorId === null) {
+      // Set advisorId if not set - important for staff to identify themselves
+      if (message.senderId !== 999 && advisorId === null) {
         const profileId = getProfileIdFromToken();
         if (profileId) {
           setAdvisorId(profileId);
         } else {
           setAdvisorId(message.senderId);
         }
-        }
-        
+      }
+      
+      // Add message to current session if it matches
       const currentSessionId = currentSession?.id;
-        if (currentSessionId && message.advisorySession1to1Id === currentSessionId) {
-          setMessages(prev => {
-            const exists = prev.some(m => m.id === message.id);
-            if (!exists) {
-              const filteredPrev = prev.filter(m => m.senderId !== 999 || m.content !== message.content);
-              return [...filteredPrev, message];
-            }
-            return prev;
-          });
-        }
+      if (currentSessionId && message.advisorySession1to1Id === currentSessionId) {
+        setMessages(prev => {
+          const exists = prev.some(m => m.id === message.id);
+          if (!exists) {
+            // Filter out duplicate messages from AI (senderId 999)
+            const filteredPrev = prev.filter(m => m.senderId !== 999 || m.content !== message.content);
+            return [...filteredPrev, message];
+          }
+          return prev;
+        });
+      }
     });
 
+    // Join session method - loads message history
     connection.on(SIGNALR_CONFIG.HUB_METHODS.JOIN_SS_METHOD, (sessionMessages: PagedResult<ChatMessage>) => {
-      
       if (!sessionMessages || !sessionMessages.items || !Array.isArray(sessionMessages.items)) {
         setMessages([]);
         return;
       }
       
+      // Clear messages first, then set new ones to avoid duplicates
       setMessages([]);
       setTimeout(() => {
         setMessages(sessionMessages.items);
       }, 100);
     });
 
-    // Listen for messages sent by students
-    connection.on('ReceiveMessage', (message: ChatMessage) => {
-      if (!message || !message.content || !message.id) {
+    // Alternative method names that backend might send for join session
+    connection.on('JoinSSMethod', (sessionMessages: PagedResult<ChatMessage>) => {
+      if (!sessionMessages || !sessionMessages.items || !Array.isArray(sessionMessages.items)) {
+        setMessages([]);
         return;
       }
-      
-      const currentSessionId = currentSession?.id;
-      if (currentSessionId && message.advisorySession1to1Id === currentSessionId) {
-        setMessages(prev => {
-          const exists = prev.some(m => m.id === message.id);
-          if (!exists) {
-            return [...prev, message];
-          }
-          return prev;
-        });
-      }
+      setMessages(sessionMessages.items);
     });
 
-    connection.on('MessageReceived', (message: ChatMessage) => {
-      if (!message || !message.content || !message.id) {
+    connection.on('joingradvss', (sessionMessages: PagedResult<ChatMessage>) => {
+      if (!sessionMessages || !sessionMessages.items || !Array.isArray(sessionMessages.items)) {
+        setMessages([]);
         return;
       }
-      
-      const currentSessionId = currentSession?.id;
-      if (currentSessionId && message.advisorySession1to1Id === currentSessionId) {
-        setMessages(prev => {
-          const exists = prev.some(m => m.id === message.id);
-          if (!exists) {
-            return [...prev, message];
-          }
-          return prev;
-        });
-      }
+      setMessages(sessionMessages.items);
     });
 
-    connection.on('NewMessage', (message: ChatMessage) => {
-      if (!message || !message.content || !message.id) {
-        return;
-      }
-      
-      const currentSessionId = currentSession?.id;
-      if (currentSessionId && message.advisorySession1to1Id === currentSessionId) {
-        setMessages(prev => {
-          const exists = prev.some(m => m.id === message.id);
-          if (!exists) {
-            return [...prev, message];
-          }
-          return prev;
-        });
-      }
-    });
-
+    // Load more messages for infinite scroll
     connection.on(SIGNALR_CONFIG.HUB_METHODS.LOAD_MORE_MESSAGES_METHOD, (data: PagedResult<ChatMessage>) => {
+      if (!data || !data.items || !Array.isArray(data.items)) {
+        return;
+      }
       
+      if (currentSession) {
+        setMessages(prev => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const newMessages = data.items.filter(m => !existingIds.has(m.id));
+          return [...prev, ...newMessages];
+        });
+      }
+    });
+
+    // Alternative method names for loading messages
+    connection.on('LoadMoreMessagesMethod', (data: PagedResult<ChatMessage>) => {
+      if (!data || !data.items || !Array.isArray(data.items)) {
+        return;
+      }
+      
+      if (currentSession) {
+        setMessages(prev => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const newMessages = data.items.filter(m => !existingIds.has(m.id));
+          return [...prev, ...newMessages];
+        });
+      }
+    });
+
+    connection.on('loadmoremessages', (data: PagedResult<ChatMessage>) => {
       if (!data || !data.items || !Array.isArray(data.items)) {
         return;
       }
@@ -524,7 +519,7 @@ export function useAdvisorChatWithStudent() {
         pageNumber, 
         pageSize: SIGNALR_CONFIG.MESSAGES.DEFAULT_PAGE_SIZE 
       });
-      } catch (err) {
+    } catch (err) {
       setError(`Failed to load more messages: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }, [currentSession]);
@@ -537,10 +532,10 @@ export function useAdvisorChatWithStudent() {
     
     try {
       await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LOAD_MORE_MESSAGES, sessionId, { 
-          pageNumber: 1, 
+        pageNumber: 1, 
         pageSize: SIGNALR_CONFIG.MESSAGES.DEFAULT_PAGE_SIZE 
-        });
-      } catch (err) {
+      });
+    } catch (err) {
       setError(`Failed to load initial messages: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }, []);
@@ -597,7 +592,11 @@ export function useAdvisorChatWithStudent() {
             continue;
           }
           
+          // Join the session first
           await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.JOIN_SESSION, sessionId);
+          
+          // Wait a bit for the join response
+          await new Promise(resolve => setTimeout(resolve, 500));
           
           // Load initial messages after joining
           await loadInitialMessages(sessionId);
@@ -606,7 +605,7 @@ export function useAdvisorChatWithStudent() {
           retryCount++;
           
           if (retryCount >= maxRetries) {
-          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
             if (errorMessage.includes('Forbidden') || errorMessage.includes('insufficient role permission')) {
               // Handle permission error for unassigned session
             }
@@ -649,7 +648,7 @@ export function useAdvisorChatWithStudent() {
         
         await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.SEND_MESSAGE, currentSession.id, content);
         return;
-    } catch (err) {
+      } catch (err) {
         retryCount++;
         
         if (retryCount >= maxRetries) {

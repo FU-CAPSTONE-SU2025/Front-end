@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router';
 import { Menu } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffNavBar.module.css';
+import Notification from '../../components/common/Notification';
 
 // Interface for navigation items
 interface NavItem {
@@ -96,6 +97,9 @@ const StaffNavBar: React.FC = () => {
         <div className={styles.header}>
           <div className={styles.logo}>
             <img src="/img/Logo.svg" alt="App Logo" />
+          </div>
+          <div className={styles.notificationContainer}>
+            <Notification variant="staff" />
           </div>
           <nav className={styles.nav}>
             {navItems.map((item, index) => (
