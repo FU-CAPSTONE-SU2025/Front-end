@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Select, DatePicker, Button, message, Space, Typography, Spin, Card, Table, Checkbox, Modal } from 'antd';
 import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Curriculum, SubjectVersion, SubjectVersionWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
-import { programs } from '../../data/schoolData';
+import { Curriculum, SubjectVersion, SubjectVersionWithCurriculumInfo, Program } from '../../interfaces/ISchoolProgram';
 import dayjs from 'dayjs';
 import {useCRUDCurriculum, useCRUDSubjectVersion} from '../../hooks/useCRUDSchoolMaterial';
 import { AddSubjectVersionToCurriculum, RemoveSubjectVersionFromCurriculum } from '../../api/SchoolAPI/curriculumAPI';
+import { FetchProgramList } from '../../api/SchoolAPI/programAPI';
 import styles from '../../css/staff/curriculumEdit.module.css';
 
 const { Title } = Typography;
@@ -32,6 +32,13 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
 
   const [loading, setLoading] = useState(false);
 
+  // Program management state
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [programPage, setProgramPage] = useState(1);
+  const [programPageSize] = useState(10);
+  const [hasMorePrograms, setHasMorePrograms] = useState(true);
+  const [programLoading, setProgramLoading] = useState(false);
+
   // Subject version management state
   const [allSubjectVersions, setAllSubjectVersions] = useState<SubjectVersion[]>([]);
   const [curriculumSubjectVersions, setCurriculumSubjectVersions] = useState<SubjectVersionWithCurriculumInfo[]>([]);
@@ -43,6 +50,49 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
   const [subjectVersionPage, setSubjectVersionPage] = useState(1);
   const [subjectVersionPageSize] = useState(10);
   const [hasMoreSubjectVersions, setHasMoreSubjectVersions] = useState(true);
+
+  // Fetch programs on mount
+  useEffect(() => {
+    fetchPrograms();
+  }, []);
+
+  // Fetch programs function
+  const fetchPrograms = async (page: number = 1) => {
+    setProgramLoading(true);
+    try {
+      const result = await FetchProgramList(page, programPageSize);
+      if (result) {
+        const newPrograms = result.items || [];
+        if (page === 1) {
+          setPrograms(newPrograms);
+        } else {
+          setPrograms(prev => {
+            const existingIds = new Set(prev.map(p => p.id));
+            const uniqueNewPrograms = newPrograms.filter(p => !existingIds.has(p.id));
+            return [...prev, ...uniqueNewPrograms];
+          });
+        }
+        
+        // Check if there are more pages
+        const totalPages = Math.ceil(result.totalCount / programPageSize);
+        setHasMorePrograms(page < totalPages);
+      }
+    } catch (error) {
+      console.error('Failed to fetch programs:', error);
+      message.error('Failed to load programs');
+    } finally {
+      setProgramLoading(false);
+    }
+  };
+
+  // Load more programs
+  const loadMorePrograms = () => {
+    if (hasMorePrograms && !programLoading) {
+      const nextPage = programPage + 1;
+      setProgramPage(nextPage);
+      fetchPrograms(nextPage);
+    }
+  };
 
   // Fetch curriculum by ID on mount (edit mode)
   useEffect(() => {
@@ -127,7 +177,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
       const curriculumData: Partial<Curriculum> = {
         ...values,
         effectiveDate: values.effectiveDate.toDate(),
-        programId: 2 // FOR NOW
+        programId: values.programId
       };
 
       if (isCreateMode) {
@@ -257,12 +307,38 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
               placeholder="Select a program"
               className={styles.formSelect}
               disabled={isEditMode} // Program shouldn't be changed after creation
+              loading={programLoading}
+              onPopupScroll={(e) => {
+                const { target } = e;
+                const { scrollTop, scrollHeight, clientHeight } = target as HTMLElement;
+                if (scrollTop + clientHeight >= scrollHeight - 5) {
+                  loadMorePrograms();
+                }
+              }}
+              notFoundContent={
+                programLoading ? (
+                  <div className={styles.notFoundContentLoading}>
+                    <Spin size="small" />
+                  </div>
+                ) : (
+                  <div className={styles.notFoundContentEmpty}>
+                    No programs found
+                  </div>
+                )
+              }
             >
               {programs.map(program => (
                 <Option key={program.id} value={program.id}>
                   {program.programName} ({program.programCode})
                 </Option>
               ))}
+              {hasMorePrograms && (
+                <Option key="load-more" value="load-more" disabled>
+                  <div className={styles.loadMoreOption}>
+                    {programLoading ? 'Loading...' : 'Scroll to load more'}
+                  </div>
+                </Option>
+              )}
             </Select>
           </Form.Item>
 
@@ -321,163 +397,165 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
         </Form>
       </Card>
 
-      {/* Subject Versions Management Card */}
-      <Card
-      rootClassName={styles.subjectsCardContainer} 
-        title={
-          <div className={styles.cardTitle}>
-            📚 Manage Subject Versions in Curriculum
-          </div>
-        } 
-        className={styles.subjectsCard}
-        classNames={{
-          header: styles.cardHeader,
-          body: styles.cardBody
-        }}
-      >
-        <div className={styles.addSubjectControls}>
-          <Space wrap>
-            <Select
-              showSearch
-              className={styles.subjectSelect}
-              placeholder="Select subject version"
-              value={addForm.subjectVersionId}
-              onChange={v => setAddForm(f => ({ ...f, subjectVersionId: v }))}
-              optionFilterProp="label"
-              filterOption={(input, option) => {
-                const label = option?.label || '';
-                return label.toString().toLowerCase().includes(input.toLowerCase());
-              }}
-              onPopupScroll={(e) => {
-                const { target } = e;
-                const { scrollTop, scrollHeight, clientHeight } = target as HTMLElement;
-                if (scrollTop + clientHeight >= scrollHeight - 5) {
-                  loadMoreSubjectVersions();
+      {/* Subject Versions Management Card - Only show in edit mode */}
+      {isEditMode && (
+        <Card
+        rootClassName={styles.subjectsCardContainer} 
+          title={
+            <div className={styles.cardTitle}>
+              📚 Manage Subject Versions in Curriculum
+            </div>
+          } 
+          className={styles.subjectsCard}
+          classNames={{
+            header: styles.cardHeader,
+            body: styles.cardBody
+          }}
+        >
+          <div className={styles.addSubjectControls}>
+            <Space wrap>
+              <Select
+                showSearch
+                className={styles.subjectSelect}
+                placeholder="Select subject version"
+                value={addForm.subjectVersionId}
+                onChange={v => setAddForm(f => ({ ...f, subjectVersionId: v }))}
+                optionFilterProp="label"
+                filterOption={(input, option) => {
+                  const label = option?.label || '';
+                  return label.toString().toLowerCase().includes(input.toLowerCase());
+                }}
+                onPopupScroll={(e) => {
+                  const { target } = e;
+                  const { scrollTop, scrollHeight, clientHeight } = target as HTMLElement;
+                  if (scrollTop + clientHeight >= scrollHeight - 5) {
+                    loadMoreSubjectVersions();
+                  }
+                }}
+                loading={getSubjectVersionMutation.isPending}
+                notFoundContent={
+                  getSubjectVersionMutation.isPending ? (
+                    <div className={styles.notFoundContentLoading}>
+                      <Spin size="small" />
+                    </div>
+                  ) : (
+                    <div className={styles.notFoundContentEmpty}>
+                      No subject versions found
+                    </div>
+                  )
                 }
-              }}
-              loading={getSubjectVersionMutation.isPending}
-              notFoundContent={
-                getSubjectVersionMutation.isPending ? (
-                  <div className={styles.notFoundContentLoading}>
-                    <Spin size="small" />
-                  </div>
-                ) : (
-                  <div className={styles.notFoundContentEmpty}>
-                    No subject versions found
-                  </div>
-                )
-              }
-            >
-              {availableSubjectVersions.map(version => (
-                <Option key={`${version.subjectId}-${version.id}`} value={version.id} label={`${version.subject.subjectName} - ${version.versionName} (${version.subject.subjectCode})`}>
-                  {version.subject.subjectName} - {version.versionName} ({version.subject.subjectCode})
-                </Option>
-              ))}
-              {hasMoreSubjectVersions && (
-                <Option key="load-more" value="load-more" disabled>
-                  <div className={styles.loadMoreOption}>
-                    {getSubjectVersionMutation.isPending ? 'Loading...' : 'Scroll to load more'}
-                  </div>
-                </Option>
-              )}
-            </Select>
-            <Input
-              type="number"
-              min={1}
-              max={20}
-              placeholder="Semester"
-              className={styles.semesterInput}
-              value={addForm.semesterNumber}
-              onChange={e => setAddForm(f => ({ ...f, semesterNumber: Number(e.target.value) }))}
-            />
-            <Checkbox
-              checked={!!addForm.isMandatory}
-              onChange={e => setAddForm(f => ({ ...f, isMandatory: e.target.checked }))}
-              className={styles.mandatoryCheckbox}
-            >
-              Mandatory
-            </Checkbox>
-            <Button
-              type="primary"
-              onClick={handleAddSubjectVersion}
-              loading={addLoading}
-              disabled={!addForm.subjectVersionId || !addForm.semesterNumber}
-              className={styles.addSubjectButton}
-            >
-              Add Subject Version
-            </Button>
-          </Space>
-        </div>
-        <Table
-          dataSource={curriculumSubjectVersions}
-          rowKey="subjectVersionId"
-          columns={[
-            {
-              title: 'Subject Code',
-              dataIndex: 'subjectCode',
-              key: 'subjectCode',
-            },
-            {
-              title: 'Subject Name',
-              dataIndex: 'subjectName',
-              key: 'subjectName',
-            },
-            {
-              title: 'Version',
-              dataIndex: 'versionName',
-              key: 'versionName',
-              render: (text: string, record: SubjectVersionWithCurriculumInfo) => (
-                <span style={{ fontWeight: '600', color: '#059669' }}>
-                  {record.versionName} ({record.versionCode})
-                </span>
-              ),
-            },
-            {
-              title: 'Credits',
-              dataIndex: 'credits',
-              key: 'credits',
-            },
-            {
-              title: 'Semester',
-              key: 'semester',
-              render: (_: any, record: SubjectVersionWithCurriculumInfo) => (
-                <span className={styles.semesterCell}>
-                  {record.semesterNumber}
-                </span>
-              ),
-            },
-            {
-              title: 'isMandatory',
-              key: 'isMandatory',
-              render: (_: any, record: SubjectVersionWithCurriculumInfo) => (
-                <span style={{ 
-                  color: record.isMandatory ? '#dc2626' : '#ea580c',
-                  fontWeight: '600'
-                }}>
-                  {record.isMandatory ? 'Mandatory' : 'Optional'}
-                </span>
-              ),
-            },
-            {
-              title: 'Action',
-              key: 'action',
-              render: (_: any, record: SubjectVersionWithCurriculumInfo) => (
-                <Button
-                  type="text"
-                  danger
-                  icon={<DeleteOutlined />}
-                  loading={deleteLoading === record.subjectVersionId}
-                  onClick={() => handleDeleteSubjectVersion(record.subjectVersionId)}
-                  className={styles.deleteButton}
-                />
-              ),
-            },
-          ]}
-          pagination={false}
-          size="small"
-          className={styles.subjectsTable}
-        />
-      </Card>
+              >
+                {availableSubjectVersions.map(version => (
+                  <Option key={`${version.subjectId}-${version.id}`} value={version.id} label={`${version.subject.subjectName} - ${version.versionName} (${version.subject.subjectCode})`}>
+                    {version.subject.subjectName} - {version.versionName} ({version.subject.subjectCode})
+                  </Option>
+                ))}
+                {hasMoreSubjectVersions && (
+                  <Option key="load-more" value="load-more" disabled>
+                    <div className={styles.loadMoreOption}>
+                      {getSubjectVersionMutation.isPending ? 'Loading...' : 'Scroll to load more'}
+                    </div>
+                  </Option>
+                )}
+              </Select>
+              <Input
+                type="number"
+                min={1}
+                max={20}
+                placeholder="Semester"
+                className={styles.semesterInput}
+                value={addForm.semesterNumber}
+                onChange={e => setAddForm(f => ({ ...f, semesterNumber: Number(e.target.value) }))}
+              />
+              <Checkbox
+                checked={!!addForm.isMandatory}
+                onChange={e => setAddForm(f => ({ ...f, isMandatory: e.target.checked }))}
+                className={styles.mandatoryCheckbox}
+              >
+                Mandatory
+              </Checkbox>
+              <Button
+                type="primary"
+                onClick={handleAddSubjectVersion}
+                loading={addLoading}
+                disabled={!addForm.subjectVersionId || !addForm.semesterNumber}
+                className={styles.addSubjectButton}
+              >
+                Add Subject Version
+              </Button>
+            </Space>
+          </div>
+          <Table
+            dataSource={curriculumSubjectVersions}
+            rowKey="subjectVersionId"
+            columns={[
+              {
+                title: 'Subject Code',
+                dataIndex: 'subjectCode',
+                key: 'subjectCode',
+              },
+              {
+                title: 'Subject Name',
+                dataIndex: 'subjectName',
+                key: 'subjectName',
+              },
+              {
+                title: 'Version',
+                dataIndex: 'versionName',
+                key: 'versionName',
+                render: (text: string, record: SubjectVersionWithCurriculumInfo) => (
+                  <span style={{ fontWeight: '600', color: '#059669' }}>
+                    {record.versionName} ({record.versionCode})
+                  </span>
+                ),
+              },
+              {
+                title: 'Credits',
+                dataIndex: 'credits',
+                key: 'credits',
+              },
+              {
+                title: 'Semester',
+                key: 'semester',
+                render: (_: any, record: SubjectVersionWithCurriculumInfo) => (
+                  <span className={styles.semesterCell}>
+                    {record.semesterNumber}
+                  </span>
+                ),
+              },
+              {
+                title: 'isMandatory',
+                key: 'isMandatory',
+                render: (_: any, record: SubjectVersionWithCurriculumInfo) => (
+                  <span style={{ 
+                    color: record.isMandatory ? '#dc2626' : '#ea580c',
+                    fontWeight: '600'
+                  }}>
+                    {record.isMandatory ? 'Mandatory' : 'Optional'}
+                  </span>
+                ),
+              },
+              {
+                title: 'Action',
+                key: 'action',
+                render: (_: any, record: SubjectVersionWithCurriculumInfo) => (
+                  <Button
+                    type="text"
+                    danger
+                    icon={<DeleteOutlined />}
+                    loading={deleteLoading === record.subjectVersionId}
+                    onClick={() => handleDeleteSubjectVersion(record.subjectVersionId)}
+                    className={styles.deleteButton}
+                  />
+                ),
+              },
+            ]}
+            pagination={false}
+            size="small"
+            className={styles.subjectsTable}
+          />
+        </Card>
+      )}
     </div>
   );
 };
