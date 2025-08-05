@@ -13,6 +13,7 @@ export interface CreateProgram {
 export interface Curriculum {
   id: number; // Primary key
   programId: number; // Foreign key referencing Program.id
+  programName:string;
   curriculumCode: string; // varchar(50), unique
   curriculumName: string; // varchar(255)
   effectiveDate: Date; // datetime2(0)

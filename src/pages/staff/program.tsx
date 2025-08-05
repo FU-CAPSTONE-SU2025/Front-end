@@ -197,7 +197,7 @@ const ProgramPage: React.FC = () => {
             ),
             children: (
               <div style={{padding: 16, color: '#1E40AF', fontWeight: 500}}>
-                <b>Program ID:</b> {program.id}<br/>
+                <b>Program Name:</b> {program.id}<br/>
                 <b>Program Code:</b> {program.programCode}<br/>
                 <b>Program Name:</b> {program.programName}<br/>
                 {/* TODO: Add curriculum details when expanded */}

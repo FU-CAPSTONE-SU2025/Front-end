@@ -306,8 +306,8 @@ const CurriculumPage: React.FC = () => {
                     borderRadius: 12
                   }}>
                     <div>
-                      <strong style={{ color: '#64748b' }}>Program ID:</strong>
-                      <div style={{ color: '#1E40AF', fontWeight: '600' }}>{curriculum.programId}</div>
+                      <strong style={{ color: '#64748b' }}>Program Name:</strong>
+                      <div style={{ color: '#1E40AF', fontWeight: '600' }}>{curriculum.programName}</div>
                     </div>
                     <div>
                       <strong style={{ color: '#64748b' }}>Effective Date:</strong>
@@ -332,7 +332,7 @@ const CurriculumPage: React.FC = () => {
                     }}>
                       <BookOutlined style={{ color: '#1E40AF', fontSize: '18px' }} />
                       <Title level={5} style={{ margin: 0, color: '#1E40AF' }}>
-                        Curriculum Subject Versions
+                        Curriculum Subjects (By Version)
                       </Title>
                     </div>
                     
