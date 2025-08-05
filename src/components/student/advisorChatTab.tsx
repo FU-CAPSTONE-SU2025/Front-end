@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Avatar, Button, Input, Modal, message } from 'antd';
-import { SendOutlined, PlusOutlined, MessageOutlined, PhoneOutlined, VideoCameraOutlined, MoreOutlined, CloseOutlined } from '@ant-design/icons';
+import { Avatar, Button, Input, Modal, message, Badge, Spin } from 'antd';
+import { SendOutlined, PlusOutlined, MessageOutlined } from '@ant-design/icons';
 import { useAdvisorChat, AdvisorSession } from '../../hooks/useAdvisorChat';
-import { ChatMessage } from '../../interfaces/IChat';
 import { motion } from 'framer-motion';
-import MainChatBox from './mainChatBox';
 import StaffNameDisplay from './staffNameDisplay';
 import LastMessageDisplay from './lastMessageDisplay';
-import ChatListItem from './chatListItem';
 
 interface AdvisorChatTabProps {
   onChatBoxOpen?: (session: AdvisorSession) => void;
@@ -19,6 +16,7 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [newChatMessage, setNewChatMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   const {
     connectionState,
@@ -35,10 +33,39 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
     setCurrentSession,
     setError,
     setMessages,
+    fetchSessions,
   } = useAdvisorChat();
 
   // Show all sessions instead of filtering
   const allSessions = sessions;
+
+  // Ensure sessions are fetched when component mounts or connection changes
+  useEffect(() => {
+    if (connectionState === 'Connected' && !dataFetched && !loading) {
+      fetchSessions();
+    }
+  }, [connectionState, dataFetched, loading, fetchSessions]);
+
+  // Component lifecycle tracking
+  useEffect(() => {
+    return () => {
+      // Cleanup on unmount
+    };
+  }, []);
+
+  // Force re-render when sessions change
+  useEffect(() => {
+    setForceUpdate(prev => prev + 1);
+  }, [sessions]);
+
+  // Handle refresh sessions
+  const handleRefreshSessions = async () => {
+    try {
+      await fetchSessions();
+    } catch (err) {
+      message.error('Failed to refresh sessions');
+    }
+  };
 
   // Handle load more sessions
   const handleLoadMoreSessions = async () => {
@@ -47,7 +74,6 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
       await loadMoreSessions(currentPage);
     }
   };
-
 
   // Handle session selection
   const handleSessionClick = async (session: AdvisorSession) => {
@@ -70,9 +96,15 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
     try {
       await joinSession(session.id);
     } catch (err) {
-      // Only show error if it's a real network/connection error
-      if (err instanceof Error && !err.message.includes('negotiation') && !err.message.includes('No connection')) {
-        message.error('Failed to join session');
+      // Only show error for real connection issues, not for normal SignalR negotiation
+      const errorMessage = err instanceof Error ? err.message : '';
+      const isConnectionError = errorMessage.includes('negotiation') || 
+                               errorMessage.includes('No connection') ||
+                               errorMessage.includes('Connection not available') ||
+                               errorMessage.includes('Failed to join session');
+      
+      if (!isConnectionError) {
+        console.warn('Join session warning:', errorMessage);
       }
     }
   };
@@ -133,19 +165,105 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
     return null;
   };
 
+  // Render individual chat item
+  const renderChatItem = (session: AdvisorSession) => {
+    // Determine if session is assigned or unassigned (staffId = 4 means unassigned)
+    const isUnassigned = !session.staffId || session.staffId === 4;
+    
+    return (
+      <motion.div
+        key={session.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="cursor-pointer transition-all duration-300 hover:bg-gray-50 border-b border-gray-100 hover:border-gray-200"
+        onClick={() => handleSessionClick(session)}
+      >
+        <div className="flex items-center gap-4 p-4">
+          <div className="relative">
+            <Avatar 
+              src={isUnassigned ? 'https://i.pravatar.cc/150?img=2' : (session.staffAvatar || 'https://i.pravatar.cc/150?img=1')} 
+              size={48} 
+              className={`ring-3 shadow-md ${
+                isUnassigned ? 'ring-orange-100' : 'ring-gray-100'
+              }`}
+            />
+            {session.isOnline && !isUnassigned && (
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
+            )}
+            {isUnassigned && (
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-orange-400 rounded-full border-2 border-white" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between items-start mb-1">
+              <div className="font-semibold text-gray-800 text-base">
+                <StaffNameDisplay 
+                  staffId={session.staffId}
+                  fallbackName={isUnassigned ? 'Unassigned Advisor' : (session.staffName || session.title)}
+                />
+              </div>
+              {session.unreadCount && session.unreadCount > 0 && (
+                <Badge 
+                  count={session.unreadCount} 
+                  size="small"
+                  className={isUnassigned ? 'bg-orange-500' : 'bg-red-500'}
+                />
+              )}
+            </div>
+            <LastMessageDisplay 
+              lastMessage={session.lastMessage}
+              lastMessageTime={session.lastMessageTime}
+              className="text-sm text-gray-500"
+              senderId={session.lastMessageSenderId}
+            />
+            {isUnassigned && (
+              <div className="text-xs text-orange-600 mt-1">
+                Waiting for assignment
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  // Render connection status
+  const renderConnectionStatus = () => {
+    const getStatusColor = () => {
+      switch (connectionState) {
+        case 'Connected':
+          return 'text-green-500';
+        case 'Connecting':
+        case 'Reconnecting':
+          return 'text-yellow-500';
+        case 'Disconnected':
+          return 'text-red-500';
+        default:
+          return 'text-gray-500';
+      }
+    };
+
+    return (
+      <div className={`text-xs ${getStatusColor()} flex items-center gap-1`}>
+        <div className={`w-2 h-2 rounded-full ${
+          connectionState === 'Connected' ? 'bg-green-500' :
+          connectionState === 'Connecting' || connectionState === 'Reconnecting' ? 'bg-yellow-500' :
+          'bg-red-500'
+        }`} />
+        {connectionState}
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col h-[600px] bg-white">
       {/* Header with New Chat Button */}
       <div className="border-b border-gray-200 p-4">
         <div className="flex justify-between items-center mb-3">
-                      <div>
-              <h3 className="text-lg font-bold text-gray-800 mb-1">Advisor Chats</h3>
-              {sessions.length > 0 && (
-                <p className="text-xs text-gray-500 mt-1">
-                  {sessions.length} sessions available
-                </p>
-              )}
-            </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-800 mb-1">Advisor Chats</h3>
+          </div>
           <Button
             type="primary"
             icon={<PlusOutlined />}
@@ -161,26 +279,26 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
       {/* Sessions List */}
       <div className="flex-1 overflow-y-auto bg-white">
         {loading && sessions.length === 0 ? (
-                      <div className="flex items-center justify-center h-32">
-              <div className="text-gray-500">Loading...</div>
-            </div>
-        ) : allSessions.length === 0 ? (
           <div className="flex items-center justify-center h-32">
-                          <div className="text-center text-gray-500">
-                <MessageOutlined className="text-3xl mb-2" />
-                <div className="text-sm">No sessions</div>
-              </div>
+            <Spin size="large" />
+            <div className="text-gray-500 ml-3">Loading sessions...</div>
+          </div>
+        ) : sessions.length === 0 ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center text-gray-500">
+              <MessageOutlined className="text-3xl mb-2" />
+              <div className="text-sm">No sessions</div>
+              {connectionState === 'Disconnected' && (
+                <div className="text-xs text-red-500 mt-2">
+                  Connection lost. Please refresh.
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <>
-            <div className="space-y-0">
-              {allSessions.map((session) => (
-                <ChatListItem
-                  key={session.id}
-                  session={session}
-                  onClick={handleSessionClick}
-                />
-              ))}
+            <div className="space-y-0" key={`sessions-${sessions.length}-${forceUpdate}`}>
+              {sessions.map(renderChatItem)}
             </div>
             
             {/* Load More Sessions Button */}
@@ -196,7 +314,6 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
                 </Button>
               </div>
             )}
-
           </>
         )}
       </div>

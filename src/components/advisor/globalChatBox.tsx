@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Avatar, Button, Input, message } from 'antd';
-import { SendOutlined, PhoneOutlined, VideoCameraOutlined, MoreOutlined, CloseOutlined, ReloadOutlined } from '@ant-design/icons';
+import { SendOutlined, CloseOutlined, ReloadOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useAdvisorChatWithStudent } from '../../hooks/useAdvisorChatWithStudent';
 import { SIGNALR_CONFIG, ConnectionState, getConnectionStatusColor, formatTime, validateMessage } from '../../config/signalRConfig';
@@ -24,6 +24,9 @@ const GlobalChatBox: React.FC = () => {
   const [isLoadingMoreMessages, setIsLoadingMoreMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const isUnmountedRef = useRef(false);
+  const isSendingRef = useRef(false);
+  const lastSentMessageRef = useRef<string>('');
 
   const {
     connectionState,
@@ -39,41 +42,56 @@ const GlobalChatBox: React.FC = () => {
     setError,
   } = useAdvisorChatWithStudent();
 
+  // Component lifecycle tracking
   useEffect(() => {
-    const handleOpenChatBox = (event: CustomEvent) => {
-      const student = event.detail;
-      const sessionId = parseInt(student.id);
-      
-      setSelectedStudent(student);
-      setChatBoxOpen(true);
-      
-      // Only join if it's a different session
-      if (student.id && sessionId !== currentSessionId) {
-        setCurrentSessionId(sessionId);
-        joinSession(sessionId);
-      } else if (student.id && sessionId === currentSessionId) {
-        // Make sure currentSession is set
-        if (!currentSession) {
-          joinSession(sessionId);
-        }
-      }
+    isUnmountedRef.current = false;
+    return () => {
+      isUnmountedRef.current = true;
+      isSendingRef.current = false;
     };
+  }, []);
 
+  // Memoized event handler to prevent recreation
+  const handleOpenChatBox = useCallback((event: CustomEvent) => {
+    if (isUnmountedRef.current) return;
+    
+    const student = event.detail;
+    const sessionId = parseInt(student.id);
+    
+    setSelectedStudent(student);
+    setChatBoxOpen(true);
+    
+    // Only join if it's a different session
+    if (student.id && sessionId !== currentSessionId) {
+      setCurrentSessionId(sessionId);
+      joinSession(sessionId);
+    } else if (student.id && sessionId === currentSessionId) {
+      // Make sure currentSession is set
+      if (!currentSession) {
+        joinSession(sessionId);
+      }
+    }
+  }, [joinSession, currentSessionId, currentSession]);
+
+  // Setup event listener only once
+  useEffect(() => {
     window.addEventListener('openAdvisorChatBox', handleOpenChatBox as EventListener);
 
     return () => {
       window.removeEventListener('openAdvisorChatBox', handleOpenChatBox as EventListener);
     };
-  }, [joinSession, currentSessionId, currentSession]);
+  }, [handleOpenChatBox]);
 
-  // Auto scroll to bottom when new messages arrive
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Memoized scroll function
+  const scrollToBottom = useCallback(() => {
+    if (!isUnmountedRef.current && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
 
-  // Handle scroll to load more messages
+  // Load more messages when scrolling to top
   const handleMessagesScroll = useCallback(() => {
-    if (!messagesContainerRef.current || isLoadingMoreMessages || !currentSession) return;
+    if (!messagesContainerRef.current || isLoadingMoreMessages || !currentSession || isUnmountedRef.current) return;
 
     const { scrollTop } = messagesContainerRef.current;
     
@@ -106,9 +124,12 @@ const GlobalChatBox: React.FC = () => {
     }
   }, [handleMessagesScroll]);
 
+  // Scroll to bottom only when new messages arrive
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, currentSession, selectedStudent, advisorId, connectionState, error]);
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages.length, scrollToBottom]);
 
   // Handle connection state changes
   useEffect(() => {
@@ -117,101 +138,46 @@ const GlobalChatBox: React.FC = () => {
     }
   }, [connectionState, error, setError]);
 
-  const handleCloseChatBox = () => {
+  const handleCloseChatBox = useCallback(() => {
     setChatBoxOpen(false);
     setSelectedStudent(null);
     setMessageInput('');
     // Don't clear messages or session ID - keep them for when reopening
-  };
+  }, []);
 
-  const handleSendMessage = async (msg?: string) => {
-    const messageToSend = msg || messageInput;
+  const handleSendMessage = useCallback(async (msg?: string) => {
+    const messageToSend = msg || messageInput.trim();
+    if (!messageToSend || isSendingRef.current) return;
     
-    if (!validateMessage(messageToSend)) {
-      message.error('Please enter a valid message');
-      return;
-    }
-    
-    if (!currentSession && currentSessionId) {
-      // Try to send message using session ID directly
-      try {
-        setSendingMessage(true);
-        setIsTyping(true);
-        
-        // Add message immediately for better UX
-        const tempMessage = {
-          id: Date.now(),
-          content: messageToSend,
-          senderId: 999, // Temporary ID to identify as advisor message
-          advisorySession1to1Id: currentSessionId,
-          createdAt: new Date().toISOString(),
-          senderName: 'You'
-        };
-        
-        // Add to messages immediately
-        setMessages(prev => [...prev, tempMessage]);
-        setMessageInput('');
-        
-        // Send to server using session ID
-        await sendMessage(messageToSend);
-      } catch (err) {
-        message.error(SIGNALR_CONFIG.ERRORS.SEND_MESSAGE_FAILED);
-        // Remove the temporary message if sending failed
-        setMessages(prev => prev.filter(m => m.id !== Date.now()));
-      } finally {
-        setSendingMessage(false);
-        setIsTyping(false);
-      }
-      return;
-    }
-    
-    if (!currentSession) {
-      message.error('No active session. Please try joining the session again.');
-      return;
-    }
-    
+    isSendingRef.current = true;
     setSendingMessage(true);
-    setIsTyping(true);
     
     try {
-      // Add message immediately for better UX
-      const tempMessage = {
-        id: Date.now(),
-        content: messageToSend,
-        senderId: 999, // Temporary ID to identify as advisor message
-        advisorySession1to1Id: currentSession.id,
-        createdAt: new Date().toISOString(),
-        senderName: 'You'
-      };
-      
-      // Add to messages immediately
-      setMessages(prev => [...prev, tempMessage]);
-      setMessageInput('');
-      
-      // Send to server
       await sendMessage(messageToSend);
-    } catch (err) {
-      message.error(SIGNALR_CONFIG.ERRORS.SEND_MESSAGE_FAILED);
-      // Remove the temporary message if sending failed
-      setMessages(prev => prev.filter(m => m.id !== Date.now()));
+      setMessageInput('');
+    } catch (error) {
+      message.error('Failed to send message');
     } finally {
       setSendingMessage(false);
-      setIsTyping(false);
+      isSendingRef.current = false;
     }
-  };
+  }, [messageInput, sendMessage]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      e.stopPropagation();
+      if (!sendingMessage && messageInput.trim()) {
+        handleSendMessage();
+      }
     }
-  };
+  }, [sendingMessage, messageInput, handleSendMessage]);
 
-  const handleRetryConnection = () => {
+  const handleRetryConnection = useCallback(() => {
     if (selectedStudent && currentSessionId) {
       joinSession(currentSessionId);
     }
-  };
+  }, [selectedStudent, currentSessionId, joinSession]);
 
   return (
     <>
@@ -244,24 +210,6 @@ const GlobalChatBox: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Button 
-                type="text" 
-                icon={<PhoneOutlined />} 
-                size="small" 
-                className="text-gray-600 hover:text-green-600" 
-              />
-              <Button 
-                type="text" 
-                icon={<VideoCameraOutlined />} 
-                size="small" 
-                className="text-gray-600 hover:text-green-600" 
-              />
-              <Button 
-                type="text" 
-                icon={<MoreOutlined />} 
-                size="small" 
-                className="text-gray-600 hover:text-green-600" 
-              />
               <Button 
                 type="text" 
                 icon={<CloseOutlined />} 
@@ -326,7 +274,7 @@ const GlobalChatBox: React.FC = () => {
                     const isStudentMessage = msg.senderId === 13; // Student message (senderId = 13)
                     return (
                       <motion.div
-                        key={msg.id}
+                        key={`${msg.id}-${index}`}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -365,12 +313,15 @@ const GlobalChatBox: React.FC = () => {
                 size="small"
                 className="flex-1 rounded-xl"
                 disabled={sendingMessage}
-                maxLength={SIGNALR_CONFIG.MESSAGES.MAX_MESSAGE_LENGTH}
               />
               <Button
                 type="primary"
                 icon={<SendOutlined />}
-                onClick={() => handleSendMessage()}
+                onClick={() => {
+                  if (!sendingMessage && messageInput.trim()) {
+                    handleSendMessage();
+                  }
+                }}
                 disabled={!validateMessage(messageInput) || sendingMessage}
                 size="small"
                 loading={sendingMessage}

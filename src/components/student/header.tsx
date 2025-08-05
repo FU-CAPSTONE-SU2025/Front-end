@@ -3,7 +3,7 @@ import { Badge, Avatar, Dropdown, Menu } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router';
 import Messenger from './messenger';
-import Notification from './notification';
+import Notification from '../common/Notification';
 import { useAuths } from '../../hooks/useAuths';
 
 const navItems = [

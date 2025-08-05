@@ -41,7 +41,7 @@ const Messenger: React.FC = () => {
           <span>Advisor</span>
         </div>
       ),
-      children: <AdvisorChatTab onChatBoxOpen={handleChatBoxOpen} drawerOpen={open} onCloseDrawer={() => setOpen(false)} />,
+      children: <AdvisorChatTab key="advisor-chat-tab" onChatBoxOpen={handleChatBoxOpen} drawerOpen={open} onCloseDrawer={() => setOpen(false)} />,
     },
   ];
 

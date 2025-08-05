@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Avatar, Button, Input, message } from 'antd';
-import { SendOutlined, PhoneOutlined, VideoCameraOutlined, MoreOutlined, CloseOutlined } from '@ant-design/icons';
+import { SendOutlined, CloseOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useAdvisorChat, AdvisorSession } from '../../hooks/useAdvisorChat';
-import { ChatMessage } from '../../interfaces/IChat';
 import StaffNameDisplay from './staffNameDisplay';
-import LastMessageDisplay from './lastMessageDisplay';
 
 interface Advisor {
   id: string;
@@ -23,6 +21,9 @@ const GlobalChatBox: React.FC = () => {
   const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
   const [currentSession, setCurrentSession] = useState<AdvisorSession | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isUnmountedRef = useRef(false);
+  const sessionsRef = useRef<AdvisorSession[]>([]);
+  const isSendingRef = useRef(false);
 
   const {
     connectionState,
@@ -35,112 +36,131 @@ const GlobalChatBox: React.FC = () => {
     setMessages,
   } = useAdvisorChat();
 
-  useEffect(() => {
-    const handleOpenChatBox = (event: CustomEvent) => {
-      const advisor = event.detail;
-      const sessionId = parseInt(advisor.id);
-      
-      setSelectedAdvisor(advisor);
-      setChatBoxOpen(true);
-      
-      // Find the current session to get staffId
-      const session = sessions.find(s => s.id === sessionId);
-      setCurrentSession(session || null);
-      
-      // Only join if it's a different session
-      if (advisor.id && sessionId !== currentSessionId) {
-        setCurrentSessionId(sessionId);
-        joinSession(sessionId);
-      } else if (advisor.id && sessionId === currentSessionId) {
-        // Make sure currentSession is set
-        if (!currentSession) {
-          joinSession(sessionId);
-        }
-      }
-    };
+  const sendMessageRef = useRef<typeof sendMessage>(sendMessage);
 
+  // Update sessions ref when sessions change
+  useEffect(() => {
+    sessionsRef.current = sessions;
+  }, [sessions]);
+
+  // Update sendMessage ref when sendMessage changes
+  useEffect(() => {
+    sendMessageRef.current = sendMessage;
+  }, [sendMessage]);
+
+  // Memoized event handler to prevent recreation
+  const handleOpenChatBox = useCallback((event: CustomEvent) => {
+    if (isUnmountedRef.current) return;
+    
+    const advisor = event.detail;
+    const sessionId = parseInt(advisor.id);
+    
+    setSelectedAdvisor(advisor);
+    setChatBoxOpen(true);
+    
+    // Find the current session to get staffId using ref
+    const session = sessionsRef.current.find(s => s.id === sessionId);
+    setCurrentSession(session || null);
+    
+    // Only join if it's a different session
+    if (advisor.id && sessionId !== currentSessionId) {
+      setCurrentSessionId(sessionId);
+      joinSession(sessionId);
+    } else if (advisor.id && sessionId === currentSessionId && !session) {
+      // Make sure currentSession is set
+      joinSession(sessionId);
+    }
+  }, [joinSession, currentSessionId]);
+
+  // Setup event listener only once
+  useEffect(() => {
     window.addEventListener('openMainChatBox', handleOpenChatBox as EventListener);
 
     return () => {
       window.removeEventListener('openMainChatBox', handleOpenChatBox as EventListener);
     };
-  }, [joinSession, currentSessionId, sessions]);
+  }, [handleOpenChatBox]);
 
-  // Auto scroll to bottom when new messages arrive
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Component lifecycle tracking
+  useEffect(() => {
+    isUnmountedRef.current = false;
+    return () => {
+      isUnmountedRef.current = true;
+      isSendingRef.current = false;
+    };
+  }, []);
+
+  // Memoized scroll function
+  const scrollToBottom = useCallback(() => {
+    if (!isUnmountedRef.current && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
 
   // Load more messages when scrolling to top
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop } = e.currentTarget;
-    if (scrollTop === 0 && currentSession) {
+    if (scrollTop === 0 && currentSession && !isUnmountedRef.current) {
       // Load more messages when scrolled to top
       const currentPage = Math.floor(messages.length / 20) + 1;
       loadMoreMessages(currentSession.id, currentPage);
     }
-  };
+  }, [currentSession, messages.length, loadMoreMessages]);
 
+  // Scroll to bottom only when new messages arrive
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, currentSession, selectedAdvisor, connectionState, error]);
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages.length, scrollToBottom]);
 
-  const handleCloseChatBox = () => {
+  const handleCloseChatBox = useCallback(() => {
     setChatBoxOpen(false);
     setSelectedAdvisor(null);
     // Don't clear messages or session ID - keep them for when reopening
-  };
+  }, []);
 
-  const handleSendMessage = async (msg?: string) => {
-    const messageToSend = msg || messageInput;
-    if (!messageToSend.trim() || !currentSession) return;
+  const handleSendMessage = useCallback(async (msg?: string) => {
+    const messageToSend = msg || messageInput.trim();
+    if (!messageToSend || isSendingRef.current) return;
     
+    isSendingRef.current = true;
     setSendingMessage(true);
+    
     try {
-      // Add message immediately for better UX
-      const tempMessage = {
-        id: Date.now(),
-        content: messageToSend,
-        senderId: 999, // Temporary ID to identify as student message
-        advisorySession1to1Id: currentSession.id,
-        createdAt: new Date().toISOString(),
-        senderName: 'You'
-      };
-      
-      // Add to messages immediately
-      setMessages(prev => [...prev, tempMessage]);
+      await sendMessageRef.current(messageToSend);
       setMessageInput('');
-      
-      // Send to server
-      await sendMessage(messageToSend);
-      
-      // If we reach here, the message was sent successfully
-      // The real message will be received via SignalR and replace the temp message
-    } catch (err) {
-      console.error('Failed to send message:', err);
-      // Only show error if it's a real network/connection error
-      if (err instanceof Error && !err.message.includes('negotiation') && !err.message.includes('No connection')) {
-        message.error('Failed to send message. Please try again.');
-      }
-      // Remove the temporary message if sending failed
-      setMessages(prev => prev.filter(m => m.id !== Date.now()));
+    } catch (error) {
+      message.error('Failed to send message');
     } finally {
       setSendingMessage(false);
+      isSendingRef.current = false;
     }
-  };
+  }, [messageInput, sendMessageRef]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      e.stopPropagation();
+      if (!sendingMessage && messageInput.trim()) {
+        handleSendMessage();
+      }
+    }
+  }, [sendingMessage, messageInput, handleSendMessage]);
+
+  const handleSendClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!sendingMessage && messageInput.trim()) {
       handleSendMessage();
     }
-  };
+  }, [sendingMessage, messageInput, handleSendMessage]);
 
-  // Format timestamp
-  const formatTime = (timestamp: string) => {
+  // Memoized format time function
+  const formatTime = useCallback((timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  }, []);
 
   return (
     <>
@@ -182,24 +202,6 @@ const GlobalChatBox: React.FC = () => {
             <div className="flex items-center gap-1">
               <Button 
                 type="text" 
-                icon={<PhoneOutlined />} 
-                size="small" 
-                className="text-gray-600 hover:text-blue-600" 
-              />
-              <Button 
-                type="text" 
-                icon={<VideoCameraOutlined />} 
-                size="small" 
-                className="text-gray-600 hover:text-blue-600" 
-              />
-              <Button 
-                type="text" 
-                icon={<MoreOutlined />} 
-                size="small" 
-                className="text-gray-600 hover:text-blue-600" 
-              />
-              <Button 
-                type="text" 
                 icon={<CloseOutlined />} 
                 size="small" 
                 className="text-gray-600 hover:text-red-600" 
@@ -225,11 +227,11 @@ const GlobalChatBox: React.FC = () => {
               <>
                 {messages
                   .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-                  .map((msg) => {
+                  .map((msg, index) => {
                     const isStudentMessage = msg.senderId === 18; // Current user (student)
                     return (
                       <div
-                        key={msg.id}
+                        key={`${msg.id}-${index}`}
                         className={`flex ${isStudentMessage ? 'justify-start' : 'justify-end'}`}
                       >
                         <div
@@ -269,7 +271,7 @@ const GlobalChatBox: React.FC = () => {
               <Button
                 type="primary"
                 icon={<SendOutlined />}
-                onClick={() => handleSendMessage()}
+                onClick={handleSendClick}
                 disabled={!messageInput.trim() || sendingMessage}
                 size="small"
                 loading={sendingMessage}

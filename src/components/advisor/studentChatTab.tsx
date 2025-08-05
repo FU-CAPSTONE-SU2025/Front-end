@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Avatar, Button, Badge, message, Spin } from 'antd';
-import { SendOutlined, PlusOutlined, MessageOutlined, PhoneOutlined, VideoCameraOutlined, MoreOutlined, CloseOutlined, ReloadOutlined } from '@ant-design/icons';
+import { SendOutlined, PlusOutlined, MessageOutlined } from '@ant-design/icons';
 import { useAdvisorChatWithStudent } from '../../hooks/useAdvisorChatWithStudent';
 import { StudentSession, ChatMessage } from '../../interfaces/IChat';
 import { motion } from 'framer-motion';
@@ -14,18 +14,14 @@ interface StudentChatTabProps {
 }
 
 const StudentChatTab: React.FC<StudentChatTabProps> = ({ onChatBoxOpen, drawerOpen, onCloseDrawer }) => {
-  const [showNewChatModal, setShowNewChatModal] = useState(false);
-  const [newChatMessage, setNewChatMessage] = useState('');
-  const [sendingMessage, setSendingMessage] = useState(false);
+ 
 
 
   const {
     connectionState,
     sessions,
-    unassignedSessions,
     allAssignedSessions,
-    currentSession,
-    messages,
+
     error,
     loading,
     advisorId,
@@ -36,38 +32,78 @@ const StudentChatTab: React.FC<StudentChatTabProps> = ({ onChatBoxOpen, drawerOp
     setError,
     setMessages,
     assignAdvisorToSession,
-    // Manual fetch functions
+    fetchSessions,
     fetchAssignedSessions,
-    fetchUnassignedSessions,
-    fetchAllAssignedSessions,
-    // Pagination functions
- 
     dataFetched,
   } = useAdvisorChatWithStudent();
 
   // Pre-load data when component mounts
   useEffect(() => {
-    // Only fetch assigned sessions for My Chat
-    fetchAllAssignedSessions();
-  }, [fetchAllAssignedSessions]);
+    console.log('StudentChatTab: Component mounted, connection state:', connectionState);
+    // Only fetch assigned sessions for My Chat when connection is ready
+    if (connectionState === ConnectionState.Connected) {
+      console.log('StudentChatTab: Connection ready, calling fetchAssignedSessions');
+      // Add delay to ensure connection is fully ready
+      const timer = setTimeout(() => {
+        console.log('StudentChatTab: Delayed fetchAssignedSessions');
+        fetchAssignedSessions();
+      }, 1000);
+      
+      // Also try fetchSessions as fallback
+      const fallbackTimer = setTimeout(() => {
+        console.log('StudentChatTab: Trying fetchSessions as fallback');
+        fetchSessions();
+      }, 3000);
+      
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(fallbackTimer);
+      };
+    } else {
+      console.log('StudentChatTab: Connection not ready yet');
+    }
+  }, [connectionState, fetchAssignedSessions, fetchSessions]);
 
   // Re-fetch data when connection becomes available
   useEffect(() => {
     if (connectionState === ConnectionState.Connected && !dataFetched) {
       // Only fetch if data hasn't been fetched yet
-      fetchAllAssignedSessions();
+      fetchAssignedSessions();
     }
-  }, [connectionState, fetchAllAssignedSessions, dataFetched]);
+  }, [connectionState, fetchAssignedSessions, dataFetched]);
+
+  // Retry mechanism when connection becomes ready
+  useEffect(() => {
+    if (connectionState === ConnectionState.Connected) {
+      // Add a small delay to ensure connection is fully ready
+      const timer = setTimeout(() => {
+        if (connectionState === ConnectionState.Connected) {
+          fetchAssignedSessions();
+        }
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [connectionState, fetchAssignedSessions]);
 
 
 
   // Filter only assigned sessions (exclude staffId = 4) and sort by updatedAt (newest first)
-  const assignedSessions = allAssignedSessions
+  const assignedSessions = (sessions.length > 0 ? sessions : allAssignedSessions)
     .filter(session => session.staffId !== 4) // Exclude unassigned sessions
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
-
-
+  // Debug logs
+  console.log('StudentChatTab Debug:', {
+    connectionState,
+    sessions: sessions.length,
+    allAssignedSessions: allAssignedSessions.length,
+    assignedSessions: assignedSessions.length,
+    dataFetched,
+    loading,
+    error,
+    advisorId
+  });
 
 
   // Handle session selection
@@ -128,15 +164,11 @@ const StudentChatTab: React.FC<StudentChatTabProps> = ({ onChatBoxOpen, drawerOp
       {/* Header */}
       <div className="border-b border-gray-200 p-4">
         <div className="flex justify-between items-center mb-3">
-                      <div>
-              <h3 className="text-lg font-bold text-gray-800 mb-1">
-                My Chat
-              </h3>
-              <p className="text-xs text-gray-500 mt-1">
-                Assigned sessions: {assignedSessions.length}
-              </p>
-            </div>
-          <Badge count={assignedSessions.length} size="small" />
+          <div>
+            <h3 className="text-lg font-bold text-gray-800 mb-1">
+              My Chat
+            </h3>
+          </div>
         </div>
       </div>
 
