@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { BellOutlined } from '@ant-design/icons';
-import { Avatar, Button, Modal, Badge } from 'antd';
+import { BellOutlined, CheckOutlined } from '@ant-design/icons';
+import { Avatar, Button, Modal, Badge, Tooltip } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotificationHub } from '../../hooks/useNotificationHub';
 import { NotificationItem } from '../../interfaces/INotification';
@@ -23,9 +23,22 @@ interface NotificationProps {
 const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { notifications, loading, markAsRead, unreadCount } = useNotificationHub();
+  const { notifications, loading, markAsRead, markAllAsRead, unreadCount } = useNotificationHub();
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [localRead, setLocalRead] = useState<{ [id: number]: boolean }>({});
+  const [markingAll, setMarkingAll] = useState(false);
+
+  // Debug function - REMOVED FOR PRODUCTION
+  // const handleDebugClick = async () => {
+  //   console.log('🔔 Debug button clicked');
+  //   await testConnection();
+  // };
+
+  // Force refresh function - REMOVED FOR PRODUCTION
+  // const handleForceRefresh = async () => {
+  //   console.log('🔔 Force refresh button clicked');
+  //   await forceRefreshNotifications();
+  // };
 
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -45,11 +58,55 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
 
   const handleNotificationClick = async (n: NotificationItem) => {
     setSelectedNotification(n);
-    setLocalRead((prev) => ({ ...prev, [n.id]: true }));
+    
+    // Only mark as read if not already read (both backend and local state)
     if (!n.isRead && !localRead[n.id]) {
+      // Optimistic update - mark locally first
+      setLocalRead((prev) => ({ ...prev, [n.id]: true }));
+      
       try {
         await markAsRead(n.id);
-      } catch {}
+      } catch (error) {
+        // Revert local read state on error
+        setLocalRead((prev) => {
+          const newState = { ...prev };
+          delete newState[n.id];
+          return newState;
+        });
+      }
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    if (unreadCount === 0) return;
+    
+    setMarkingAll(true);
+    
+    try {
+      // Optimistic update - mark all locally first
+      const newLocalRead = { ...localRead };
+      notifications.forEach(n => {
+        if (!n.isRead) {
+          newLocalRead[n.id] = true;
+        }
+      });
+      setLocalRead(newLocalRead);
+      
+      // Call backend
+      await markAllAsRead();
+    } catch (error) {
+      // Revert local read state on error
+      setLocalRead((prev) => {
+        const newState = { ...prev };
+        notifications.forEach(n => {
+          if (!n.isRead) {
+            delete newState[n.id];
+          }
+        });
+        return newState;
+      });
+    } finally {
+      setMarkingAll(false);
     }
   };
 
@@ -65,14 +122,14 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
   const getUnreadStyle = () => {
     switch (variant) {
       case 'admin':
-        return 'bg-purple-50';
+        return 'bg-purple-50 border-l-4 border-purple-500';
       case 'staff':
-        return 'bg-green-50';
+        return 'bg-green-50 border-l-4 border-green-500';
       case 'advisor':
-        return 'bg-blue-50';
+        return 'bg-blue-50 border-l-4 border-blue-500';
       case 'student':
       default:
-        return 'bg-orange-50';
+        return 'bg-orange-50 border-l-4 border-orange-500';
     }
   };
 
@@ -111,6 +168,20 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
           >
             <div className="p-4 border-b border-gray-100 font-bold text-gray-800 flex items-center justify-between">
               <span>Notifications</span>
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <Tooltip title="Mark all as read">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<CheckOutlined />}
+                      onClick={handleMarkAllAsRead}
+                      loading={markingAll}
+                      className="text-gray-500 hover:text-gray-700"
+                    />
+                  </Tooltip>
+                )}
+              </div>
             </div>
             <div className="max-h-80 overflow-y-auto">
               <AnimatePresence>
@@ -128,22 +199,36 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 30 }}
                         transition={{ duration: 0.2 }}
-                        className={`flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200 ${!isRead ? getUnreadStyle() : ''}`}
+                        className={`flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-all duration-200 ${!isRead ? getUnreadStyle() : 'border-l-4 border-transparent'}`}
                         onClick={() => handleNotificationClick(n)}
                         style={{ cursor: 'pointer' }}
                       >
                         <Avatar src="/img/Logo.svg" size={40} className="mt-1" />
                         <div className="flex-1">
                           <div className="flex justify-between items-center">
-                            <span className="font-semibold text-gray-800">{n.title}</span>
+                            <span className={`font-semibold ${!isRead ? 'text-gray-800' : 'text-gray-600'}`}>
+                              {n.title}
+                            </span>
                             <span className="text-xs text-gray-400 ml-2">{timeAgo(n.createdAt)}</span>
                           </div>
-                          <div className={`text-sm ${!isRead ? 'text-gray-800 font-medium' : 'text-gray-600'}`}>{n.content}</div>
+                          <div className={`text-sm ${!isRead ? 'text-gray-800 font-medium' : 'text-gray-600'}`}>
+                            {n.content}
+                          </div>
                           {n.link && (
-                            <a href={n.link} className="text-xs text-blue-500 underline" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>View details</a>
+                            <a 
+                              href={n.link} 
+                              className="text-xs text-blue-500 underline hover:text-blue-700" 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              View details
+                            </a>
                           )}
                         </div>
-                        {!isRead && <span className={`w-2 h-2 ${getUnreadDotColor()} rounded-full mt-2 ml-1`} />}
+                        {!isRead && (
+                          <span className={`w-3 h-3 ${getUnreadDotColor()} rounded-full mt-2 ml-1 animate-pulse`} />
+                        )}
                       </motion.div>
                     );
                   })
@@ -158,13 +243,21 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
         onCancel={handleModalClose}
         footer={null}
         title={selectedNotification?.title || 'Notification Detail'}
+        width={500}
       >
         {selectedNotification && (
           <div>
             <div className="mb-2 text-gray-500 text-xs">{timeAgo(selectedNotification.createdAt)}</div>
-            <div className="mb-4 text-base text-gray-800">{selectedNotification.content}</div>
+            <div className="mb-4 text-base text-gray-800 leading-relaxed">{selectedNotification.content}</div>
             {selectedNotification.link && (
-              <a href={selectedNotification.link} className="text-blue-500 underline" target="_blank" rel="noopener noreferrer">View details</a>
+              <a 
+                href={selectedNotification.link} 
+                className="text-blue-500 underline hover:text-blue-700" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                View details
+              </a>
             )}
           </div>
         )}

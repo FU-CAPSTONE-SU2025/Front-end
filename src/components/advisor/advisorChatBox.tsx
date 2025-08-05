@@ -35,6 +35,7 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
   const [input, setInput] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isSending, setIsSending] = useState(false);
 
   // Mock current advisor (in real app, this would come from auth context)
   const currentAdvisor = {
@@ -58,14 +59,29 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
   };
 
   const handleSend = async () => {
-    if (!input.trim()) return;
-    await onSendMessage(input);
-    setInput('');
+    if (!input.trim() || isSending) return;
+    
+    setIsSending(true);
+    const currentInput = input;
+    setInput(''); // Clear input immediately
+    
+    try {
+      await onSendMessage(currentInput);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      // Restore input if sending failed
+      setInput(currentInput);
+    } finally {
+      setIsSending(false);
+    }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
+
+
+  const handleSendClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isSending && input.trim()) {
       handleSend();
     }
   };
@@ -177,17 +193,21 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onPressEnter={(e) => {
+                  if (!isSending && input.trim()) {
+                    handleSend();
+                  }
+                }}
                 placeholder="Message..."
                 className="rounded-full bg-white"
                 maxLength={1000}
-                disabled={loading}
+                disabled={loading || isSending}
               />
               <Button 
                 type="primary" 
                 shape="circle" 
-                onClick={handleSend} 
-                disabled={!input.trim() || loading}
+                onClick={handleSendClick} 
+                disabled={!input.trim() || loading || isSending}
                 icon={<SendOutlined />}
               />
             </div>
@@ -280,13 +300,15 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
                   onPressEnter={(e) => {
                     if (!e.shiftKey) {
                       e.preventDefault();
-                      handleSend();
+                      if (!isSending && input.trim()) {
+                        handleSend();
+                      }
                     }
                   }}
                   placeholder="Message..."
                   autoSize={{ minRows: 1, maxRows: 4 }}
                   className="flex-1"
-                  disabled={loading}
+                  disabled={loading || isSending}
                 />
                 <Button 
                   type="primary" 

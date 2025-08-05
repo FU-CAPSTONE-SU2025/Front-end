@@ -33,29 +33,53 @@ const OpenChatTab: React.FC<OpenChatTabProps> = ({ onChatBoxOpen, drawerOpen, on
     setError,
     setMessages,
     assignAdvisorToSession,
-    fetchUnassignedSessions,
+    fetchSessions,
   } = useAdvisorChatWithStudent();
 
-  // Show all sessions with staffId = 4 in Open Chat tab (unassigned)
-  const allSessionsForOpenChat = [...sessions, ...unassignedSessions].filter(session => 
-    session.staffId === 4 // EmptyStaffProfileId from backend
-  );
-  const openChatSessions = allSessionsForOpenChat.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  // Show unassigned sessions from LIST_OPENED_SESSIONS (no filtering needed)
+  const openChatSessions = unassignedSessions.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+  // Debug logs
+  console.log('OpenChatTab Debug:', {
+    connectionState,
+    sessions: sessions.length,
+    unassignedSessions: unassignedSessions.length,
+    openChatSessions: openChatSessions.length,
+    dataFetched,
+    loading,
+    error,
+    unassignedData: unassignedSessions.map(s => ({ id: s.id, staffId: s.staffId, title: s.title }))
+  });
 
   // Pre-load data when component mounts
   useEffect(() => {
-    // Only fetch unassigned sessions for Open Chat
-    fetchUnassignedSessions();
-  }, [fetchUnassignedSessions]);
+    // Only fetch unassigned sessions for Open Chat when connection is ready
+    if (connectionState === ConnectionState.Connected) {
+      fetchSessions();
+    }
+  }, [connectionState, fetchSessions]);
 
   // Re-fetch data when connection becomes available
   useEffect(() => {
     if (connectionState === ConnectionState.Connected && !dataFetched) {
       // Only fetch if data hasn't been fetched yet
-      fetchUnassignedSessions();
+      fetchSessions();
     }
-  }, [connectionState, fetchUnassignedSessions, dataFetched]);
+  }, [connectionState, fetchSessions, dataFetched]);
 
+  // Retry mechanism when connection becomes ready
+  useEffect(() => {
+    if (connectionState === ConnectionState.Connected) {
+      // Add a small delay to ensure connection is fully ready
+      const timer = setTimeout(() => {
+        if (connectionState === ConnectionState.Connected) {
+          fetchSessions();
+        }
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [connectionState, fetchSessions]);
 
 
   // Handle session selection
@@ -128,9 +152,6 @@ const OpenChatTab: React.FC<OpenChatTabProps> = ({ onChatBoxOpen, drawerOpen, on
         <div className="flex justify-between items-center mb-3">
           <div>
             <h3 className="text-lg font-bold text-gray-800 mb-1">Open Chat</h3>
-            <p className="text-xs text-gray-500 mt-1">
-              Available sessions: {openChatSessions.length}
-            </p>
           </div>
         </div>
       </div>
