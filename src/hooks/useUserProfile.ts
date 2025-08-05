@@ -18,8 +18,6 @@ interface UseUserProfileProps {
 export default function useUserProfile(props?: UseUserProfileProps) {
   const queryClient = useQueryClient();
   const { userId, currentAvatarUrl, userRole, onAvatarUpdate } = props || {};
-
-  // Query for fetching current user profile - this will auto-fetch when userId changes
   const getCurrentUserQuery = (userId: number | null) => useQuery<AccountProps | null>({
     queryKey: ['currentUser', userId],
     queryFn: async () => {
@@ -28,18 +26,16 @@ export default function useUserProfile(props?: UseUserProfileProps) {
         return null;
       }
       const data = await GetCurrentStaffUser(userId);
-      //console.log('current user data: ',data)
       return data;
     },
-    enabled: !!userId && userId !== 0, // Only run if we have a valid userId
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    enabled: !!userId && userId !== 0, 
+    staleTime: 5 * 60 * 1000, 
     retry: 2,
   });
 
-  // Mutation for updating user profile
+
   const updateUserMutation = useMutation<AccountProps | true | null, unknown, { userId: number; data: UpdateAccountProps }>({
     mutationFn: async ({ userId, data }) => {
-      // Convert UpdateProfileData to UpdateAccountProps
       const updateData: UpdateAccountProps = {
         username: data.username || '',
         email: data.email || '',
@@ -64,7 +60,6 @@ export default function useUserProfile(props?: UseUserProfileProps) {
     },
   });
 
-  // Mutation for avatar updates (works for all roles)
   const avatarUpdateMutation = useMutation({
     mutationFn: async ({ userId, avatarData }: { userId: number; avatarData: UpdateAvatarProps }) => {
       const result = await UpdateUserAvatar(userId, avatarData);
@@ -73,8 +68,6 @@ export default function useUserProfile(props?: UseUserProfileProps) {
     onSuccess: (data, variables) => {
       if (data === true || data) {
         message.success('Avatar updated successfully!');
-        
-        // Invalidate and refetch user data to ensure consistency
         queryClient.invalidateQueries({ queryKey: ['currentUser', variables.userId] });
         queryClient.invalidateQueries({ queryKey: ['activeUsers'] });
         queryClient.invalidateQueries({ queryKey: ['staffList'] });
@@ -88,8 +81,6 @@ export default function useUserProfile(props?: UseUserProfileProps) {
       message.error('Failed to update avatar. Please try again.');
     },
   });
-
-  // Avatar upload handler
   const handleAvatarUpload = async (file: File) => {
     if (!userId || !userRole) {
       message.error('User information not available');
@@ -97,7 +88,6 @@ export default function useUserProfile(props?: UseUserProfileProps) {
     }
 
     try {
-      // Validate the file
       const validation = validateImageFile(file);
       if (!validation.isValid) {
         message.error(validation.error);
@@ -105,17 +95,11 @@ export default function useUserProfile(props?: UseUserProfileProps) {
       }
 
       message.loading('Uploading avatar...', 0);
-
-      // Upload to Firebase Storage with role-based path
       const newAvatarUrl = await uploadAvatar(file, userId, userRole);
-
-      // Use the avatar update API for all roles
       await avatarUpdateMutation.mutateAsync({
         userId,
         avatarData: { url: newAvatarUrl }
       });
-
-      // Delete old avatar if it exists and is from Firebase
       if (currentAvatarUrl && currentAvatarUrl.includes('firebase')) {
         try {
           await deleteAvatar(currentAvatarUrl, userRole);
@@ -124,7 +108,6 @@ export default function useUserProfile(props?: UseUserProfileProps) {
         }
       }
 
-      // Call the callback function
       if (onAvatarUpdate) {
         onAvatarUpdate(newAvatarUrl);
       }

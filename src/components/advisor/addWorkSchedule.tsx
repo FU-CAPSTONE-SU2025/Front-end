@@ -46,12 +46,6 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
       // Map day of week: Sunday = 1, Monday = 2, ..., Saturday = 7
       const dayOfWeek = selectedSlotInfo.date.day() === 0 ? 1 : selectedSlotInfo.date.day() + 1;
       
-      // Debug: Log selectedSlotInfo mapping
-      console.log('selectedSlotInfo.date:', selectedSlotInfo.date.format('YYYY-MM-DD'));
-      console.log('selectedSlotInfo.date.day():', selectedSlotInfo.date.day());
-      console.log('Calculated dayOfWeek:', dayOfWeek);
-      console.log('Day label:', dayOptions.find(day => day.value === dayOfWeek)?.label);
-      
       singleForm.setFieldsValue({
         dayInWeek: dayOfWeek,
         startTime: selectedSlotInfo.start,
@@ -138,11 +132,6 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
       const startTime = values.startTime.format('HH:mm:ss');
       const endTime = values.endTime.format('HH:mm:ss');
       
-      // Debug: Log giá trị dayInWeek
-      console.log('Frontend dayInWeek value:', values.dayInWeek);
-      console.log('Selected day label:', dayOptions.find(day => day.value === values.dayInWeek)?.label);
-      console.log('All dayOptions:', dayOptions);
-      
       await createBookingAvailability.mutateAsync({
         startTime,
         endTime,
@@ -173,13 +162,6 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
         endTime: dayjs(item.endTime).format('HH:mm:ss'),
         dayInWeek: item.dayInWeek
       }));
-
-      // Debug: Log bulk data
-      console.log('Bulk data dayInWeek values:', bulkData.map(item => ({
-        dayInWeek: item.dayInWeek,
-        dayLabel: dayOptions.find(day => day.value === item.dayInWeek)?.label
-      })));
-      console.log('All dayOptions in bulk:', dayOptions);
 
       await createBulkBookingAvailability.mutateAsync(bulkData);
 

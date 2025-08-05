@@ -1,15 +1,19 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
 import Header from './header';
+import GlobalChatBox from './globalChatBox';
+import { Outlet } from 'react-router';
 
-const AdvisorLayout: React.FC = () => {
+const AdvisorLayout = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+   
+    <>
       <Header />
-      <main className="pt-20 px-4 sm:px-6 lg:px-8">
+      <main className="mt-15">
         <Outlet />
       </main>
-    </div>
+      <GlobalChatBox />
+    </>
+
   );
 };
 

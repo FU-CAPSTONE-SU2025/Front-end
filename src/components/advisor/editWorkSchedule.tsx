@@ -26,14 +26,9 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
   const updateBookingAvailability = useUpdateBookingAvailability();
   const { data: schedule, isLoading: isLoadingSchedule } = useGetBookingAvailabilityById(scheduleId);
 
-  // Log scheduleId for debugging
-  console.log('EditWorkSchedule - scheduleId:', scheduleId);
-
   // Set form values when schedule changes or modal opens
   useEffect(() => {
-    console.log('EditWorkSchedule useEffect - scheduleId:', scheduleId, 'visible:', visible, 'schedule:', schedule);
     if (schedule && visible && !isLoadingSchedule) {
-      console.log('Setting form values for schedule:', schedule);
       // Use setTimeout to ensure the form is ready
       setTimeout(() => {
         form.setFieldsValue({

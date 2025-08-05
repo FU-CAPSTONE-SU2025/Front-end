@@ -428,3 +428,19 @@ export const getStudentBookingsForCalendar = async (pageNumber: number, pageSize
     return null as never;
   }
 };
+
+// Get unassigned sessions for student
+export const getUnassignedSessions = async () => {
+  const props = {
+    data: null,
+    url: baseUrl + "/AdvisorySession1to1/unassigned",
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};

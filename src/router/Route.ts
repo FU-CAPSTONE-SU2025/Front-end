@@ -54,6 +54,7 @@ import StudentInCoursePage from "../pages/manager/studentInCoursePage";
 import HistoryMeeting from "../pages/student/historyMeeting";
 import MeetingPage from "../pages/advisor/meetingPage";
 
+
 export const routes = createBrowserRouter([
   {
     path: "/admin",
@@ -131,7 +132,8 @@ export const routes = createBrowserRouter([
       {
         path: "chat-ai",
         Component: ChatAI,
-      }
+      },
+   
     ],
   },
   {
