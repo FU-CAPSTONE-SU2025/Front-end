@@ -3,7 +3,7 @@ import * as signalR from '@microsoft/signalr';
 import { useAuths } from './useAuths';
 import { NOTI_HUB_METHODS, NotificationItem } from '../interfaces/INotification';
 
-const NOTI_HUB_URL = `${import.meta.env.VITE_API_AISEA_API_HUBURL}/notificationHub`;
+const NOTI_HUB_URL = 'http://178.128.31.58:5000/notificationHub'
 
 
 enum ConnectionState {
@@ -99,8 +99,8 @@ export function useNotificationHub() {
         accessTokenFactory: () => accessToken,
         transport: signalR.HttpTransportType.WebSockets 
       })
-      .withAutomaticReconnect([0, 2000, 10000, 30000]) // Custom retry intervals
-      .configureLogging(signalR.LogLevel.Warning) // Production logging
+      .withAutomaticReconnect([0, 2000, 10000, 30000]) 
+      .configureLogging(signalR.LogLevel.Warning) 
       .build();
 
     // Connection state handlers
