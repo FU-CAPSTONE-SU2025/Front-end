@@ -3,7 +3,7 @@ import * as signalR from '@microsoft/signalr';
 import { useAuths } from './useAuths';
 import { NOTI_HUB_METHODS, NotificationItem } from '../interfaces/INotification';
 
-const NOTI_HUB_URL = 'https://178.128.31.58:5000/notificationHub'
+const NOTI_HUB_URL = 'https://jkh8ing8.online/notificationHub'
 
 
 enum ConnectionState {
