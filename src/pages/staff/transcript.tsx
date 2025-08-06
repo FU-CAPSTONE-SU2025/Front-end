@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Select, Button, Row, Col, ConfigProvider, message, Card, Space, Typography, Affix, Pagination, Empty } from 'antd';
 import { EditOutlined, SearchOutlined } from '@ant-design/icons';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
@@ -10,49 +9,6 @@ import { StudentBase } from '../../interfaces/IStudent';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
 
 const { Title, Text } = Typography;
-
-// Interfaces
-interface AccountProps {
-  id: number;
-}
-
-interface StudentDataListResponse {
-  enrolledAt: Date;
-  doGraduate: boolean;
-  careerGoal: string;
-}
-
-interface Program {
-  id: number;
-  programName: string;
-  programCode: string;
-}
-
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0, scale: 0.9, filter: 'blur(4px)' },
-  visible: { opacity: 1, scale: 1, filter: 'blur(0px)', transition: { duration: 0.8, ease: 'easeOut' } },
-};
-
-const headerVariants = {
-  hidden: { opacity: 0, y: -60 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: 'easeOut' } },
-};
-
-const filterVariants = {
-  hidden: { opacity: 0, y: -40, scale: 0.9 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.7, ease: 'easeOut', delay: i * 0.35 },
-  }),
-};
-
-const tableVariants = {
-  hidden: { opacity: 0, y: 60, scale: 0.95 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.9, ease: 'easeOut', delay: 1.0 } },
-};
 
 const StaffTranscript: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,13 +24,12 @@ const StaffTranscript: React.FC = () => {
   const {
     getAllPrograms,
     programList,
-    paginationProgram,
     isLoading: isLoadingProgram
   } = useCRUDProgram();
 
   // Load programs for filter
   useEffect(() => {
-    getAllPrograms({ pageNumber: 1, pageSize: 100, searchQuery: '' });
+    getAllPrograms({ pageNumber: 1, pageSize: 10, searchQuery: '' });
   }, []);
 
   // Load data when pagination or filters change
@@ -316,16 +271,6 @@ const StaffTranscript: React.FC = () => {
         </Affix>
 
         {/* Student Table Container */}
-        <Card 
-          className={glassStyles.appleGlassCard}
-          style={{ 
-            padding: '2rem',
-            background: 'rgba(255, 255, 255, 0.25)',
-            backdropFilter: 'blur(30px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)'
-          }}
-        >
           <Table
             columns={columns}
             dataSource={studentList}
@@ -356,7 +301,6 @@ const StaffTranscript: React.FC = () => {
               />
             </div>
           )}
-        </Card>
       </div>
     </ConfigProvider>
   );

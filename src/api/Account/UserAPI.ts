@@ -35,15 +35,9 @@ export const GetPagedActiveStudent = async (
   const params = new URLSearchParams({
     pageNumber: pageNumber.toString(),
     pageSize: pageSize.toString(),
+    search: searchQuery || "",
+    programId: programId?.toString() || ""
   });
-
-  if (searchQuery) {
-    params.append("searchQuery", searchQuery);
-  }
-
-  if (programId) {
-    params.append("programId", programId.toString());
-  }
 
   const props = {
     data: null,
