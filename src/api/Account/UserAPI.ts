@@ -38,7 +38,6 @@ export const GetPagedActiveStudent = async (
     search: searchQuery || "",
     programId: programId?.toString() || ""
   });
-
   const props = {
     data: null,
     url: userURL + `/students/active/paged?${params.toString()}`,
