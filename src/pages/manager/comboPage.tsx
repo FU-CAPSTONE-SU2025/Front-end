@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Affix, Tag, message, Pagination, Spin, Empty, Modal, Select, Space, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
+import { Table, Input, Button, Affix, Tag, message, Pagination, Spin, Empty, Modal, Space, Card, Typography, Row, Col } from 'antd';
+import { PlusOutlined,CheckOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
@@ -8,17 +8,16 @@ import { useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateCombo } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
-import { GetSubjectsInCombo } from '../../api/SchoolAPI/comboAPI';
-import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
-import SubjectSelect from '../../components/common/SubjectSelect';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
+
+const { Text, Title } = Typography;
 
 const ComboManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  // Remove local approval status state since we'll use backend data
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [approvalModalVisible, setApprovalModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ id: number; name: string } | null>(null);
@@ -40,7 +39,7 @@ const ComboManagerPage: React.FC = () => {
   const { subjectList, getAllSubjects } = useCRUDSubject();
   const [subjectModalOpen, setSubjectModalOpen] = useState(false);
   const [selectedCombo, setSelectedCombo] = useState<any>(null);
-  const [comboSubjects, setComboSubjects] = useState<any[]>([]); // Will hold SubjectInCombo[]
+  const [comboSubjects, setComboSubjects] = useState<any[]>([]);
   const [addSubjectId, setAddSubjectId] = useState<number | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
 
@@ -48,12 +47,8 @@ const ComboManagerPage: React.FC = () => {
   const { handleApproval, isApproving } = useApprovalActions();
 
   useEffect(() => {
-    // Backend search: pass search as filterValue
     getAllCombos({ pageNumber: page, pageSize, filterValue: search });
   }, [page, pageSize, search]);
-
-  // Remove the automatic success handling effect to prevent false positives
-  // Success handling is now only done in the mutation's onSuccess callback
 
   const handleAddCombo = () => {
     navigate('/manager/combo/add');
@@ -64,11 +59,9 @@ const ComboManagerPage: React.FC = () => {
   };
 
   const handleDeleteCombo = (id: number) => {
-    // TODO: Wire up to API if needed
     message.success('Deleted combo!');
   };
 
-  // Open modal and load subjects for combo
   const handleOpenSubjectModal = async (combo: any) => {
     setSelectedCombo(combo);
     setAddSubjectId(null);
@@ -82,7 +75,6 @@ const ComboManagerPage: React.FC = () => {
     }
   };
 
-  // Add subject to combo (backend)
   const handleAddSubject = async () => {
     if (!selectedCombo || !addSubjectId || comboSubjects.some(s => s.subjectId === addSubjectId)) return;
     setModalLoading(true);
@@ -99,7 +91,6 @@ const ComboManagerPage: React.FC = () => {
     }
   };
 
-  // Remove subject from combo (backend)
   const handleRemoveSubject = async (subjectId: number) => {
     if (!selectedCombo) return;
     setModalLoading(true);
@@ -115,7 +106,6 @@ const ComboManagerPage: React.FC = () => {
     }
   };
 
-  // Approve combo (backend)
   const handleApprove = (id: number, name: string) => {
     setSelectedItem({ id, name });
     setApprovalModalVisible(true);
@@ -126,7 +116,6 @@ const ComboManagerPage: React.FC = () => {
     
     try {
       await handleApproval('combo', selectedItem.id, approvalStatus, rejectionReason);
-      // Refresh the combo list to get updated approval status
       getAllCombos({ pageNumber: page, pageSize, filterValue: search });
       setApprovalModalVisible(false);
       setSelectedItem(null);
@@ -137,7 +126,6 @@ const ComboManagerPage: React.FC = () => {
 
   const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
-      // Extract combo data from the imported data
       const comboData = importedData['COMBO'] || [];
       
       if (comboData.length === 0) {
@@ -145,14 +133,12 @@ const ComboManagerPage: React.FC = () => {
         return;
       }
 
-      // Transform the imported data to match CreateCombo interface
       const transformedData: CreateCombo[] = comboData.map(item => ({
         comboName: item.comboName || '',
         comboDescription: item.comboDescription || '',
-        subjectIds: [] // Start with empty subject IDs array
+        subjectIds: []
       }));
 
-      // Validate the data
       const validData = transformedData.filter(item => 
         item.comboName.trim() !== ''
       );
@@ -166,12 +152,10 @@ const ComboManagerPage: React.FC = () => {
         message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
       }
 
-      // Call the bulk import mutation
       addMultipleCombosMutation.mutate(validData, {
         onSuccess: () => {
           message.success(`Successfully imported ${validData.length} combos`);
           setIsImportOpen(false);
-          // Refresh the combo list
           getAllCombos({ pageNumber: page, pageSize, filterValue: search });
         },
         onError: (error: any) => {
@@ -184,8 +168,6 @@ const ComboManagerPage: React.FC = () => {
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
       message.error(errorMessage);
-    } finally {
-
     }
   };
 
@@ -254,7 +236,7 @@ const ComboManagerPage: React.FC = () => {
       render: (_: any, record: any) => (
         <Button
           type="primary"
-          icon={<PlusOutlined />} // You may want to use a book icon for consistency
+          icon={<PlusOutlined />}
           onClick={() => handleOpenSubjectModal(record)}
           style={{ 
             backgroundColor: '#f97316',
@@ -280,17 +262,15 @@ const ComboManagerPage: React.FC = () => {
             icon={<CheckOutlined />}
             onClick={async () => {
               if (isApproved) {
-                // Unapprove
                 await handleApproval('combo', record.id, 0, null);
               } else {
-                // Approve
                 handleApprove(record.id, record.comboName);
               }
               getAllCombos({ pageNumber: page, pageSize, filterValue: search });
             }}
             style={{borderRadius: 8, height: 28, padding: '0 8px', marginLeft: 8}}
           >
-            {isApproved ? 'Approved' : 'Approve'}
+            {isApproved ? 'Edit Status' : 'Approve'}
           </Button>
         );
       },
@@ -299,47 +279,123 @@ const ComboManagerPage: React.FC = () => {
 
   return (
     <div className={styles.sttContainer}>
-      {/* Sticky Toolbar */}
-      <Affix offsetTop={80} style={{zIndex: 10}}>
-        <div className={`${styles.sttToolbar} ${glassStyles.appleGlassCard}`}>
-          <Input
-            placeholder="Search by ID or Combo Name"
-            prefix={<SearchOutlined />}
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1); }}
-            style={{maxWidth: 240, borderRadius: 999}}
-            size="large"
-            className={glassStyles.appleGlassInput}
-          />
-        </div>
-      </Affix>
-      {/* Combo Table */}
-      <Spin spinning={getComboMutation.isPending} tip="Loading combos...">
-        <Table
-          columns={columns}
-          dataSource={comboList}
-          rowKey="id"
-          className={styles.sttFreshTable}
-          locale={{ emptyText: <Empty description="No records available." /> }}
-          scroll={{ x: 'max-content' }}
-          pagination={false}
-          style={{marginBottom: 48}}
-        />
-        {/* Pagination */}
-        {paginationCombo && paginationCombo.total > 0 && (
-          <div style={{marginTop: 32, display: 'flex', justifyContent: 'center'}}>
-            <Pagination
-              current={paginationCombo.current}
-              pageSize={paginationCombo.pageSize}
-              total={paginationCombo.total}
-              showSizeChanger
-              pageSizeOptions={[5, 10, 20, 50]}
-              onChange={(p, ps) => { setPage(p); setPageSize(ps); }}
-              style={{borderRadius: 8}}
-            />
+      {/* Title Card */}
+      <Card 
+        className={glassStyles.appleGlassCard}
+        style={{ 
+          marginBottom: 24,
+          padding: '2rem 3rem',
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 20px 60px rgba(30, 64, 175, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06)'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <Title level={2} style={{ margin: 0, color: '#1E293B', fontSize: '2.5rem', fontWeight: 800 }}>
+              Combo Management
+            </Title>
+            <Text type="secondary" style={{ fontSize: 16 }}>
+              Manage and approve combo submissions
+            </Text>
           </div>
-        )}
-      </Spin>
+        </div>
+      </Card>
+
+      {/* Toolbar */}
+      <Affix offsetTop={80} style={{zIndex: 10}}>
+        <Card 
+          className={glassStyles.appleGlassCard}
+          style={{ 
+            marginBottom: 24,
+            padding: '1.5rem 2rem',
+            background: 'rgba(255, 255, 255, 0.25)',
+            backdropFilter: 'blur(30px) saturate(180%)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}
+        >
+          <Row gutter={[16, 16]} align="middle">
+            <Col xs={24} sm={12}>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Text strong>Search Combos</Text>
+                <Input
+                  placeholder="Search by ID or Combo Name"
+                  prefix={<SearchOutlined />}
+                  value={search}
+                  onChange={e => { setSearch(e.target.value); setPage(1); }}
+                  style={{borderRadius: 12, width: '100%'}}
+                  size="large"
+                  className={glassStyles.appleGlassInput}
+                />
+              </Space>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Text strong>Actions</Text>
+                <Space>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={handleAddCombo}
+                    style={{
+                      borderRadius: 12,
+                      background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                      border: 'none',
+                      fontWeight: 600,
+                      boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)'
+                    }}
+                  >
+                    Add Combo
+                  </Button>
+                  <Button
+                    icon={<UploadOutlined />}
+                    onClick={() => setIsImportOpen(true)}
+                    style={{borderRadius: 12}}
+                  >
+                    Import
+                  </Button>
+                </Space>
+              </Space>
+            </Col>
+          </Row>
+        </Card>
+      </Affix>
+
+      {/* Combo Table Container */}
+      <Card 
+      >
+        <Spin spinning={getComboMutation.isPending} tip="Loading combos...">
+          <Table
+            columns={columns}
+            dataSource={comboList}
+            rowKey="id"
+            className={styles.sttFreshTable}
+            locale={{ emptyText: <Empty description="No records available." /> }}
+            scroll={{ x: 'max-content' }}
+            pagination={false}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 12,
+              overflow: 'hidden'
+            }}
+          />
+          
+          {/* Pagination */}
+          {paginationCombo && paginationCombo.total > 0 && (
+            <div style={{marginTop: 32, display: 'flex', justifyContent: 'center'}}>
+              <Pagination
+                current={paginationCombo.current}
+                pageSize={paginationCombo.pageSize}
+                total={paginationCombo.total}
+                showSizeChanger
+                pageSizeOptions={[5, 10, 20, 50]}
+                onChange={(p, ps) => { setPage(p); setPageSize(ps); }}
+                style={{borderRadius: 8}}
+              />
+            </div>
+          )}
+        </Spin>
+      </Card>
       
       {/* Data Import Modal */}
       {isImportOpen && (

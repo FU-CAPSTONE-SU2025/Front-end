@@ -25,21 +25,39 @@ export const GetActiveUser = async ():Promise<ActiveAccountProps|null> => {
     }
 }
 // This is for Staff and Manager
-export const GetPagedActiveStudent = async (pageNumber:number,pageSize:number):Promise<PagedData<StudentBase>> => {
-    const props = {
-        data: null,
-        url: userURL+`/students/active/paged?pageNumber=${pageNumber}&pageSize=${pageSize}`,
-    }
-    const result = await axiosRead(props)
-    if (result.success) {
-        return result.data
-    }
-    else {
-        console.log(result.error)
-        throwApiError(result);
-        return null
-    }
-}
+export const GetPagedActiveStudent = async (
+  pageNumber: number,
+  pageSize: number,
+  searchQuery?: string,
+  programId?: number
+): Promise<PagedData<StudentBase>> => {
+  // Build query parameters
+  const params = new URLSearchParams({
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString(),
+  });
+
+  if (searchQuery) {
+    params.append("searchQuery", searchQuery);
+  }
+
+  if (programId) {
+    params.append("programId", programId.toString());
+  }
+
+  const props = {
+    data: null,
+    url: userURL + `/students/active/paged?${params.toString()}`,
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    console.log(result.error);
+    throwApiError(result);
+    return null;
+  }
+};
 
 export const GetCurrentStaffUser = async (userId:number):Promise<AccountProps|null> => {
     const props = {

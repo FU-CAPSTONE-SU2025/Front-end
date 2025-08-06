@@ -90,29 +90,22 @@ export const FetchCurriculumList = async (
   pageNumber: number = 1,
   pageSize: number = 10,
   searchQuery?: string,
-  filterType?: string,
-  filterValue?: string
+  programId?: number
 ): Promise<PagedData<Curriculum> | null> => {
   // Build query parameters
   const params = new URLSearchParams({
     pageNumber: pageNumber.toString(),
     pageSize: pageSize.toString(),
+    search: searchQuery || "",
+    programId: programId?.toString() || ""
   });
-
-  if (searchQuery) {
-    params.append("searchQuery", searchQuery);
-  }
-
-  if (filterType && filterValue) {
-    params.append("filterType", filterType);
-    params.append("filterValue", filterValue);
-  }
 
   const props = {
     data: null,
     url: curriculumURL + "?" + params.toString(),
     headers: GetHeader(),
   };
+  console.log(props.url)
   const result = await axiosRead(props);
   if (result.success) {
     return result.data;

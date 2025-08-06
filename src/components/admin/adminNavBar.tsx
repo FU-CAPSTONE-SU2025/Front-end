@@ -4,7 +4,6 @@ import { User, Users, Briefcase, BookUser, UserCog, Activity, LogOut } from 'luc
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../../css/admin/adminNavBar.module.css';
 import { getAuthState } from '../../hooks/useAuths';
-import Notification from '../common/Notification';
 
 // Interface for navigation items
 interface NavItem {
@@ -129,9 +128,6 @@ const AdminNavBar: React.FC = () => {
                 src="/img/Logo.svg"
                 alt="AI-SEA Logo"
               />
-            </div>
-            <div className={styles.notificationContainer}>
-              <Notification variant="admin" />
             </div>
           </div>
           <nav className={styles.nav}>

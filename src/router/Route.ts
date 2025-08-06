@@ -24,7 +24,7 @@ import StaffProfile from "../pages/staff/profile";
 import StaffLayout from "../components/staff/staffLayout";
 import ManagerLayout from "../components/manager/managerLayout";
 import ManagerProfile from "../pages/manager/profile";
-import HomePage from '../pages/manager/home';
+import CurriculumPageManager from '../pages/manager/curriculum';
 import ComboPage from "../pages/manager/comboPage";
 import AddComboPage from "../pages/manager/addCombo";
 import EditComboPage from "../pages/manager/editCombo";
@@ -219,7 +219,7 @@ export const routes = createBrowserRouter([
       },
       {
         path: "curriculum",
-        Component: HomePage,
+        Component: CurriculumPageManager,
       },
       {
         index: true,

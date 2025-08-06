@@ -47,6 +47,8 @@ interface PaginationParams {
   pageSize: number;
   filterType?: string;
   filterValue?: string;
+  searchQuery?: string;
+  programId?: number;
 }
 
 export function useCRUDCurriculum() {
@@ -55,8 +57,8 @@ export function useCRUDCurriculum() {
       const data = await FetchCurriculumList(
         params.pageNumber, 
         params.pageSize, 
-        params.filterType, 
-        params.filterValue
+        params.searchQuery,
+        params.programId
       );
       return data;
     },
