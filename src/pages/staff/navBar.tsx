@@ -98,9 +98,6 @@ const StaffNavBar: React.FC = () => {
           <div className={styles.logo}>
             <img src="/img/Logo.svg" alt="App Logo" />
           </div>
-          <div className={styles.notificationContainer}>
-            <Notification variant="staff" />
-          </div>
           <nav className={styles.nav}>
             {navItems.map((item, index) => (
               <motion.div
@@ -119,6 +116,9 @@ const StaffNavBar: React.FC = () => {
               </motion.div>
             ))}
           </nav>
+          <div className={styles.notificationContainer}>
+            <Notification variant="staff" />
+          </div>
         </div>
       </motion.header>
     </>

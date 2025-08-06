@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Affix, message, Pagination, Spin, Modal, Form, Tag, Space, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, UploadOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { Table, Input, Button, Affix, Pagination, Spin, Modal, Form, Tag, Space, Tooltip, Card, Typography, Row, Col } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
-import { CreateProgram, Program } from '../../interfaces/ISchoolProgram';
-import { isErrorResponse } from '../../api/AxiosCRUD';
+
+const { Text, Title } = Typography;
 
 const ManagerProgramPage: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -74,54 +74,103 @@ const ManagerProgramPage: React.FC = () => {
 
   return (
     <div className={styles.sttContainer}>
-      {/* Sticky Toolbar */}
-      <Affix offsetTop={80} style={{zIndex: 10}}>
-        <div className={`${styles.sttToolbar} ${glassStyles.appleGlassCard}`}>
-          <Input.Search
-            placeholder="Search by Program Name or Code"
-            prefix={<SearchOutlined />}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onSearch={handleSearch}
-            style={{maxWidth: 280, borderRadius: 999}}
-            size="large"
-            allowClear
-            className={glassStyles.appleGlassInput}
-          />
+      {/* Title Card */}
+      <Card 
+        className={glassStyles.appleGlassCard}
+        style={{ 
+          marginBottom: 24,
+          padding: '2rem 3rem',
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 20px 60px rgba(30, 64, 175, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06)'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <Title level={2} style={{ margin: 0, color: '#1E293B', fontSize: '2.5rem', fontWeight: 800 }}>
+              Program Management
+            </Title>
+            <Text type="secondary" style={{ fontSize: 16 }}>
+              Manage and view program information
+            </Text>
+          </div>
         </div>
+      </Card>
+
+      {/* Toolbar */}
+      <Affix offsetTop={80} style={{zIndex: 10}}>
+        <Card 
+          className={glassStyles.appleGlassCard}
+          style={{ 
+            marginBottom: 24,
+            padding: '1.5rem 2rem',
+            background: 'rgba(255, 255, 255, 0.25)',
+            backdropFilter: 'blur(30px) saturate(180%)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}
+        >
+          <Row gutter={[16, 16]} align="middle">
+            <Col xs={24} sm={12}>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Text strong>Search Programs</Text>
+                <Input.Search
+                  placeholder="Search by Program Name or Code"
+                  prefix={<SearchOutlined />}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onSearch={handleSearch}
+                  style={{borderRadius: 12, width: '100%'}}
+                  size="large"
+                  allowClear
+                  className={glassStyles.appleGlassInput}
+                />
+              </Space>
+            </Col>
+          </Row>
+        </Card>
       </Affix>
 
-      {/* Programs Table */}
-      <div style={{ background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)', padding: '24px' }}>
-        <Table
-          columns={columns}
-          dataSource={programList}
-          rowKey="id"
-          loading={isLoading}
-          pagination={false}
-          locale={{
-            emptyText: search ? `No programs found matching "${search}"` : 'No programs available'
-          }}
-        />
-        {/* Pagination */}
-        {paginationProgram && paginationProgram.total > 0 && (
-          <div style={{marginTop: 24, display: 'flex', justifyContent: 'center'}}>
-            <Pagination
-              current={paginationProgram.current}
-              pageSize={paginationProgram.pageSize}
-              total={paginationProgram.total}
-              showSizeChanger
-              showQuickJumper
-              showTotal={(total, range) => 
-                `${range[0]}-${range[1]} of ${total} programs`
-              }
-              pageSizeOptions={['10', '20', '50', '100']}
-              onChange={handlePageChange}
-              style={{borderRadius: 8}}
-            />
-          </div>
-        )}
-      </div>
+      {/* Programs Table Container */}
+      <Card 
+      >
+        <Spin spinning={isLoading} tip="Loading programs...">
+          <Table
+            columns={columns}
+            dataSource={programList}
+            rowKey="id"
+            className={styles.sttFreshTable}
+            locale={{
+              emptyText: search ? `No programs found matching "${search}"` : 'No programs available'
+            }}
+            scroll={{ x: 'max-content' }}
+            pagination={false}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 12,
+              overflow: 'hidden'
+            }}
+          />
+          
+          {/* Pagination */}
+          {paginationProgram && paginationProgram.total > 0 && (
+            <div style={{marginTop: 32, display: 'flex', justifyContent: 'center'}}>
+              <Pagination
+                current={paginationProgram.current}
+                pageSize={paginationProgram.pageSize}
+                total={paginationProgram.total}
+                showSizeChanger
+                showQuickJumper
+                showTotal={(total, range) => 
+                  `${range[0]}-${range[1]} of ${total} programs`
+                }
+                pageSizeOptions={['10', '20', '50', '100']}
+                onChange={handlePageChange}
+                style={{borderRadius: 8}}
+              />
+            </div>
+          )}
+        </Spin>
+      </Card>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Select, Affix, Tag, Pagination, Spin, Empty } from 'antd';
-import {SearchOutlined, CheckOutlined } from '@ant-design/icons';
+import { Table, Input, Button, Select, Affix, Tag, Pagination, Spin, Empty, Card, Typography, Space, Row, Col } from 'antd';
+import {SearchOutlined, CheckOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { curriculums, combos } from '../../data/schoolData';
@@ -10,12 +10,12 @@ import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
 
 const { Option } = Select;
+const { Text, Title } = Typography;
 
 const SubjectManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [curriculumFilter, setCurriculumFilter] = useState<number | undefined>();
   const [comboFilter, setComboFilter] = useState<number | undefined>();
-  // Remove local approval status state since we'll use backend data
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [approvalModalVisible, setApprovalModalVisible] = useState(false);
@@ -44,8 +44,6 @@ const SubjectManagerPage: React.FC = () => {
     if (title) setSearch(title);
   }, [searchParams]);
 
-
-
   const handleApprove = (id: number, name: string) => {
     setSelectedItem({ id, name });
     setApprovalModalVisible(true);
@@ -56,7 +54,6 @@ const SubjectManagerPage: React.FC = () => {
     
     try {
       await handleApproval('subject', selectedItem.id, approvalStatus, rejectionReason);
-      // Refresh the subject list to get updated approval status
       getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
       setApprovalModalVisible(false);
       setSelectedItem(null);
@@ -102,39 +99,53 @@ const SubjectManagerPage: React.FC = () => {
       },
     },
     {
-      title: 'Status',
-      key: 'status',
+      title: 'Actions',
+      key: 'actions',
       align: 'center' as 'center',
-      width: 180,
+      width: 280,
       render: (_: any, record: any) => {
         const isApproved = record.approvalStatus === 1;
         return (
           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+            {/* Approved Status Display */}
             <Tag color={isApproved ? 'green' : 'orange'} style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6, marginBottom: 0 }}>
               {isApproved ? 'Approved' : 'Waiting'}
             </Tag>
-                    <Button
-          type={isApproved ? 'default' : 'primary'}
-          icon={<CheckOutlined style={{ fontSize: 12 }} />}
-          size="small"
-          onClick={async () => {
-            if (isApproved) {
-              // Unapprove
-              await handleApproval('subject', record.id, 0, null);
-            } else {
-              // Approve
-              handleApprove(record.id, record.subjectName);
-            }
-            getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
-          }}
-          style={{borderRadius: 6, height: 22, padding: '0 6px', fontSize: 12, marginBottom: 0}}
-        >
-          {isApproved ? 'Approved' : 'Approve'}
-        </Button>
+            
+            {/* Edit Status Button */}
             <Button
-              type="default"
+              type={isApproved ? 'default' : 'primary'}
+              icon={<CheckOutlined style={{ fontSize: 12 }} />}
               size="small"
-              style={{ borderRadius: 6, height: 22, padding: '0 10px', fontSize: 12, marginBottom: 0 }}
+              onClick={async () => {
+                if (isApproved) {
+                  await handleApproval('subject', record.id, 0, null);
+                } else {
+                  handleApprove(record.id, record.subjectName);
+                }
+                getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+              }}
+              style={{borderRadius: 6, height: 22, padding: '0 6px', fontSize: 12, marginBottom: 0}}
+            >
+              {isApproved ? 'Edit Status' : 'Approve'}
+            </Button>
+            
+            {/* View Version Button - Styled like Staff Edit Version */}
+            <Button
+              type="primary"
+              icon={<EyeOutlined style={{ fontSize: 12 }} />}
+              size="small"
+              style={{
+                borderRadius: 6,
+                height: 22,
+                padding: '0 8px',
+                fontSize: 12,
+                marginBottom: 0,
+                background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                border: 'none',
+                fontWeight: 600,
+                boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)'
+              }}
               onClick={() => handleViewVersion(record.id)}
             >
               View Version
@@ -146,50 +157,100 @@ const SubjectManagerPage: React.FC = () => {
   ];
 
   return (
-    <div>
-      <div className={styles.sttContainer} style={{ paddingTop: 12 }}>
-        {/* Sticky Toolbar */}
-        <Affix offsetTop={80} style={{zIndex: 10}}>
-          <div className={`${styles.sttToolbar} ${glassStyles.appleGlassCard}`}>
-            <Input
-              placeholder="Search by Subject Name or ID"
-              prefix={<SearchOutlined />}
-              value={search}
-              onChange={e => { setSearch(e.target.value); setPage(1); }}
-              style={{maxWidth: 240, borderRadius: 999}}
-              size="large"
-              className={glassStyles.appleGlassInput}
-            />
-            <Select
-              allowClear
-              placeholder="Filter by Curriculum"
-              style={{minWidth: 180, borderRadius: 999}}
-              size="large"
-              value={curriculumFilter}
-              onChange={setCurriculumFilter}
-              className={glassStyles.appleGlassInput}
-            >
-              {curriculums.map(c => (
-                <Option key={c.id} value={c.id}>{c.curriculumName}</Option>
-              ))}
-            </Select>
-            <Select
-              allowClear
-              placeholder="Filter by Combo"
-              style={{minWidth: 180, borderRadius: 999}}
-              size="large"
-              value={comboFilter}
-              onChange={setComboFilter}
-              className={glassStyles.appleGlassInput}
-            >
-              {combos.map(cb => (
-                <Option key={cb.id} value={cb.id}>{cb.comboName}</Option>
-              ))}
-            </Select>
-            {/* Remove the Add Subject button and bulk import logic from the toolbar and page. */}
+    <div className={styles.sttContainer}>
+      {/* Title Card */}
+      <Card 
+        className={glassStyles.appleGlassCard}
+        style={{ 
+          marginBottom: 24,
+          padding: '2rem 3rem',
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 20px 60px rgba(30, 64, 175, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06)'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <Title level={2} style={{ margin: 0, color: '#1E293B', fontSize: '2.5rem', fontWeight: 800 }}>
+              Subject Management
+            </Title>
+            <Text type="secondary" style={{ fontSize: 16 }}>
+              Manage and approve subject submissions
+            </Text>
           </div>
-        </Affix>
-        {/* Subject Table */}
+        </div>
+      </Card>
+
+      {/* Toolbar */}
+      <Affix offsetTop={80} style={{zIndex: 10}}>
+        <Card 
+          className={glassStyles.appleGlassCard}
+          style={{ 
+            marginBottom: 24,
+            padding: '1.5rem 2rem',
+            background: 'rgba(255, 255, 255, 0.25)',
+            backdropFilter: 'blur(30px) saturate(180%)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}
+        >
+          <Row gutter={[16, 16]} align="middle">
+            <Col xs={24} sm={8}>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Text strong>Search Subjects</Text>
+                <Input
+                  placeholder="Search by Subject Name or ID"
+                  prefix={<SearchOutlined />}
+                  value={search}
+                  onChange={e => { setSearch(e.target.value); setPage(1); }}
+                  style={{borderRadius: 12, width: '100%'}}
+                  size="large"
+                  className={glassStyles.appleGlassInput}
+                />
+              </Space>
+            </Col>
+            <Col xs={24} sm={8}>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Text strong>Filter by Curriculum</Text>
+                <Select
+                  allowClear
+                  placeholder="Select Curriculum"
+                  style={{borderRadius: 12, width: '100%'}}
+                  size="large"
+                  value={curriculumFilter}
+                  onChange={setCurriculumFilter}
+                  className={glassStyles.appleGlassInput}
+                >
+                  {curriculums.map(c => (
+                    <Option key={c.id} value={c.id}>{c.curriculumName}</Option>
+                  ))}
+                </Select>
+              </Space>
+            </Col>
+            <Col xs={24} sm={8}>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Text strong>Filter by Combo</Text>
+                <Select
+                  allowClear
+                  placeholder="Select Combo"
+                  style={{borderRadius: 12, width: '100%'}}
+                  size="large"
+                  value={comboFilter}
+                  onChange={setComboFilter}
+                  className={glassStyles.appleGlassInput}
+                >
+                  {combos.map(cb => (
+                    <Option key={cb.id} value={cb.id}>{cb.comboName}</Option>
+                  ))}
+                </Select>
+              </Space>
+            </Col>
+          </Row>
+        </Card>
+      </Affix>
+
+      {/* Subject Table Container */}
+      <Card>
+      
         <Spin spinning={isLoading} tip="Loading subjects...">
           <Table
             columns={columns}
@@ -199,8 +260,13 @@ const SubjectManagerPage: React.FC = () => {
             locale={{ emptyText: <Empty description="No records available." /> }}
             scroll={{ x: 'max-content' }}
             pagination={false}
-            style={{marginBottom: 48}}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 12,
+              overflow: 'hidden'
+            }}
           />
+          
           {/* Pagination */}
           {paginationSubject && paginationSubject.total > 0 && (
             <div style={{marginTop: 32, display: 'flex', justifyContent: 'center'}}>
@@ -216,22 +282,21 @@ const SubjectManagerPage: React.FC = () => {
             </div>
           )}
         </Spin>
-        
-        {/* Approval Modal */}
-        <ApprovalModal
-          visible={approvalModalVisible}
-          onCancel={() => {
-            setApprovalModalVisible(false);
-            setSelectedItem(null);
-          }}
-          onConfirm={handleApprovalConfirm}
-          type="subject"
-          itemId={selectedItem?.id || 0}
-          itemName={selectedItem?.name || ''}
-          loading={isApproving}
-        />
-        
-      </div>
+      </Card>
+      
+      {/* Approval Modal */}
+      <ApprovalModal
+        visible={approvalModalVisible}
+        onCancel={() => {
+          setApprovalModalVisible(false);
+          setSelectedItem(null);
+        }}
+        onConfirm={handleApprovalConfirm}
+        type="subject"
+        itemId={selectedItem?.id || 0}
+        itemName={selectedItem?.name || ''}
+        loading={isApproving}
+      />
     </div>
   );
 };

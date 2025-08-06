@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Select, Button, Row, Col, ConfigProvider, message } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
+import { Table, Input, Select, Button, Row, Col, ConfigProvider, message, Card, Space, Typography, Affix, Pagination, Empty } from 'antd';
+import { EditOutlined, SearchOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { GetPagedActiveStudent } from '../../api/Account/UserAPI';
 import { StudentBase } from '../../interfaces/IStudent';
+import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
+
+const { Title, Text } = Typography;
 
 // Interfaces
 interface AccountProps {
@@ -23,12 +27,6 @@ interface Program {
   programName: string;
   programCode: string;
 }
-
-// Mock programs data (this could be fetched from API later)
-const mockPrograms: Program[] = [
-  { id: 1, programName: 'Computer Science', programCode: 'CS101' },
-  { id: 2, programName: 'Artificial Intelligence', programCode: 'AI201' },
-];
 
 // Animation variants
 const containerVariants = {
@@ -66,20 +64,28 @@ const StaffTranscript: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Load initial data
+  // Program API for filter
+  const {
+    getAllPrograms,
+    programList,
+    paginationProgram,
+    isLoading: isLoadingProgram
+  } = useCRUDProgram();
+
+  // Load programs for filter
   useEffect(() => {
-    loadStudentData();
+    getAllPrograms({ pageNumber: 1, pageSize: 100, searchQuery: '' });
   }, []);
 
   // Load data when pagination or filters change
   useEffect(() => {
     loadStudentData();
-  }, [currentPage, pageSize, selectedProgram]);
+  }, [currentPage, pageSize, searchQuery, selectedProgram]);
 
   const loadStudentData = async () => {
     setIsLoading(true);
     try {
-      const result = await GetPagedActiveStudent(currentPage, pageSize);
+      const result = await GetPagedActiveStudent(currentPage, pageSize, searchQuery, selectedProgram || undefined);
       
       if (result) {
         setStudentList(result.items || []);
@@ -100,18 +106,6 @@ const StaffTranscript: React.FC = () => {
     }
   };
 
-  // Handle search (client-side filtering)
-  const filteredStudents = studentList.filter((student) => {
-    if (!searchQuery) return true;
-    
-    return (
-      student.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.id?.toString().includes(searchQuery)
-    );
-  });
-
   // Handle pagination change
   const handlePageChange = (page: number, size?: number) => {
     setCurrentPage(page);
@@ -129,7 +123,7 @@ const StaffTranscript: React.FC = () => {
   // Handle search change
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    // Search is client-side, so we don't need to reload data
+    setCurrentPage(1); // Reset to first page when search changes
   };
 
   // Handle edit action
@@ -174,18 +168,18 @@ const StaffTranscript: React.FC = () => {
       align: 'center' as 'center', 
       render: (status: number) => (
         <span style={{ 
-          color: status === 1 ? '#10b981' : '#ef4444',
+          color: status === 0 ? '#10b981' : '#ef4444',
           fontWeight: 600,
           padding: '4px 12px',
           borderRadius: '8px',
-          backgroundColor: status === 1 ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-          border: `1.5px solid ${status === 1 ? '#10b981' : '#ef4444'}`,
+          backgroundColor: status === 0 ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+          border: `1.5px solid ${status === 0 ? '#10b981' : '#ef4444'}`,
           fontSize: '13px',
           minWidth: 70,
           display: 'inline-block',
           textAlign: 'center',
         }}>
-          {status === 1 ? 'Active' : 'Inactive'}
+          {status === 0 ? 'Active' : 'Inactive'}
         </span>
       ) 
     },
@@ -205,10 +199,6 @@ const StaffTranscript: React.FC = () => {
       )
     },
   ];
-
-  // Custom row and table styling for Syllabus look
-  const tableClassName = styles.syllabusTable;
-  const rowClassName = () => styles.syllabusTableRow;
 
   return (
     <ConfigProvider
@@ -250,63 +240,123 @@ const StaffTranscript: React.FC = () => {
       }}
     >
       <div className={styles.sttContainer}>
-        <motion.div className={styles.sttHeader} variants={headerVariants} initial="hidden" animate="visible">
-          <Row>
-            <Col span={18}>
-              <h1 className={styles.sttTitle}>Student Transcript Hub</h1>
-            </Col>
-            <Col span={6}>
-              <div className={styles.sttFilterWrapper}>
-                <div className={styles.sttFilterSection}>
+        {/* Title Card */}
+        <Card 
+          className={glassStyles.appleGlassCard}
+          style={{ 
+            marginBottom: 24,
+            padding: '2rem 3rem',
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 20px 60px rgba(30, 64, 175, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <Title level={2} style={{ margin: 0, color: '#1E293B', fontSize: '2.5rem', fontWeight: 800 }}>
+                Student Transcript Hub
+              </Title>
+              <Text type="secondary" style={{ fontSize: 16 }}>
+                Manage and view student transcripts
+              </Text>
+            </div>
+          </div>
+        </Card>
+
+        {/* Toolbar */}
+        <Affix offsetTop={80} style={{zIndex: 10}}>
+          <Card 
+            className={glassStyles.appleGlassCard}
+            style={{ 
+              marginBottom: 24,
+              padding: '1.5rem 2rem',
+              background: 'rgba(255, 255, 255, 0.25)',
+              backdropFilter: 'blur(30px) saturate(180%)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}
+          >
+            <Row gutter={[16, 16]} align="middle">
+              <Col xs={24} sm={12}>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text strong>Search Students</Text>
                   <Input
                     placeholder="Search by name, email or ID"
+                    prefix={<SearchOutlined />}
                     value={searchQuery}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    className={styles.sttFreshInput}
+                    onChange={e => handleSearchChange(e.target.value)}
+                    style={{borderRadius: 12, width: '100%'}}
                     size="large"
+                    className={glassStyles.appleGlassInput}
                   />
+                </Space>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text strong>Filter by Program</Text>
                   <Select
-                    value={selectedProgram}
-                    onChange={(value) => handleProgramFilterChange(value)}
-                    placeholder="Filter by Program"
                     allowClear
-                    className={styles.sttFreshSelect}
+                    placeholder="Select Program"
+                    value={selectedProgram}
+                    onChange={handleProgramFilterChange}
+                    loading={isLoadingProgram}
+                    style={{borderRadius: 12, width: '100%'}}
                     size="large"
+                    className={glassStyles.appleGlassInput}
                   >
-                    {mockPrograms.map((program) => (
+                    {programList.map((program: any) => (
                       <Select.Option key={program.id} value={program.id}>
                         {program.programName}
                       </Select.Option>
                     ))}
                   </Select>
-                </div>
-              </div>
-            </Col>
-          </Row>
-        </motion.div>
+                </Space>
+              </Col>
+            </Row>
+          </Card>
+        </Affix>
 
-        <motion.div variants={tableVariants} initial="hidden" animate="visible" className={styles.sttTableWrapper}>
+        {/* Student Table Container */}
+        <Card 
+          className={glassStyles.appleGlassCard}
+          style={{ 
+            padding: '2rem',
+            background: 'rgba(255, 255, 255, 0.25)',
+            backdropFilter: 'blur(30px) saturate(180%)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)'
+          }}
+        >
           <Table
             columns={columns}
-            dataSource={filteredStudents}
+            dataSource={studentList}
             rowKey="id"
-            className={tableClassName}
-            rowClassName={rowClassName}
-            locale={{ emptyText: 'No students found.' }}
+            className={styles.sttFreshTable}
+            locale={{ emptyText: <Empty description="No students found." /> }}
             scroll={{ x: 'max-content' }}
             loading={isLoading}
-            pagination={{
-              current: pagination?.current || 1,
-              pageSize: pagination?.pageSize || 10,
-              total: pagination?.total || 0,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) => `Showing ${range[0]}-${range[1]} of ${total} students`,
-              onChange: handlePageChange,
-              onShowSizeChange: handlePageChange,
+            pagination={false}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 12,
+              overflow: 'hidden'
             }}
           />
-        </motion.div>
+          
+          {/* Pagination */}
+          {pagination && pagination.total > 0 && (
+            <div style={{marginTop: 32, display: 'flex', justifyContent: 'center'}}>
+              <Pagination
+                current={pagination.current}
+                pageSize={pagination.pageSize}
+                total={pagination.total}
+                showSizeChanger
+                pageSizeOptions={[5, 10, 20, 50]}
+                onChange={handlePageChange}
+                style={{borderRadius: 8}}
+              />
+            </div>
+          )}
+        </Card>
       </div>
     </ConfigProvider>
   );
