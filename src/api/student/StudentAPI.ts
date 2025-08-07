@@ -15,6 +15,7 @@ import {
     PagedLeaveScheduleData,
     BookingAvailabilityData
 } from "../../interfaces/IStudent";
+import { ChatSessionRequest, ChatSessionResponse } from "../../interfaces/IChat";
 
 
 const userURL = baseUrl+"/User/student"
@@ -379,6 +380,26 @@ export const getCurrentNumberOfBan = async () => {
     headers: GetHeader(),
   };
   const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+
+
+
+
+// Initialize chat session with human advisor
+export const initChatSession = async (message: string): Promise<ChatSessionResponse> => {
+  const props = {
+    data: { message } as ChatSessionRequest,
+    url: baseUrl + "/AdvisorySession1to1/human",
+    headers: GetHeader(),
+  };
+  const result = await axiosCreate(props);
   if (result.success) {
     return result.data;
   } else {

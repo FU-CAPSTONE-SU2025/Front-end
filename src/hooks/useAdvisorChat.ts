@@ -3,6 +3,8 @@ import * as signalR from '@microsoft/signalr';
 import { useAuths } from './useAuths';
 import { ChatMessage, PagedResult } from '../interfaces/IChat';
 import { SIGNALR_CONFIG, ConnectionState, signalRManager } from '../config/signalRConfig';
+import { useChatSession } from './useChatSession';
+import { addMessageWithDeduplication, mapBackendMessage } from '../utils/messageUtils';
 
 export interface AdvisorSession {
   id: number;
@@ -199,31 +201,12 @@ export function useAdvisorChat() {
   }, []);
 
   // Initialize chat session
+  // Use the new chat session hook
+  const { initializeSession, isLoading: isInitializingSession, error: sessionError, sessionData } = useChatSession();
+
   const initChatSession = useCallback(async (message: string) => {
-    if (!accessToken) {
-      throw new Error('No access token available');
-    }
-
-    try {
-      const response = await fetch('https://jkh8ing8.online/api/AdvisorySession1to1/human', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({ message })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result;
-    } catch (err) {
-      throw new Error(`Failed to initialize chat session: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    }
-  }, [accessToken]);
+    return await initializeSession(message);
+  }, [initializeSession]);
 
   // Join session
   const joinSession = useCallback(async (sessionId: number) => {
@@ -328,29 +311,15 @@ export function useAdvisorChat() {
       }
     });
 
-    // Main message listener for real-time messages - SIMPLIFIED like demo
+    // Main message listener for real-time messages - USING UTILITY FUNCTION
     connection.on(SIGNALR_CONFIG.HUB_METHODS.SEND_ADVSS_METHOD, (message: any) => {
       if (message && message.content) {
-        const mappedMessage: ChatMessage = {
-          id: message.messageId || Date.now(),
-          content: message.content,
-          senderId: message.senderId,
-          advisorySession1to1Id: message.advisorySession1to1Id,
-          createdAt: message.createdAt || new Date().toISOString(),
-          senderName: message.senderName || 'Unknown'
-        };
+        const mappedMessage = mapBackendMessage(message);
         
-        // Simply add message to current session if it matches
+        // Add message to current session if it matches
         const currentSessionId = currentSessionRef.current?.id;
         if (currentSessionId && message.advisorySession1to1Id === currentSessionId) {
-          setMessages(prev => {
-            // Simple duplicate check by message ID
-            const exists = prev.some(m => m.id === mappedMessage.id);
-            if (exists) {
-              return prev;
-            }
-            return [...prev, mappedMessage];
-          });
+          setMessages(prev => addMessageWithDeduplication(mappedMessage, prev));
         }
       }
     });
@@ -463,5 +432,9 @@ export function useAdvisorChat() {
     setError,
     setMessages,
     fetchSessions,
+    // Chat session states from useChatSession hook
+    isInitializingSession,
+    sessionError,
+    sessionData,
   };
 } 

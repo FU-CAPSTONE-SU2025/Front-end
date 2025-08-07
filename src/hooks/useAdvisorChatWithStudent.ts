@@ -3,6 +3,7 @@ import * as signalR from '@microsoft/signalr';
 import { useAuths } from './useAuths';
 import { SIGNALR_CONFIG, ConnectionState, signalRManager } from '../config/signalRConfig';
 import { StudentSession, ChatMessage, PagedResult } from '../interfaces/IChat';
+import { addMessageWithDeduplication, mapBackendMessage } from '../utils/messageUtils';
 
 // Global sessions state to share across all instances
 let globalSessions: StudentSession[] = [];
@@ -347,30 +348,16 @@ export function useAdvisorChatWithStudent() {
       handleSessionEvent('GetAllSessions', data);
     });
 
-    // Main message listener for real-time messages - SIMPLIFIED like demo
+    // Main message listener for real-time messages - USING UTILITY FUNCTION
     connection.on(SIGNALR_CONFIG.HUB_METHODS.SEND_ADVSS_METHOD, (message: any) => {
       
       if (message && message.content) {
-        const mappedMessage: ChatMessage = {
-          id: message.messageId || Date.now(),
-          content: message.content,
-          senderId: message.senderId,
-          advisorySession1to1Id: message.advisorySession1to1Id,
-          createdAt: message.createdAt || new Date().toISOString(),
-          senderName: message.senderName || 'Unknown'
-        };
+        const mappedMessage = mapBackendMessage(message);
         
-        // Simply add message to current session if it matches
+        // Add message to current session if it matches
         const currentSessionId = currentSessionRef.current?.id;
         if (currentSessionId && message.advisorySession1to1Id === currentSessionId) {
-          setMessages(prev => {
-            // Simple duplicate check by message ID
-            const exists = prev.some(m => m.id === mappedMessage.id);
-            if (exists) {
-              return prev;
-            }
-            return [...prev, mappedMessage];
-          });
+          setMessages(prev => addMessageWithDeduplication(mappedMessage, prev));
         }
       }
     });
