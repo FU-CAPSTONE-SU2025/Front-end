@@ -19,20 +19,20 @@ interface MeetingDetailModalProps {
   onActionComplete?: () => void; // Optional callback for parent to refresh data
 }
 
-const statusMap: Record<number, { color: string; text: string; icon: React.ReactNode }> = {
-  1: { color: 'blue', text: 'Pending', icon: <InfoCircleTwoTone twoToneColor="#1890ff" /> },
-  2: { color: 'green', text: 'Confirmed', icon: <CheckCircleTwoTone twoToneColor="#52c41a" /> },
-  3: { color: 'red', text: 'Advisor Canceled', icon: <CloseCircleTwoTone twoToneColor="#ff4d4f" /> },
-  4: { color: 'orange', text: 'Completed', icon: <CheckCircleTwoTone twoToneColor="#52c41a" /> },
-  5: { color: 'red', text: 'Student Missed', icon: <CloseCircleTwoTone twoToneColor="#ff4d4f" /> },
-  6: { color: 'red', text: 'Advisor Missed', icon: <CloseCircleTwoTone twoToneColor="#ff4d4f" /> },
-  8: { color: 'red', text: 'Overdue', icon: <CloseCircleTwoTone twoToneColor="#ff4d4f" /> },
-  9: { color: 'red', text: 'Student Canceled', icon: <CloseCircleTwoTone twoToneColor="#ff4d4f" /> },
+const statusMap: Record<number, { color: string; text: string; }> = {
+  1: { color: 'blue', text: 'Pending',  },
+  2: { color: 'green', text: 'Confirmed',  },
+  3: { color: 'red', text: 'Advisor Canceled' },
+  4: { color: 'orange', text: 'Completed' },
+  5: { color: 'red', text: 'Student Missed'  },
+  6: { color: 'red', text: 'Advisor Missed' },
+  8: { color: 'red', text: 'Overdue'  },
+  9: { color: 'red', text: 'Student Canceled' },
 };
 
 const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, detail, loading, onActionComplete }) => {
   const status = detail?.status;
-  const statusInfo = statusMap[status] || { color: 'default', text: 'Unknown', icon: <InfoCircleTwoTone /> };
+  const statusInfo = statusMap[status] || { color: 'default', text: 'Unknown' };
   
   // Use custom hooks
   const { actionLoading, handleConfirmMeeting, handleStudentCancelMeeting } = useMeetingActions({ onActionComplete });
@@ -147,7 +147,7 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
               <div className="font-semibold text-lg">{dayjs(detail.startDateTime).format('dddd, MMMM D, YYYY')}</div>
             </div>
             <span className="ml-auto flex items-center gap-2">
-              {statusInfo.icon}
+             
               <Tag color={statusInfo.color} className="font-semibold text-xs px-3 py-1 rounded-full">{statusInfo.text}</Tag>
             </span>
           </div>
@@ -215,7 +215,7 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
             <div className="flex gap-4 justify-end mt-4">
               <Button 
                 type="primary" 
-                icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
+         
                 onClick={openCompleteModal}
               >
                 Complete Meeting
@@ -226,7 +226,7 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
             <div className="flex gap-4 justify-end mt-4">
               <Button 
                 danger
-                icon={<CloseCircleTwoTone twoToneColor="#ff4d4f" />}
+            
                 onClick={handleStudentCancel}
               >
                 Cancel Meeting
@@ -237,7 +237,7 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
             <div className="flex gap-4 justify-end mt-4">
               <Button 
                 danger
-                icon={<CloseCircleTwoTone twoToneColor="#ff4d4f" />}
+             
                 onClick={openMarkAdvisorMissedModal}
               >
                 Mark Advisor Missed
@@ -248,7 +248,7 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
             <div className="flex gap-4 justify-end mt-4">
               <Button 
                 type="primary" 
-                icon={<MessageTwoTone twoToneColor="#1890ff" />}
+               
                 onClick={openFeedbackModal}
               >
                 Send Feedback

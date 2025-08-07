@@ -15,7 +15,6 @@ import {
   getChatSessions,
   getChatMessages,
   deleteChatSession,
-  renameChatSession
 } from '../api/student/AiChatBox';
 import { debugLog } from '../utils/performanceOptimization';
 
@@ -211,33 +210,7 @@ export function useDeleteChatSession() {
   });
 }
 
-// Đổi tên session với optimistic updates
-export function useRenameChatSession() {
-  const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { chatSessionId: number, title: string }>({
-    mutationFn: async ({ chatSessionId, title }) => {
-      debugLog('Renaming chat session', { chatSessionId, title });
-      const response = await renameChatSession(chatSessionId, title);
-      debugLog('Rename session response:', response);
-      return response;
-    },
-    onSuccess: (_data, variables) => {
-      debugLog('Chat session renamed successfully:', { chatSessionId: variables.chatSessionId, title: variables.title });
-      // Optimistic update cho sessions
-      queryClient.setQueryData(['chatSessions'], (oldData: IChatSession[] | undefined) => {
-        if (!oldData) return oldData;
-        return oldData.map(session => 
-          session.id === variables.chatSessionId 
-            ? { ...session, title: variables.title, updatedAt: new Date().toISOString() }
-            : session
-        );
-      });
-    },
-    onError: (error, variables) => {
-      debugLog('Failed to rename chat session', { chatSessionId: variables.chatSessionId, error });
-    }
-  });
-}
+
 
 // Prefetch sessions cho user khi component mount
 export function usePrefetchChatSessions() {

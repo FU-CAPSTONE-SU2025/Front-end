@@ -1,10 +1,9 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { AccountProps, AccountPropsCreate } from "../../interfaces/IAccount";
-import { pagedAdvisorData, AdvisorBase } from "../../interfaces/IAdvisor";
+import { pagedAdvisorData } from "../../interfaces/IAdvisor";
 import { 
   BookingAvailability, 
-  PagedBookingAvailabilityData, 
   CreateBookingAvailabilityRequest, 
   CreateBulkBookingAvailabilityRequest,
   UpdateBookingAvailabilityRequest
@@ -404,5 +403,21 @@ export const completeMeeting = async (id: number, checkInCode: string): Promise<
     return null as never;
   }
 }; 
+
+// API để advisor ghi note cho meeting quá hạn
+export const addReasonForOverdue = async (meetingId: number, note: string): Promise<any> => {
+  const props = {
+    data: { note },
+    url: `${baseUrl}/Meeting/reason-for-overdue/${meetingId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosCreate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
 
 

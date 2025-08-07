@@ -1,6 +1,6 @@
 import { message } from 'antd';
 import { getUserFriendlyErrorMessage } from '../api/AxiosCRUD';
-import { useCancelPendingMeeting, useCancelConfirmedMeeting, useSendMeetingFeedback, useMarkAdvisorMissed, useConfirmMeeting, useCancelPendingMeetingAdvisor, useCompleteMeeting } from './useStudentHistoryMeetings';
+import { useCancelPendingMeeting, useCancelConfirmedMeeting, useSendMeetingFeedback, useMarkAdvisorMissed, useConfirmMeeting, useCancelPendingMeetingAdvisor, useCompleteMeeting, useAddReasonForOverdue } from './useStudentHistoryMeetings';
 
 interface UseMeetingActionsProps {
   onActionComplete?: () => void;
@@ -15,6 +15,7 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
   const confirmMeetingMutation = useConfirmMeeting();
   const cancelPendingAdvisorMutation = useCancelPendingMeetingAdvisor();
   const completeMeetingMutation = useCompleteMeeting();
+  const addReasonForOverdueMutation = useAddReasonForOverdue();
 
   const handleConfirmMeeting = async (meetingId: number) => {
     if (!meetingId) return;
@@ -110,17 +111,33 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       onActionComplete?.();
     } catch (err) {
       console.error('Error marking advisor missed:', err);
-      message.error('Failed to mark advisor missed. Please try again.');
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      message.error(errorMessage);
+    }
+  };
+
+  const handleAddReasonForOverdue = async (meetingId: number, note: string) => {
+    if (!meetingId) return;
+    
+    try {
+      await addReasonForOverdueMutation.mutateAsync({ meetingId, note });
+      message.success('Reason for overdue added successfully!');
+      onActionComplete?.();
+    } catch (err) {
+      console.error('Error adding reason for overdue:', err);
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      message.error(errorMessage);
     }
   };
 
   return {
-    actionLoading: cancelPendingMutation.isPending || cancelConfirmedMutation.isPending || sendFeedbackMutation.isPending || markMissedMutation.isPending || confirmMeetingMutation.isPending || cancelPendingAdvisorMutation.isPending || completeMeetingMutation.isPending,
+    actionLoading: cancelPendingMutation.isPending || cancelConfirmedMutation.isPending || sendFeedbackMutation.isPending || markMissedMutation.isPending || confirmMeetingMutation.isPending || cancelPendingAdvisorMutation.isPending || completeMeetingMutation.isPending || addReasonForOverdueMutation.isPending,
     handleConfirmMeeting,
     handleCancelMeeting,
     handleCompleteMeeting,
     handleSendFeedback,
     handleStudentCancelMeeting,
     handleMarkAdvisorMissed,
+    handleAddReasonForOverdue,
   };
 }; 

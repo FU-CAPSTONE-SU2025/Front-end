@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAllStudentSelfBookings, getStudentBookingsForCalendar, cancelPendingMeeting, cancelConfirmedMeeting, sendMeetingFeedback, markAdvisorMissed } from '../api/student/StudentAPI';
-import { confirmMeeting, cancelPendingMeeting as cancelPendingMeetingAdvisor, completeMeeting } from '../api/advisor/AdvisorAPI';
-import { IStudentBookingResponse, IStudentBookingCalendarResponse } from '../interfaces/IChat';
+import { confirmMeeting, cancelPendingMeeting as cancelPendingMeetingAdvisor, completeMeeting, addReasonForOverdue } from '../api/advisor/AdvisorAPI';
+import { IStudentBookingResponse, IStudentBookingCalendarResponse } from '../interfaces/IStudent';
 import { message } from 'antd';
+import { getUserFriendlyErrorMessage } from '../api/AxiosCRUD';
 
 // Hook cho calendar data (API riêng với interface đơn giản)
 export const useStudentHistoryMeetings = (pageNumber: number, pageSize: number) => {
@@ -77,17 +78,16 @@ export const useCancelPendingMeeting = () => {
       return { previousCalendarData, previousListData };
     },
     onError: (err, variables, context) => {
-      // Rollback on error
       if (context?.previousCalendarData) {
         queryClient.setQueryData(['studentHistoryMeetings'], context.previousCalendarData);
       }
       if (context?.previousListData) {
         queryClient.setQueryData(['studentHistoryMeetingsOriginal'], context.previousListData);
       }
-      message.error('Failed to cancel meeting. Please try again.');
+      // Remove error message - let useMeetingActions handle it
     },
     onSuccess: () => {
-      message.success('Meeting cancelled successfully!');
+      // Remove success message - let useMeetingActions handle it
       invalidateHistoryQueries(queryClient);
     },
     onSettled: () => {
@@ -140,10 +140,10 @@ export const useCancelConfirmedMeeting = () => {
       if (context?.previousListData) {
         queryClient.setQueryData(['studentHistoryMeetingsOriginal'], context.previousListData);
       }
-      message.error('Failed to cancel meeting. Please try again.');
+      // Remove error message - let useMeetingActions handle it
     },
     onSuccess: () => {
-      message.success('Meeting cancelled successfully!');
+      // Remove success message - let useMeetingActions handle it
       invalidateHistoryQueries(queryClient);
     },
     onSettled: () => {
@@ -207,10 +207,10 @@ export const useSendMeetingFeedback = () => {
       if (context?.previousListData) {
         queryClient.setQueryData(['studentHistoryMeetingsOriginal'], context.previousListData);
       }
-      message.error('Failed to send feedback. Please try again.');
+      // Remove error message - let useMeetingActions handle it
     },
     onSuccess: () => {
-      message.success('Feedback sent successfully!');
+      // Remove success message - let useMeetingActions handle it
       invalidateHistoryQueries(queryClient);
     },
     onSettled: () => {
@@ -262,10 +262,10 @@ export const useMarkAdvisorMissed = () => {
       if (context?.previousListData) {
         queryClient.setQueryData(['studentHistoryMeetingsOriginal'], context.previousListData);
       }
-      message.error('Failed to mark advisor missed. Please try again.');
+      // Remove error message - let useMeetingActions handle it
     },
     onSuccess: () => {
-      message.success('Advisor marked as missed successfully!');
+      // Remove success message - let useMeetingActions handle it
       invalidateHistoryQueries(queryClient);
     },
     onSettled: () => {
@@ -317,10 +317,10 @@ export const useConfirmMeeting = () => {
       if (context?.previousListData) {
         queryClient.setQueryData(['studentHistoryMeetingsOriginal'], context.previousListData);
       }
-      message.error('Failed to confirm meeting. Please try again.');
+      // Remove error message - let useMeetingActions handle it
     },
     onSuccess: () => {
-      message.success('Meeting confirmed successfully!');
+      // Remove success message - let useMeetingActions handle it
       invalidateHistoryQueries(queryClient);
     },
     onSettled: () => {
@@ -373,10 +373,10 @@ export const useCancelPendingMeetingAdvisor = () => {
       if (context?.previousListData) {
         queryClient.setQueryData(['studentHistoryMeetingsOriginal'], context.previousListData);
       }
-      message.error('Failed to cancel meeting. Please try again.');
+      // Remove error message - let useMeetingActions handle it
     },
     onSuccess: () => {
-      message.success('Meeting cancelled successfully!');
+      // Remove success message - let useMeetingActions handle it
       invalidateHistoryQueries(queryClient);
     },
     onSettled: () => {
@@ -429,14 +429,33 @@ export const useCompleteMeeting = () => {
       if (context?.previousListData) {
         queryClient.setQueryData(['studentHistoryMeetingsOriginal'], context.previousListData);
       }
-      message.error('Failed to complete meeting. Please try again.');
+      // Remove error message - let useMeetingActions handle it
     },
     onSuccess: () => {
-      message.success('Meeting completed successfully!');
+      // Remove success message - let useMeetingActions handle it
       invalidateHistoryQueries(queryClient);
     },
     onSettled: () => {
       invalidateHistoryQueries(queryClient);
     },
   });
-}; 
+};
+
+// Hook for adding reason for overdue meeting
+export const useAddReasonForOverdue = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ meetingId, note }: { meetingId: number; note: string }) => 
+      addReasonForOverdue(meetingId, note),
+    onSuccess: () => {
+      invalidateHistoryQueries(queryClient);
+    },
+    onError: (err) => {
+      // Remove error message - let useMeetingActions handle it
+    },
+    onSettled: () => {
+      invalidateHistoryQueries(queryClient);
+    },
+  });
+};
