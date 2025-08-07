@@ -393,7 +393,7 @@ export interface PagedSubjectVersion extends PagedData<SubjectVersion> {}
 
 // Search parameters for filtering
 export interface SearchParams {
-  searchQuery?: string;
+  search?: string;
   pageNumber?: number;
   pageSize?: number;
   sortBy?: string;

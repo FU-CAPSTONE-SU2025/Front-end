@@ -16,6 +16,7 @@ import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import AddPrerequisiteSubjectVersionModal from '../../components/staff/AddPrerequisiteSubjectVersionModal';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 // Function to create default version for a subject (moved outside component)
 const createDefaultVersion = async (
@@ -23,8 +24,13 @@ const createDefaultVersion = async (
   addSubjectVersionMutation: any,
   handleSuccess: (message: string) => void,
   handleError: (error: any, title?: string) => void
-) => {
+): Promise<SubjectVersion[]> => {
   try {
+    // Check if subject is approved before creating version
+    if (subjectData.approvalStatus !== 1) {
+      throw new Error('Cannot create versions for unapproved subjects. Please approve the subject first.');
+    }
+    
     const defaultVersionData = generateDefaultVersionData(
       subjectData.id,
       subjectData.subjectCode,
@@ -34,7 +40,7 @@ const createDefaultVersion = async (
     const newVersion = await addSubjectVersionMutation.mutateAsync(defaultVersionData);
     if (newVersion) {
       handleSuccess('Default version created successfully!');
-      return [newVersion];
+      return Array.isArray(newVersion) ? newVersion : [newVersion];
     }
   } catch (err: any) {
     const errorMessage = getUserFriendlyErrorMessage(err);
@@ -74,7 +80,8 @@ const createDefaultSyllabus = async (
 const SubjectVersionPage: React.FC = () => {
   const navigate = useNavigate();
   const { subjectId } = useParams();
-  const { handleError, handleSuccess, showInfo } = useApiErrorHandler();
+  const { handleError, handleSuccess } = useApiErrorHandler();
+  const { showInfo } = useMessagePopupContext();
   const [modalVisible, setModalVisible] = useState(false);
   const [adding, setAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -82,7 +89,6 @@ const SubjectVersionPage: React.FC = () => {
 
   // State for Add Prerequisite Modal
   const [prereqModalOpen, setPrereqModalOpen] = useState(false);
-  const [selectedPrereqSubject, setSelectedPrereqSubject] = useState<any>(null);
   const [editingVersionId, setEditingVersionId] = useState<number | null>(null);
   
   // Local state for prerequisites per version
@@ -206,6 +212,10 @@ const SubjectVersionPage: React.FC = () => {
       if (!syllabusData) {
         // No syllabus exists, create default syllabus
         showInfo('No syllabus found. Creating default syllabus...');
+        
+        // Add delay to ensure version is fully created
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         const newSyllabus = await createDefaultSyllabus(
           versionId,
           subjectData.subjectCode,
@@ -277,6 +287,7 @@ const SubjectVersionPage: React.FC = () => {
   }, [fetchSyllabusBySubjectVersionMutation, addSyllabusMutation, showInfo, handleSuccess, handleError]);
 
   // Fetch subject and versions
+  // Fetch subject and versions
   useEffect(() => {
     const fetchData = async () => {
       if (!subjectId) return;
@@ -287,39 +298,89 @@ const SubjectVersionPage: React.FC = () => {
         const subjectData = await getSubjectById.mutateAsync(Number(subjectId));
         setSubject(subjectData);
         
-        // Fetch subject versions
-        let versionsData: SubjectVersion[] | null = null;
-        try {
-          versionsData = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
-        } catch (err) {
-          // API might return 404 or error when no versions exist
-          console.log('No versions found or API error:', err);
-          versionsData = null;
+        // Check if subject is approved before proceeding
+        if (subjectData.approvalStatus !== 1) {
+          handleError('Cannot create versions for unapproved subjects. Please approve the subject first.');
+          setError('Subject must be approved before creating versions.');
+          setLoading(false);
+          return;
         }
         
-        if (!versionsData || versionsData.length === 0) {
-          // No versions exist, create default version
-          showInfo('No versions found. Creating default version...');
-          const defaultVersions = await createDefaultVersion(subjectData, addSubjectVersionMutation, handleSuccess, handleError);
-          setSubjectVersions(defaultVersions);
-          if (defaultVersions.length > 0) {
-            setActiveKey(String(defaultVersions[0].id));
-            // Fetch syllabus for the first version
-            await fetchOrCreateSyllabus(defaultVersions[0].id, subjectData);
-            // Fetch prerequisites for the first version
-            try {
-              await fetchPrerequisitesForVersion(defaultVersions[0].id);
-            } catch (error) {
-              console.error('Failed to fetch prerequisites for default version:', error);
+        // Fetch subject versions with proper error handling
+        let versionsData: SubjectVersion[] = [];
+        try {
+          const response = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+          // Handle different response types
+          if (Array.isArray(response)) {
+            versionsData = response;
+          } else if (response && typeof response === 'object' && 'data' in (response as any)) {
+            // API might return { data: [...] }
+            versionsData = Array.isArray((response as any).data) ? (response as any).data : [];
+          } else if (response === true || response === false) {
+            // API returned boolean instead of array
+            console.log('API returned boolean instead of array:', response);
+            versionsData = [];
+          } else {
+            console.log('API returned unexpected data type:', typeof response, response);
+            versionsData = [];
+          }
+        } catch (err: any) {
+          // Handle specific error cases
+          if (err?.response?.status === 400 && err?.response?.data?.message?.includes('not approved')) {
+            handleError('Cannot create versions for unapproved subjects. Please approve the subject first.');
+            setError('Subject must be approved before creating versions.');
+            setLoading(false);
+            return;
+          }
+          console.log('No versions found or API error:', err);
+          versionsData = [];
+        }
+        
+        if (!Array.isArray(versionsData) || versionsData.length === 0) {
+          // No versions exist, automatically create default version
+          showInfo('No versions found. Automatically creating default version and syllabus...');
+          
+          try {
+            const defaultVersions = await createDefaultVersion(subjectData, addSubjectVersionMutation, handleSuccess, handleError);
+            // Ensure defaultVersions is an array
+            const versionsToSet = Array.isArray(defaultVersions) ? defaultVersions : [];
+            
+            if (versionsToSet.length > 0) {
+              setSubjectVersions(versionsToSet);
+              setActiveKey(String(versionsToSet[0].id));
+              
+              // Wait a moment before creating syllabus to ensure version is fully created
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              // Automatically create syllabus for the first version
+              await fetchOrCreateSyllabus(versionsToSet[0].id, subjectData);
+              
+              // Wait before fetching prerequisites
+              await new Promise(resolve => setTimeout(resolve, 500));
+              
+              // Fetch prerequisites for the first version
+              try {
+                await fetchPrerequisitesForVersion(versionsToSet[0].id);
+              } catch (error) {
+                console.error('Failed to fetch prerequisites for default version:', error);
+              }
+            } else {
+              handleError('Failed to create default version');
             }
+          } catch (error) {
+            console.error('Error creating default version:', error);
+            handleError('Failed to create default version. Please try again.');
           }
         } else {
           // Versions exist, use them
-          setSubjectVersions(versionsData);
-          if (versionsData.length > 0) {
-            setActiveKey(String(versionsData[0].id));
+          const finalVersionsData = Array.isArray(versionsData) ? versionsData : [];
+          setSubjectVersions(finalVersionsData);
+          if (finalVersionsData.length > 0) {
+            setActiveKey(String(finalVersionsData[0].id));
+            
             // Fetch syllabus for the first version
-            await fetchOrCreateSyllabus(versionsData[0].id, subjectData);
+            await fetchOrCreateSyllabus(finalVersionsData[0].id, subjectData);
+            
             // Fetch prerequisites for all versions - with error handling
             try {
               await fetchAllPrerequisites();
@@ -328,7 +389,7 @@ const SubjectVersionPage: React.FC = () => {
             }
             // Always fetch prerequisites for the first (active) version to guarantee display
             try {
-              await fetchPrerequisitesForVersion(versionsData[0].id);
+              await fetchPrerequisitesForVersion(finalVersionsData[0].id);
             } catch (prereqError) {
               console.error('Failed to fetch prerequisites for first version:', prereqError);
             }
@@ -343,7 +404,7 @@ const SubjectVersionPage: React.FC = () => {
     };
 
     fetchData();
-  }, [subjectId, getSubjectById, getSubjectVersionsBySubjectId, addSubjectVersionMutation, createDefaultVersion, handleSuccess, handleError, showInfo, fetchOrCreateSyllabus, fetchPrerequisitesForVersion, fetchAllPrerequisites]); // Only depend on subjectId to prevent infinite loops
+  }, [subjectId]); // Only depend on subjectId to prevent infinite loops
 
   // Handler for adding a new version
   const handleAddVersion = useCallback(async (values: CreateSubjectVersion) => {
@@ -791,7 +852,7 @@ const SubjectVersionPage: React.FC = () => {
     );
   }
 
-  if (subjectVersions.length === 0) {
+  if (!Array.isArray(subjectVersions) || subjectVersions.length === 0) {
     return (
       <div className={styles.syllabusContainer} style={{ width: '100%', maxWidth: 'none', minWidth: 0 }}>
         {/* Header */}
@@ -848,13 +909,6 @@ const SubjectVersionPage: React.FC = () => {
           </Button>
         </div>
 
-        <AddVersionModal
-          visible={modalVisible}
-          onCancel={() => setModalVisible(false)}
-          onAdd={handleAddVersion}
-          confirmLoading={adding}
-          subjectId={Number(subjectId)}
-        />
       </div>
     );
   }
@@ -917,11 +971,13 @@ const SubjectVersionPage: React.FC = () => {
         {/* Tabs for Versions */}
         <div style={{ width: '100%' }}>
           <Tabs
-            activeKey={activeKey}
+            activeKey={activeKey || (Array.isArray(subjectVersions) && subjectVersions.length > 0 ? String(subjectVersions[0].id) : '')}
             onChange={handleTabChange}
             type="card"
             tabBarStyle={{ background: 'transparent', borderRadius: 12, boxShadow: 'none', display: 'flex', justifyContent: 'center' }}
-            items={subjectVersions.map((version, index) => {
+            items={(Array.isArray(subjectVersions) ? subjectVersions : [])
+              .filter(version => version && typeof version.id !== 'undefined')
+              .map((version, index) => {
               const isActive = activeKey === String(version.id);
               return {
                 key: String(version.id),
@@ -1046,7 +1102,12 @@ const SubjectVersionPage: React.FC = () => {
                         </h3>
                         <Space>
                           {isEditing && (
-                            <Button type="primary" onClick={() => { setEditingVersionId(version.id); setPrereqModalOpen(true); }}>
+                            <Button type="primary" onClick={async () => { 
+                              setEditingVersionId(version.id); 
+                              setPrereqModalOpen(true);
+                              // Refresh prerequisites when opening modal to ensure latest data
+                              await fetchPrerequisitesForVersion(version.id);
+                            }}>
                               Add Prerequisite
                             </Button>
                           )}
@@ -1090,13 +1151,28 @@ const SubjectVersionPage: React.FC = () => {
                       {/* Add Prerequisite Modal */}
                       <AddPrerequisiteSubjectVersionModal
                         open={prereqModalOpen && editingVersionId === version.id}
-                        onClose={() => setPrereqModalOpen(false)}
+                        onClose={() => {
+                          setPrereqModalOpen(false);
+                          // Refresh prerequisites when modal closes to ensure latest data
+                          fetchPrerequisitesForVersion(version.id);
+                        }}
                         onAdd={async (prereqVersionId) => {
-                          await addPrerequisiteToSubjectVersionMutation.mutateAsync({
-                            subjectVersionId: version.id,
-                            prerequisiteId: prereqVersionId
-                          });
-                          await fetchPrerequisitesForVersion(version.id);
+                          try {
+                            await addPrerequisiteToSubjectVersionMutation.mutateAsync({
+                              subjectVersionId: version.id,
+                              prerequisiteId: prereqVersionId
+                            });
+                            handleSuccess('Prerequisite added successfully!');
+                            
+                            // Refresh prerequisites to show the latest data
+                            await fetchPrerequisitesForVersion(version.id);
+                            
+                            // Also refresh all prerequisites to ensure consistency
+                            await fetchAllPrerequisites();
+                          } catch (error) {
+                            console.error('Failed to add prerequisite:', error);
+                            handleError('Failed to add prerequisite');
+                          }
                         }}
                         currentSubjectVersionId={version.id}
                         existingPrerequisites={(prereqMap[version.id] || []).map((p: any) => p.prerequisite_subject_id)}

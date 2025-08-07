@@ -22,7 +22,7 @@ import {
   UpdateSyllabusById, 
   DisableSyllabus 
 } from '../api/SchoolAPI/syllabusAPI';
-import { CreateSyllabus, Syllabus, UpdateSyllabus, SyllabusAssessment, SyllabusMaterial, SyllabusOutcome, SyllabusSession, CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from '../interfaces/ISchoolProgram';
+import { CreateSyllabus, Syllabus, UpdateSyllabus,CreateSyllabusAssessment, CreateSyllabusMaterial, CreateSyllabusOutcome, CreateSyllabusSession } from '../interfaces/ISchoolProgram';
 import { 
   AddSubjectVersion, 
   DeleteSubjectVersion, 
@@ -45,10 +45,9 @@ import { SubjectVersion, CreateSubjectVersion, UpdateSubjectVersion } from '../i
 interface PaginationParams {
   pageNumber: number;
   pageSize: number;
-  filterType?: string;
-  filterValue?: string;
-  searchQuery?: string;
+  search?: string;
   programId?: number;
+  subjectId?:number;
 }
 
 export function useCRUDCurriculum() {
@@ -57,7 +56,7 @@ export function useCRUDCurriculum() {
       const data = await FetchCurriculumList(
         params.pageNumber, 
         params.pageSize, 
-        params.searchQuery,
+        params.search,
         params.programId
       );
       return data;
@@ -169,9 +168,8 @@ export function useCRUDSubject() {
         const data = await FetchSubjectList(
           params.pageNumber,
           params.pageSize,
-          params.filterValue,
-          params.filterType,
-          undefined
+          params.search
+
         );
         return data;
       }
@@ -218,20 +216,6 @@ export function useCRUDSubject() {
     },
   });
 
-  /**
-   * @deprecated Use addPrerequisiteToSubjectVersionMutation from useCRUDSubjectVersion instead
-   * This mutation will be removed in a future version
-   */
-  const addPrerequisiteMutation = useMutation<Subject | null, unknown, { id: number; prerequisitesId: number }>({
-    mutationFn: async ({ id, prerequisitesId }) => {
-      const result = await AddPrerequisitesSubject(id, prerequisitesId);
-      return result;
-    },
-    onError: (error) => {
-      console.error(error);
-    },
-  });
-
   const isSuccessCreateSubject = addSubjectMutation.isSuccess;
   const isSuccessUpdateSubject = updateSubjectMutation.isSuccess;
   const isSuccessBulkImport = addMultipleSubjectsMutation.isSuccess;
@@ -260,7 +244,6 @@ export function useCRUDSubject() {
     isSuccessBulkImport,
     subjectById,
     getSubjectById,
-    addPrerequisiteMutation
   }
 }
 
@@ -274,7 +257,7 @@ export function useCRUDCombo() {
       const data = await FetchComboList(
         params.pageNumber,
         params.pageSize,
-        params.filterValue
+        params.search
       );
       return data;
     },
@@ -549,14 +532,12 @@ export function useCRUDSyllabus() {
 }
 
 export function useCRUDProgram() {
-  const getProgramMutation = useMutation<PagedData<Program> | null, unknown, PaginationParams & { searchQuery?: string }>({
+  const getProgramMutation = useMutation<PagedData<Program> | null, unknown, PaginationParams & { search?: string }>({
     mutationFn: async (params) => {
       const data = await FetchProgramList(
         params.pageNumber,
         params.pageSize,
-        params.searchQuery,
-        params.filterType,
-        params.filterValue
+        params.search,
       );
       return data;
     },
@@ -654,8 +635,8 @@ export function useCRUDSubjectVersion() {
       const data = await FetchPagedSubjectVersionList(
         params.pageNumber,
         params.pageSize,
-        params.filterValue,
-        params.filterType
+        params.search,
+        params.subjectId
       );
       return data;
     },

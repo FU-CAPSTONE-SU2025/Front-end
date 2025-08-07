@@ -17,7 +17,7 @@ const ProgramPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const navigate = useNavigate();
-  const { handleError, handleSuccess, showWarning } = useApiErrorHandler();
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   // Use the new CRUD hooks
   const {
@@ -35,7 +35,7 @@ const ProgramPage: React.FC = () => {
     getAllPrograms({
       pageNumber: currentPage,
       pageSize: pageSize,
-      searchQuery: search
+      search: search
     });
   }, [currentPage, pageSize, getAllPrograms]);
 
@@ -45,7 +45,7 @@ const ProgramPage: React.FC = () => {
       getAllPrograms({
         pageNumber: 1,
         pageSize: pageSize,
-        searchQuery: search
+        search: search
       });
     } else {
       getAllPrograms({
@@ -72,7 +72,7 @@ const ProgramPage: React.FC = () => {
       const programData = importedData['PROGRAM'] || [];
       
       if (programData.length === 0) {
-        showWarning('No program data found in the imported file');
+        handleError('No program data found in the imported file');
         return;
       }
 
@@ -93,7 +93,7 @@ const ProgramPage: React.FC = () => {
       }
 
       if (validData.length !== transformedData.length) {
-        showWarning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+        handleError(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
       }
 
       // Call the bulk import mutation
@@ -105,7 +105,7 @@ const ProgramPage: React.FC = () => {
       getAllPrograms({
         pageNumber: currentPage,
         pageSize: pageSize,
-        searchQuery: search
+        search: search
       });
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
