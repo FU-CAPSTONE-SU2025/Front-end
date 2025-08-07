@@ -17,7 +17,6 @@ export const AddProgram = async (data: CreateProgram): Promise<Program | null> =
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -32,7 +31,6 @@ export const RegisterMultiplePrograms = async (data: CreateProgram[]): Promise<a
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -68,7 +66,6 @@ export const FetchProgramList = async (
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -83,7 +80,6 @@ export const FetchProgramById = async (id: number): Promise<Program | null> => {
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -98,7 +94,6 @@ export const UpdateProgramById = async (id: number, data: any): Promise<Program 
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -113,6 +108,5 @@ export const DisableProgram = async (programId: number): Promise<Program | null>
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 }; 

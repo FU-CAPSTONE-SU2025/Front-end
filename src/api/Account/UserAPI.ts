@@ -21,7 +21,6 @@ export const GetActiveUser = async ():Promise<ActiveAccountProps|null> => {
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 // This is for Staff and Manager
@@ -48,7 +47,6 @@ export const GetPagedActiveStudent = async (
   } else {
     console.log(result.error);
     throwApiError(result);
-    return null;
   }
 };
 
@@ -65,7 +63,6 @@ export const GetCurrentStaffUser = async (userId:number):Promise<AccountProps|nu
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 export const UpdateCurrentStaffUser = async (userId:number,data:UpdateAccountProps):Promise<AccountProps|null|true> => {
@@ -82,7 +79,6 @@ export const UpdateCurrentStaffUser = async (userId:number,data:UpdateAccountPro
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 export const GetCurrentStudentUser = async (userId:number):Promise<AccountProps|null> => {
@@ -98,7 +94,6 @@ export const GetCurrentStudentUser = async (userId:number):Promise<AccountProps|
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 export const UpdateCurrentStudentUser = async (userId:number,data:AccountPropsCreate):Promise<AccountProps|null|true> => {
@@ -114,7 +109,6 @@ export const UpdateCurrentStudentUser = async (userId:number,data:AccountPropsCr
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 
@@ -132,7 +126,6 @@ export const RegisterUser = async (data: AccountPropsCreate):Promise<any> => {
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 export const RegisterMultipleUser = async (data: AccountPropsCreate[]):Promise<any> => {
@@ -149,7 +142,6 @@ export const RegisterMultipleUser = async (data: AccountPropsCreate[]):Promise<a
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 
@@ -167,7 +159,6 @@ export const FetchUserList = async ():Promise<AccountProps[]> => {
     else {
         console.log(result.error)
         throwApiError(result);
-        return []
     }
 }
 export const FetchUserById = async (userId:number):Promise<AccountProps|null> => {
@@ -184,7 +175,6 @@ export const FetchUserById = async (userId:number):Promise<AccountProps|null> =>
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 export const UpdateUser = async (userId:number,data:UpdateAccountProps):Promise<AccountProps|null|true> => {
@@ -201,7 +191,6 @@ export const UpdateUser = async (userId:number,data:UpdateAccountProps):Promise<
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 
@@ -220,7 +209,6 @@ export const UpdateUserAvatar = async (userId:number,data:UpdateAvatarProps):Pro
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 
@@ -238,7 +226,6 @@ export const SelfAvatarUpdate = async (data:UpdateAvatarProps):Promise<any|null|
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 
@@ -258,7 +245,6 @@ export const DisableUser = async (userId:number):Promise<AccountProps|null> => {
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 
@@ -276,7 +262,6 @@ export const BulkRegisterStudent = async (data: BulkAccountPropsCreate[]):Promis
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 
@@ -295,7 +280,6 @@ export const BulkRegisterStaff = async (data: BulkAccountPropsCreate[]):Promise<
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 
@@ -314,7 +298,6 @@ export const BulkRegisterAdvisor = async (data: BulkAccountPropsCreate[]):Promis
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 
@@ -332,7 +315,6 @@ export const BulkRegisterManager = async (data: BulkAccountPropsCreate[]):Promis
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 
@@ -350,7 +332,6 @@ export const BulkRegisterAdmin = async (data: BulkAccountPropsCreate[]):Promise<
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }
 
@@ -368,6 +349,5 @@ export const ResetBanNumberForStudent = async (studentProfileId:number):Promise<
     else {
         console.log(result.error)
         throwApiError(result);
-        return null
     }
 }

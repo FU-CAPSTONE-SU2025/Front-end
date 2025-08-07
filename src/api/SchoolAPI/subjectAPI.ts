@@ -15,7 +15,6 @@ export const AddSubject = async (data: CreateSubject): Promise<Subject | null> =
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -34,7 +33,6 @@ export const AddPrerequisitesSubject = async (id:number,prerequisitesId:number):
       return result.data;
     } else {
       throwApiError(result);
-      return null; // This will never be reached, but TypeScript needs it
     }
   };
   
@@ -53,7 +51,6 @@ export const DeletePrerequisitesSubject = async (id:number,prerequisitesId:numbe
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -72,7 +69,6 @@ export const GetPrerequisitesSubject = async (id:number): Promise<Subject[] | nu
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 }
 
@@ -87,7 +83,6 @@ export const RegisterMultipleSubject = async (data: CreateSubject[]): Promise<an
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -126,7 +121,6 @@ export const FetchSubjectList = async (
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -141,7 +135,6 @@ export const FetchSubjectById = async (id: number): Promise<Subject | null> => {
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -156,7 +149,6 @@ export const UpdateSubjectById = async (id: number, data: UpdateSubject): Promis
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -171,7 +163,6 @@ export const DisableSubject = async (userId: number): Promise<any | null> => {
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 }; 
 
@@ -186,6 +177,5 @@ export const ApproveSubject = async (subjectId: number, data: SubjectApproval): 
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };

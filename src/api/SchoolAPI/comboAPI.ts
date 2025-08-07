@@ -17,7 +17,6 @@ export const AddCombo = async (data: CreateCombo): Promise<Combo | null> => {
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 export const GetSubjectsInCombo = async (comboId:number): Promise<SubjectInCombo[] | null> => {
@@ -31,7 +30,6 @@ export const GetSubjectsInCombo = async (comboId:number): Promise<SubjectInCombo
       return result.data;
     } else {
       throwApiError(result);
-      return null; // This will never be reached, but TypeScript needs it
     }
   };
 
@@ -46,7 +44,6 @@ export const AddSubjectToCombo = async (comboId:number,subjectId:number): Promis
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -61,7 +58,6 @@ export const RemoveSubjectToCombo = async (comboId:number,subjectId:number): Pro
       return result.data;
     } else {
       throwApiError(result);
-      return null; // This will never be reached, but TypeScript needs it
     }
   };
 
@@ -76,7 +72,6 @@ export const RegisterMultipleCombo = async (data: CreateCombo[]): Promise<any> =
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -105,7 +100,6 @@ export const FetchComboList = async (
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -120,7 +114,6 @@ export const FetchComboById = async (id: number): Promise<Combo | null> => {
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -135,7 +128,6 @@ export const UpdateComboById = async (id: number, data: any): Promise<Combo | nu
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -150,7 +142,6 @@ export const DisableCombo = async (comboId: number): Promise<AccountProps | null
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 }; 
 
@@ -165,7 +156,6 @@ export const FetchComboSubjects = async (comboId: number): Promise<Subject[] | n
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 }; 
 
@@ -180,6 +170,5 @@ export const ApproveCombo = async (comboId: number, data: ComboApproval): Promis
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };

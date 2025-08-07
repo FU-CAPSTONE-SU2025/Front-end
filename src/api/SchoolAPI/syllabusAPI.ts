@@ -15,7 +15,6 @@ export const AddSyllabus = async (data: CreateSyllabus): Promise<Syllabus> => {
     return result.data;
   } else {
     throwApiError(result);
-    return null as never;
   }
 };
 export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): Promise<Curriculum> => {
@@ -29,7 +28,6 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       return result.data;
     } else {
       throwApiError(result);
-      return null as never;
     }
   };
   export const AddSyllabusAssessmentsBulk = async ( data: CreateSyllabusAssessment[]): Promise<Curriculum> => {
@@ -43,7 +41,6 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       return result.data;
     } else {
       throwApiError(result);
-      return null as never;
     }
   };
   export const AddSyllabusMaterial = async ( data: CreateSyllabusMaterial): Promise<any> => {
@@ -57,7 +54,6 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       return result.data;
     } else {
       throwApiError(result);
-      return null as never;
     }
   };
   export const AddSyllabusOutcomes = async ( data: CreateSyllabusOutcome): Promise<any> => {
@@ -71,7 +67,6 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       return result.data;
     } else {
       throwApiError(result);
-      return null as never;
     }
   };
   export const AddSyllabusSessions = async ( data: CreateSyllabusSession): Promise<any> => {
@@ -85,7 +80,6 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       return result.data;
     } else {
       throwApiError(result);
-      return null as never;
     }
   };
   export const AddSyllabusOutcomesToSession = async (sessionId: number, outcomeId: number): Promise<Curriculum> => {
@@ -99,7 +93,6 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       return result.data;
     } else {
       throwApiError(result);
-      return null as never;
     }
   };
   export const AddSyllabusMaterialsBulk = async (data: CreateSyllabusMaterial[]): Promise<any> => {
@@ -113,7 +106,6 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       return result.data;
     } else {
       throwApiError(result);
-      return null as never;
     }
   };
 
@@ -128,7 +120,6 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       return result.data;
     } else {
       throwApiError(result);
-      return null as never;
     }
   };
 
@@ -143,7 +134,6 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       return result.data;
     } else {
       throwApiError(result);
-      return null as never;
     }
   };
 

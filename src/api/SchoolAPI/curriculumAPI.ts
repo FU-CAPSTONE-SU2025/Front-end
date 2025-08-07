@@ -16,8 +16,7 @@ export const AddCurriculum = async (data: CreateCurriculum): Promise<Curriculum 
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
   }
 };
 
@@ -33,7 +32,7 @@ export const FetchSubjectVersionsToCurriculum = async (id: number): Promise<Subj
     return result.data;
   } else {
     console.log(result.error);
-    return null;
+    throwApiError(result);
   }
 };
 
@@ -50,7 +49,6 @@ export const AddSubjectVersionToCurriculum = async (id: number, data: CreateSubj
     } else {
       console.log(result.error);
       throwApiError(result);
-      return null; // This will never be reached, but TypeScript needs it
     }
   };
 
@@ -66,7 +64,7 @@ export const RemoveSubjectVersionFromCurriculum = async (subjectVersionId: numbe
       return result.data;
     } else {
       console.log(result.error);
-      return null;
+      throwApiError(result);
     }
   };
 
@@ -80,9 +78,7 @@ export const RegisterMultipleCurriculum = async (data: CreateCurriculum[]): Prom
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -110,8 +106,7 @@ export const FetchCurriculumList = async (
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
   }
 };
 
@@ -125,8 +120,7 @@ export const FetchCurriculumById = async (id: number): Promise<Curriculum | null
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
   }
 };
 
@@ -140,8 +134,7 @@ export const UpdateCurriculumById = async (id: number, data: any): Promise<Curri
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
   }
 };
 
@@ -155,8 +148,7 @@ export const DisableCurriculum = async (userId: number): Promise<AccountProps | 
   if (result.success) {
     return result.data;
   } else {
-    console.log(result.error);
-    return null;
+    throwApiError(result);
   }
 }; 
 
@@ -171,6 +163,5 @@ export const ApproveCurriculum = async (curriculumId: number, data: CurriculumAp
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };

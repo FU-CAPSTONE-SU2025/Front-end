@@ -16,7 +16,6 @@ export const AddSubjectVersion = async (data: CreateSubjectVersion): Promise<Sub
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
   
@@ -31,7 +30,6 @@ export const DeleteSubjectVersion = async (id:number): Promise<any | null> => {
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -47,7 +45,6 @@ export const AddPrerequisiteToSubjectVersion = async (subjectVersionId: number, 
     return result.data;
   } else {
     throwApiError(result);
-    return null;
   }
 };
 
@@ -62,7 +59,6 @@ export const GetPrerequisitesBySubjectVersion = async (subjectVersionId: number)
     return result.data;
   } else {
     throwApiError(result);
-    return null;
   }
 };
 
@@ -77,7 +73,6 @@ export const GetDependentsBySubjectVersion = async (subjectVersionId: number): P
     return result.data;
   } else {
     throwApiError(result);
-    return null;
   }
 };
 
@@ -92,7 +87,6 @@ export const DeletePrerequisiteFromSubjectVersion = async (subjectVersionId: num
     return result.data;
   } else {
     throwApiError(result);
-    return null;
   }
 };
 
@@ -107,7 +101,6 @@ export const GetPrerequisitesBySubject = async (subjectId: number): Promise<any 
     return result.data;
   } else {
     throwApiError(result);
-    return null;
   }
 };
 
@@ -122,7 +115,6 @@ export const CopyPrerequisitesBetweenVersions = async (sourceVersionId: number, 
     return result.data;
   } else {
     throwApiError(result);
-    return null;
   }
 };
 
@@ -166,7 +158,6 @@ export const FetchPagedSubjectVersionList = async (
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -181,7 +172,6 @@ export const FetchSubjectVersionById = async (id: number): Promise<SubjectVersio
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -196,7 +186,6 @@ export const FetchSubjectVersionBySubjectId = async (id: number): Promise<Subjec
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -211,7 +200,6 @@ export const FetchDefaultSubjectVersionBySubject = async (id: number): Promise<S
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -226,7 +214,6 @@ export const UpdateSubjectVersionById = async (id: number, data: UpdateSubjectVe
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 };
 
@@ -241,7 +228,6 @@ export const ActiveSubjectVersion = async (id: number): Promise<any | null> => {
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 }; 
 
@@ -256,6 +242,5 @@ export const SetDefaultSubjectVersion = async (id: number): Promise<any | null> 
     return result.data;
   } else {
     throwApiError(result);
-    return null; // This will never be reached, but TypeScript needs it
   }
 }; 

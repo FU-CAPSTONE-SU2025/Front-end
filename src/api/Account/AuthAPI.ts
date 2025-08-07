@@ -24,7 +24,6 @@ export const LoginGoogleAccount = async (data: string) => {
     }
     else {
         throwApiError(result);
-        return null; // This will never be reached, but TypeScript needs it
     }
 } // TODO change to use axiosCreate
 
@@ -39,7 +38,6 @@ export const LoginAccount = async (data: LoginProps) => {
     }
     else {
         throwApiError(result);
-        return null; 
     }
 }
 
@@ -54,7 +52,6 @@ export const CloudflareVerification = async (data:any) => {
     }
     else {
         throwApiError(result);
-        return null;
     }
 }
 
@@ -69,7 +66,6 @@ export const Logout = async () => {
     }
     else {
         throwApiError(result);
-        return null; // This will never be reached, but TypeScript needs it
     }
 } // TODO change to use axiosCreate
 
@@ -107,7 +103,6 @@ export const SendEmail = async (data:any) => {
     }
     else {
         throwApiError(result);
-        return null; // This will never be reached, but TypeScript needs it
     }
 }
 
@@ -124,6 +119,5 @@ export const ResetPassword = async (data:any) => {
     }
     else {
         throwApiError(result);
-        return null; // This will never be reached, but TypeScript needs it
     }
 }
