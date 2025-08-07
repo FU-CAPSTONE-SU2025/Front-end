@@ -65,57 +65,105 @@ export function useNotificationHub() {
     }
   }, [loading]);
 
-  // Mark as read với optimistic update
+  // Mark as read với optimistic update và better error handling
   const markAsRead = useCallback(async (notificationId: number) => {
     const connection = connectionRef.current;
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-      setError('Connection not available');
+      const errorMsg = 'Connection not available';
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    // Check if notification exists and is not already read
+    const notification = notifications.find(n => n.id === notificationId);
+    if (!notification) {
+      console.warn(`⚠️ Notification ${notificationId} not found`);
       return;
     }
 
+    if (notification.isRead) {
+      console.log(`ℹ️ Notification ${notificationId} is already read`);
+      return;
+    }
+
+    console.log(`🔄 Marking notification ${notificationId} as read...`);
+
     // Optimistic update
-    const originalNotifications = notifications;
+    const originalNotifications = [...notifications];
     setNotifications((prev) => 
       prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
     );
 
     try {
       await connection.invoke(SIGNALR_CONFIG.HUB_METHODS.MARK_AS_READ, notificationId);
+      console.log(`✅ Successfully marked notification ${notificationId} as read`);
       setError(null);
     } catch (err) {
+      console.error(`❌ Failed to mark notification ${notificationId} as read:`, err);
       // Rollback optimistic update
       setNotifications(originalNotifications);
       const errorMessage = err instanceof Error ? err.message : 'Failed to mark as read';
       setError(errorMessage);
+      throw err;
     }
   }, [notifications]);
 
-  // Mark all as read với optimistic update
+  // Mark all as read với optimistic update và batch processing
   const markAllAsRead = useCallback(async () => {
     const connection = connectionRef.current;
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
       setError('Connection not available');
-      return;
+      throw new Error('Connection not available');
     }
 
+    // Get unread notifications before optimistic update
+    const unreadNotifications = notifications.filter(n => !n.isRead);
+    if (unreadNotifications.length === 0) {
+      return; // Nothing to mark
+    }
+
+    console.log(`🔄 Starting to mark ${unreadNotifications.length} notifications as read...`);
+
     // Optimistic update
-    const originalNotifications = notifications;
+    const originalNotifications = [...notifications];
     setNotifications((prev) => 
       prev.map(n => ({ ...n, isRead: true }))
     );
 
     try {
-      // Since backend doesn't have MarkAllAsRead, we'll mark each notification individually
-      const unreadNotifications = notifications.filter(n => !n.isRead);
-      for (const notification of unreadNotifications) {
-        await connection.invoke(SIGNALR_CONFIG.HUB_METHODS.MARK_AS_READ, notification.id);
+      // Process notifications in batches to avoid overwhelming the server
+      const batchSize = 5;
+      for (let i = 0; i < unreadNotifications.length; i += batchSize) {
+        const batch = unreadNotifications.slice(i, i + batchSize);
+        
+        // Process batch concurrently but with error handling
+        const promises = batch.map(async (notification) => {
+          try {
+            await connection.invoke(SIGNALR_CONFIG.HUB_METHODS.MARK_AS_READ, notification.id);
+            console.log(`✅ Marked notification ${notification.id} as read`);
+          } catch (err) {
+            console.error(`❌ Failed to mark notification ${notification.id} as read:`, err);
+            throw err;
+          }
+        });
+
+        await Promise.all(promises);
+        
+        // Small delay between batches to be gentle on the server
+        if (i + batchSize < unreadNotifications.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       }
+
+      console.log(`✅ Successfully marked all ${unreadNotifications.length} notifications as read`);
       setError(null);
     } catch (err) {
+      console.error('❌ Failed to mark all notifications as read:', err);
       // Rollback optimistic update
       setNotifications(originalNotifications);
       const errorMessage = err instanceof Error ? err.message : 'Failed to mark all as read';
       setError(errorMessage);
+      throw err;
     }
   }, [notifications]);
 

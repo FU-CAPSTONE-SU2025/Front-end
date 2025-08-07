@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { BellOutlined, CheckOutlined } from '@ant-design/icons';
 import { Avatar, Button, Modal, Badge, Tooltip } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,40 +23,29 @@ interface NotificationProps {
 const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { notifications, loading, markAsRead, markAllAsRead, unreadCount } = useNotificationHub();
+  const { notifications, loading, markAsRead, markAllAsRead, unreadCount, refreshNotifications } = useNotificationHub();
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [localRead, setLocalRead] = useState<{ [id: number]: boolean }>({});
   const [markingAll, setMarkingAll] = useState(false);
 
-
-  React.useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-    if (open) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [open]);
-
   const badgeCount = unreadCount > 10 ? '10+' : unreadCount;
 
-  const handleNotificationClick = async (n: NotificationItem) => {
+  // ALL FUNCTIONS DEFINED WITH useCallback TO AVOID HOISTING ISSUES
+  const handleNotificationClick = useCallback(async (n: NotificationItem, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
     setSelectedNotification(n);
     
-    // Only mark as read if not already read (both backend and local state)
     if (!n.isRead && !localRead[n.id]) {
-      // Optimistic update - mark locally first
       setLocalRead((prev) => ({ ...prev, [n.id]: true }));
       
       try {
         await markAsRead(n.id);
+        console.log(`✅ Marked notification ${n.id} as read`);
       } catch (error) {
-        // Revert local read state on error
+        console.error('❌ Failed to mark notification as read:', error);
         setLocalRead((prev) => {
           const newState = { ...prev };
           delete newState[n.id];
@@ -64,27 +53,34 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
         });
       }
     }
-  };
+  }, [localRead, markAsRead]);
 
-  const handleMarkAllAsRead = async () => {
+  const handleMarkAllAsRead = useCallback(async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (unreadCount === 0) return;
     
     setMarkingAll(true);
     
     try {
-      // Optimistic update - mark all locally first
       const newLocalRead = { ...localRead };
-      notifications.forEach(n => {
-        if (!n.isRead) {
-          newLocalRead[n.id] = true;
-        }
+      const unreadNotifications = notifications.filter(n => !n.isRead && !localRead[n.id]);
+      
+      unreadNotifications.forEach(n => {
+        newLocalRead[n.id] = true;
       });
       setLocalRead(newLocalRead);
       
-      // Call backend
+      console.log(`🔄 Marking ${unreadNotifications.length} notifications as read...`);
+      
       await markAllAsRead();
+      console.log(`✅ Successfully marked all ${unreadNotifications.length} notifications as read`);
+      
     } catch (error) {
-      // Revert local read state on error
+      console.error('❌ Failed to mark all notifications as read:', error);
       setLocalRead((prev) => {
         const newState = { ...prev };
         notifications.forEach(n => {
@@ -97,18 +93,27 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
     } finally {
       setMarkingAll(false);
     }
-  };
+  }, [unreadCount, localRead, notifications, markAllAsRead]);
 
-  const handleModalClose = () => {
+  const handleModalClose = useCallback(() => {
     setSelectedNotification(null);
-  };
+  }, []);
 
-  const handleBellClick = () => {
-    setOpen((prev) => !prev);
-  };
+  const handleBellClick = useCallback(async () => {
+    const newOpen = !open;
+    setOpen(newOpen);
+    
+    if (newOpen) {
+      try {
+        await refreshNotifications();
+        console.log('🔄 Refreshed notifications on dropdown open');
+      } catch (error) {
+        console.error('❌ Failed to refresh notifications:', error);
+      }
+    }
+  }, [open, refreshNotifications]);
 
-  // Style variants based on role
-  const getUnreadStyle = () => {
+  const getUnreadStyle = useCallback(() => {
     switch (variant) {
       case 'admin':
         return 'bg-purple-50 border-l-4 border-purple-500';
@@ -120,9 +125,9 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
       default:
         return 'bg-orange-50 border-l-4 border-orange-500';
     }
-  };
+  }, [variant]);
 
-  const getUnreadDotColor = () => {
+  const getUnreadDotColor = useCallback(() => {
     switch (variant) {
       case 'admin':
         return 'bg-purple-500';
@@ -134,7 +139,42 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
       default:
         return 'bg-red-500';
     }
-  };
+  }, [variant]);
+
+  // KEYBOARD SHORTCUTS HANDLER
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (open) {
+      if (event.key === 'Escape') {
+        setOpen(false);
+      } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        handleMarkAllAsRead();
+      }
+    }
+  }, [open, handleMarkAllAsRead]);
+
+  // CLICK OUTSIDE HANDLER  
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    if (ref.current && !ref.current.contains(event.target as Node)) {
+      setOpen(false);
+    }
+  }, []);
+
+  // EFFECT FOR EVENT LISTENERS - PLACED AFTER ALL FUNCTION DEFINITIONS
+  useEffect(() => {
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, handleClickOutside, handleKeyDown]);
 
   return (
     <div className="relative" ref={ref}>
@@ -156,19 +196,30 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
             className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden"
           >
             <div className="p-4 border-b border-gray-100 font-bold text-gray-800 flex items-center justify-between">
-              <span>Notifications</span>
+              <div className="flex items-center gap-2">
+                <span>Notifications</span>
+                {unreadCount > 0 && (
+                  <Badge count={unreadCount} size="small" className="ml-1" />
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (
-                  <Tooltip title="Mark all as read">
+                  <Tooltip title={`Mark all ${unreadCount} notifications as read`}>
                     <Button
                       type="text"
                       size="small"
                       icon={<CheckOutlined />}
                       onClick={handleMarkAllAsRead}
                       loading={markingAll}
-                      className="text-gray-500 hover:text-gray-700"
-                    />
+                      className="text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
+                      disabled={markingAll}
+                    >
+                      {markingAll ? 'Marking...' : 'Mark all'}
+                    </Button>
                   </Tooltip>
+                )}
+                {unreadCount === 0 && (
+                  <span className="text-xs text-gray-400">All caught up! 🎉</span>
                 )}
               </div>
             </div>
@@ -188,12 +239,13 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 30 }}
                         transition={{ duration: 0.2 }}
-                        className={`flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-all duration-200 ${!isRead ? getUnreadStyle() : 'border-l-4 border-transparent'}`}
-                        onClick={() => handleNotificationClick(n)}
-                        style={{ cursor: 'pointer' }}
+                        className={`flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-all duration-200 group ${!isRead ? getUnreadStyle() : 'border-l-4 border-transparent'}`}
                       >
                         <Avatar src="/img/Logo.svg" size={40} className="mt-1" />
-                        <div className="flex-1">
+                        <div 
+                          className="flex-1 cursor-pointer"
+                          onClick={() => handleNotificationClick(n)}
+                        >
                           <div className="flex justify-between items-center">
                             <span className={`font-semibold ${!isRead ? 'text-gray-800' : 'text-gray-600'}`}>
                               {n.title}
@@ -215,15 +267,46 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                             </a>
                           )}
                         </div>
-                        {!isRead && (
-                          <span className={`w-3 h-3 ${getUnreadDotColor()} rounded-full mt-2 ml-1 animate-pulse`} />
-                        )}
+                        <div className="flex flex-col items-center gap-2 mt-1">
+                          {!isRead && (
+                            <>
+                              <Tooltip title="Mark as read">
+                                <Button
+                                  type="text"
+                                  size="small"
+                                  icon={<CheckOutlined />}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleNotificationClick(n, e);
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
+                                />
+                              </Tooltip>
+                              <span className={`w-3 h-3 ${getUnreadDotColor()} rounded-full animate-pulse`} />
+                            </>
+                          )}
+                          {isRead && (
+                            <Tooltip title="Read">
+                              <CheckOutlined className="text-green-500 text-sm" />
+                            </Tooltip>
+                          )}
+                        </div>
                       </motion.div>
                     );
                   })
                 )}
               </AnimatePresence>
             </div>
+            {notifications.length > 0 && (
+              <div className="px-4 py-2 border-t border-gray-100 bg-gray-50">
+                <div className="text-xs text-gray-500 flex items-center justify-between">
+                  <span>💡 Press Esc to close</span>
+                  {unreadCount > 0 && (
+                    <span>Ctrl+Enter to mark all read</span>
+                  )}
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

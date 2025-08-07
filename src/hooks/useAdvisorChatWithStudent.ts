@@ -363,7 +363,14 @@ export function useAdvisorChatWithStudent() {
         // Simply add message to current session if it matches
         const currentSessionId = currentSessionRef.current?.id;
         if (currentSessionId && message.advisorySession1to1Id === currentSessionId) {
-          setMessages(prev => [...prev, mappedMessage]);
+          setMessages(prev => {
+            // Simple duplicate check by message ID
+            const exists = prev.some(m => m.id === mappedMessage.id);
+            if (exists) {
+              return prev;
+            }
+            return [...prev, mappedMessage];
+          });
         }
       }
     });
@@ -402,7 +409,7 @@ export function useAdvisorChatWithStudent() {
           setMessages(prev => {
             const existingIds = new Set(prev.map(m => m.id));
             const newMessages = mappedMessages.filter(m => !existingIds.has(m.id));
-            return [...prev, ...newMessages];
+            return [...newMessages, ...prev]; // Prepend older messages
           });
         }
       }
@@ -609,26 +616,10 @@ export function useAdvisorChatWithStudent() {
       throw new Error('No active session');
     }
     
-    // Create optimistic message for immediate display
-    const optimisticMessage: ChatMessage = {
-      id: Date.now(), // Temporary ID
-      content: content,
-      senderId: advisorId || 0,
-      advisorySession1to1Id: currentSessionRef.current.id,
-      createdAt: new Date().toISOString(),
-      senderName: 'You'
-    };
-
-    // Add optimistic message immediately
-    setMessages(prev => [...prev, optimisticMessage]);
-    
     try {
-      
       await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.SEND_MESSAGE, currentSessionRef.current.id, content);
-      } catch (err) {
+    } catch (err) {
       console.error('Send message error:', err);
-          // Remove optimistic message on error
-          setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
       throw new Error(`Failed to send message: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }, [advisorId, connectionState, accessToken, setupEventListeners]);
