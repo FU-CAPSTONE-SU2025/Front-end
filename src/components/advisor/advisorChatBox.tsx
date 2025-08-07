@@ -222,7 +222,7 @@ const AdvisorChatBox: React.FC<AdvisorChatBoxProps> = ({ onClose, selectedStuden
         open={isExpanded}
         onCancel={() => setIsExpanded(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
         width="90vw"
         style={{ top: 20, maxWidth: '1200px', height: '90vh' }}
         styles={{ body: { padding: 0, height: '100%', overflow: 'hidden' } }}

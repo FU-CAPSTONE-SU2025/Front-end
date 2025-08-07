@@ -144,7 +144,7 @@ const SubjectDetailModal: React.FC<SubjectDetailModalProps> = ({ visible, onClos
             mask: { backdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.6)' },
             content: { background: 'transparent', padding: 0, boxShadow: 'none' },
           }}
-          destroyOnClose
+          destroyOnHidden
         >
           <motion.div
             variants={containerVariants}

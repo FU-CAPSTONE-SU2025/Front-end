@@ -145,7 +145,7 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
       onCancel={handleCancel}
       footer={null}
       width={600}
-      destroyOnClose
+      destroyOnHidden
     >
       {schedule && (
         <div style={{ 

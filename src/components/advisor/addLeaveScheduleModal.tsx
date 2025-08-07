@@ -260,7 +260,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
         onCancel={handleCancel}
         footer={null}
         width={800}
-        destroyOnClose
+        destroyOnHidden
       >
         {errorMessage && (
           <Alert type="error" message={errorMessage} closable onClose={() => setErrorMessage(null)} style={{ marginBottom: 16 }} />

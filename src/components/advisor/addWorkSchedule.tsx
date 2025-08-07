@@ -233,7 +233,7 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
         onCancel={handleCancel}
         footer={null}
         width={800}
-        destroyOnClose
+        destroyOnHidden
       >
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           <TabPane tab="Single Schedule" key="single">

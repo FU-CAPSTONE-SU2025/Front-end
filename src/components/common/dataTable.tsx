@@ -23,20 +23,20 @@ type DataProps = {
     onPageChange?: (page: number, pageSize: number) => void
     onRow?: (record: any, rowIndex?: number) => React.HTMLAttributes<HTMLElement>
     loading?: boolean
-    searchQuery?: string
+    search?: string
     searchFields?: string[] // Fields to search in (e.g., ['firstName', 'lastName', 'id'])
 }
 
-export default function DataTable({columns, data, rowSelection, pagination, onPageChange, onRow, loading, searchQuery, searchFields}: DataProps) {
+export default function DataTable({columns, data, rowSelection, pagination, onPageChange, onRow, loading, search, searchFields}: DataProps) {
   const [currentPage, setCurrentPage] = useState<number>(pagination?.current || 1);
   console.log(data)
   // Client-side search filtering
   const filteredData = useMemo(() => {
-    if (!searchQuery || !searchFields || searchFields.length === 0) {
+    if (!search || !searchFields || searchFields.length === 0) {
       return data;
     }
     
-    const query = searchQuery.toLowerCase();
+    const query = search.toLowerCase();
     return data.filter(item => {
       return searchFields.some(field => {
         const value = item[field];
@@ -44,7 +44,7 @@ export default function DataTable({columns, data, rowSelection, pagination, onPa
         return String(value).toLowerCase().includes(query);
       });
     });
-  }, [data, searchQuery, searchFields]);
+  }, [data, search, searchFields]);
   
   const handlePageChange = (page: number, pageSize: number) => {
     setCurrentPage(page);
@@ -54,7 +54,7 @@ export default function DataTable({columns, data, rowSelection, pagination, onPa
   };
 
   // If we have search active, use client-side pagination
-  const isClientSidePagination = searchQuery && searchQuery.trim() !== '';
+  const isClientSidePagination = search && search.trim() !== '';
   
   const paginationConfig = isClientSidePagination 
     ? {
