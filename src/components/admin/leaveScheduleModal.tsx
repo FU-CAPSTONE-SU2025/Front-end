@@ -202,7 +202,7 @@ const LeaveScheduleModal: React.FC<LeaveScheduleModalProps> = ({
         </Button>
       ]}
       width={1000}
-      destroyOnClose
+      destroyOnHidden
       styles={modalStyles}
       centered
     >

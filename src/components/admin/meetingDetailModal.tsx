@@ -177,7 +177,7 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({
      </div>
       ]}
       width={800}
-      destroyOnClose
+      destroyOnHidden
       styles={modalStyles}
       centered
     >

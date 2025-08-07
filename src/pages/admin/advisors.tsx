@@ -59,7 +59,7 @@ const AdvisorList: React.FC = () => {
   const { categorizedData, refetch } = useActiveUserData();
   const { getAllAdvisor, advisorList, pagination, isLoading } = useCRUDAdvisor();
   const nav = useNavigate();
-  const { handleError, handleSuccess, showWarning } = useApiErrorHandler();
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   // Load initial data
   useEffect(() => {
@@ -147,7 +147,6 @@ const AdvisorList: React.FC = () => {
       if (advisorData.length === 0) {
         setUploadStatus('error');
         setUploadMessage('No advisor data found in the imported file');
-        showWarning('No advisor data found in the imported file');
         return;
       }
       // Transform the imported data to match BulkAccountPropsCreate interface
@@ -303,7 +302,6 @@ const AdvisorList: React.FC = () => {
       const data = await GetAllMeetingRecordPaged(1, 10);
       const allMeetingRecords = data.items;
       if (!allMeetingRecords.length) {
-        showWarning('No meeting records to download');
         hideLoading();
         return;
       }
@@ -541,7 +539,7 @@ const AdvisorList: React.FC = () => {
                 onClick: () => handleRowClick(record),
               })}
               loading={isLoading}
-              searchQuery={searchQuery}
+              search={searchQuery}
               searchFields={['id', 'firstName', 'lastName', 'email', 'specialization']}
             />
             {isDeleteMode && (

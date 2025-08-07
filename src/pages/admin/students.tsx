@@ -536,7 +536,7 @@ const StudentList: React.FC = () => {
                 onClick: (event: React.MouseEvent) => handleRowClick(record, event),
               })}
               loading={isLoading}
-              searchQuery={searchQuery}
+              search={searchQuery}
               searchFields={['id', 'username', 'firstName', 'lastName', 'email']}
             />
             {isDeleteMode && (

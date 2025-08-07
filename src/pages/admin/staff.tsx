@@ -397,7 +397,7 @@ const StaffList: React.FC = () => {
                 onClick: () => handleRowClick(record),
               })}
               loading={isLoading}
-              searchQuery={searchQuery}
+              search={searchQuery}
               searchFields={['id', 'firstName', 'lastName', 'email']}
             />
             {isDeleteMode && (

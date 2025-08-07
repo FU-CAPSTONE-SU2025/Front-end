@@ -32,7 +32,7 @@ const ManagerList: React.FC = () => {
   const { categorizedData, refetch } = useActiveUserData();
   const { getAllManager, managerList, pagination, isLoading } = useCRUDManager();
   const nav = useNavigate();
-  const { handleError, handleSuccess, showWarning } = useApiErrorHandler();
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   // Load initial data
   useEffect(() => {
@@ -73,7 +73,6 @@ const ManagerList: React.FC = () => {
       if (managerData.length === 0) {
         setUploadStatus('error');
         setUploadMessage('No manager data found in the imported file');
-        showWarning('No manager data found in the imported file');
         return;
       }
 
@@ -367,7 +366,7 @@ const ManagerList: React.FC = () => {
                 onClick: () => handleRowClick(record),
               })}
               loading={isLoading}
-              searchQuery={searchQuery}
+              search={searchQuery}
               searchFields={['id', 'firstName', 'lastName', 'email', 'department', 'position']}
             />
             {isDeleteMode && (
