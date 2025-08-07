@@ -26,6 +26,26 @@ export default function useCRUDStudent() {
       console.error(error);
     },
   });
+  const getStudentById = useMutation<StudentBase|null, unknown, number>({
+    mutationFn: async () => {
+     // const data = await GetStudentById(id);
+     throw Error("Not yet working")
+      
+    },
+  });
+
+  // The mutation signature was incorrect for useMutation. 
+  // useMutation expects the third generic parameter to be the variables object passed to the mutation function.
+  // To fix, wrap the parameters in a single object and type accordingly.
+
+  type UpdateStudentScoreParams = { studentId: number; subjectId: number; score: number };
+
+  const updateStudentScoreMutation = useMutation<StudentBase | number, unknown, UpdateStudentScoreParams>({
+    mutationFn: async ({ studentId, subjectId, score }) => {
+      // const data = await UpdateStudentScore(studentId, subjectId, score);
+      throw Error("Not yet working");
+    },
+  });
   
   const metaData = getStudentMutation.data || null;
   const studentList = metaData?.items || [];
@@ -41,7 +61,9 @@ export default function useCRUDStudent() {
     getAllStudent: getStudentMutation.mutate,
     studentList,
     pagination,
-    isLoading: getStudentMutation.isPending
+    isLoading: getStudentMutation.isPending,
+    getStudentById,
+    updateStudentScoreMutation
   }
 }
 

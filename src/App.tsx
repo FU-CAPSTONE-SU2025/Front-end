@@ -6,6 +6,7 @@ import { RouterProvider } from 'react-router'
 import LoadingScreen from './components/LoadingScreen'
 import { useLoading } from './hooks/useLoading'
 import ConsoleWarning from './components/common/consoleWarning';
+import { MessagePopupProvider } from './contexts/MessagePopupContext';
 
 function App() {
   const router = routes
@@ -18,8 +19,10 @@ function App() {
   
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
-      <LoadingScreen isLoading={isLoading} message={message} />
-      <RouterProvider router={router} />
+      <MessagePopupProvider>
+        <LoadingScreen isLoading={isLoading} message={message} />
+        <RouterProvider router={router} />
+      </MessagePopupProvider>
     </GoogleOAuthProvider>
   )
 }
