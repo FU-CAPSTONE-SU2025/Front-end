@@ -123,7 +123,7 @@ const LeaveSchedulePage: React.FC = () => {
         const overlaps = (leaveStart.isBefore(weekEnd) && leaveEnd.isAfter(weekStart));
         return overlaps;
       })
-    : leaveList; // Show all for other views
+    : leaveList; 
 
 
   return (

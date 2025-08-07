@@ -200,26 +200,8 @@ export interface BookingAvailabilityData {
     createdAt: string;
 }
 
-// Get upcoming leave schedules for an advisor
-export const GetUpcomingLeaveSchedules = async (staffProfileId: number): Promise<PagedLeaveScheduleData> => {
-    const props = {
-        data: null,
-        url: baseUrl + `/LeaveSche/upcoming/${staffProfileId}`,
-        headers: GetHeader()
-    }
-    
-    const result = await axiosRead(props)
-    if (result.success) {
-        console.log("Leave schedules data:", result.data)
-        return result.data
-    }
-    else {
-        throwApiError(result);
-        return null as never;
-    }
-}
 
-// Api for admin and student getting All leave schedule in ONE STAFF ADVISOR
+
 export const GetPagedLeaveSchedulesOneStaff = async (staffProfileId: number): Promise<PagedLeaveScheduleData> => {
   const props = {
       data: null,

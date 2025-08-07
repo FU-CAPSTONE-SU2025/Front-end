@@ -28,7 +28,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         {/* Main search container */}
         <div className="relative flex items-center">
           <div className="absolute left-4 flex items-center pointer-events-none z-10">
-            <SearchOutlined className="text-lg text-white/70" />
+            <SearchOutlined className="text-lg text-white/70 !text-white" style={{ color: 'white' }} />
           </div>
           
           <input
@@ -36,12 +36,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={(e) => {
+              console.log('SearchBar onKeyDown:', e.key);
               if (e.key === 'Enter' && onEnter) {
+                console.log('SearchBar: Calling onEnter');
                 onEnter();
               }
             }}
             placeholder={placeholder}
-            className="w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm placeholder-white/40 outline-none transition-all duration-200 hover:bg-white/10 hover:border-white/30 focus:bg-white/10 focus:border-white/40"
+            className="w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm placeholder-white/40 outline-none transition-all duration-200 hover:bg-white/10 hover:border-white/30 focus:bg-white/10 focus:border-white/40 !text-white"
+            style={{ color: 'white' }}
           />
         </div>
       </div>

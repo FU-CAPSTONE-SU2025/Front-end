@@ -160,22 +160,15 @@ export default function useUserProfile(props?: UseUserProfileProps) {
   };
 
   return {
-    // Current user fetching - now returns the query hook function
     getCurrentUserQuery,
-
-    // Profile updating
     updateProfileAsync: updateUserMutation.mutateAsync,
     updatedProfileData: updateUserMutation.data,
     isUpdatingProfile: updateUserMutation.isPending,
     isUpdateSuccess: updateUserMutation.isSuccess,
     updateError: updateUserMutation.error,
-
-    // Avatar operations
     handleAvatarUpload,
     handleAvatarDelete,
     isAvatarUploading: avatarUpdateMutation.isPending,
-
-    // Reset functions
     resetUpdateProfile: updateUserMutation.reset,
   };
 } 

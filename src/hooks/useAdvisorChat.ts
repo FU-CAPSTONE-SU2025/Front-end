@@ -208,7 +208,7 @@ export function useAdvisorChat() {
     }
 
     try {
-      const response = await fetch('https://178.128.31.58:5000/api/AdvisorySession1to1/human', {
+      const response = await fetch('https://jkh8ing8.online/api/AdvisorySession1to1/human', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
