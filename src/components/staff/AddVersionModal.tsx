@@ -49,7 +49,7 @@ const AddVersionModal: React.FC<AddVersionModalProps> = ({
       confirmLoading={confirmLoading}
       okText="Add"
       cancelText="Cancel"
-      destroyOnClose
+      destroyOnHidden
       width={600}
       className={styles.versionModal}
     >

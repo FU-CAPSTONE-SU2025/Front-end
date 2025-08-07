@@ -86,7 +86,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
         </div>
       }
       width={500}
-      destroyOnClose
+      destroyOnHidden
     >
       <div style={{ marginBottom: 16 }}>
         <Text strong>Item: </Text>

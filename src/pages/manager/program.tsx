@@ -26,7 +26,7 @@ const ManagerProgramPage: React.FC = () => {
     getAllPrograms({
       pageNumber: page,
       pageSize: pageSize,
-      searchQuery: search
+              search: search
     });
   }, [page, pageSize, search]);
 

@@ -40,7 +40,6 @@ const ComboManagerPage: React.FC = () => {
     fetchComboSubjectsMutation
   } = useCRUDCombo();
 
-  const { subjectList, getAllSubjects } = useCRUDSubject();
   const [subjectModalOpen, setSubjectModalOpen] = useState(false);
   const [selectedCombo, setSelectedCombo] = useState<any>(null);
   const [comboSubjects, setComboSubjects] = useState<any[]>([]);
@@ -51,7 +50,7 @@ const ComboManagerPage: React.FC = () => {
   const { handleApproval, isApproving } = useApprovalActions();
 
   useEffect(() => {
-    getAllCombos({ pageNumber: page, pageSize, filterValue: search });
+    getAllCombos({ pageNumber: page, pageSize, search: search });
   }, [page, pageSize, search]);
 
   const handleAddCombo = () => {
@@ -68,7 +67,7 @@ const ComboManagerPage: React.FC = () => {
       // You may need to implement this functionality
       handleSuccess('Deleted combo!');
       // Refresh the combo list
-      getAllCombos({ pageNumber: page, pageSize, filterValue: search });
+      getAllCombos({ pageNumber: page, pageSize, search: search });
     } catch (error) {
       handleError(error, 'Failed to delete combo');
     }
@@ -128,7 +127,7 @@ const ComboManagerPage: React.FC = () => {
     
     try {
       await handleApproval('combo', selectedItem.id, approvalStatus, rejectionReason);
-      getAllCombos({ pageNumber: page, pageSize, filterValue: search });
+      getAllCombos({ pageNumber: page, pageSize, search: search });
       setApprovalModalVisible(false);
       setSelectedItem(null);
     } catch (error) {
@@ -173,7 +172,7 @@ const ComboManagerPage: React.FC = () => {
       setIsImportOpen(false);
       
       // Refresh the combo list
-      getAllCombos({ pageNumber: page, pageSize, filterValue: search });
+      getAllCombos({ pageNumber: page, pageSize, search: search });
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
       handleError(errorMessage);
@@ -275,7 +274,7 @@ const ComboManagerPage: React.FC = () => {
               } else {
                 handleApprove(record.id, record.comboName);
               }
-              getAllCombos({ pageNumber: page, pageSize, filterValue: search });
+              getAllCombos({ pageNumber: page, pageSize, search: search });
             }}
             style={{borderRadius: 8, height: 28, padding: '0 8px', marginLeft: 8}}
           >
@@ -435,7 +434,7 @@ const ComboManagerPage: React.FC = () => {
             View Subjects for {selectedCombo.comboName}
           </span>
         ) : 'View Subjects'}
-        destroyOnClose
+        destroyOnHidden
         width={540}
         confirmLoading={modalLoading}
         bodyStyle={{

@@ -68,7 +68,7 @@ const CurriculumPageManager: React.FC = () => {
   // Fetch programs for Select (infinite scroll)
   const fetchPrograms = (page = 1, search = '') => {
     setProgramFetching(true);
-    getAllPrograms({ pageNumber: page, pageSize: 10, searchQuery: search });
+          getAllPrograms({ pageNumber: page, pageSize: 10, search: search });
   };
 
   // Update program options when programList changes
@@ -119,7 +119,7 @@ const CurriculumPageManager: React.FC = () => {
     getCurriculumMutation.mutate({
       pageNumber: currentPage,
       pageSize,
-      searchQuery: search,
+              search: search,
       programId: programId || undefined
     });
   }, [currentPage, pageSize, search, programId]);
@@ -194,7 +194,7 @@ const CurriculumPageManager: React.FC = () => {
                 getCurriculumMutation.mutate({
                   pageNumber: currentPage,
                   pageSize,
-                  filterValue: search
+                  search: search
                 });
               } catch (error) {
                 // Error is already handled in the hook
@@ -305,7 +305,7 @@ const CurriculumPageManager: React.FC = () => {
       getCurriculumMutation.mutate({
         pageNumber: currentPage,
         pageSize,
-        filterValue: search
+        search: search
       });
     } catch (error) {
       // Error is already handled in the hook
@@ -476,7 +476,7 @@ const CurriculumPageManager: React.FC = () => {
           </Button>
         ]}
         width={900}
-        destroyOnClose
+        destroyOnHidden
         centered
         style={{
           borderRadius: 16

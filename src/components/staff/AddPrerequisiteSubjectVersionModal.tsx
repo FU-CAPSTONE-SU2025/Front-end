@@ -3,7 +3,7 @@ import { Modal, List, Button, Input, Select, Space, Typography, Spin, Empty } fr
 import { PlusOutlined, CheckOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useCRUDSubject, useCRUDSubjectVersion } from '../../hooks/useCRUDSchoolMaterial';
-import { Subject, SubjectVersion } from '../../interfaces/ISchoolProgram';
+import { Subject } from '../../interfaces/ISchoolProgram';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 
@@ -16,6 +16,7 @@ interface SubjectVersionItem {
   subjectCode: string;
   versionCode: string;
   subjectName: string;
+  key?: number; // Optional key property for React reconciliation
 }
 
 interface AddPrerequisiteSubjectVersionModalProps {
@@ -29,7 +30,6 @@ interface AddPrerequisiteSubjectVersionModalProps {
 const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersionModalProps> = ({
   open,
   onClose,
-  onAdd,
   currentSubjectVersionId,
   existingPrerequisites,
 }) => {
@@ -49,12 +49,13 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
 
   // CRUD hooks
   const {
-    getAllSubjects,
-    getSubjectVersionsBySubjectId,
-    addPrerequisiteMutation
+    getSubjectMutation,
   } = useCRUDSubject();
 
-  const { addPrerequisiteSubjectVersionMutation } = useCRUDSubjectVersion();
+  const { 
+    getSubjectVersionMutation,
+    addPrerequisiteToSubjectVersionMutation 
+  } = useCRUDSubjectVersion();
 
   // Fetch subject options with real API
   const fetchSubjectOptions = async (reset = false, searchValue = subjectOptionsSearch) => {
@@ -68,7 +69,14 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
     setSubjectOptionsLoading(true);
     
     try {
-      const result = await getAllSubjects({ pageNumber: reset ? 1 : subjectOptionsPage + 1, pageSize: 10, searchValue });
+      // Check if the function is available
+      if (!getSubjectMutation || !getSubjectMutation.mutateAsync) {
+        console.error('getSubjectMutation is not available');
+        handleError('Subject fetch function is not available');
+        return;
+      }
+      
+      const result = await getSubjectMutation.mutateAsync({ pageNumber: reset ? 1 : subjectOptionsPage + 1, pageSize: 10, search: searchValue });
       
       if (result) {
         const newSubjects = result.items || [];
@@ -109,29 +117,37 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
     setLoading(true);
     
     try {
-      // Build filter parameters
-      let filterType: string | undefined;
-      let filterValue: string | undefined;
-      
-      if (selectedSubjectId && selectedSubjectId !== undefined) {
-        // Use subjectId for filtering instead of subjectCode
-        filterType = 'subjectId';
-        filterValue = selectedSubjectId.toString();
+      // Check if the function is available
+      if (!getSubjectVersionMutation || !getSubjectVersionMutation.mutateAsync) {
+        console.error('getSubjectVersionMutation is not available');
+        handleError('Subject version fetch function is not available');
+        return;
       }
-      // If selectedSubjectId is undefined (All Subjects), don't send any filter parameters
       
       const pageNumber = reset ? 1 : customPage || page + 1;
       
-      const result = await getSubjectVersionsBySubjectId.mutateAsync(selectedSubjectId || 0, { pageNumber, pageSize: 10, searchValue, filterType, filterValue });
+      // Build API parameters based on the API documentation
+      const params = {
+        pageNumber,
+        pageSize: 10,
+        search: searchValue || "",
+        subjectId: selectedSubjectId || ""
+      } as any;
       
-      if (result) {
-        const newVersions = result.items || [];
-        
-        const transformedData: SubjectVersionItem[] = newVersions.map(version => ({
+      // Add subjectId if selected (not part of PaginationParams interface)
+      if (selectedSubjectId && selectedSubjectId !== undefined) {
+        (params as any).subjectId = selectedSubjectId;
+      }
+      
+      const result = await getSubjectVersionMutation.mutateAsync(params);
+      
+      if (result && result.items) {
+        const transformedData: SubjectVersionItem[] = result.items.map(version => ({
           id: version.id,
-          subjectCode: version.subject.subjectCode,
+          subjectCode: version.subject?.subjectCode || '',
           versionCode: version.versionCode,
-          subjectName: version.subject.subjectName
+          subjectName: version.subject?.subjectName || '',
+          key: version.id 
         }));
         
         if (reset) {
@@ -167,8 +183,13 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
     }
   }, [open]);
 
+  // Debounced search effect
   useEffect(() => {
-    fetchData(true);
+    const timeoutId = setTimeout(() => {
+      fetchData(true);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
   }, [searchValue, selectedSubjectId]);
 
   const handleSearchChange = (value: string) => {
@@ -181,11 +202,16 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
 
   const handleSubjectDropdownSearch = (value: string) => {
     setSubjectOptionsSearch(value);
-    // Add a small delay to prevent too many API calls
-    setTimeout(() => {
-      fetchSubjectOptions(true, value);
-    }, 300);
   };
+
+  // Debounced subject options search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchSubjectOptions(true, subjectOptionsSearch);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [subjectOptionsSearch]);
 
   const handleSubjectDropdownScroll = (e: React.UIEvent<HTMLDivElement, UIEvent>) => {
     const { target } = e;
@@ -206,9 +232,9 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
   const handleAdd = async (item: SubjectVersionItem) => {
     setAddingId(item.id);
     try {
-      await addPrerequisiteSubjectVersionMutation.mutateAsync({
+      await addPrerequisiteToSubjectVersionMutation.mutateAsync({
         subjectVersionId: currentSubjectVersionId,
-        prerequisiteSubjectVersionId: item.id
+        prerequisiteId: item.id
       });
       handleSuccess('Prerequisite added successfully!');
       onClose();

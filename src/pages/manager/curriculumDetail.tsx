@@ -140,18 +140,15 @@ const CurriculumManagerPage: React.FC = () => {
     }
   };
 
-  const handleAddSubjectVersionToSemester = (curriculumId: number, semester: number) => {
-    setAddSubjectVersionModal({ open: true, curriculumId, semester });
-  };
-
   const handleAddSubjectVersionConfirm = async () => {
     if (!addSubjectVersionModal.curriculumId || !addSubjectVersionModal.semester || !selectedSubjectVersionId) return;
     
     try {
-      await AddSubjectVersionToCurriculum({
-        curriculumId: addSubjectVersionModal.curriculumId,
-        semester: addSubjectVersionModal.semester,
-        subjectVersionId: selectedSubjectVersionId
+      await AddSubjectVersionToCurriculum(addSubjectVersionModal.curriculumId,
+        {
+        semesterNumber: addSubjectVersionModal.semester,
+        subjectVersionId: selectedSubjectVersionId,
+        isMandatory: true
       });
       handleSuccess('Subject version added to curriculum!');
       setAddSubjectVersionModal({ open: false, curriculumId: null, semester: null });

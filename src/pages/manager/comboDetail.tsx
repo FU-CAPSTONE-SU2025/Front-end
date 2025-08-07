@@ -420,7 +420,7 @@ const ComboDetail: React.FC = () => {
         footer={null}
         width={480}
         className="rounded-xl"
-        destroyOnClose
+        destroyOnHidden
         style={{ background: '#fff', borderRadius: 16 }}
         bodyStyle={{ background: '#fff', borderRadius: 16 }}
       >
