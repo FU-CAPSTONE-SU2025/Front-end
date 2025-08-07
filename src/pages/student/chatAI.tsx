@@ -3,7 +3,7 @@ import { Avatar, Button, Input, Spin, ConfigProvider, message } from 'antd';
 import { SendOutlined, UserOutlined, RobotOutlined} from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router';
-import { useChatSessions, useChatSessionMessages, useInitChatSession, useSendChatMessage, useDeleteChatSession, useRenameChatSession, usePrefetchChatSessions, usePrefetchChatMessages } from '../../hooks/useChatApi';
+import { useChatSessions, useChatSessionMessages, useInitChatSession, useSendChatMessage, useDeleteChatSession, usePrefetchChatSessions, usePrefetchChatMessages } from '../../hooks/useChatApi';
 import type { IChatMessage, IChatSession } from '../../interfaces/IChatAI';
 
 import SidebarChat from '../../components/student/sidebarChat';
@@ -165,55 +165,29 @@ const ChatAI: React.FC = () => {
       return dateA - dateB;
     });
   
-  // Debug logs - replaced with debugLog
-  debugLog('Sessions:', sessions);
-  debugLog('Selected Session ID:', selectedSessionId);
-  debugLog('Messages:', messages);
-  debugLog('Loading Messages:', loadingMessages);
-  debugLog('Has Next Page:', hasNextPage);
-  debugLog('Is Fetching Next Page:', isFetchingNextPage);
-  debugLog('Sessions Error:', sessionsError);
-  debugLog('Messages Error:', messagesError);
-  
   // Mutations
   const initChatMutation = useInitChatSession();
   const sendMessageMutation = useSendChatMessage();
   const deleteSessionMutation = useDeleteChatSession();
-  const renameSessionMutation = useRenameChatSession();
   
   // Local state
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<any>(null);
   const navigate = useNavigate();
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 
-  // Preserve scroll position when loading older messages
-  const prevHeightRef = useRef<number | null>(null);
-  const prevScrollHeightRef = useRef<number | null>(null);
+
 
   // Before fetching next page, record current scroll height
   const handleFetchNextPage = useCallback(async () => {
     if (!messagesContainerRef.current) return;
-    prevScrollHeightRef.current = messagesContainerRef.current.scrollHeight;
     await fetchNextPage();
   }, [fetchNextPage]);
 
-  // After fetching next page, adjust scrollTop to preserve position
-  useEffect(() => {
-    if (prevScrollHeightRef.current && messagesContainerRef.current) {
-      const newScrollHeight = messagesContainerRef.current.scrollHeight;
-      const diff = newScrollHeight - prevScrollHeightRef.current;
-      if (diff > 0) {
-        messagesContainerRef.current.scrollTop += diff;
-      }
-      prevScrollHeightRef.current = null;
-    }
-  }, [messages.length]);
+
 
   // Scroll detection for infinite loading and scroll button
   const handleScroll = useCallback(() => {
@@ -225,11 +199,6 @@ const ChatAI: React.FC = () => {
     const isAtBottom = scrollTop + clientHeight >= scrollHeight - 100;
     setShowScrollButton(!isAtBottom);
     
-    // Disable auto-scroll when user scrolls up
-    if (!isAtBottom) {
-      setShouldAutoScroll(false);
-    }
-    
     // Load more when user scrolls to top (within 100px)
     if (scrollTop < 100 && hasNextPage && !isFetchingNextPage) {
       debugLog('Loading more messages...');
@@ -237,14 +206,7 @@ const ChatAI: React.FC = () => {
     }
   }, [hasNextPage, isFetchingNextPage, handleFetchNextPage]);
 
-  // Auto-scroll to bottom only when new messages are sent (not when loading old ones)
-  useEffect(() => {
-    if (shouldAutoScroll && messages.length > 0) {
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    }
-  }, [messages.length, isTyping, shouldAutoScroll]);
+
 
   // Focus input when session changes
   useEffect(() => {
@@ -258,11 +220,7 @@ const ChatAI: React.FC = () => {
     }
   }, [sessions, selectedSessionId]);
 
-  // Scroll to bottom function
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    setShouldAutoScroll(true);
-  };
+
 
   // Debug: Log messages and session info - replaced with debugLog
   useEffect(() => {
@@ -308,7 +266,6 @@ const ChatAI: React.FC = () => {
     const userInput = input;
     setInput('');
     setIsTyping(true);
-    setShouldAutoScroll(true); // Enable auto-scroll when sending new message
 
     // Create optimistic user message with correct senderId
     // Use studentId from selected session to ensure it's recognized as user message
@@ -428,7 +385,6 @@ const ChatAI: React.FC = () => {
     debugLog('Selecting session:', sessionId);
     setSelectedSessionId(sessionId);
     setInput('');
-    setShouldAutoScroll(true); // Enable auto-scroll when selecting new session
   };
 
   const handleDeleteSession = (sessionId: number) => {
@@ -460,20 +416,7 @@ const ChatAI: React.FC = () => {
     );
   };
 
-  const handleRenameSession = (sessionId: number, newTitle: string) => {
-    renameSessionMutation.mutate(
-      { chatSessionId: sessionId, title: newTitle },
-      {
-        onSuccess: () => {
-          message.success('Session renamed successfully');
-        },
-        onError: (error) => {
-          debugLog('Failed to rename session:', error);
-          message.error('Failed to rename session. Please try again.');
-        },
-      }
-    );
-  };
+
 
   // Check if current user is the sender (for message display)
   const isCurrentUser = (message: IChatMessage) => {
@@ -528,7 +471,6 @@ const ChatAI: React.FC = () => {
           onNewChat={handleNewChat}
           onShowHistoryModal={() => setShowHistoryModal(true)}
           AI_BOT={AI_BOT}
-          handleRenameSession={handleRenameSession}
           handleDeleteSession={handleDeleteSession}
           loading={loadingSessions}
         />
@@ -537,14 +479,13 @@ const ChatAI: React.FC = () => {
         <main className="flex-1 flex flex-col h-[calc(100vh-6rem)] mt-6 mb-6 rounded-3xl shadow-2xl bg-white border border-gray-200 max-w-5xl mx-auto relative overflow-hidden">
        
           <div className="flex-1 flex flex-col relative min-h-0">
-            <div 
-              ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto px-6 py-6"
-              style={{ 
-                scrollBehavior: 'smooth',
-                height: '100%'
-              }}
-            >
+                         <div 
+               ref={messagesContainerRef}
+               className="flex-1 overflow-y-auto px-6 py-6"
+               style={{ 
+                 height: '100%'
+               }}
+             >
               {/* Loading indicator for infinite scroll */}
               {isFetchingNextPage && (
                 <div className="flex justify-center py-4 mb-4">
@@ -657,7 +598,7 @@ const ChatAI: React.FC = () => {
                 {isTyping && <TypingIndicator />}
               </div>
               
-              <div ref={messagesEndRef} />
+              
             </div>
             
             {/* Input Area */}
@@ -679,9 +620,9 @@ const ChatAI: React.FC = () => {
                     disabled={sendMessageMutation.isPending || !selectedSessionId}
                     maxLength={2000}
                     autoSize={{ minRows: 1, maxRows: 4 }}
-                    style={{ minHeight: 56, maxHeight: 120 }}
+                    style={{ minHeight: 70, maxHeight: 120 }}
                   />
-                  <div className="absolute right-3 bottom-3 text-xs text-gray-400">
+                  <div className="absolute right-3 bottom-2 text-xs text-gray-400">
                     {input.length}/2000
                   </div>
                 </div>
@@ -692,8 +633,8 @@ const ChatAI: React.FC = () => {
                   disabled={!input.trim() || sendMessageMutation.isPending || !selectedSessionId}
                   loading={sendMessageMutation.isPending}
                   size="large"
-                  className="rounded-2xl h-14 w-14 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-r from-blue-500 to-blue-600 border-0"
-                  style={{ minWidth: 56, minHeight: 56 }}
+                  className="rounded-xl h-14 w-14 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-r from-blue-500 to-blue-600 border-0"
+                  
                 />
               </div>
               <div className="mt-3 text-xs text-gray-400 text-center">

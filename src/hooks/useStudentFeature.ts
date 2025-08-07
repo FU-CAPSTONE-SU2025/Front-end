@@ -3,14 +3,14 @@ import { fetchSyllabusPaged } from '../api/syllabus/syllabusAPI';
 import { PagedData, Syllabus } from '../interfaces/ISchoolProgram';
 import { 
     GetActiveAdvisors, 
-    PagedAdvisorData, 
-    PagedLeaveScheduleData,
     GetBookingAvailability,
-    BookingAvailabilityData,
+   
     getAdvisorMeetings,
-    GetPagedLeaveSchedulesOneStaff
+    GetPagedLeaveSchedulesOneStaff,
+    getMaxNumberOfBan,
+    getCurrentNumberOfBan
 } from '../api/student/StudentAPI';
-import { AdvisorMeetingPaged } from '../interfaces/IStudent';
+import { AdvisorMeetingPaged, BookingAvailabilityData, PagedAdvisorData, PagedLeaveScheduleData, MaxBanData, CurrentBanData } from '../interfaces/IStudent';
 
 interface UseStudentFeatureParams {
   search: string;
@@ -151,4 +151,30 @@ export const useAdvisorDataManager = () => {
   };
 
   return { invalidateAdvisorData, removeAdvisorData, setAdvisorData };
+};
+
+// Hook for fetching max number of bans
+export const useMaxNumberOfBan = () => {
+  return useQuery<MaxBanData | null, Error>({
+    queryKey: ['maxNumberOfBan'],
+    queryFn: () => getMaxNumberOfBan(),
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
+};
+
+// Hook for fetching current number of bans
+export const useCurrentNumberOfBan = () => {
+  return useQuery<CurrentBanData | null, Error>({
+    queryKey: ['currentNumberOfBan'],
+    queryFn: () => getCurrentNumberOfBan(),
+    staleTime: 1000 * 60 * 5, // 5 minutes (shorter for current data)
+    gcTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
 };

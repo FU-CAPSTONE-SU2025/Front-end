@@ -13,8 +13,8 @@ import CalendarHeader from '../../components/student/calendarHeader';
 import SelectedAdvisorInfo from '../../components/student/selectedAdvisorInfo';
 import CalendarView from '../../components/student/calendarView';
 import BookingModal from '../../components/student/bookingModal';
-import { AdvisorData, BookingAvailabilityData, CreateBookingMeeting } from '../../api/student/StudentAPI';
-import { CreateBookingMeetingRequest } from '../../interfaces/IStudent';
+import { CreateBookingMeeting } from '../../api/student/StudentAPI';
+import { AdvisorData, BookingAvailabilityData, CreateBookingMeetingRequest } from '../../interfaces/IStudent';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 interface WorkSlot {

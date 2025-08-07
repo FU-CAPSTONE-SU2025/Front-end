@@ -134,4 +134,86 @@ export interface IStudentBookingCalendarResponse {
   totalCount: number;
   pageNumber: number;
   pageSize: number;
-} 
+}
+
+// Interface for advisor data
+export interface AdvisorData {
+    id: number;
+    username: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
+    avatarUrl: string | null;
+    roleName: string;
+    status: number;
+    staffDataDetailResponse: {
+        id: number;
+        campus: string;
+        position: string;
+        department: string;
+        startWorkAt: string;
+        endWorkAt: string | null;
+    } | null;
+}
+
+export interface PagedAdvisorData {
+    items: AdvisorData[];
+    totalCount: number;
+    pageNumber: number;
+    pageSize: number;
+}
+
+// Interface for leave schedule data
+export interface LeaveScheduleData {
+    id: number;
+    staffProfileId: number;
+    startDateTime: string;
+    endDateTime: string;
+    staffProfile: {
+        id: number;
+        campus: string;
+        department: string;
+        position: string;
+        startWorkAt: string;
+        endWorkAt: string | null;
+        userId: number;
+        user: any;
+        advisorySessions1to1: any[];
+        bookingAvailabilities: any[];
+        leaveSchedules: any[];
+        bookedMeetings: any[];
+        createdAt: string;
+        updatedAt: string | null;
+        deletedAt: string | null;
+        isDeleted: boolean;
+    };
+    createdAt: string;
+}
+
+export interface PagedLeaveScheduleData {
+    items: LeaveScheduleData[];
+    totalCount: number;
+    pageNumber: number;
+    pageSize: number;
+}
+
+// Interface for booking availability data
+export interface BookingAvailabilityData {
+    id: number;
+    startTime: string;
+    endTime: string;
+    dayInWeek: number;
+    staffProfileId: number;
+    staffProfile: any;
+    createdAt: string;
+}
+
+// Interface for ban data
+export interface MaxBanData {
+    maxNoOfBan: number;
+}
+
+export interface CurrentBanData {
+    curNoOfBan: number;
+}
