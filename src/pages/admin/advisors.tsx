@@ -21,6 +21,7 @@ import { showForExport, hideLoading } from '../../hooks/useLoading';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import MeetingDetailModal from '../../components/admin/meetingDetailModal';
 import LeaveScheduleModal from '../../components/admin/leaveScheduleModal';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 
 const { Option } = Select;
@@ -58,6 +59,7 @@ const AdvisorList: React.FC = () => {
   const { categorizedData, refetch } = useActiveUserData();
   const { getAllAdvisor, advisorList, pagination, isLoading } = useCRUDAdvisor();
   const nav = useNavigate();
+  const { handleError, handleSuccess, showWarning } = useApiErrorHandler();
 
   // Load initial data
   useEffect(() => {
@@ -78,7 +80,7 @@ const AdvisorList: React.FC = () => {
       setMeetingRecords(data.items);
       setMeetingTotal(data.totalCount);
     } catch (err) {
-      message.error('Failed to fetch meeting records');
+      handleError('Failed to fetch meeting records');
     } finally {
       setMeetingLoading(false);
     }
@@ -96,7 +98,7 @@ const AdvisorList: React.FC = () => {
       const meetingDetail = await getMeetingDetail(record.id);
       setSelectedMeeting(meetingDetail);
     } catch (err) {
-      message.error('Failed to fetch meeting details');
+      handleError('Failed to fetch meeting details');
       setModalVisible(false);
     } finally {
       setDetailLoading(false);
@@ -145,7 +147,7 @@ const AdvisorList: React.FC = () => {
       if (advisorData.length === 0) {
         setUploadStatus('error');
         setUploadMessage('No advisor data found in the imported file');
-        message.warning('No advisor data found in the imported file');
+        showWarning('No advisor data found in the imported file');
         return;
       }
       // Transform the imported data to match BulkAccountPropsCreate interface
@@ -173,27 +175,27 @@ const AdvisorList: React.FC = () => {
         const errorMessage = getUserFriendlyErrorMessage(err);
         setUploadStatus('error');
         setUploadMessage(errorMessage);
-        message.error(errorMessage);
+        handleError(errorMessage);
         return;
       }
       // Treat null/undefined (204 No Content) as success
       if (response !== null && response !== undefined || response === null) {
         setUploadStatus('success');
         setUploadMessage(`Successfully imported ${advisorData.length} advisors`);
-        message.success(`Successfully imported ${advisorData.length} advisors`);
+        handleSuccess(`Successfully imported ${advisorData.length} advisors`);
         // Refresh the advisor list
         refetch();
         loadAdvisorData();
       } else {
         setUploadStatus('error');
         setUploadMessage('Failed to import advisors. Please try again.');
-        message.error('Failed to import advisors. Please try again.');
+        handleError('Failed to import advisors. Please try again.');
       }
     } catch (error) {
       console.error('Import error:', error);
       setUploadStatus('error');
       setUploadMessage('An error occurred during import. Please check your data and try again.');
-      message.error('An error occurred during import. Please check your data and try again.');
+      handleError('An error occurred during import. Please check your data and try again.');
     }
   };
 
@@ -301,7 +303,7 @@ const AdvisorList: React.FC = () => {
       const data = await GetAllMeetingRecordPaged(1, 10);
       const allMeetingRecords = data.items;
       if (!allMeetingRecords.length) {
-        message.warning('No meeting records to download');
+        showWarning('No meeting records to download');
         hideLoading();
         return;
       }
@@ -321,9 +323,9 @@ const AdvisorList: React.FC = () => {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'MeetingRecords');
       XLSX.writeFile(wb, `MeetingRecords_All_${new Date().toISOString().split('T')[0]}.xlsx`);
-      message.success(`Successfully downloaded ${allMeetingRecords.length} meeting records`);
+      handleSuccess(`Successfully downloaded ${allMeetingRecords.length} meeting records`);
     } catch (error) {
-      message.error('Failed to download meeting records');
+      handleError('Failed to download meeting records');
       console.error('Download error:', error);
     } finally {
       setDownloadLoading(false);

@@ -4,6 +4,7 @@ import { DeleteOutlined, CloseOutlined } from '@ant-design/icons';
 import { AdminViewBooking } from '../../interfaces/IBookingAvailability';
 import { DeleteMeetingById } from '../../api/admin/auditlogAPI';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 interface MeetingDetailModalProps {
   visible: boolean;
@@ -21,6 +22,7 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({
   loading = false
 }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   const handleDelete = async () => {
     if (!meeting) return;
@@ -28,12 +30,12 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({
     setDeleteLoading(true);
     try {
       await DeleteMeetingById(meeting.id);
-      message.success('Meeting deleted successfully');
+      handleSuccess('Meeting deleted successfully');
       onDelete();
       onClose();
     } catch (err) {
       const errorMessage = getUserFriendlyErrorMessage(err);
-      message.error(errorMessage);
+      handleError(errorMessage);
       console.error('Delete meeting error:', err);
     } finally {
       setDeleteLoading(false);

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, DatePicker, Table, Button, message } from 'antd';
+import { ConfigProvider, DatePicker, Table, Button } from 'antd';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import * as XLSX from 'xlsx';
 import styles from '../../css/admin/logs.module.css';
@@ -8,8 +8,11 @@ import { mockUserActivity } from '../../../data/mockData';
 import { useAuditLog } from '../../hooks/useAuditLog';
 import { AuditLog } from '../../interfaces/IAuditLog';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+
 const LogsPage: React.FC = () => {
   const [dateRange, setDateRange] = useState<[Date, Date] | null>(null);
+  const { handleError, handleSuccess } = useApiErrorHandler();
   const { 
     auditLogs, 
     loading, 
@@ -90,10 +93,10 @@ const LogsPage: React.FC = () => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Audit Logs');
       XLSX.writeFile(workbook, 'audit_logs.xlsx');
-      message.success('Audit logs exported successfully!');
+      handleSuccess('Audit logs exported successfully!');
     } catch (err) {
       const errorMessage = getUserFriendlyErrorMessage(err);
-      message.error(errorMessage);
+      handleError(errorMessage);
       console.error('Export error:', err);
     }
   };

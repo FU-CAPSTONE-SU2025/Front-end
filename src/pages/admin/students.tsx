@@ -14,6 +14,8 @@ import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { BulkRegisterStudent, DisableUser, ResetBanNumberForStudent } from '../../api/Account/UserAPI';
 import { parseExcelDate } from '../../utils/dateUtils';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 const { Option } = Select;
 
@@ -34,6 +36,8 @@ const StudentList: React.FC = () => {
   const { categorizedData, refetch } = useActiveUserData();
   const { studentList, getAllStudent, pagination, isLoading } = useCRUDStudent();
   const nav = useNavigate();
+  const { handleError, handleSuccess } = useApiErrorHandler();
+  const { showWarning } = useMessagePopupContext();
 
   // Load initial data
   useEffect(() => {
@@ -97,7 +101,7 @@ const StudentList: React.FC = () => {
       if (studentData.length === 0) {
         setUploadStatus('error');
         setUploadMessage('No student data found in the imported file');
-        message.warning('No student data found in the imported file');
+        showWarning('No student data found in the imported file');
         return;
       }
 
@@ -127,12 +131,12 @@ const StudentList: React.FC = () => {
       if (validData.length === 0) {
         setUploadStatus('error');
         setUploadMessage('No valid student data found. Please check your data format and ensure all required fields are filled.');
-        message.error('No valid student data found. Please check your data format and ensure all required fields are filled.');
+        handleError('No valid student data found. Please check your data format and ensure all required fields are filled.');
         return;
       }
 
       if (validData.length !== transformedData.length) {
-        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+        showWarning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
       }
 
       // Call the bulk registration API
@@ -143,26 +147,26 @@ const StudentList: React.FC = () => {
         const errorMessage = getUserFriendlyErrorMessage(err);
         setUploadStatus('error');
         setUploadMessage(errorMessage);
-        message.error(errorMessage);
+        handleError(errorMessage);
         return;
       }
       // Treat null/undefined (204 No Content) as success
       if (response !== null && response !== undefined || response === null) {
         setUploadStatus('success');
         setUploadMessage(`Successfully imported ${validData.length} students`);
-        message.success(`Successfully imported ${validData.length} students`);
+        handleSuccess(`Successfully imported ${validData.length} students`);
         // Refresh the student list
         loadStudentData();
       } else {
         setUploadStatus('error');
         setUploadMessage('Failed to import students. Please try again.');
-        message.error('Failed to import students. Please try again.');
+        handleError('Failed to import students. Please try again.');
       }
     } catch (error) {
       console.error('Import error:', error);
       setUploadStatus('error');
       setUploadMessage('An error occurred during import. Please check your data and try again.');
-      message.error('An error occurred during import. Please check your data and try again.');
+      handleError('An error occurred during import. Please check your data and try again.');
     }
   };
 
@@ -207,12 +211,12 @@ const StudentList: React.FC = () => {
       onOk: async () => {
         try {
           await DisableUser(studentId);
-          message.success('Student account deleted successfully');
+          handleSuccess('Student account deleted successfully');
           loadStudentData();
           setSelectedStudents([]);
           setIsDeleteMode(false);
         } catch (error) {
-          message.error('Failed to delete student account');
+          handleError('Failed to delete student account');
         }
       },
       maskStyle: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
@@ -231,7 +235,7 @@ const StudentList: React.FC = () => {
   const handleResetBanNumber = async (studentId: number) => {
     try {
       await ResetBanNumberForStudent(studentId);
-      message.success('Ban number reset successfully');
+      handleSuccess('Ban number reset successfully');
       // Refresh the data and refetch active user data
       loadStudentData();
       refetch();
@@ -239,7 +243,7 @@ const StudentList: React.FC = () => {
       setResetBanStudentId(null);
     } catch (err) {
       const errorMessage = getUserFriendlyErrorMessage(err);
-      message.error(errorMessage);
+      handleError(errorMessage);
       console.error('Reset ban number error:', err);
     }
   };

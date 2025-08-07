@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Table, DatePicker, Button, message, Space } from 'antd';
+import { Modal, Table, DatePicker, Button, Space, Typography } from 'antd';
 import { CalendarOutlined, CloseOutlined } from '@ant-design/icons';
 import { GetPagedLeaveSchedulesOneStaff } from '../../api/student/StudentAPI';
 import { LeaveSchedule } from '../../interfaces/ILeaveSchedule';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import dayjs, { Dayjs } from 'dayjs';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { RangePicker } = DatePicker;
+const { Title } = Typography;
 
 interface LeaveScheduleModalProps {
   visible: boolean;
@@ -27,6 +29,7 @@ const LeaveScheduleModal: React.FC<LeaveScheduleModalProps> = ({
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
+  const { handleError } = useApiErrorHandler();
 
   // Fetch leave schedules
   const fetchLeaveSchedules = async () => {
@@ -41,7 +44,7 @@ const LeaveScheduleModal: React.FC<LeaveScheduleModalProps> = ({
       setPageSize(data.pageSize);
     } catch (err) {
       const errorMessage = getUserFriendlyErrorMessage(err);
-      message.error(errorMessage);
+      handleError(errorMessage);
       console.error('Fetch leave schedules error:', err);
     } finally {
       setLoading(false);

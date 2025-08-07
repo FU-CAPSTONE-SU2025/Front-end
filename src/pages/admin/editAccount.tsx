@@ -7,6 +7,7 @@ import styles from '../../css/admin/editAccount.module.css';
 import { GetCurrentStudentUser, GetCurrentStaffUser, UpdateCurrentStaffUser, UpdateCurrentStudentUser, RegisterUser } from '../../api/Account/UserAPI';
 import { AccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 import AvatarUpload from '../../components/common/AvatarUpload';
 
@@ -56,6 +57,7 @@ const EditAccount: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<AccountProps | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(!!id); // Only loading if editing
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string>('');
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   // Role checks
   const isStudent = role === 'student';
@@ -77,7 +79,7 @@ const EditAccount: React.FC = () => {
       try {
         const userId = parseInt(id);
         if (!userId) {
-          message.error('Unable to identify user');
+          handleError('Unable to identify user');
           nav(-1);
           return;
         }
@@ -105,12 +107,12 @@ const EditAccount: React.FC = () => {
             endWorkAt: userData.staffDataDetailResponse?.endWorkAt ? dayjs(userData.staffDataDetailResponse.endWorkAt) : null,
           });
         } else {
-          message.error('Failed to load user data');
+          handleError('Failed to load user data');
           nav(-1);
         }
       } catch (error) {
         console.error('Error loading user data:', error);
-        message.error('Failed to load user data');
+        handleError('Failed to load user data');
         nav(-1);
       } finally {
         setIsLoadingUser(false);
@@ -128,7 +130,7 @@ const EditAccount: React.FC = () => {
       if (!id) {
         // CREATE MODE: Check password match
         if (values.password !== values.confirmPassword) {
-          message.error('Passwords do not match');
+          handleError('Passwords do not match');
           setLoading(false);
           return;
         }
@@ -157,13 +159,13 @@ const EditAccount: React.FC = () => {
         };
         try {
           await RegisterUser(createData);
-          message.success('Account created successfully!');
+          handleSuccess('Account created successfully!');
           nav(-1);
         } catch (err) {
           // Use the improved error handling
           const errorMessage = getUserFriendlyErrorMessage(err);
           console.error('Account creation error:', err);
-          message.error(errorMessage);
+          handleError(errorMessage, 'Failed to create account');
         }
         setLoading(false);
         return;
@@ -172,7 +174,7 @@ const EditAccount: React.FC = () => {
       // EDIT MODE: Update logic as before
       const userId = parseInt(id);
       if (!userId) {
-        message.error('Unable to identify user');
+        handleError('Unable to identify user');
         setLoading(false);
         return;
       }
@@ -205,15 +207,15 @@ const EditAccount: React.FC = () => {
         response = await UpdateCurrentStaffUser(userId, updateData);
       }
       if (response) {
-        message.success('Account updated successfully!');
+        handleSuccess('Account updated successfully!');
         nav(-1);
       } else {
-        message.error('Failed to update account');
+        handleError('Failed to update account', 'Failed to update account');
       }
       setLoading(false);
     } catch (error) {
       console.error('Submit error:', error);
-      message.error('Failed to submit account');
+      handleError('Failed to submit account', 'Failed to submit account');
       setLoading(false);
     }
   };

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import {DatePicker, message } from 'antd';
+import { DatePicker } from 'antd';
 import dayjs from 'dayjs';
 import { jwtDecode } from 'jwt-decode';
 import styles from '../../css/admin/account.module.css';
@@ -14,6 +14,7 @@ import { JWTAccountProps } from '../../interfaces/IAccount';
 import { validateEmail } from '../../components/common/validation';
 import { useNavigate } from 'react-router';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -32,8 +33,9 @@ const Profile: React.FC = () => {
   const [userId, setUserId] = useState<number | null>(null);
   const { accessToken } = getAuthState();
   const { categorizedData, refetch } = useActiveUserData();
-  const {logout} = getAuthState()
+  const { logout } = getAuthState();
   const navigate = useNavigate();
+  const { handleError, handleSuccess } = useApiErrorHandler();
   
   // Get user ID from JWT token
   const getUserIdFromToken = () => {
@@ -121,7 +123,7 @@ const Profile: React.FC = () => {
   // Handle successful profile update
   useEffect(() => {
     if (isUpdateSuccess) {
-      message.success('Profile updated successfully!');
+      handleSuccess('Profile updated successfully!');
       setIsEditing(false);
       setErrors({});
       // Refresh the profile data
@@ -133,7 +135,7 @@ const Profile: React.FC = () => {
   useEffect(() => {
     if (updateError) {
       const errorMessage = getUserFriendlyErrorMessage(updateError);
-      message.error(errorMessage);
+      handleError(errorMessage);
       console.error('Update error:', updateError);
     }
   }, [updateError]);
@@ -143,7 +145,7 @@ const Profile: React.FC = () => {
     if (currentUserError) {
       const errorMessage = getUserFriendlyErrorMessage(currentUserError);
       console.error('Failed to fetch user data:', currentUserError);
-      message.error(errorMessage);
+      handleError(errorMessage);
     }
   }, [currentUserError]);
 
@@ -186,7 +188,7 @@ const Profile: React.FC = () => {
 
     if (Object.values(newErrors).every((error) => error === null)) {
       if (!userId) {
-        message.error('Unable to identify user. Please try logging in again.');
+        handleError('Unable to identify user. Please try logging in again.');
         return;
       }
 
@@ -214,7 +216,7 @@ const Profile: React.FC = () => {
   const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
     // Extract admin profile data from the imported data
     const adminProfileData = importedData['ADMIN_PROFILE'] || [];
-    message.success(`Successfully imported ${adminProfileData.length} admin profiles`);
+    handleSuccess(`Successfully imported ${adminProfileData.length} admin profiles`);
     setIsImportOpen(false);
     // Refresh the account list
     refetch();
