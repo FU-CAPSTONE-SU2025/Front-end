@@ -1,8 +1,20 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import axios from "axios";
-import { AccountProps, AccountPropsCreate, LoginProps } from "../../interfaces/IAccount";
-import { pagedStudentData, StudentBase, CreateBookingMeetingRequest, BookingMeetingResponse, AdvisorMeetingItem, AdvisorMeetingPaged, IStudentBookingResponse, IStudentBookingCalendarResponse } from "../../interfaces/IStudent";
+import { AccountProps, AccountPropsCreate } from "../../interfaces/IAccount";
+import { 
+    pagedStudentData, 
+    CreateBookingMeetingRequest, 
+    BookingMeetingResponse,  
+    AdvisorMeetingPaged, 
+    IStudentBookingResponse, 
+    IStudentBookingCalendarResponse,
+    AdvisorData,
+    PagedAdvisorData,
+    LeaveScheduleData,
+    PagedLeaveScheduleData,
+    BookingAvailabilityData
+} from "../../interfaces/IStudent";
 
 
 const userURL = baseUrl+"/User/student"
@@ -104,33 +116,7 @@ export const DisableUser = async (userId:number):Promise<AccountProps> => {
     }
 }
 
-// Interface for advisor data
-export interface AdvisorData {
-    id: number;
-    username: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string;
-    avatarUrl: string | null;
-    roleName: string;
-    status: number;
-    staffDataDetailResponse: {
-        id: number;
-        campus: string;
-        position: string;
-        department: string;
-        startWorkAt: string;
-        endWorkAt: string | null;
-    } | null;
-}
 
-export interface PagedAdvisorData {
-    items: AdvisorData[];
-    totalCount: number;
-    pageNumber: number;
-    pageSize: number;
-}
 
 export const GetActiveAdvisors = async (pageNumber: number = 1, pageSize: number = 10): Promise<PagedAdvisorData> => {
     const params = new URLSearchParams({
@@ -155,71 +141,10 @@ export const GetActiveAdvisors = async (pageNumber: number = 1, pageSize: number
     }
 }
 
-// Interface for leave schedule data
-export interface LeaveScheduleData {
-    id: number;
-    staffProfileId: number;
-    startDateTime: string;
-    endDateTime: string;
-    staffProfile: {
-        id: number;
-        campus: string;
-        department: string;
-        position: string;
-        startWorkAt: string;
-        endWorkAt: string | null;
-        userId: number;
-        user: any;
-        advisorySessions1to1: any[];
-        bookingAvailabilities: any[];
-        leaveSchedules: any[];
-        bookedMeetings: any[];
-        createdAt: string;
-        updatedAt: string | null;
-        deletedAt: string | null;
-        isDeleted: boolean;
-    };
-    createdAt: string;
-}
 
-export interface PagedLeaveScheduleData {
-    items: LeaveScheduleData[];
-    totalCount: number;
-    pageNumber: number;
-    pageSize: number;
-}
 
-// Interface for booking availability data
-export interface BookingAvailabilityData {
-    id: number;
-    startTime: string;
-    endTime: string;
-    dayInWeek: number;
-    staffProfileId: number;
-    staffProfile: any;
-    createdAt: string;
-}
 
-// Get upcoming leave schedules for an advisor
-export const GetUpcomingLeaveSchedules = async (staffProfileId: number): Promise<PagedLeaveScheduleData> => {
-    const props = {
-        data: null,
-        url: baseUrl + `/LeaveSche/upcoming/${staffProfileId}`,
-        headers: GetHeader()
-    }
-    
-    const result = await axiosRead(props)
-    if (result.success) {
-        console.log("Leave schedules data:", result.data)
-        return result.data
-    }
-    else {
-        throwApiError(result);
-        return null as never;
-    }
-}
 
-// Api for admin and student getting All leave schedule in ONE STAFF ADVISOR
 export const GetPagedLeaveSchedulesOneStaff = async (staffProfileId: number): Promise<PagedLeaveScheduleData> => {
   const props = {
       data: null,
@@ -273,7 +198,6 @@ export const CreateBookingMeeting = async (data: CreateBookingMeetingRequest): P
   }
 };
 
-// API lấy danh sách meeting của advisor
 export const getAdvisorMeetings = async (staffProfileId: number, pageNumber = 1, pageSize = 50): Promise<AdvisorMeetingPaged> => {
   const props = {
     data: null,
@@ -289,21 +213,7 @@ export const getAdvisorMeetings = async (staffProfileId: number, pageNumber = 1,
   }
 };
 
-// API lấy lịch sử meeting của sinh viên
-export const getStudentMeetings = async (pageNumber = 1, pageSize = 20): Promise<AdvisorMeetingPaged> => {
-  const props = {
-    data: null,
-    url: `${baseUrl}/Meeting/all-stu-self/paged?pageNumber=${pageNumber}&pageSize=${pageSize}`,
-    headers: GetHeader(),
-  };
-  const result = await axiosRead(props);
-  if (result.success) {
-    return result.data;
-  } else {
-    throwApiError(result);
-    return null as never;
-  }
-};
+
 
 // API lấy chi tiết meeting - cho cả Admin
 export const getMeetingDetail = async (meetingId: number): Promise<any> => {
@@ -434,6 +344,38 @@ export const getUnassignedSessions = async () => {
   const props = {
     data: null,
     url: baseUrl + "/AdvisorySession1to1/unassigned",
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+// Get max number of bans for student
+export const getMaxNumberOfBan = async () => {
+  const props = {
+    data: null,
+    url: baseUrl + "/Meeting/max-number-of-ban",
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+// Get current number of bans for student
+export const getCurrentNumberOfBan = async () => {
+  const props = {
+    data: null,
+    url: baseUrl + "/Meeting/cur-number-of-ban",
     headers: GetHeader(),
   };
   const result = await axiosRead(props);

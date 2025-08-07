@@ -3,25 +3,31 @@ import { fetchSyllabusPaged } from '../api/syllabus/syllabusAPI';
 import { PagedData, Syllabus } from '../interfaces/ISchoolProgram';
 import { 
     GetActiveAdvisors, 
-    PagedAdvisorData, 
-    GetUpcomingLeaveSchedules, 
-    PagedLeaveScheduleData,
     GetBookingAvailability,
-    BookingAvailabilityData,
-    getAdvisorMeetings
+   
+    getAdvisorMeetings,
+    GetPagedLeaveSchedulesOneStaff,
+    getMaxNumberOfBan,
+    getCurrentNumberOfBan
 } from '../api/student/StudentAPI';
-import { AdvisorMeetingPaged } from '../interfaces/IStudent';
+import { AdvisorMeetingPaged, BookingAvailabilityData, PagedAdvisorData, PagedLeaveScheduleData, MaxBanData, CurrentBanData } from '../interfaces/IStudent';
 
 interface UseStudentFeatureParams {
   search: string;
   page: number;
   pageSize: number;
+  searchType?: 'code' | 'name' | 'all';
 }
 
-export const useStudentFeature = ({ search, page, pageSize }: UseStudentFeatureParams) => {
+export const useStudentFeature = ({ search, page, pageSize, searchType = 'code' }: UseStudentFeatureParams) => {
+  console.log('useStudentFeature called with:', { search, page, pageSize, searchType });
   return useQuery<PagedData<Syllabus> | null, Error>({
-    queryKey: ['syllabus', search, page, pageSize],
-    queryFn: () => fetchSyllabusPaged({ search, page, pageSize }),
+    queryKey: ['syllabus', search, searchType, page, pageSize],
+    queryFn: () => {
+      console.log('Calling API with search:', search);
+      return fetchSyllabusPaged({ search, page, pageSize, searchType });
+    },
+    enabled: search !== undefined && search !== null, // Chỉ gọi API khi search được định nghĩa và không null
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
@@ -53,7 +59,7 @@ export const useAdvisors = ({ page = 1, pageSize = 10 }: UseAdvisorsParams = {})
 export const useLeaveSchedules = (staffProfileId: number | null) => {
   return useQuery<PagedLeaveScheduleData | null, Error>({
     queryKey: ['leaveSchedules', staffProfileId],
-    queryFn: () => staffProfileId ? GetUpcomingLeaveSchedules(staffProfileId) : null,
+    queryFn: () => staffProfileId ? GetPagedLeaveSchedulesOneStaff(staffProfileId) : null,
     enabled: !!staffProfileId,
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 15, // 15 minutes
@@ -102,7 +108,7 @@ export const usePrefetchAdvisorData = () => {
     // Prefetch leave schedules
     await queryClient.prefetchQuery({
       queryKey: ['leaveSchedules', staffProfileId],
-      queryFn: () => GetUpcomingLeaveSchedules(staffProfileId),
+      queryFn: () => GetPagedLeaveSchedulesOneStaff(staffProfileId),
       staleTime: 1000 * 60 * 15,
     });
 
@@ -145,4 +151,30 @@ export const useAdvisorDataManager = () => {
   };
 
   return { invalidateAdvisorData, removeAdvisorData, setAdvisorData };
+};
+
+// Hook for fetching max number of bans
+export const useMaxNumberOfBan = () => {
+  return useQuery<MaxBanData | null, Error>({
+    queryKey: ['maxNumberOfBan'],
+    queryFn: () => getMaxNumberOfBan(),
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
+};
+
+// Hook for fetching current number of bans
+export const useCurrentNumberOfBan = () => {
+  return useQuery<CurrentBanData | null, Error>({
+    queryKey: ['currentNumberOfBan'],
+    queryFn: () => getCurrentNumberOfBan(),
+    staleTime: 1000 * 60 * 5, // 5 minutes (shorter for current data)
+    gcTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
 };

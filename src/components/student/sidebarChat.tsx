@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Avatar, Button, Popconfirm, Tooltip, Dropdown, Menu, Spin, Input, message } from 'antd';
-import { PlusOutlined, DeleteOutlined, MessageOutlined, MoreOutlined, EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { Avatar, Button, Popconfirm, Tooltip, Spin } from 'antd';
+import { PlusOutlined, DeleteOutlined, MessageOutlined } from '@ant-design/icons';
 import type { IChatSession } from '../../interfaces/IChatAI';
 import DeleteSessionModal from './deleteSessionModal';
 
@@ -11,7 +11,6 @@ interface SidebarChatProps {
   onNewChat: () => void;
   onShowHistoryModal: () => void;
   AI_BOT: { avatar: string };
-  handleRenameSession: (id: number, newTitle: string) => void;
   handleDeleteSession: (id: number) => void;
   loading?: boolean;
 }
@@ -23,12 +22,9 @@ const SidebarChat: React.FC<SidebarChatProps> = ({
   onNewChat,
   onShowHistoryModal,
   AI_BOT,
-  handleRenameSession,
   handleDeleteSession,
   loading = false
 }) => {
-  const [editingSessionId, setEditingSessionId] = useState<number | null>(null);
-  const [editValue, setEditValue] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<IChatSession | null>(null);
 
@@ -41,32 +37,6 @@ const SidebarChat: React.FC<SidebarChatProps> = ({
     if (!dateB) return -1;
     return new Date(dateB).getTime() - new Date(dateA).getTime();
   });
-
-  const handleMenuClick = (key: string, session: IChatSession) => {
-    if (key === 'rename') {
-      setEditingSessionId(session.id);
-      setEditValue(session.title);
-    }
-    if (key === 'delete') {
-      setSessionToDelete(session);
-      setDeleteModalOpen(true);
-    }
-  };
-
-  const handleRenameConfirm = () => {
-    if (editingSessionId && editValue.trim()) {
-      handleRenameSession(editingSessionId, editValue.trim());
-      setEditingSessionId(null);
-      setEditValue('');
-    } else if (editValue.trim() === '') {
-      message.error('Session title cannot be empty');
-    }
-  };
-
-  const handleRenameCancel = () => {
-    setEditingSessionId(null);
-    setEditValue('');
-  };
 
   const handleDelete = () => {
     if (sessionToDelete) {
@@ -138,36 +108,17 @@ const SidebarChat: React.FC<SidebarChatProps> = ({
             </div>
           ) : (
             sortedSessions.slice(0, 10).map((session) => {
-              const isEditing = editingSessionId === session.id;
               const isSelected = selectedSessionId === session.id;
-              
-              const menu = (
-                <Menu
-                  onClick={({ key }) => handleMenuClick(key as string, session)}
-                  items={[
-                    {
-                      key: 'rename',
-                      icon: <EditOutlined className="text-blue-600" />,
-                      label: 'Rename',
-                    },
-                    {
-                      key: 'delete',
-                      icon: <DeleteOutlined className="text-red-500" />,
-                      label: 'Delete',
-                    },
-                  ]}
-                />
-              );
 
               return (
                 <div
                   key={session.id}
-                  className={`flex items-center gap-3 px-4 py-3 mx-2 my-1 rounded-2xl cursor-pointer transition-all duration-200 ${
+                  className={`flex items-center gap-3 px-4 py-3 mx-2 my-1 rounded-2xl cursor-pointer transition-all duration-200 group ${
                     isSelected 
                       ? 'bg-gradient-to-r from-blue-100 to-purple-100 border border-blue-300 shadow-md' 
                       : 'hover:bg-blue-50 border border-transparent'
                   }`}
-                  onClick={() => !isEditing && onSelectSession(session.id)}
+                  onClick={() => onSelectSession(session.id)}
                 >
                   <Avatar 
                     src={AI_BOT.avatar} 
@@ -176,50 +127,21 @@ const SidebarChat: React.FC<SidebarChatProps> = ({
                     className="w-10 h-10 object-cover rounded-full border-2 border-blue-100 flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
-                    {isEditing ? (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onPressEnter={handleRenameConfirm}
-                          onBlur={handleRenameCancel}
-                          autoFocus
-                          size="small"
-                          className="text-sm"
-                          maxLength={50}
-                        />
-                        <Button
-                          type="text"
-                          icon={<CheckOutlined />}
-                          size="small"
-                          onClick={handleRenameConfirm}
-                          className="text-green-600 hover:text-green-700"
-                        />
-                        <Button
-                          type="text"
-                          icon={<CloseOutlined />}
-                          size="small"
-                          onClick={handleRenameCancel}
-                          className="text-red-600 hover:text-red-700"
-                        />
-                      </div>
-                    ) : (
-                      <div className="text-gray-900 font-semibold text-base truncate">
-                        {session.title}
-                      </div>
-                    )}
+                    <div className="text-gray-900 font-semibold text-base truncate">
+                      {session.title}
+                    </div>
                     <div className="text-xs text-gray-400 mt-1">{formatDate(session.updatedAt || session.createdAt)}</div>
                   </div>
-                  {!isEditing && (
-                    <Dropdown menu={{ items: menu.props.items }} trigger={["click"]} placement="bottomRight">
-                      <Button
-                        type="text"
-                        icon={<MoreOutlined className="text-lg text-gray-500 hover:text-blue-700" />}
-                        onClick={e => e.stopPropagation()}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      />
-                    </Dropdown>
-                  )}
+                  <Button
+                  type='primary'
+                    icon={<DeleteOutlined color='red'/>}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setSessionToDelete(session);
+                      setDeleteModalOpen(true);
+                    }}
+                   
+                  />
                 </div>
               );
             })
@@ -228,8 +150,9 @@ const SidebarChat: React.FC<SidebarChatProps> = ({
         <div className="p-4 border-t border-gray-100 bg-white flex items-center justify-center">
           <Button
             type="default"
-            className="w-full font-medium text-blue-700 border border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 transition-colors"
+            className="w-full font-medium !text-black border border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 transition-colors"
             onClick={onShowHistoryModal}
+          
           >
             View all history ({sessions.length})
           </Button>

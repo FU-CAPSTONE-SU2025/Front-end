@@ -103,21 +103,7 @@ export const deleteChatSession = async (chatSessionId: number): Promise<{ succes
   }
 };
 
-export const renameChatSession = async (chatSessionId: number, title: string): Promise<{ success: boolean }> => {
-  const props = {
-    data: { title },
-    url: `${sessionUrl}/${chatSessionId}/rename`,
-    headers: GetHeader(),
-  };
-  
-  const result = await axiosUpdate(props);
-  if (result.success) {
-    return { success: true };
-  } else {
-    throwApiError(result);
-    return null as never;
-  }
-};
+
 
 export const sendAiMessage = async (message: string): Promise<ISendChatMessageResponse> => {
   const props = {

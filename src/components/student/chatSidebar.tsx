@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Spin, Dropdown, Menu } from 'antd';
-import { PlusOutlined, MoreOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, MoreOutlined, DeleteOutlined } from '@ant-design/icons';
 import { IChatSession } from '../../interfaces/IChatAI';
 
 interface ChatSidebarProps {
@@ -39,13 +39,10 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           const menu = (
             <Menu
               items={[{
-                key: 'rename',
-                icon: <EditOutlined className="text-blue-600" />,
-                label: 'Rename',
-              }, {
                 key: 'delete',
-                icon: <DeleteOutlined className="text-red-500" />,
+                icon: <DeleteOutlined style={{ color: '#ef4444 !important' }} />,
                 label: 'Delete',
+                style: { color: '#ef4444 !important' },
                 onClick: () => onDeleteSession(session)
               }]}
             />
@@ -53,7 +50,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           return (
             <div
               key={session.id}
-              className={`flex items-center gap-3 px-4 py-3 mx-2 my-1 rounded-2xl cursor-pointer transition-all duration-200 ${selectedSession?.id === session.id ? 'bg-gradient-to-r from-blue-100 to-purple-100 border border-blue-300 shadow-md' : 'hover:bg-blue-50 border border-transparent'}`}
+              className={`flex items-center gap-3 px-4 py-3 mx-2 my-1 rounded-2xl cursor-pointer transition-all duration-200 group ${selectedSession?.id === session.id ? 'bg-gradient-to-r from-blue-100 to-purple-100 border border-blue-300 shadow-md' : 'hover:bg-blue-50 border border-transparent'}`}
               onClick={() => onSelectSession(session)}
             >
               <div className="flex-1 min-w-0">
@@ -63,8 +60,10 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
               <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight">
                 <Button
                   type="text"
-                  icon={<MoreOutlined className="text-lg text-gray-500 hover:text-blue-700" />}
+                  icon={<MoreOutlined style={{ color: '#6b7280 !important', fontSize: '18px' }} />}
                   onClick={e => e.stopPropagation()}
+                  style={{ color: '#6b7280 !important' }}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
                 />
               </Dropdown>
             </div>
@@ -77,6 +76,11 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         type="primary"
         className="w-full font-bold text-blue-700 border border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 transition-colors"
         onClick={onShowHistoryModal}
+        style={{ 
+          color: '#1d4ed8 !important',
+          borderColor: '#bfdbfe !important',
+          backgroundColor: '#eff6ff !important'
+        }}
       >
         View all history
       </Button>
