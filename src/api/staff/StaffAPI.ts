@@ -47,9 +47,9 @@ export const FetchStaffList = async (pageNumber: number = 1, pageSize: number = 
         pageSize: pageSize.toString()
     });
     
-    if (searchQuery) {
-        params.append('searchQuery', searchQuery);
-    }
+      if (searchQuery) {
+    params.append('search', searchQuery);
+  }
     
     if (filterType && filterValue) {
         params.append('filterType', filterType);

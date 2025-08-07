@@ -40,6 +40,7 @@ export const AddPrerequisiteToSubjectVersion = async (subjectVersionId: number, 
     url: prerequisiteURL + `/${subjectVersionId}`,
     headers: GetHeader(),
   };
+  console.log("GetPrerequisitesBySubjectVersion",props)
   const result = await axiosCreate(props);
   if (result.success) {
     return result.data;
@@ -54,6 +55,7 @@ export const GetPrerequisitesBySubjectVersion = async (subjectVersionId: number)
     url: prerequisiteURL + `/${subjectVersionId}`,
     headers: GetHeader(),
   };
+
   const result = await axiosRead(props);
   if (result.success) {
     return result.data;
@@ -122,8 +124,7 @@ export const FetchPagedSubjectVersionList = async (
   pageNumber?: number,
   pageSize?: number,
   search?: string,
-  filterType?: string,
-  filterValue?: string
+  subjectId?: number
 ): Promise<PagedData<SubjectVersion> | null> => {
   let params = new URLSearchParams();
   // Build query parameters
@@ -131,33 +132,21 @@ export const FetchPagedSubjectVersionList = async (
    params = new URLSearchParams({
     pageNumber: pageNumber.toString(),
     pageSize: pageSize.toString(),
+    search: search || "",
+    subjectId: subjectId ? subjectId.toString() : ""
   });
-  
-
-  if (search) {
-    params.append("search", search);
-  }
-
-  // Handle subjectId filtering specifically
-  if (filterType === 'subjectId' && filterValue) {
-    params.append("subjectId", filterValue);
-  } else if (filterType && filterValue) {
-    // For other filter types, use the generic approach
-    params.append("filterType", filterType);
-    params.append("filterValue", filterValue);
-  }
-  // If filterType and filterValue are undefined, don't append any filter parameters
-  }
   const props = {
     data: null,
     url: subjectVersionURL + "?" + params.toString(),
     headers: GetHeader(),
   };
+  //console.log("FetchPagedSubjectVersionList",props)
   const result = await axiosRead(props);
   if (result.success) {
     return result.data;
   } else {
     throwApiError(result);
+  }
   }
 };
 

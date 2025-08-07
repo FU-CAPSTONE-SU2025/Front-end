@@ -55,7 +55,7 @@ export const FetchAdvisorList = async (
     pageSize: pageSize.toString(),
   });
   if (searchQuery) {
-    params.append("searchQuery", searchQuery);
+    params.append("search", searchQuery);
   }
   if (filterType && filterValue) {
     params.append("filterType", filterType);

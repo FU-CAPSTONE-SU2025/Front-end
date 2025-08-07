@@ -48,7 +48,7 @@ export const FetchProgramList = async (
   });
 
   if (searchQuery) {
-    params.append("searchQuery", searchQuery);
+    params.append("search", searchQuery);
   }
 
   if (filterType && filterValue) {
