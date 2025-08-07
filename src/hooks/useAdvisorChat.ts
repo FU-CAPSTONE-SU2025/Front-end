@@ -3,6 +3,8 @@ import * as signalR from '@microsoft/signalr';
 import { useAuths } from './useAuths';
 import { ChatMessage, PagedResult } from '../interfaces/IChat';
 import { SIGNALR_CONFIG, ConnectionState, signalRManager } from '../config/signalRConfig';
+import { useChatSession } from './useChatSession';
+import { addMessageWithDeduplication, mapBackendMessage } from '../utils/messageUtils';
 
 export interface AdvisorSession {
   id: number;
@@ -108,17 +110,14 @@ export function useAdvisorChat() {
     // Sessions state changed
   }, [sessions]);
 
-  // Add retry mechanism for session fetching
+  // Fetch sessions with simple retry mechanism
   const fetchSessionsWithRetry = useCallback(async (retryCount = 0) => {
     if (!connectionRef.current || isFetchingSessionsRef.current) {
-      if (retryCount < 3) {
-        setTimeout(() => fetchSessionsWithRetry(retryCount + 1), 1000);
-      }
       return;
     }
     
     if (connectionRef.current.state !== signalR.HubConnectionState.Connected) {
-      if (retryCount < 3) {
+      if (retryCount < 2) {
         setTimeout(() => fetchSessionsWithRetry(retryCount + 1), 1000);
       }
       return;
@@ -128,6 +127,7 @@ export function useAdvisorChat() {
     
     try {
       setLoading(true);
+      setError(null);
       await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_ALL_SESSIONS_BY_STUDENT, { pageNumber: 1, pageSize: 20 });
     } catch (err) {
       // Try alternative method
@@ -138,8 +138,7 @@ export function useAdvisorChat() {
         try {
           await connectionRef.current.invoke('GetSessions', { pageNumber: 1, pageSize: 20 });
         } catch (directErr) {
-          // Retry if we haven't exceeded retry count
-          if (retryCount < 3) {
+          if (retryCount < 2) {
             setTimeout(() => fetchSessionsWithRetry(retryCount + 1), 2000);
           } else {
             setError(`Failed to fetch sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -202,31 +201,12 @@ export function useAdvisorChat() {
   }, []);
 
   // Initialize chat session
+  // Use the new chat session hook
+  const { initializeSession, isLoading: isInitializingSession, error: sessionError, sessionData } = useChatSession();
+
   const initChatSession = useCallback(async (message: string) => {
-    if (!accessToken) {
-      throw new Error('No access token available');
-    }
-
-    try {
-      const response = await fetch('https://jkh8ing8.online/api/AdvisorySession1to1/human', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({ message })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result;
-    } catch (err) {
-      throw new Error(`Failed to initialize chat session: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    }
-  }, [accessToken]);
+    return await initializeSession(message);
+  }, [initializeSession]);
 
   // Join session
   const joinSession = useCallback(async (sessionId: number) => {
@@ -256,27 +236,12 @@ export function useAdvisorChat() {
       throw new Error('No active session');
     }
 
-    // Create optimistic message for immediate display
-    const optimisticMessage: ChatMessage = {
-      id: Date.now(), // Temporary ID
-      content: content,
-      senderId: studentId || 0,
-      advisorySession1to1Id: currentSessionRef.current.id,
-      createdAt: new Date().toISOString(),
-      senderName: 'You'
-    };
-
-    // Add optimistic message immediately
-    setMessages(prev => [...prev, optimisticMessage]);
-
     try {
       await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.SEND_MESSAGE, currentSessionRef.current.id, content);
     } catch (err) {
-      // Remove optimistic message on error
-      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
       throw new Error(`Failed to send message: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
-  }, [studentId]);
+  }, []);
 
   // Setup event listeners on existing connection
   const setupEventListeners = useCallback((connection: signalR.HubConnection) => {
@@ -346,22 +311,15 @@ export function useAdvisorChat() {
       }
     });
 
-    // Main message listener for real-time messages - SIMPLIFIED like demo
+    // Main message listener for real-time messages - USING UTILITY FUNCTION
     connection.on(SIGNALR_CONFIG.HUB_METHODS.SEND_ADVSS_METHOD, (message: any) => {
       if (message && message.content) {
-        const mappedMessage: ChatMessage = {
-          id: message.messageId || Date.now(),
-          content: message.content,
-          senderId: message.senderId,
-          advisorySession1to1Id: message.advisorySession1to1Id,
-          createdAt: message.createdAt || new Date().toISOString(),
-          senderName: message.senderName || 'Unknown'
-        };
+        const mappedMessage = mapBackendMessage(message);
         
-        // Simply add message to current session if it matches
+        // Add message to current session if it matches
         const currentSessionId = currentSessionRef.current?.id;
         if (currentSessionId && message.advisorySession1to1Id === currentSessionId) {
-          setMessages(prev => [...prev, mappedMessage]);
+          setMessages(prev => addMessageWithDeduplication(mappedMessage, prev));
         }
       }
     });
@@ -383,7 +341,7 @@ export function useAdvisorChat() {
           setMessages(prev => {
             const existingIds = new Set(prev.map(m => m.id));
             const newMessages = mappedMessages.filter(m => !existingIds.has(m.id));
-            return [...prev, ...newMessages];
+            return [...newMessages, ...prev]; // Prepend older messages
           });
         }
       }
@@ -474,5 +432,9 @@ export function useAdvisorChat() {
     setError,
     setMessages,
     fetchSessions,
+    // Chat session states from useChatSession hook
+    isInitializingSession,
+    sessionError,
+    sessionData,
   };
 } 

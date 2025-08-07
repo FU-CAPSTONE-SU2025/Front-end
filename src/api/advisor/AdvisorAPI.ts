@@ -90,8 +90,6 @@ export const FetchAdvisorById = async (userId: number): Promise<AccountProps> =>
 };
 
 export const FetchBookingAvailability = async (
-  pageNumber: number = 1,
-  pageSize: number = 50
 ): Promise<BookingAvailability[]> => {
   const props = {
     data: null,
@@ -100,7 +98,6 @@ export const FetchBookingAvailability = async (
   };
   const result = await axiosRead(props);
   if (result.success) {
-    // Ensure we always return an array
     return Array.isArray(result.data) ? result.data : [];
   } else {
 
@@ -110,10 +107,6 @@ export const FetchBookingAvailability = async (
 };
 
 export const CreateBookingAvailability = async (data: CreateBookingAvailabilityRequest): Promise<BookingAvailability> => {
-  // Debug: Log data before sending to API
-  console.log('CreateBookingAvailability - Data to send:', data);
-  console.log('CreateBookingAvailability - dayInWeek value:', data.dayInWeek);
-  
   const props = {
     data: data,
     url: baseUrl + "/BookingAvailability",

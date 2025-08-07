@@ -98,3 +98,19 @@ export interface ChatSessionStats {
   unreadCount: number;
   onlineCount: number;
 }
+
+export interface ChatSessionResponse {
+  id: number;
+  title: string;
+  staffId: number;
+  studentId: number;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+  message?: string;
+  status?: string;
+}
+
+export interface ChatSessionRequest {
+  message: string;
+}
