@@ -20,6 +20,7 @@ import SemesterPlannerDetail from "../pages/student/semesterPlannerDetail";
 import ForgetPassword from "../pages/common/forgetPassword";
 import Dummy from "../pages/dummy";
 import SubjectDetails from '../pages/student/subjectDetails';
+import SyllabusDetail from '../pages/student/syllabusDetail';
 import StaffProfile from "../pages/staff/profile";
 import StaffLayout from "../components/staff/staffLayout";
 import ManagerLayout from "../components/manager/managerLayout";
@@ -36,7 +37,7 @@ import EditData from "../pages/staff/editData";
 import CurriculumDetail from '../pages/manager/curriculumDetail';
 import ComboDetail from '../pages/manager/comboDetail';
 import ManagerSubjectPage from '../pages/manager/subject';
-import SubjectDetail from '../pages/manager/subjectDetail';
+import ManagerSubjectDetail from '../pages/manager/subjectDetail';
 import AddSubjectPage from '../pages/manager/addSubject';
 import EditSubjectPage from '../pages/manager/editSubject';
 import EditStudentTranscript from "../pages/staff/editStudentTranscript";
@@ -120,6 +121,10 @@ export const routes = createBrowserRouter([
       {
         path: 'course-tracking/:subjectCode',
         Component: SubjectDetails,
+      },
+      {
+        path: "syllabus/:id",
+        Component: SyllabusDetail,
       },
       {
         path: "semesterPlanner",
@@ -263,7 +268,7 @@ export const routes = createBrowserRouter([
       },
       {
         path: "subject/:id",
-        Component: SubjectDetail,
+        Component: ManagerSubjectDetail,
       },
       {
         path: "subject/:subjectId/version",

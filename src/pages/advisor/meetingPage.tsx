@@ -10,22 +10,16 @@ import { useQueryClient } from '@tanstack/react-query';
 
 export default function MeetingPage() {
   const queryClient = useQueryClient();
-  
-  // Hook cho calendar data (cột phải)
+
   const { data: calendarData, isLoading: calendarLoading, refetch: refetchCalendar } = useAdvisorActiveMeetings(1, 50);
   const calendarMeetings = calendarData?.items || [];
   
-  // Hook cho meetings list (cột trái)
   const { data: meetingsData, isLoading: meetingsLoading, refetch: refetchMeetings } = useAdvisorSelfMeetings(1, 50);
   const meetings = meetingsData?.items || [];
   
-  // Callback để refresh data sau khi có CRUD operation
   const handleDataRefresh = useCallback(() => {
-    // Invalidate và refetch cả hai queries
     queryClient.invalidateQueries({ queryKey: ['advisorActiveMeetings'] });
     queryClient.invalidateQueries({ queryKey: ['advisorSelfMeetings'] });
-    
-    // Refetch ngay lập tức
     refetchCalendar();
     refetchMeetings();
   }, [queryClient, refetchCalendar, refetchMeetings]);
@@ -36,15 +30,11 @@ export default function MeetingPage() {
   const [detail, setDetail] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [showAllMeetings, setShowAllMeetings] = useState(false);
-  
-  // Limit meetings display
+
   const displayedMeetings = showAllMeetings ? meetings : meetings.slice(0, 10);
   const hasMoreMeetings = meetings.length > 10;
+
   
-  console.log('Advisor Calendar Meetings:', calendarMeetings);
-  console.log('Advisor Meetings List:', meetings);
-  
-  // Khi click meeting block
   const handleSlotClick = async (slot: any, date: Dayjs) => {
     if (!slot.meeting) return;
     setDetailLoading(true);
@@ -53,7 +43,6 @@ export default function MeetingPage() {
     setDetailLoading(false);
   };
 
-  // Khi click meeting từ list
   const handleMeetingClick = async (meeting: any) => {
     setDetailLoading(true);
     setSelectedMeeting(meeting);
@@ -73,7 +62,7 @@ export default function MeetingPage() {
   const goToNextWeek = () => setSelectedDate(selectedDate.startOf('week').add(1, 'week'));
   const weekRange = `${selectedDate.startOf('week').format('DD MMM YYYY')} - ${selectedDate.endOf('week').format('DD MMM YYYY')}`;
 
-  // Copy statusMap from modal for badge rendering
+
   const statusMap: Record<number, { color: string; text: string }> = {
     1: { color: 'blue', text: 'Pending' },
     2: { color: 'green', text: 'Confirmed' },
@@ -89,7 +78,6 @@ export default function MeetingPage() {
     <div className="min-h-screen flex flex-col items-center justify-start py-10 px-2 sm:px-8 mt-12">
       <div className="w-full max-w-7xl">
         <h1 className="text-2xl sm:text-3xl font-extrabold text-blue-900 tracking-tight mb-8">Advisor Meeting Calendar</h1>
-        {/* Simple Meeting List UI */}
         <div className="mb-8">
           <List
             bordered

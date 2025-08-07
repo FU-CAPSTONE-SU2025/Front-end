@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import SearchBar from '../../components/student/searchBar';
 import ResourceTable from '../../components/student/resourceTable';
-import SubjectDetailModal from '../../components/student/subjectDetailModal';
 import { useStudentFeature } from '../../hooks/useStudentFeature';
 
 // Mock data for current semester subjects
@@ -35,29 +35,48 @@ const currentSemesterSubjects = [
 ];
 
 const ResourceExplorer: React.FC = () => {
-  const [search, setSearch] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState<any>(null);
+  const navigate = useNavigate();
+  const [searchInput, setSearchInput] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [showAll, setShowAll] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
     setPage(1);
-  }, [search]);
+  }, [activeSearch]);
 
-  const { data, isLoading, error } = useStudentFeature({ search: showAll ? '' : search, page, pageSize });
+  const { data, isLoading, error } = useStudentFeature({ 
+    search: activeSearch, 
+    page, 
+    pageSize,
+    searchType: 'code' // Chỉ search theo subject code
+  });
 
-  const handleOpenModal = (subject: any) => {
-    setSelectedSubject(subject);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedSubject(null);
+  const handleSubjectSelect = (subject: any) => {
+    navigate(`/student/syllabus/${subject.id}`);
   };
 
   const handleSearchEnter = () => {
-    if (search.trim() === '') {
-      setShowAll(true);
+    const trimmedSearch = searchInput.trim();
+    console.log('=== handleSearchEnter called ===');
+    console.log('Search input:', searchInput);
+    console.log('Trimmed search:', trimmedSearch);
+    
+    setHasSearched(true);
+    console.log('setHasSearched(true) called');
+    
+    // Nếu search trống, hiển thị tất cả data
+    if (trimmedSearch === '') {
+      setActiveSearch('');
+      setShowResults(true);
+      console.log('Show all data');
+    } else {
+      // Nếu có search term, chỉ hiển thị kết quả search
+      setActiveSearch(trimmedSearch);
+      setShowResults(true);
+      console.log('Search for:', trimmedSearch);
     }
   };
 
@@ -111,37 +130,33 @@ const ResourceExplorer: React.FC = () => {
       {/* Search Bar */}
       <div className="mb-6 w-full max-w-7xl mx-auto">
         <SearchBar
-          value={search}
-          onChange={(val) => {
-            setSearch(val);
-            if (val.trim() !== '') setShowAll(false);
-          }}
+          value={searchInput}
+          onChange={setSearchInput}
           onEnter={handleSearchEnter}
-          placeholder="Search by subject code or name..."
+          placeholder="Search by subject code only... (Press Enter to search)"
           className="mb-0"
         />
       </div>
 
-      {/* Table - Hiện khi có search hoặc showAll */}
-      {(search.trim() !== '' || showAll) && (
-        <ResourceTable
-          data={data?.items || []}
-          isLoading={isLoading}
-          page={page}
-          pageSize={pageSize}
-          total={data?.totalCount || 0}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
-          searchTerm={search}
-          onSubjectSelect={handleOpenModal}
-        />
-      )}
-
-      <SubjectDetailModal
-        visible={!!selectedSubject}
-        onClose={handleCloseModal}
-        subject={selectedSubject}
-      />
+      {/* Table - Hiện khi có kết quả search */}
+             {(() => {
+         console.log('showResults:', showResults, 'data:', data, 'isLoading:', isLoading, 'hasSearched:', hasSearched, 'activeSearch:', activeSearch);
+         return null;
+       })()}
+       {showResults && (
+         <ResourceTable
+           data={data?.items || []}
+           isLoading={isLoading}
+           page={page}
+           pageSize={pageSize}
+           total={data?.totalCount || 0}
+           onPageChange={setPage}
+           onPageSizeChange={setPageSize}
+           searchTerm={activeSearch}
+           hasSearched={hasSearched}
+           onSubjectSelect={handleSubjectSelect}
+         />
+       )}
     </div>
   );
 };

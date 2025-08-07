@@ -28,17 +28,6 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
   const [localRead, setLocalRead] = useState<{ [id: number]: boolean }>({});
   const [markingAll, setMarkingAll] = useState(false);
 
-  // Debug function - REMOVED FOR PRODUCTION
-  // const handleDebugClick = async () => {
-  //   console.log('🔔 Debug button clicked');
-  //   await testConnection();
-  // };
-
-  // Force refresh function - REMOVED FOR PRODUCTION
-  // const handleForceRefresh = async () => {
-  //   console.log('🔔 Force refresh button clicked');
-  //   await forceRefreshNotifications();
-  // };
 
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

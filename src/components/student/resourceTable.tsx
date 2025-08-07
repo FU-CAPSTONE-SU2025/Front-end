@@ -14,18 +14,19 @@ interface ResourceTableProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   searchTerm: string;
+  hasSearched: boolean;
   onSubjectSelect: (subject: Syllabus) => void;
 }
 
 const getColumns = (onSubjectSelect: (subject: Syllabus) => void): ColumnsType<Syllabus> => [
   {
-    title: 'Syllabus ID',
+    title: 'ID',
     dataIndex: 'id',
     key: 'id',
     align: 'center',
-    width: 110,
-    render: (text: string) => (
-      <span className="font-medium text-white whitespace-nowrap">{text}</span>
+    width: 80,
+    render: (text: string, record: any, index: number) => (
+      <span className="font-medium text-white whitespace-nowrap">{index + 1}</span>
     ),
   },
   {
@@ -76,13 +77,18 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
   onPageChange,
   onPageSizeChange,
   searchTerm,
+  hasSearched,
   onSubjectSelect,
 }) => {
+  console.log('ResourceTable props:', { data, isLoading, hasSearched, searchTerm, total });
+  
   const columns = getColumns(onSubjectSelect);
 
-  if (!searchTerm.trim()) {
-    return null;
-  }
+  // Tạm thời bỏ điều kiện để debug
+  // if (!hasSearched) {
+  //   console.log('ResourceTable: hasSearched is false, returning null');
+  //   return null;
+  // }
 
   return (
     <motion.div
@@ -97,7 +103,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
           Search Results
         </h3>
         <p className="text-gray-400 text-sm">
-          Found {total} result{total !== 1 ? 's' : ''} for "{searchTerm}"
+          Found {total} result{total !== 1 ? 's' : ''} {searchTerm ? `for "${searchTerm}"` : 'for all subjects'}
         </p>
       </div>
       <AnimatePresence>
@@ -128,7 +134,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <FileSearchOutlined style={{ fontSize: '48px', color: 'rgba(255, 255, 255, 0.25)' }} />
                   <p className="text-white font-semibold text-lg mt-4">
-                    No results found for "{searchTerm}"
+                    {searchTerm ? `No results found for "${searchTerm}"` : 'No subjects found'}
                   </p>
                   <p className="text-gray-400 text-sm mt-1">
                     Try searching with different keywords or check for typos.
