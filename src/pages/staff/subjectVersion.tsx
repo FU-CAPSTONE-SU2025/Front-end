@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Button, Tabs, Typography, message, Card, Tag, Space, Popconfirm, Tooltip } from 'antd';
+import { Button, Tabs, Typography, Card, Tag, Space, Popconfirm, Tooltip } from 'antd';
 import { PlusOutlined, ArrowLeftOutlined, EditOutlined, SaveOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import AddVersionModal from '../../components/staff/AddVersionModal';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
@@ -15,11 +15,14 @@ import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../d
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import AddPrerequisiteSubjectVersionModal from '../../components/staff/AddPrerequisiteSubjectVersionModal';
 import BulkDataImport from '../../components/common/bulkDataImport';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 // Function to create default version for a subject (moved outside component)
 const createDefaultVersion = async (
   subjectData: any, 
-  addSubjectVersionMutation: any
+  addSubjectVersionMutation: any,
+  handleSuccess: (message: string) => void,
+  handleError: (error: any, title?: string) => void
 ) => {
   try {
     const defaultVersionData = generateDefaultVersionData(
@@ -30,12 +33,12 @@ const createDefaultVersion = async (
     
     const newVersion = await addSubjectVersionMutation.mutateAsync(defaultVersionData);
     if (newVersion) {
-      message.success('Default version created successfully!');
+      handleSuccess('Default version created successfully!');
       return [newVersion];
     }
   } catch (err: any) {
     const errorMessage = getUserFriendlyErrorMessage(err);
-    message.error('Failed to create default version: ' + errorMessage);
+    handleError('Failed to create default version: ' + errorMessage);
   }
   return [];
 };
@@ -45,7 +48,9 @@ const createDefaultSyllabus = async (
   subjectVersionId: number,
   subjectCode: string,
   subjectName: string,
-  addSyllabusMutation: any
+  addSyllabusMutation: any,
+  handleSuccess: (message: string) => void,
+  handleError: (error: any, title?: string) => void
 ) => {
   try {
     const defaultSyllabusData = generateDefaultSyllabusData(
@@ -56,12 +61,12 @@ const createDefaultSyllabus = async (
     
     const newSyllabus = await addSyllabusMutation.mutateAsync(defaultSyllabusData);
     if (newSyllabus) {
-      message.success('Default syllabus created successfully!');
+      handleSuccess('Default syllabus created successfully!');
       return newSyllabus;
     }
   } catch (err: any) {
     const errorMessage = getUserFriendlyErrorMessage(err);
-    message.error('Failed to create default syllabus: ' + errorMessage);
+    handleError('Failed to create default syllabus: ' + errorMessage);
   }
   return null;
 };
@@ -69,6 +74,7 @@ const createDefaultSyllabus = async (
 const SubjectVersionPage: React.FC = () => {
   const navigate = useNavigate();
   const { subjectId } = useParams();
+  const { handleError, handleSuccess, showInfo } = useApiErrorHandler();
   const [modalVisible, setModalVisible] = useState(false);
   const [adding, setAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -142,11 +148,11 @@ const SubjectVersionPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch prerequisites for version:', versionId, error);
-      message.error('Failed to fetch prerequisites');
+      handleError('Failed to fetch prerequisites');
     } finally {
       setPrereqLoading(prev => ({ ...prev, [versionId]: false }));
     }
-  }, [getPrerequisitesBySubjectVersionMutation]);
+  }, [getPrerequisitesBySubjectVersionMutation, handleError]);
 
   // Function to fetch all prerequisites for the subject
   const fetchAllPrerequisites = useCallback(async () => {
@@ -177,9 +183,9 @@ const SubjectVersionPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch all prerequisites:', error);
-      message.error('Failed to fetch prerequisites');
+      handleError('Failed to fetch prerequisites');
     }
-  }, [subjectId, getPrerequisitesBySubjectMutation]);
+  }, [subjectId, getPrerequisitesBySubjectMutation, handleError]);
 
   // Handler to fetch or create syllabus for a specific version
   const fetchOrCreateSyllabus = useCallback(async (versionId: number, subjectData: any) => {
@@ -199,12 +205,14 @@ const SubjectVersionPage: React.FC = () => {
       
       if (!syllabusData) {
         // No syllabus exists, create default syllabus
-        message.info('No syllabus found. Creating default syllabus...');
+        showInfo('No syllabus found. Creating default syllabus...');
         const newSyllabus = await createDefaultSyllabus(
           versionId,
           subjectData.subjectCode,
           subjectData.subjectName,
-          addSyllabusMutation
+          addSyllabusMutation,
+          handleSuccess,
+          handleError
         );
         
         if (newSyllabus) {
@@ -264,9 +272,9 @@ const SubjectVersionPage: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Error in fetchOrCreateSyllabus:', err);
-      message.error('Failed to fetch/create syllabus: ' + err.message);
+      handleError('Failed to fetch/create syllabus: ' + err.message);
     }
-  }, [fetchSyllabusBySubjectVersionMutation, addSyllabusMutation]);
+  }, [fetchSyllabusBySubjectVersionMutation, addSyllabusMutation, showInfo, handleSuccess, handleError]);
 
   // Fetch subject and versions
   useEffect(() => {
@@ -291,8 +299,8 @@ const SubjectVersionPage: React.FC = () => {
         
         if (!versionsData || versionsData.length === 0) {
           // No versions exist, create default version
-          message.info('No versions found. Creating default version...');
-          const defaultVersions = await createDefaultVersion(subjectData, addSubjectVersionMutation);
+          showInfo('No versions found. Creating default version...');
+          const defaultVersions = await createDefaultVersion(subjectData, addSubjectVersionMutation, handleSuccess, handleError);
           setSubjectVersions(defaultVersions);
           if (defaultVersions.length > 0) {
             setActiveKey(String(defaultVersions[0].id));
@@ -335,14 +343,14 @@ const SubjectVersionPage: React.FC = () => {
     };
 
     fetchData();
-  }, [subjectId]); // Only depend on subjectId to prevent infinite loops
+  }, [subjectId, getSubjectById, getSubjectVersionsBySubjectId, addSubjectVersionMutation, createDefaultVersion, handleSuccess, handleError, showInfo, fetchOrCreateSyllabus, fetchPrerequisitesForVersion, fetchAllPrerequisites]); // Only depend on subjectId to prevent infinite loops
 
   // Handler for adding a new version
   const handleAddVersion = useCallback(async (values: CreateSubjectVersion) => {
     setAdding(true);
     try {
       await addSubjectVersionMutation.mutateAsync(values);
-      message.success('Version added successfully!');
+      handleSuccess('Version added successfully!');
       
       // Refresh versions list
       const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
@@ -358,17 +366,17 @@ const SubjectVersionPage: React.FC = () => {
       
       setModalVisible(false);
     } catch (err: any) {
-      message.error('Failed to add version: ' + err.message);
+      handleError('Failed to add version: ' + err.message);
     } finally {
       setAdding(false);
     }
-  }, [addSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, fetchPrerequisitesForVersion]);
+  }, [addSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, fetchPrerequisitesForVersion, handleSuccess, handleError]);
 
   // Handler to delete a version
   const handleDeleteVersion = useCallback(async (versionId: number) => {
     try {
       await deleteSubjectVersionMutation.mutateAsync(versionId);
-      message.success('Version deleted successfully!');
+      handleSuccess('Version deleted successfully!');
       
       // Refresh versions list
       const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
@@ -379,15 +387,15 @@ const SubjectVersionPage: React.FC = () => {
         }
       }
     } catch (err: any) {
-      message.error('Failed to delete version: ' + err.message);
+      handleError('Failed to delete version: ' + err.message);
     }
-  }, [deleteSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, activeKey]);
+  }, [deleteSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, activeKey, handleSuccess, handleError]);
 
   // Handler to toggle active status
   const handleToggleActive = useCallback(async (versionId: number) => {
     try {
       await toggleActiveSubjectVersionMutation.mutateAsync(versionId);
-      message.success('Version status updated successfully!');
+      handleSuccess('Version status updated successfully!');
       
       // Refresh versions list
       const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
@@ -395,15 +403,15 @@ const SubjectVersionPage: React.FC = () => {
         setSubjectVersions(updatedVersions);
       }
     } catch (err: any) {
-      message.error('Failed to update version status: ' + err.message);
+      handleError('Failed to update version status: ' + err.message);
     }
-  }, [toggleActiveSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId]);
+  }, [toggleActiveSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, handleSuccess, handleError]);
 
   // Handler to set default version
   const handleSetDefault = useCallback(async (versionId: number) => {
     try {
       await setDefaultSubjectVersionMutation.mutateAsync(versionId);
-      message.success('Version set as default successfully!');
+      handleSuccess('Version set as default successfully!');
       
       // Refresh versions list
       const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
@@ -411,9 +419,9 @@ const SubjectVersionPage: React.FC = () => {
         setSubjectVersions(updatedVersions);
       }
     } catch (err: any) {
-      message.error('Failed to set version as default: ' + err.message);
+      handleError('Failed to set version as default: ' + err.message);
     }
-  }, [setDefaultSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId]);
+  }, [setDefaultSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, handleSuccess, handleError]);
 
   // Handler to delete a prerequisite
   const handleDeletePrerequisite = async (versionId: number, prerequisite_subject_id: number) => {
@@ -421,7 +429,7 @@ const SubjectVersionPage: React.FC = () => {
       // Find the prerequisite that matches the subject ID to get the subject version ID
       const prerequisite = (prereqMap[versionId] || []).find((p: any) => p.prerequisite_subject_id === prerequisite_subject_id);
       if (!prerequisite) {
-        message.error('Prerequisite not found');
+        handleError('Prerequisite not found');
         return;
       }
       
@@ -437,10 +445,10 @@ const SubjectVersionPage: React.FC = () => {
       // Refetch prerequisites for this version to ensure UI reflects server state
       await fetchPrerequisitesForVersion(versionId);
       
-      message.success('Prerequisite removed successfully!');
+      handleSuccess('Prerequisite removed successfully!');
     } catch (error) {
       console.error('Failed to delete prerequisite:', error);
-      message.error('Failed to remove prerequisite');
+      handleError('Failed to remove prerequisite');
     }
   };
   // Handlers for AssessmentTable
@@ -448,7 +456,7 @@ const SubjectVersionPage: React.FC = () => {
     try {
       const syllabus = syllabusMap[versionId];
       if (!syllabus) {
-        message.error('Syllabus not found for this version');
+        handleError('Syllabus not found for this version');
         return;
       }
 
@@ -472,10 +480,10 @@ const SubjectVersionPage: React.FC = () => {
         }));
       }
       
-      message.success('Assessment added successfully!');
+      handleSuccess('Assessment added successfully!');
     } catch (error) {
       console.error('Error adding assessment:', error);
-      message.error('Failed to add assessment');
+      handleError('Failed to add assessment');
       throw error;
     }
   };
@@ -487,10 +495,10 @@ const SubjectVersionPage: React.FC = () => {
         ...prev, 
         [versionId]: (prev[versionId] || []).filter(a => a.id !== id) 
       }));
-      message.success('Assessment deleted successfully!');
+      handleSuccess('Assessment deleted successfully!');
     } catch (error) {
       console.error('Error deleting assessment:', error);
-      message.error('Failed to delete assessment');
+      handleError('Failed to delete assessment');
     }
   };
 
@@ -501,10 +509,10 @@ const SubjectVersionPage: React.FC = () => {
         ...prev, 
         [versionId]: (prev[versionId] || []).map(a => a.id === id ? { ...a, ...update } : a) 
       }));
-      message.success('Assessment updated successfully!');
+      handleSuccess('Assessment updated successfully!');
     } catch (error) {
       console.error('Error updating assessment:', error);
-      message.error('Failed to update assessment');
+      handleError('Failed to update assessment');
     }
   };
 
@@ -513,7 +521,7 @@ const SubjectVersionPage: React.FC = () => {
     try {
       const syllabus = syllabusMap[versionId];
       if (!syllabus) {
-        message.error('Syllabus not found for this version');
+        handleError('Syllabus not found for this version');
         return;
       }
 
@@ -537,10 +545,10 @@ const SubjectVersionPage: React.FC = () => {
         }));
       }
       
-      message.success('Material added successfully!');
+      handleSuccess('Material added successfully!');
     } catch (error) {
       console.error('Error adding material:', error);
-      message.error('Failed to add material');
+      handleError('Failed to add material');
       throw error;
     }
   };
@@ -552,10 +560,10 @@ const SubjectVersionPage: React.FC = () => {
         ...prev, 
         [versionId]: (prev[versionId] || []).filter(m => m.id !== id) 
       }));
-      message.success('Material deleted successfully!');
+      handleSuccess('Material deleted successfully!');
     } catch (error) {
       console.error('Error deleting material:', error);
-      message.error('Failed to delete material');
+      handleError('Failed to delete material');
     }
   };
 
@@ -566,10 +574,10 @@ const SubjectVersionPage: React.FC = () => {
         ...prev, 
         [versionId]: (prev[versionId] || []).map(m => m.id === id ? { ...m, ...update } : m) 
       }));
-      message.success('Material updated successfully!');
+      handleSuccess('Material updated successfully!');
     } catch (error) {
       console.error('Error updating material:', error);
-      message.error('Failed to update material');
+      handleError('Failed to update material');
     }
   };
 
@@ -578,7 +586,7 @@ const SubjectVersionPage: React.FC = () => {
     try {
       const syllabus = syllabusMap[versionId];
       if (!syllabus) {
-        message.error('Syllabus not found for this version');
+        handleError('Syllabus not found for this version');
         return;
       }
 
@@ -602,10 +610,10 @@ const SubjectVersionPage: React.FC = () => {
         }));
       }
       
-      message.success('Outcome added successfully!');
+      handleSuccess('Outcome added successfully!');
     } catch (error) {
       console.error('Error adding outcome:', error);
-      message.error('Failed to add outcome');
+      handleError('Failed to add outcome');
       throw error;
     }
   };
@@ -617,10 +625,10 @@ const SubjectVersionPage: React.FC = () => {
         ...prev, 
         [versionId]: (prev[versionId] || []).filter(o => o.id !== id) 
       }));
-      message.success('Outcome deleted successfully!');
+      handleSuccess('Outcome deleted successfully!');
     } catch (error) {
       console.error('Error deleting outcome:', error);
-      message.error('Failed to delete outcome');
+      handleError('Failed to delete outcome');
     }
   };
 
@@ -631,10 +639,10 @@ const SubjectVersionPage: React.FC = () => {
         ...prev, 
         [versionId]: (prev[versionId] || []).map(o => o.id === id ? { ...o, ...update } : o) 
       }));
-      message.success('Outcome updated successfully!');
+      handleSuccess('Outcome updated successfully!');
     } catch (error) {
       console.error('Error updating outcome:', error);
-      message.error('Failed to update outcome');
+      handleError('Failed to update outcome');
     }
   };
 
@@ -643,7 +651,7 @@ const SubjectVersionPage: React.FC = () => {
     try {
       const syllabus = syllabusMap[versionId];
       if (!syllabus) {
-        message.error('Syllabus not found for this version');
+        handleError('Syllabus not found for this version');
         return;
       }
 
@@ -667,10 +675,10 @@ const SubjectVersionPage: React.FC = () => {
         }));
       }
       
-      message.success('Session added successfully!');
+      handleSuccess('Session added successfully!');
     } catch (error) {
       console.error('Error adding session:', error);
-      message.error('Failed to add session');
+      handleError('Failed to add session');
       throw error;
     }
   };
@@ -682,10 +690,10 @@ const SubjectVersionPage: React.FC = () => {
         ...prev, 
         [versionId]: (prev[versionId] || []).filter(s => s.id !== id) 
       }));
-      message.success('Session deleted successfully!');
+      handleSuccess('Session deleted successfully!');
     } catch (error) {
       console.error('Error deleting session:', error);
-      message.error('Failed to delete session');
+      handleError('Failed to delete session');
     }
   };
 
@@ -696,10 +704,10 @@ const SubjectVersionPage: React.FC = () => {
         ...prev, 
         [versionId]: (prev[versionId] || []).map(s => s.id === id ? { ...s, ...update } : s) 
       }));
-      message.success('Session updated successfully!');
+      handleSuccess('Session updated successfully!');
     } catch (error) {
       console.error('Error updating session:', error);
-      message.error('Failed to update session');
+      handleError('Failed to update session');
     }
   };
 
@@ -710,10 +718,10 @@ const SubjectVersionPage: React.FC = () => {
         outcomeId
       });
       
-      message.success('Outcome added to session successfully!');
+      handleSuccess('Outcome added to session successfully!');
     } catch (error) {
       console.error('Error adding outcome to session:', error);
-      message.error('Failed to add outcome to session');
+      handleError('Failed to add outcome to session');
     }
   };
 
@@ -728,7 +736,7 @@ const SubjectVersionPage: React.FC = () => {
     if (type === 'OUTCOME') setOutcomeMap(prev => ({ ...prev, [versionId]: importedData }));
     if (type === 'SESSION') setSessionMap(prev => ({ ...prev, [versionId]: importedData }));
     setBulkModal(null);
-    message.success(`${type} data imported successfully!`);
+    handleSuccess(`${type} data imported successfully!`);
   };
 
   const handleBulkModalClose = () => setBulkModal(null);
@@ -760,10 +768,10 @@ const SubjectVersionPage: React.FC = () => {
       // Refetch prerequisites for the target version to ensure UI reflects server state
       await fetchPrerequisitesForVersion(targetVersionId);
       
-      message.success('Prerequisites copied successfully!');
+      handleSuccess('Prerequisites copied successfully!');
     } catch (error) {
       console.error('Failed to copy prerequisites:', error);
-      message.error('Failed to copy prerequisites');
+      handleError('Failed to copy prerequisites');
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Select, Button, Row, Col, ConfigProvider, message, Card, Space, Typography, Affix, Pagination, Empty } from 'antd';
+import { Table, Input, Select, Button, Row, Col, ConfigProvider, Card, Space, Typography, Affix, Pagination, Empty } from 'antd';
 import { EditOutlined, SearchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
@@ -7,6 +7,7 @@ import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { GetPagedActiveStudent } from '../../api/Account/UserAPI';
 import { StudentBase } from '../../interfaces/IStudent';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title, Text } = Typography;
 
@@ -19,6 +20,7 @@ const StaffTranscript: React.FC = () => {
   const [pagination, setPagination] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { handleError } = useApiErrorHandler();
 
   // Program API for filter
   const {
@@ -51,11 +53,11 @@ const StaffTranscript: React.FC = () => {
           totalPages: Math.ceil(result.totalCount / result.pageSize)
         });
       } else {
-        message.error('Failed to fetch students');
+        handleError('Failed to fetch students');
       }
     } catch (error) {
       console.error('Error fetching students:', error);
-      message.error('Failed to fetch students');
+      handleError('Failed to fetch students');
     } finally {
       setIsLoading(false);
     }

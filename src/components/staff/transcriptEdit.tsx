@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { Card, Typography, Row, Col, Button, Table, Tag, InputNumber, message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Typography, Row, Col, Button, Table, Tag, InputNumber } from 'antd';
 import { CloseOutlined, SaveOutlined, EditOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/transcriptEditDialog.module.css';
+import  useCRUDStudent  from '../../hooks/useCRUDStudent';
+import { StudentBase } from '../../interfaces/IStudent';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title, Text } = Typography;
 
@@ -44,9 +47,23 @@ const initialAssessments: Assessment[] = [
 ];
 
 export default function TranscriptEdit({ transcriptId, subject, onClose }: Props) {
+  const { handleSuccess } = useApiErrorHandler();
   const [assessments, setAssessments] = useState<Assessment[]>(initialAssessments);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [tempScore, setTempScore] = useState<number>(0);
+
+  // CRUD hook
+  const {
+    getStudentById,
+    updateStudentScoreMutation,
+  } = useCRUDStudent();
+
+  // Fetch student data on mount
+  useEffect(() => {
+    if (transcriptId) {
+      getStudentById.mutate(transcriptId);
+    }
+  }, [transcriptId]);
 
   // Calculate weighted average
   const calculateFinalGrade = () => {
@@ -62,7 +79,7 @@ export default function TranscriptEdit({ transcriptId, subject, onClose }: Props
     setTempScore(assessment.score);
   };
 
-  const saveScore = (assessmentId: number) => {
+  const saveScore = async (assessmentId: number) => {
     setAssessments(prev => 
       prev.map(assessment => 
         assessment.id === assessmentId 
@@ -71,7 +88,8 @@ export default function TranscriptEdit({ transcriptId, subject, onClose }: Props
       )
     );
     setEditingId(null);
-    message.success('Score updated successfully!');
+    await updateStudentScoreMutation.mutateAsync({ studentId: transcriptId, subjectId: subject.id, score: tempScore });
+    handleSuccess('Score updated successfully!');
   };
 
   const cancelEditing = () => {

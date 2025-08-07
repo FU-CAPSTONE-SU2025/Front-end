@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, message, Space, Typography, Select, Tag } from 'antd';
+import { Form, Input, Button, Space, Typography, Select, Tag } from 'antd';
 import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Combo, CreateCombo, Subject } from '../../interfaces/ISchoolProgram';
 import { useCRUDCombo, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -17,6 +18,7 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
   const [form] = Form.useForm();
   const isCreateMode = !id;
   const isEditMode = !!id;
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   // API hooks
   const {
@@ -80,12 +82,12 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
         },
         onError: () => {
           setLoading(false);
-          message.error('Failed to fetch combo data.');
+          handleError('Failed to fetch combo data.');
         }
       });
     } catch (error) {
       setLoading(false);
-      message.error('Failed to fetch combo data.');
+      handleError('Failed to fetch combo data.');
     }
   };
 
@@ -103,14 +105,14 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
       };
       if (isCreateMode) {
         await addComboMutation.mutateAsync(comboData);
-        message.success('Combo created successfully!');
+        handleSuccess('Combo created successfully!');
         form.resetFields();
       } else {
         await updateComboMutation.mutateAsync({ id, data: comboData });
-        message.success('Combo updated successfully!');
+        handleSuccess('Combo updated successfully!');
       }
     } catch (error) {
-      message.error('An error occurred. Please try again.');
+      handleError(error, 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -122,11 +124,11 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
     try {
       //console.log(id, addSubjectId);
       await addSubjectToComboMutation.mutateAsync({ comboId: id, subjectId: addSubjectId });
-      message.success('Subject added to combo!');
+      handleSuccess('Subject added to combo!');
       await loadComboSubjects();
       setAddSubjectId(null);
     } catch {
-      message.error('Failed to add subject.');
+      handleError('Failed to add subject.');
     } finally {
       setLoading(false);
     }
@@ -138,10 +140,10 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
     try {
       //console.log(id, subjectId);
       await removeSubjectFromComboMutation.mutateAsync({ comboId: id, subjectId });
-      message.success('Subject removed from combo!');
+      handleSuccess('Subject removed from combo!');
       await loadComboSubjects();
     } catch {
-      message.error('Failed to remove subject.');
+      handleError('Failed to remove subject.');
     } finally {
       setLoading(false);
     }

@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Modal, List, Button, Input, Select, Space, Typography, Spin, Empty } from 'antd';
 import { PlusOutlined, CheckOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
-import { message } from 'antd';
-import { FetchSubjectList } from '../../api/SchoolAPI/subjectAPI';
-import { FetchPagedSubjectVersionList } from '../../api/SchoolAPI/subjectVersionAPI';
-import { Subject } from '../../interfaces/ISchoolProgram';
+import { useCRUDSubject, useCRUDSubjectVersion } from '../../hooks/useCRUDSchoolMaterial';
+import { Subject, SubjectVersion } from '../../interfaces/ISchoolProgram';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 
 const { Search } = Input;
@@ -46,6 +45,16 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
   const [subjectOptionsLoading, setSubjectOptionsLoading] = useState(false);
   const [subjectOptionsHasMore, setSubjectOptionsHasMore] = useState(true);
   const [subjectOptionsPage, setSubjectOptionsPage] = useState(1);
+  const { handleError, handleSuccess } = useApiErrorHandler();
+
+  // CRUD hooks
+  const {
+    getAllSubjects,
+    getSubjectVersionsBySubjectId,
+    addPrerequisiteMutation
+  } = useCRUDSubject();
+
+  const { addPrerequisiteSubjectVersionMutation } = useCRUDSubjectVersion();
 
   // Fetch subject options with real API
   const fetchSubjectOptions = async (reset = false, searchValue = subjectOptionsSearch) => {
@@ -59,11 +68,7 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
     setSubjectOptionsLoading(true);
     
     try {
-      const result = await FetchSubjectList(
-        reset ? 1 : subjectOptionsPage + 1,
-        10,
-        searchValue
-      );
+      const result = await getAllSubjects({ pageNumber: reset ? 1 : subjectOptionsPage + 1, pageSize: 10, searchValue });
       
       if (result) {
         const newSubjects = result.items || [];
@@ -86,7 +91,7 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
       }
     } catch (error) {
       console.error('Failed to fetch subjects:', error);
-      message.error('Failed to load subjects');
+      handleError('Failed to load subjects');
     } finally {
       setSubjectOptionsLoading(false);
     }
@@ -117,13 +122,7 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
       
       const pageNumber = reset ? 1 : customPage || page + 1;
       
-      const result = await FetchPagedSubjectVersionList(
-        pageNumber,
-        10,
-        searchValue,
-        filterType,
-        filterValue
-      );
+      const result = await getSubjectVersionsBySubjectId.mutateAsync(selectedSubjectId || 0, { pageNumber, pageSize: 10, searchValue, filterType, filterValue });
       
       if (result) {
         const newVersions = result.items || [];
@@ -155,7 +154,7 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
       }
     } catch (error) {
       console.error('Failed to fetch subject versions:', error);
-      message.error('Failed to load subject versions');
+      handleError('Failed to load subject versions');
     } finally {
       setLoading(false);
     }
@@ -207,11 +206,15 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
   const handleAdd = async (item: SubjectVersionItem) => {
     setAddingId(item.id);
     try {
-      await onAdd(item.id);
-      message.success('Prerequisite added successfully!');
+      await addPrerequisiteSubjectVersionMutation.mutateAsync({
+        subjectVersionId: currentSubjectVersionId,
+        prerequisiteSubjectVersionId: item.id
+      });
+      handleSuccess('Prerequisite added successfully!');
+      onClose();
     } catch (err: any) {
       const errorMessage = getUserFriendlyErrorMessage(err);
-      message.error('Failed to add prerequisite: ' + errorMessage);
+      handleError('Failed to add prerequisite: ' + errorMessage);
     } finally {
       setAddingId(null);
     }

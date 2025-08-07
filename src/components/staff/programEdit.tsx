@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, message, Space, Typography, Modal } from 'antd';
+import { Form, Input, Button, Space, Typography, Modal } from 'antd';
 import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 import { CreateProgram, Program } from '../../interfaces/ISchoolProgram';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title } = Typography;
 
@@ -15,13 +16,16 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
   const [form] = Form.useForm();
   const isCreateMode = !id;
   const isEditMode = !!id;
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   // API hooks
   const {
     addProgramMutation,
     updateProgramMutation,
     getProgramById,
-    disableProgramMutation
+    disableProgramMutation,
+    deleteProgramMutation,
+    isLoading,
   } = useCRUDProgram();
 
   const [initialData, setInitialData] = useState<Program | null>(null);
@@ -47,20 +51,24 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
 
   const onFinish = async (values: CreateProgram) => {
     try {
+      const programData: Partial<Program> = {
+        ...values
+      };
+
       if (isCreateMode) {
-        await addProgramMutation.mutateAsync(values);
-        message.success('Program created successfully!');
+        await addProgramMutation.mutateAsync(programData as CreateProgram);
+        handleSuccess('Program created successfully!');
         form.resetFields();
       } else if (id) {
-        await updateProgramMutation.mutateAsync({ id, data: values });
-        message.success('Program updated successfully!');
+        await updateProgramMutation.mutateAsync({ id, data: programData });
+        handleSuccess('Program updated successfully!');
       }
     } catch (error) {
-      message.error('An error occurred. Please try again.');
+      handleError(error, 'Program operation failed');
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     Modal.confirm({
       title: 'Delete Program',
       content: 'Are you sure you want to delete this program? This action cannot be undone.',
@@ -69,17 +77,18 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
       cancelText: 'Cancel',
       onOk: async () => {
         try {
-          await disableProgramMutation.mutateAsync(id!);
-          message.success('Program deleted successfully!');
+          if (id) {
+            await deleteProgramMutation.mutateAsync(id);
+            handleSuccess('Program deleted successfully!');
+          }
         } catch (error) {
-          message.error('Failed to delete program.');
+          handleError(error, 'Failed to delete program');
         }
-      }
+      },
     });
   };
 
   // Loading states
-  const isLoading = addProgramMutation.isPending || updateProgramMutation.isPending || disableProgramMutation.isPending;
   const isLoadingData = getProgramById.isPending;
 
   if (isEditMode && isLoadingData) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Button, Collapse, Affix, Space, message, Spin } from 'antd';
+import { Input, Button, Collapse, Affix, Space, Spin } from 'antd';
 import { PlusOutlined, SearchOutlined, EditOutlined, UploadOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { useNavigate } from 'react-router';
@@ -7,6 +7,7 @@ import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDProgram, useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateProgram } from '../../interfaces/ISchoolProgram';
 import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Panel } = Collapse;
 
@@ -16,6 +17,7 @@ const ProgramPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const navigate = useNavigate();
+  const { handleError, handleSuccess, showWarning } = useApiErrorHandler();
 
   // Use the new CRUD hooks
   const {
@@ -70,7 +72,7 @@ const ProgramPage: React.FC = () => {
       const programData = importedData['PROGRAM'] || [];
       
       if (programData.length === 0) {
-        message.warning('No program data found in the imported file');
+        showWarning('No program data found in the imported file');
         return;
       }
 
@@ -86,37 +88,28 @@ const ProgramPage: React.FC = () => {
       );
 
       if (validData.length === 0) {
-        message.error('No valid program data found. Please check your data format.');
+        handleError('No valid program data found. Please check your data format.');
         return;
       }
 
       if (validData.length !== transformedData.length) {
-        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+        showWarning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
       }
 
       // Call the bulk import mutation
-      addMultipleProgramsMutation.mutate(validData, {
-        onSuccess: () => {
-          message.success(`Successfully imported ${validData.length} programs`);
-          setIsImportOpen(false);
-          // Refresh the program list
-          getAllPrograms({
-            pageNumber: currentPage,
-            pageSize: pageSize,
-            searchQuery: search
-          });
-        },
-        onError: (error: any) => {
-          console.error('Import error:', error);
-          const errorMessage = getUserFriendlyErrorMessage(error);
-          message.error(errorMessage);
-        }
+      await addMultipleProgramsMutation.mutateAsync(validData);
+      handleSuccess(`Successfully imported ${validData.length} programs`);
+      setIsImportOpen(false);
+      
+      // Refresh the program list
+      getAllPrograms({
+        pageNumber: currentPage,
+        pageSize: pageSize,
+        searchQuery: search
       });
-
     } catch (error) {
-      console.error('Import error:', error);
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      handleError(errorMessage);
     }
   };
 

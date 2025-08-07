@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Input, Button, Collapse, Typography, Affix, Pagination, Spin, Empty, Table, Tag, message } from 'antd';
+import { Input, Button, Collapse, Typography, Affix, Pagination, Spin, Empty, Table, Tag } from 'antd';
 import { PlusOutlined, SearchOutlined, EditOutlined, BookOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { useSearchParams, useNavigate } from 'react-router';
@@ -10,6 +10,7 @@ import { Curriculum, SubjectVersionWithCurriculumInfo, CreateCurriculum } from '
 import {  getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import dayjs from 'dayjs';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title } = Typography;
 
@@ -20,6 +21,7 @@ const CurriculumPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [expandedCurriculum, setExpandedCurriculum] = useState<number | null>(null);
+  const { handleError, handleSuccess, showWarning } = useApiErrorHandler();
   
   // Pagination state
   const [page, setPage] = useState(1);
@@ -93,74 +95,48 @@ const CurriculumPage: React.FC = () => {
       const curriculumData = importedData['CURRICULUM'] || [];
       
       if (curriculumData.length === 0) {
-        message.warning('No curriculum data found in the imported file');
+        showWarning('No curriculum data found in the imported file');
         setUploadStatus('error');
         return;
       }
 
-      // Transform the imported data to match CreateCurriculum interface
-      const transformedData: CreateCurriculum[] = curriculumData.map(item => {
-        // Parse the date properly
-        let effectiveDate: Date;
-        if (item.effectiveDate) {
-          effectiveDate = new Date(item.effectiveDate);
-          // If the date is invalid, use current date
-          if (isNaN(effectiveDate.getTime())) {
-            effectiveDate = new Date();
-          }
-        } else {
-          effectiveDate = new Date();
-        }
+      // Transform the data to match the CreateCurriculum interface
+      const transformedData: CreateCurriculum[] = curriculumData.map((item: any) => ({
+        curriculumCode: item.curriculumCode || '',
+        curriculumName: item.curriculumName || '',
+        effectiveDate: item.effectiveDate ? new Date(item.effectiveDate) : new Date(),
+        programId: parseInt(item.programId) || 1,
+      }));
 
-        return {
-          programId: parseInt(item.programId) || 0,
-          curriculumCode: item.curriculumCode || '',
-          curriculumName: item.curriculumName || '',
-          effectiveDate: effectiveDate
-        };
-      });
-
-      // Validate the data
+      // Validate the transformed data
       const validData = transformedData.filter(item => 
-        item.curriculumCode.trim() !== '' && 
-        item.curriculumName.trim() !== '' && 
-        item.programId > 0
+        item.curriculumCode && 
+        item.curriculumName && 
+        item.effectiveDate && 
+        item.programId
       );
 
       if (validData.length === 0) {
-        message.error('No valid curriculum data found. Please check your data format and ensure all required fields are filled.');
+        handleError('No valid curriculum data found. Please check your data format and ensure all required fields are filled.');
         setUploadStatus('error');
         return;
       }
 
-      if (validData.length !== transformedData.length) {
-        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+      if (validData.length < transformedData.length) {
+        showWarning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
       }
 
-      // Call the bulk import mutation
-      addMultipleCurriculumsMutation.mutate(validData, {
-        onSuccess: () => {
-          message.success(`Successfully imported ${validData.length} curricula`);
-          setUploadStatus('success');
-          setTimeout(() => {
-            setIsImportOpen(false);
-            setUploadStatus('idle');
-            // Refresh the curriculum list
-            getAllCurriculums({ pageNumber: page, pageSize, filterType: 'search', filterValue: search });
-          }, 2000); // Show success for 2 seconds before closing
-        },
-        onError: (error: any) => {
-          console.error('Import error:', error);
-          const errorMessage = getUserFriendlyErrorMessage(error);
-          message.error(errorMessage);
-          setUploadStatus('error');
-        }
-      });
-
+      // Import the valid data
+      await addMultipleCurriculumsMutation.mutateAsync(validData);
+      handleSuccess(`Successfully imported ${validData.length} curricula`);
+      setUploadStatus('success');
+      setIsImportOpen(false);
+      
+      // Refresh the curriculum list
+      getAllCurriculums({ pageNumber: page, pageSize, filterType: 'search', filterValue: search });
     } catch (error) {
-      console.error('Import error:', error);
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      handleError(errorMessage);
       setUploadStatus('error');
     }
   };

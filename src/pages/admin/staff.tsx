@@ -14,6 +14,8 @@ import { BulkRegisterStaff, BulkRegisterManager, BulkRegisterAdvisor, BulkRegist
 import { transformBulkImportData, validateBulkData, getApiFunctionName } from '../../utils/bulkImportTransformers';
 import { AccountProps } from '../../interfaces/IAccount';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 const { Option } = Select;
 
@@ -33,6 +35,8 @@ const StaffList: React.FC = () => {
   const { categorizedData, refetch } = useActiveUserData();
   const { getAllStaff, staffList, pagination, isLoading } = useCRUDStaff();
   const nav = useNavigate();
+  const { handleError, handleSuccess } = useApiErrorHandler();
+  const { showWarning } = useMessagePopupContext();
 
   // Load initial data
   useEffect(() => {
@@ -78,7 +82,7 @@ const StaffList: React.FC = () => {
       if (staffData.length === 0) {
         setUploadStatus('error');
         setUploadMessage('No staff data found in the imported file');
-        message.warning('No staff data found in the imported file');
+        showWarning('No staff data found in the imported file');
         return;
       }
 
@@ -110,12 +114,12 @@ const StaffList: React.FC = () => {
       if (validData.length === 0) {
         setUploadStatus('error');
         setUploadMessage('No valid staff data found. Please check your data format and ensure all required fields are filled.');
-        message.error('No valid staff data found. Please check your data format and ensure all required fields are filled.');
+        handleError('No valid staff data found. Please check your data format and ensure all required fields are filled.');
         return;
       }
 
       if (validData.length !== transformedData.length) {
-        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+        showWarning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
       }
 
       // Call the bulk registration API
@@ -126,26 +130,26 @@ const StaffList: React.FC = () => {
         const errorMessage = getUserFriendlyErrorMessage(err);
         setUploadStatus('error');
         setUploadMessage(errorMessage);
-        message.error(errorMessage);
+        handleError(errorMessage);
         return;
       }
       // Treat null/undefined (204 No Content) as success
       if (response !== null && response !== undefined || response === null) {
         setUploadStatus('success');
         setUploadMessage(`Successfully imported ${validData.length} staff members`);
-        message.success(`Successfully imported ${validData.length} staff members`);
+        handleSuccess(`Successfully imported ${validData.length} staff members`);
         // Refresh the staff list
         loadStaffData();
       } else {
         setUploadStatus('error');
         setUploadMessage('Failed to import staff members. Please try again.');
-        message.error('Failed to import staff members. Please try again.');
+        handleError('Failed to import staff members. Please try again.');
       }
     } catch (error) {
       console.error('Import error:', error);
       setUploadStatus('error');
       setUploadMessage('An error occurred during import. Please check your data and try again.');
-      message.error('An error occurred during import. Please check your data and try again.');
+      handleError('An error occurred during import. Please check your data and try again.');
     }
   };
 

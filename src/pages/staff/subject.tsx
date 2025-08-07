@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Select, Affix, Collapse, Pagination, Spin, Empty, message, Tag } from 'antd';
+import { Table, Input, Button, Select, Affix, Collapse, Pagination, Spin, Empty, Tag } from 'antd';
 import { PlusOutlined, EditOutlined, SearchOutlined, UploadOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { curriculums, combos, comboSubjects } from '../../data/schoolData';
@@ -10,6 +10,7 @@ import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { Subject } from '../../interfaces/ISchoolProgram';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -23,6 +24,7 @@ const SubjectPage: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { handleError, handleSuccess, showWarning } = useApiErrorHandler();
 
   // CRUD hook
   const {
@@ -67,7 +69,7 @@ const SubjectPage: React.FC = () => {
           }
         } catch (error) {
           const errorMessage = getUserFriendlyErrorMessage(error);
-          message.error(errorMessage);
+          handleError(errorMessage);
         } finally {
           setLoadingComboSubjects(false);
         }
@@ -116,52 +118,44 @@ const SubjectPage: React.FC = () => {
       const subjectData = importedData['SUBJECT'] || [];
       
       if (subjectData.length === 0) {
-        message.warning('No subject data found in the imported file');
+        showWarning('No subject data found in the imported file');
         return;
       }
 
       // Transform the imported data to match CreateSubject interface
       const transformedData: CreateSubject[] = subjectData.map(item => ({
-        subjectCode: item.subjectCode || '',
-        subjectName: item.subjectName || '',
-        credits: parseInt(item.credits) || 0,
-        description: item.description || ''
+        subjectName: item.subjectName || item['Subject Name'] || item.SubjectName || '',
+        subjectCode: item.subjectCode || item['Subject Code'] || item.SubjectCode || '',
+        credits: parseInt(item.credits) || 3,
+        description: item.description || item.Description || ''
       }));
 
       // Validate the data
       const validData = transformedData.filter(item => 
-        item.subjectCode.trim() !== '' && 
         item.subjectName.trim() !== '' && 
+        item.subjectCode.trim() !== '' && 
         item.credits > 0
       );
 
       if (validData.length === 0) {
-        message.error('No valid subject data found. Please check your data format and ensure all required fields are filled.');
+        handleError('No valid subject data found. Please check your data format and ensure all required fields are filled.');
         return;
       }
 
       if (validData.length !== transformedData.length) {
-        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+        showWarning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
       }
 
       // Call the bulk import mutation
-      addMultipleSubjectsMutation.mutate(validData, {
-        onSuccess: () => {
-          message.success(`Successfully imported ${validData.length} subjects`);
-          setIsImportOpen(false);
-          // Refresh the subject list
-          getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
-        },
-        onError: (error: any) => {
-          console.error('Import error:', error);
-          const errorMessage = getUserFriendlyErrorMessage(error);
-          message.error(errorMessage);
-        }
-      });
-
+      await addMultipleSubjectsMutation.mutateAsync(validData);
+      handleSuccess(`Successfully imported ${validData.length} subjects`);
+      setIsImportOpen(false);
+      
+      // Refresh the subject list
+      getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
     } catch (error) {
-      console.error('Import error:', error);
-      message.error('Error processing imported data. Please check your data format.');
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      handleError(errorMessage);
     }
   };
 

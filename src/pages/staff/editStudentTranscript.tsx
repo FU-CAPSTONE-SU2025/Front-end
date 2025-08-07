@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Card, Row, Col, Avatar, Typography, Tag, Input, Button, Modal, Progress, List, message, Spin } from 'antd';
+import { Card, Row, Col, Avatar, Typography, Tag, Input, Button, Modal, Progress, List, Spin } from 'antd';
 import { ArrowLeftOutlined, BookOutlined, UserOutlined, CalendarOutlined, MailOutlined, PhoneOutlined, PlusOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffEditTranscript.module.css';
 import TranscriptEdit from '../../components/staff/transcriptEdit';
 import { FetchSubjectVersionsToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
 import { SubjectVersionWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -71,6 +72,7 @@ const mockSubjects: Subject[] = [
 const EditStudentTranscript: React.FC = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
+  const { handleError, handleSuccess, showWarning, showInfo } = useApiErrorHandler();
   const [student, setStudent] = useState<StudentProfile>(mockStudent);
   const [subjects, setSubjects] = useState<Subject[]>(mockSubjects);
   const [searchQuery, setSearchQuery] = useState('');
@@ -107,22 +109,19 @@ const EditStudentTranscript: React.FC = () => {
 
   // Handle Add Subject button click
   const handleAddSubjectClick = async () => {
-    setIsAddSubjectModalVisible(true);
     setLoadingSubjectVersions(true);
-    
     try {
-      // Fetch subject versions from curriculum (assuming curriculum ID = 1)
-      const curriculumId = 1; // Mock: all students are in curriculum ID = 1
-      const result = await FetchSubjectVersionsToCurriculum(curriculumId);
-      
-      if (result) {
-        setSubjectVersions(result);
+      // Fetch subject versions from curriculum
+      const versions = await FetchSubjectVersionsToCurriculum(1); // Assuming curriculum ID 1 for now
+      if (versions) {
+        setSubjectVersions(versions);
+        setIsAddSubjectModalVisible(true);
       } else {
-        message.error('Failed to fetch subject versions');
+        handleError('Failed to fetch subject versions');
       }
     } catch (error) {
       console.error('Error fetching subject versions:', error);
-      message.error('Failed to fetch subject versions');
+      handleError('Failed to fetch subject versions');
     } finally {
       setLoadingSubjectVersions(false);
     }
@@ -140,40 +139,42 @@ const EditStudentTranscript: React.FC = () => {
     setSelectedSubjectVersion(subjectVersion);
   };
 
-  // Handle adding student to subject version (mock function)
+  // Handle adding student to subject version
   const handleAddStudentToSubjectVersion = async () => {
     if (!selectedSubjectVersion) {
-      message.warning('Please select a subject version');
+      showWarning('Please select a subject version');
       return;
     }
 
+    // Show loading state
+    showInfo('Adding student to subject version...');
+
     try {
-      // Mock API call - in real implementation, this would call the backend
-      message.loading('Adding student to subject version...', 1);
-      
-      // Simulate API delay
+      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock success response
+      // Add the subject to the student's transcript
       const newSubject: Subject = {
-        id: Date.now(), // Generate unique ID
+        id: selectedSubjectVersion.subjectVersionId,
         title: selectedSubjectVersion.subjectName,
         code: selectedSubjectVersion.subjectCode,
         credits: selectedSubjectVersion.credits,
-        description: selectedSubjectVersion.description || 'No description available',
-        progress: 0, // New subject starts with 0 progress
+        description: `Version: ${selectedSubjectVersion.versionName}`,
+        progress: 0,
         status: 'Current',
         semester: selectedSubjectVersion.semesterNumber,
       };
-
-      // Add to subjects list
-      setSubjects(prev => [...prev, newSubject]);
       
-      message.success(`Successfully added ${selectedSubjectVersion.subjectName} to student's transcript`);
-      handleAddSubjectModalClose();
+      setSubjects(prev => [...prev, newSubject]);
+      handleSuccess(`Successfully added ${selectedSubjectVersion.subjectName} to student's transcript`);
+      
+      // Close modal and reset state
+      setIsAddSubjectModalVisible(false);
+      setSelectedSubjectVersion(null);
+      setSearchSubjectVersion('');
     } catch (error) {
       console.error('Error adding student to subject version:', error);
-      message.error('Failed to add student to subject version');
+      handleError('Failed to add student to subject version');
     }
   };
 

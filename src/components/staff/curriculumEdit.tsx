@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Select, DatePicker, Button, message, Space, Typography, Spin, Card, Table, Checkbox, Modal } from 'antd';
+import { Form, Input, Select, DatePicker, Button, Space, Typography, Spin, Card, Table, Checkbox, Modal } from 'antd';
 import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Curriculum, SubjectVersion, SubjectVersionWithCurriculumInfo, Program } from '../../interfaces/ISchoolProgram';
 import dayjs from 'dayjs';
@@ -7,6 +7,7 @@ import {useCRUDCurriculum, useCRUDSubjectVersion} from '../../hooks/useCRUDSchoo
 import { AddSubjectVersionToCurriculum, RemoveSubjectVersionFromCurriculum } from '../../api/SchoolAPI/curriculumAPI';
 import { FetchProgramList } from '../../api/SchoolAPI/programAPI';
 import styles from '../../css/staff/curriculumEdit.module.css';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -19,6 +20,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
   const [form] = Form.useForm();
   const isCreateMode = !id;
   const isEditMode = !!id;
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   // API hooks
   const {
@@ -50,6 +52,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
   const [subjectVersionPage, setSubjectVersionPage] = useState(1);
   const [subjectVersionPageSize] = useState(10);
   const [hasMoreSubjectVersions, setHasMoreSubjectVersions] = useState(true);
+  const [availableSubjectVersions, setAvailableSubjectVersions] = useState<SubjectVersion[]>([]);
 
   // Fetch programs on mount
   useEffect(() => {
@@ -79,7 +82,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
       }
     } catch (error) {
       console.error('Failed to fetch programs:', error);
-      message.error('Failed to load programs');
+      handleError(error, 'Failed to load programs');
     } finally {
       setProgramLoading(false);
     }
@@ -126,29 +129,31 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
 
   // Update all subject versions when fetched
   useEffect(() => {
-    if (getSubjectVersionMutation.data) {
-      const newVersions = getSubjectVersionMutation.data.items || [];
+    const data = getSubjectVersionMutation.data?.items;
+    if (Array.isArray(data)) {
       if (subjectVersionPage === 1) {
-        setAllSubjectVersions(newVersions);
+        setAllSubjectVersions(data);
       } else {
         setAllSubjectVersions(prev => {
-          // Create a Set of existing IDs to avoid duplicates
           const existingIds = new Set(prev.map(v => `${v.subjectId}-${v.id}`));
-          const uniqueNewVersions = newVersions.filter(v => !existingIds.has(`${v.subjectId}-${v.id}`));
+          const uniqueNewVersions = data.filter(v => !existingIds.has(`${v.subjectId}-${v.id}`));
           return [...prev, ...uniqueNewVersions];
         });
       }
-      
-      // Check if there are more pages
-      const totalPages = Math.ceil(getSubjectVersionMutation.data.totalCount / subjectVersionPageSize);
+      const totalPages = Math.ceil((getSubjectVersionMutation.data?.totalCount || 0) / subjectVersionPageSize);
       setHasMoreSubjectVersions(subjectVersionPage < totalPages);
+    } else if (subjectVersionPage === 1) {
+      setAllSubjectVersions([]);
     }
   }, [getSubjectVersionMutation.data, subjectVersionPage]);
 
   // Update curriculum subject versions when fetched
   useEffect(() => {
-    if (fetchCurriculumSubjectVersionsMutation.data) {
-      setCurriculumSubjectVersions(fetchCurriculumSubjectVersionsMutation.data);
+    const data = fetchCurriculumSubjectVersionsMutation.data;
+    if (Array.isArray(data)) {
+      setCurriculumSubjectVersions(data);
+    } else {
+      setCurriculumSubjectVersions([]);
     }
   }, [fetchCurriculumSubjectVersionsMutation.data]);
 
@@ -160,9 +165,25 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
   };
 
   // Compute available subject versions to add
-  const availableSubjectVersions = allSubjectVersions.filter(
-    version => !curriculumSubjectVersions.some(csv => csv.subjectVersionId === version.id)
-  );
+  useEffect(() => {
+    GetAvailableSubjectVersions();
+  }, [curriculumSubjectVersions, allSubjectVersions]);
+
+  const GetAvailableSubjectVersions = () => {
+    // Ensure both arrays are defined
+    const safeCurriculumVersions = curriculumSubjectVersions || [];
+    const safeAllVersions = allSubjectVersions || [];
+    
+    if (safeCurriculumVersions.length > 0) {
+      // Filter out versions that are already in the curriculum
+      setAvailableSubjectVersions(safeAllVersions.filter(
+        version => !safeCurriculumVersions.some(csv => csv.subjectVersionId === version.id)
+      ));
+    } else {
+      // If no curriculum subject versions, all subject versions are available
+      setAvailableSubjectVersions(safeAllVersions);
+    }
+  };
 
   // Refresh curriculum subject versions after adding/removing
   const refreshCurriculumSubjectVersions = () => {
@@ -182,7 +203,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
 
       if (isCreateMode) {
         await addCurriculumMutation.mutateAsync(curriculumData as Curriculum);
-        message.success('Curriculum created successfully!');
+        handleSuccess('Curriculum created successfully!');
         form.resetFields();
       } else if (id) {
         // Ensure all required fields are non-undefined for update
@@ -194,10 +215,10 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
           effectiveDate: curriculumData.effectiveDate as Date // ensure effectiveDate is always Date, not undefined
         };
         await updateCurriculumMutation.mutateAsync({ id, data: updateData });
-        message.success('Curriculum updated successfully!');
+        handleSuccess('Curriculum updated successfully!');
       }
     } catch (error) {
-      message.error('An error occurred. Please try again.');
+      handleError(error, 'Curriculum operation failed');
     } finally {
       setLoading(false);
     }
@@ -206,11 +227,11 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
   // Add subject version handler (using curriculum API)
   const handleAddSubjectVersion = async () => {
     if (!addForm.subjectVersionId || !addForm.semesterNumber ){
-      message.error('Please select a subject version and semester.');
+      handleError('Please select a subject version and semester.', 'Validation Error');
       return;
     }
     if(addForm.semesterNumber > 9 || addForm.semesterNumber < 1){
-      message.error('Invalid semester number. Semester must be from 1 to 9');
+      handleError('Invalid semester number. Semester must be from 1 to 9', 'Validation Error');
       return;
     }
     setAddLoading(true);
@@ -220,13 +241,13 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
         semesterNumber: addForm.semesterNumber,
         isMandatory: !!addForm.isMandatory,
       });
-      message.success('Add successful');
+      handleSuccess('Subject version added successfully');
       
       setAddForm({});
       // Refresh curriculum subject versions
       refreshCurriculumSubjectVersions();
     } catch (e) {
-      message.error('Failed to add subject version.');
+      handleError(e, 'Failed to add subject version');
     } finally {
       setAddLoading(false);
     }
@@ -253,12 +274,12 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
               setDeleteLoading(subjectVersionId);
               try {
                 await RemoveSubjectVersionFromCurriculum(subjectVersionId, id!);
-                message.success('Subject version removed');
+                handleSuccess('Subject version removed successfully');
                 
                 // Refresh curriculum subject versions
                 refreshCurriculumSubjectVersions();
               } catch (e) {
-                message.error('Failed to remove subject version.');
+                handleError(e, 'Failed to remove subject version');
               } finally {
                 setDeleteLoading(null);
               }
@@ -326,7 +347,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
                 )
               }
             >
-              {programs.map(program => (
+              {(programs || []).map(program => (
                 <Option key={program.id} value={program.id}>
                   {program.programName} ({program.programCode})
                 </Option>
@@ -444,7 +465,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
                   )
                 }
               >
-                {availableSubjectVersions.map(version => (
+                {(availableSubjectVersions || []).map((version:SubjectVersion) => (
                   <Option key={`${version.subjectId}-${version.id}`} value={version.id} label={`${version.subject.subjectName} - ${version.versionName} (${version.subject.subjectCode})`}>
                     {version.subject.subjectName} - {version.versionName} ({version.subject.subjectCode})
                   </Option>
@@ -485,7 +506,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
             </Space>
           </div>
           <Table
-            dataSource={curriculumSubjectVersions}
+            dataSource={curriculumSubjectVersions || []}
             rowKey="subjectVersionId"
             columns={[
               {

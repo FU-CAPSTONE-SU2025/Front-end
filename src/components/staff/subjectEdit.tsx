@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
-import { Form, Input, InputNumber, Button, message, Space, Typography } from 'antd';
+import { Form, Input, InputNumber, Button, Space, Typography } from 'antd';
 import { SaveOutlined } from '@ant-design/icons';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateSubject, Subject } from '../../interfaces/ISchoolProgram';
 import styles from '../../css/staff/subjectEdit.module.css';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -16,6 +17,7 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
   const [form] = Form.useForm();
   const isCreateMode = !id;
   const isEditMode = !!id;
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   // CRUD hook
   const {
@@ -40,6 +42,7 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
       form.setFieldsValue(s);
     }
   }, [getSubjectById.data, isEditMode, form]);
+
   const onFinish = async (values: any) => {
     try {
       const subjectData: Partial<Subject> = {
@@ -51,11 +54,11 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
       if (isCreateMode) {
         // Ensure subjectCode is a string (not undefined) to satisfy CreateSubject type
         if (!subjectData.subjectCode) {
-          message.error('Subject code is required!');
+          handleError('Subject code is required!', 'Validation Error');
           return;
         }
         const created = await addSubjectMutation.mutateAsync(subjectData as CreateSubject);
-        message.success('Subject created successfully!');
+        handleSuccess('Subject created successfully!');
         // Add prerequisites if any
         if (created && created.id && selectedPrereqs.length > 0) {
           for (const prereqId of selectedPrereqs) {
@@ -66,12 +69,12 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
       } else if (id) {
         // Ensure subjectCode is a string (not undefined) to satisfy UpdateSubject type
         if (!subjectData.subjectCode) {
-          message.error('Subject code is required!');
+          handleError('Subject code is required!', 'Validation Error');
           return;
         }
         // Ensure subjectName is a string to satisfy UpdateSubject type
         if (!subjectData.subjectName) {
-          message.error('Subject name is required!');
+          handleError('Subject name is required!', 'Validation Error');
           return;
         }
         // Remove undefined status to satisfy UpdateSubject type
@@ -92,10 +95,10 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
           } 
         });
        
-        message.success('Subject updated successfully!');
+        handleSuccess('Subject updated successfully!');
       }
     } catch (error) {
-      message.error('An error occurred. Please try again.');
+      handleError(error, 'Subject operation failed');
     }
   };
   return (
