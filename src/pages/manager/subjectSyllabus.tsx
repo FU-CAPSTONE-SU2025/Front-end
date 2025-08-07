@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Button, 
-  message,
   Typography,
   Spin
 } from 'antd';
@@ -23,6 +22,7 @@ import SessionTable from '../../components/staff/SessionTable';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title } = Typography;
 
@@ -47,6 +47,7 @@ const ManagerSubjectSyllabus: React.FC = () => {
 
   // Approval hook
   const { handleApproval, isApproving } = useApprovalActions();
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   // State for syllabus data
   const [syllabus, setSyllabus] = useState<Syllabus | null>(null);
@@ -99,14 +100,16 @@ const ManagerSubjectSyllabus: React.FC = () => {
   }, [subjectId, syllabusId]);
 
   const handleSaveSyllabus = async () => {
+    if (!syllabus) return;
+    
     setLoading(true);
     try {
       // TODO: Replace with actual API call
-      message.success('Syllabus saved successfully');
+      handleSuccess('Syllabus saved successfully');
       setIsEditing(false);
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      handleError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -183,73 +186,73 @@ const ManagerSubjectSyllabus: React.FC = () => {
   const handleDeleteItem = async (type: string, id: number) => {
     try {
       // TODO: Implement delete mutations
-      message.success(`${type} deleted successfully`);
+      handleSuccess(`${type} deleted successfully`);
       // Refetch syllabus to update UI
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      handleError(errorMessage);
     }
   };
 
   const handleUpdateAssessment = async (id: number, assessment: Partial<SyllabusAssessment>) => {
     try {
       // TODO: Implement update mutation
-      message.success('Assessment updated successfully');
+      handleSuccess('Assessment updated successfully');
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      handleError(errorMessage);
     }
   };
 
   const handleUpdateMaterial = async (id: number, material: Partial<SyllabusMaterial>) => {
     try {
       // TODO: Implement update mutation
-      message.success('Material updated successfully');
+      handleSuccess('Material updated successfully');
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      handleError(errorMessage);
     }
   };
 
   const handleUpdateOutcome = async (id: number, outcome: Partial<SyllabusOutcome>) => {
     try {
       // TODO: Implement update mutation
-      message.success('Outcome updated successfully');
+      handleSuccess('Outcome updated successfully');
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      handleError(errorMessage);
     }
   };
 
   const handleUpdateSession = async (id: number, session: Partial<SyllabusSession>) => {
     try {
       // TODO: Implement update mutation
-      message.success('Session updated successfully');
+      handleSuccess('Session updated successfully');
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      handleError(errorMessage);
     }
   };
 
   const handleAddOutcomeToSession = async (sessionId: number, outcomeId: number) => {
     try {
       // TODO: Implement add outcome to session mutation
-      message.success('Outcome added to session successfully');
+      handleSuccess('Outcome added to session successfully');
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      handleError(errorMessage);
     }
   };
 

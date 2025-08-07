@@ -13,6 +13,7 @@ import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { BulkRegisterManager } from '../../api/Account/UserAPI';
 import { parseExcelDate } from '../../utils/dateUtils';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Option } = Select;
 
@@ -31,6 +32,7 @@ const ManagerList: React.FC = () => {
   const { categorizedData, refetch } = useActiveUserData();
   const { getAllManager, managerList, pagination, isLoading } = useCRUDManager();
   const nav = useNavigate();
+  const { handleError, handleSuccess, showWarning } = useApiErrorHandler();
 
   // Load initial data
   useEffect(() => {
@@ -71,7 +73,7 @@ const ManagerList: React.FC = () => {
       if (managerData.length === 0) {
         setUploadStatus('error');
         setUploadMessage('No manager data found in the imported file');
-        message.warning('No manager data found in the imported file');
+        showWarning('No manager data found in the imported file');
         return;
       }
 
@@ -100,26 +102,26 @@ const ManagerList: React.FC = () => {
         const errorMessage = getUserFriendlyErrorMessage(err);
         setUploadStatus('error');
         setUploadMessage(errorMessage);
-        message.error(errorMessage);
+        handleError(errorMessage);
         return;
       }
       // Treat null/undefined (204 No Content) as success
       if (response !== null && response !== undefined || response === null) {
         setUploadStatus('success');
         setUploadMessage(`Successfully imported ${transformedData.length} managers`);
-        message.success(`Successfully imported ${transformedData.length} managers`);
+        handleSuccess(`Successfully imported ${transformedData.length} managers`);
         // Refresh the manager list
         loadManagerData();
       } else {
         setUploadStatus('error');
         setUploadMessage('Failed to import managers. Please try again.');
-        message.error('Failed to import managers. Please try again.');
+        handleError('Failed to import managers. Please try again.');
       }
     } catch (error) {
       console.error('Import error:', error);
       setUploadStatus('error');
       setUploadMessage('An error occurred during import. Please check your data and try again.');
-      message.error('An error occurred during import. Please check your data and try again.');
+      handleError('An error occurred during import. Please check your data and try again.');
     }
   };
 

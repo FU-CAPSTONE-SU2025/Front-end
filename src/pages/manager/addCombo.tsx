@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
-import { Button, Form, Input, Select, Upload, Table, message, Card, Steps, Divider } from 'antd';
-import {  FileExcelOutlined, CheckCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Form, Input, Select, Upload, Table, message, Card, Steps, Divider, Typography, Space, Progress, Alert } from 'antd';
+import {  FileExcelOutlined, CheckCircleOutlined, PlusOutlined, UploadOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router';
 import * as XLSX from 'xlsx';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { CreateCombo } from '../../interfaces/ISchoolProgram';
+import { useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Option } = Select;
 const { TextArea } = Input;
+const { Title, Text } = Typography;
 
 interface ComboData {
   id?: number;
@@ -32,7 +36,16 @@ const AddComboPage: React.FC = () => {
   const [uploadedData, setUploadedData] = useState<ComboData[]>([]);
   const [previewData, setPreviewData] = useState<ComboData[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [fileList, setFileList] = useState<any[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadMessage, setUploadMessage] = useState('');
+  const [transformedData, setTransformedData] = useState<CreateCombo[]>([]);
+  const [reviewMode, setReviewMode] = useState(false);
   const navigate = useNavigate();
+  const { handleError, handleSuccess } = useApiErrorHandler();
+
+  const { addMultipleCombosMutation } = useCRUDCombo();
 
   // Handle file upload
   const handleFileUpload = (file: File) => {
@@ -50,7 +63,7 @@ const AddComboPage: React.FC = () => {
         } catch (xlsxError) {
           console.error('XLSX parsing error:', xlsxError);
           const errorMessage = getUserFriendlyErrorMessage(xlsxError);
-          message.error(errorMessage);
+          handleError(errorMessage);
           setIsUploading(false);
           return;
         }
@@ -59,7 +72,7 @@ const AddComboPage: React.FC = () => {
         const worksheet = workbook.Sheets[sheetName];
         
         if (!worksheet) {
-          message.error('No worksheet found in the Excel file.');
+          handleError('No worksheet found in the Excel file.');
           setIsUploading(false);
           return;
         }
@@ -67,7 +80,7 @@ const AddComboPage: React.FC = () => {
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
         
         if (!jsonData || jsonData.length === 0) {
-          message.error('No data found in the Excel file.');
+          handleError('No data found in the Excel file.');
           setIsUploading(false);
           return;
         }
@@ -86,12 +99,12 @@ const AddComboPage: React.FC = () => {
 
         setUploadedData(transformedData);
         setPreviewData(transformedData);
-        message.success(`Successfully uploaded ${transformedData.length} combos`);
+        handleSuccess(`Successfully uploaded ${transformedData.length} combos`);
         setCurrentStep(1);
       } catch (error) {
         console.error('File processing error:', error);
         const errorMessage = getUserFriendlyErrorMessage(error);
-        message.error(errorMessage);
+        handleError(errorMessage);
       } finally {
         setIsUploading(false);
       }
@@ -110,14 +123,14 @@ const AddComboPage: React.FC = () => {
     
     setPreviewData([newCombo]);
     setCurrentStep(1);
-    message.success('Combo data prepared for review');
+    handleSuccess('Combo data prepared for review');
   };
 
   // Handle final confirmation
   const handleConfirm = () => {
     // Here you would typically send the data to your API
     console.log('Final combo data:', previewData);
-    message.success('Combo(s) created successfully!');
+    handleSuccess('Combo(s) created successfully!');
     navigate('/manager/combo');
   };
 
@@ -148,6 +161,97 @@ const AddComboPage: React.FC = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Combo Template');
     XLSX.writeFile(wb, 'combo_template.xlsx');
+  };
+
+  const handleUpload = async () => {
+    if (fileList.length === 0) {
+      handleError('Please select a file to upload');
+      return;
+    }
+
+    const formData = new FormData();
+    fileList.forEach(file => {
+      formData.append('files[]', file);
+    });
+
+    setUploading(true);
+    setUploadStatus('uploading');
+
+    try {
+      const file = fileList[0];
+      const reader = new FileReader();
+
+      reader.onload = async (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+          
+          // Get the first worksheet
+          const worksheetName = workbook.SheetNames[0];
+          if (!worksheetName) {
+            handleError('No worksheet found in the Excel file.');
+            setUploadStatus('error');
+            return;
+          }
+
+          const worksheet = workbook.Sheets[worksheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+          if (jsonData.length === 0) {
+            handleError('No data found in the Excel file.');
+            setUploadStatus('error');
+            return;
+          }
+
+          // Transform the data
+          const transformed: CreateCombo[] = jsonData.map((item: any) => ({
+            comboName: item.comboName || item['Combo Name'] || item.ComboName || '',
+            comboCode: item.comboCode || item['Combo Code'] || item.ComboCode || '',
+            description: item.description || item.Description || ''
+          }));
+
+          setTransformedData(transformed);
+          handleSuccess(`Successfully uploaded ${transformed.length} combos`);
+          setUploadStatus('success');
+          setReviewMode(true);
+        } catch (error) {
+          const errorMessage = getUserFriendlyErrorMessage(error);
+          handleError(errorMessage);
+          setUploadStatus('error');
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      handleError(errorMessage);
+      setUploadStatus('error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleCreateCombos = async () => {
+    try {
+      await addMultipleCombosMutation.mutateAsync(transformedData);
+      handleSuccess('Combo data prepared for review');
+      setReviewMode(false);
+      navigate('/manager/combo');
+    } catch (error) {
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      handleError(errorMessage);
+    }
+  };
+
+  const handleFinalCreate = async () => {
+    try {
+      await addMultipleCombosMutation.mutateAsync(transformedData);
+      handleSuccess('Combo(s) created successfully!');
+      navigate('/manager/combo');
+    } catch (error) {
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      handleError(errorMessage);
+    }
   };
 
   // Preview table columns

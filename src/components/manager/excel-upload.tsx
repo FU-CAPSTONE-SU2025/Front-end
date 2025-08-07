@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Upload, message, Card } from 'antd';
-import { FileExcelOutlined } from '@ant-design/icons';
+import { Upload, Button, Card, Typography, Space, Progress, Alert } from 'antd';
+import { UploadOutlined, FileExcelOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Dragger } = Upload;
+const { Title, Text } = Typography;
 
 interface ExcelUploadProps {
   title: string;
@@ -35,6 +37,7 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({
   sheetName
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   const handleFileUpload = (file: File) => {
     setIsUploading(true);
@@ -51,7 +54,7 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({
         } catch (xlsxError) {
           console.error('XLSX parsing error:', xlsxError);
           const errorMessage = getUserFriendlyErrorMessage(xlsxError);
-          message.error(errorMessage);
+          handleError(errorMessage);
           setIsUploading(false);
           return;
         }
@@ -60,7 +63,7 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({
         const worksheet = workbook.Sheets[sheetName];
         
         if (!worksheet) {
-          message.error('No worksheet found in the Excel file.');
+          handleError('No worksheet found in the Excel file.');
           setIsUploading(false);
           return;
         }
@@ -68,18 +71,18 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
         
         if (!jsonData || jsonData.length === 0) {
-          message.error('No data found in the Excel file.');
+          handleError('No data found in the Excel file.');
           setIsUploading(false);
           return;
         }
         
         const transformedData = transformData(jsonData);
         onDataUploaded(transformedData);
-        message.success(`Successfully uploaded ${transformedData.length} items`);
+        handleSuccess(`Successfully uploaded ${transformedData.length} items`);
       } catch (error) {
         console.error('File processing error:', error);
         const errorMessage = getUserFriendlyErrorMessage(error);
-        message.error(errorMessage);
+        handleError(errorMessage);
       } finally {
         setIsUploading(false);
       }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {  Input, Button, Affix, message ,Collapse, Modal, Typography, Progress, Select, Card, Space, Row, Col, Table, Empty } from 'antd';
+import {  Input, Button, Affix, Collapse, Modal, Typography, Progress, Select, Card, Space, Row, Col, Table, Empty } from 'antd';
 import { PlusOutlined, EditOutlined, SearchOutlined, CheckOutlined, ImportOutlined, EyeOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
@@ -12,6 +12,8 @@ import { AddSubjectVersionToCurriculum } from '../../api/SchoolAPI/curriculumAPI
 import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 const { Panel } = Collapse;
 const { Title, Text } = Typography;
@@ -30,6 +32,8 @@ const CurriculumManagerPage: React.FC = () => {
   const navigate = useNavigate();
   const [addSubjectVersionModal, setAddSubjectVersionModal] = useState<{ open: boolean, curriculumId: number | null, semester: number | null }>({ open: false, curriculumId: null, semester: null });
   const [selectedSubjectVersionId, setSelectedSubjectVersionId] = useState<number | null>(null);
+  const { handleError, handleSuccess } = useApiErrorHandler();
+  const { showWarning } = useMessagePopupContext();
 
   // Add CRUD hooks
   const {
@@ -66,7 +70,7 @@ const CurriculumManagerPage: React.FC = () => {
       const curriculumData = importedData['CURRICULUM'] || [];
       
       if (curriculumData.length === 0) {
-        message.warning('No curriculum data found in the imported file');
+        showWarning('No curriculum data found in the imported file');
         return;
       }
 
@@ -96,29 +100,26 @@ const CurriculumManagerPage: React.FC = () => {
       );
 
       if (validData.length === 0) {
-        message.error('No valid curriculum data found. Please check your data format and ensure all required fields are filled.');
+        handleError('No valid curriculum data found. Please check your data format and ensure all required fields are filled.');
         return;
       }
 
       if (validData.length !== transformedData.length) {
-        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+        showWarning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
       }
 
-      addMultipleCurriculumsMutation.mutate(validData, {
-        onSuccess: () => {
-          message.success(`Successfully imported ${validData.length} curriculums`);
-          setIsImportOpen(false);
-        },
-        onError: (error: any) => {
-          console.error('Import error:', error);
-          const errorMessage = getUserFriendlyErrorMessage(error);
-          message.error(errorMessage);
-        }
-      });
+      try {
+        await addMultipleCurriculumsMutation.mutateAsync(validData);
+        handleSuccess(`Successfully imported ${validData.length} curriculums`);
+        setIsImportOpen(false);
+      } catch (error) {
+        const errorMessage = getUserFriendlyErrorMessage(error);
+        handleError(errorMessage);
+      }
 
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      handleError(errorMessage);
     }
   };
 
@@ -152,11 +153,11 @@ const CurriculumManagerPage: React.FC = () => {
         semester: addSubjectVersionModal.semester,
         subjectVersionId: selectedSubjectVersionId
       });
-      message.success('Subject version added to curriculum!');
+      handleSuccess('Subject version added to curriculum!');
       setAddSubjectVersionModal({ open: false, curriculumId: null, semester: null });
       setSelectedSubjectVersionId(null);
     } catch (error) {
-      message.error('Failed to add subject version to curriculum.');
+      handleError('Failed to add subject version to curriculum.');
     }
   };
 

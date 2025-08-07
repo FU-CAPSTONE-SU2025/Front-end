@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Descriptions, Avatar, Button, ConfigProvider, message } from 'antd';
+import { Descriptions, Avatar, Button, ConfigProvider } from 'antd';
 import { LogOut, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffProfile.module.css';
@@ -9,6 +9,7 @@ import { jwtDecode } from 'jwt-decode';
 import { JWTAccountProps } from '../../interfaces/IAccount';
 import useUserProfile from '../../hooks/useUserProfile';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 // Animation variants
 const containerVariants = {
@@ -40,6 +41,7 @@ const ManagerProfile: React.FC = () => {
   const { logout } = getAuthState();
   const [userId, setUserId] = useState<number | null>(null);
   const { accessToken } = getAuthState();
+  const { handleError, handleSuccess } = useApiErrorHandler();
   
   // Use the user profile hook
   const {
@@ -73,7 +75,7 @@ const ManagerProfile: React.FC = () => {
   // Handle successful profile update
   useEffect(() => {
     if (isUpdateSuccess) {
-      message.success('Profile updated successfully!');
+      handleSuccess('Profile updated successfully!');
       // Refresh the profile data
       refetchUser();
     }
@@ -83,7 +85,7 @@ const ManagerProfile: React.FC = () => {
   useEffect(() => {
     if (updateError) {
       const errorMessage = getUserFriendlyErrorMessage(updateError);
-      message.error(errorMessage);
+      handleError(errorMessage);
       console.error('Update error:', updateError);
     }
   }, [updateError]);
@@ -93,7 +95,7 @@ const ManagerProfile: React.FC = () => {
     if (currentUserError) {
       const errorMessage = getUserFriendlyErrorMessage(currentUserError);
       console.error('Failed to fetch user data:', currentUserError);
-      message.error(errorMessage);
+      handleError(errorMessage);
     }
   }, [currentUserError]);
 

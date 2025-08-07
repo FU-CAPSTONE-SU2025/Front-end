@@ -18,6 +18,8 @@ import { SubjectVersion, Syllabus, CreateSubjectVersion } from '../../interfaces
 import { useCRUDSubject, useCRUDSubjectVersion, useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
 import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../data/mockData';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 // Function to create default version for a subject (moved outside component)
 const createDefaultVersion = async (
@@ -118,6 +120,9 @@ const ManagerSubjectVersionPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { handleError, handleSuccess, showInfo } = useApiErrorHandler();
+  const { showMessage } = useMessagePopupContext();
+
   // Function to fetch prerequisites for a specific version
   const fetchPrerequisitesForVersion = useCallback(async (versionId: number) => {
     setPrereqLoading(prev => ({ ...prev, [versionId]: true }));
@@ -137,11 +142,11 @@ const ManagerSubjectVersionPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch prerequisites for version:', versionId, error);
-      message.error('Failed to fetch prerequisites');
+      handleError('Failed to fetch prerequisites');
     } finally {
       setPrereqLoading(prev => ({ ...prev, [versionId]: false }));
     }
-  }, [getPrerequisitesBySubjectVersionMutation]);
+  }, [getPrerequisitesBySubjectVersionMutation, handleError]);
 
   // Function to fetch all prerequisites for the subject
   const fetchAllPrerequisites = useCallback(async () => {
@@ -170,9 +175,9 @@ const ManagerSubjectVersionPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch all prerequisites:', error);
-      message.error('Failed to fetch prerequisites');
+      handleError('Failed to fetch prerequisites');
     }
-  }, [subjectId, getPrerequisitesBySubjectMutation]);
+  }, [subjectId, getPrerequisitesBySubjectMutation, handleError]);
 
   // Handler to fetch or create syllabus for a specific version
   const fetchOrCreateSyllabus = useCallback(async (versionId: number, subjectData: any) => {
@@ -192,7 +197,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
       
       if (!syllabusData) {
         // No syllabus exists, create default syllabus
-        message.info('No syllabus found. Creating default syllabus...');
+        showInfo('No syllabus found. Creating default syllabus...');
         const newSyllabus = await createDefaultSyllabus(
           versionId,
           subjectData.subjectCode,
@@ -257,9 +262,9 @@ const ManagerSubjectVersionPage: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Error in fetchOrCreateSyllabus:', err);
-      message.error('Failed to fetch/create syllabus: ' + err.message);
+      handleError('Failed to fetch/create syllabus: ' + err.message);
     }
-  }, [fetchSyllabusBySubjectVersionMutation, addSyllabusMutation]);
+  }, [fetchSyllabusBySubjectVersionMutation, addSyllabusMutation, showInfo, handleError]);
 
   // Fetch subject and versions
   useEffect(() => {
@@ -283,7 +288,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
         
         if (!versionsData || versionsData.length === 0) {
           // No versions exist, create default version
-          message.info('No versions found. Creating default version...');
+          showInfo('No versions found. Creating default version...');
           const defaultVersions = await createDefaultVersion(subjectData, addSubjectVersionMutation);
           setSubjectVersions(defaultVersions);
           if (defaultVersions.length > 0) {
@@ -327,7 +332,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
     };
 
     fetchData();
-  }, [subjectId]);
+  }, [subjectId, getSubjectById, getSubjectVersionsBySubjectId, addSubjectVersionMutation, createDefaultVersion, showInfo, fetchPrerequisitesForVersion, fetchAllPrerequisites, fetchOrCreateSyllabus]);
 
   // Handler for tab change
   const handleTabChange = useCallback(async (key: string) => {
@@ -350,7 +355,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
     setAdding(true);
     try {
       await addSubjectVersionMutation.mutateAsync(values);
-      message.success('Version added successfully!');
+      handleSuccess('Version added successfully!');
       
       // Refresh versions list
       const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
@@ -366,17 +371,17 @@ const ManagerSubjectVersionPage: React.FC = () => {
       
       setModalVisible(false);
     } catch (err: any) {
-      message.error('Failed to add version: ' + err.message);
+      handleError('Failed to add version: ' + err.message);
     } finally {
       setAdding(false);
     }
-  }, [addSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, fetchPrerequisitesForVersion]);
+  }, [addSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, fetchPrerequisitesForVersion, handleSuccess, handleError]);
 
   // Handler to delete a version
   const handleDeleteVersion = useCallback(async (versionId: number) => {
     try {
       await deleteSubjectVersionMutation.mutateAsync(versionId);
-      message.success('Version deleted successfully!');
+      handleSuccess('Version deleted successfully!');
       
       // Refresh versions list
       const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
@@ -387,15 +392,15 @@ const ManagerSubjectVersionPage: React.FC = () => {
         }
       }
     } catch (err: any) {
-      message.error('Failed to delete version: ' + err.message);
+      handleError('Failed to delete version: ' + err.message);
     }
-  }, [deleteSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, activeKey]);
+  }, [deleteSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, activeKey, handleSuccess, handleError]);
 
   // Handler to toggle active status (Manager approval)
   const handleToggleActive = useCallback(async (versionId: number) => {
     try {
       await toggleActiveSubjectVersionMutation.mutateAsync(versionId);
-      message.success('Version status updated successfully!');
+      handleSuccess('Version status updated successfully!');
       
       // Refresh versions list
       const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
@@ -403,9 +408,9 @@ const ManagerSubjectVersionPage: React.FC = () => {
         setSubjectVersions(updatedVersions);
       }
     } catch (err: any) {
-      message.error('Failed to update version status: ' + err.message);
+      handleError('Failed to update version status: ' + err.message);
     }
-  }, [toggleActiveSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId]);
+  }, [toggleActiveSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, handleSuccess, handleError]);
 
   // Handler to add a prerequisite
   const handleAddPrerequisite = (versionId: number) => {
@@ -425,10 +430,10 @@ const ManagerSubjectVersionPage: React.FC = () => {
         // Refetch prerequisites for this version to ensure UI reflects server state
         await fetchPrerequisitesForVersion(editingVersionId);
         
-        message.success('Prerequisite added successfully!');
+        handleSuccess('Prerequisite added successfully!');
       } catch (error) {
         console.error('Failed to add prerequisite:', error);
-        message.error('Failed to add prerequisite');
+        handleError('Failed to add prerequisite');
       }
     }
     setPrereqModalOpen(false);
@@ -545,7 +550,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
     if (type === 'OUTCOME') setOutcomeMap(prev => ({ ...prev, [versionId]: importedData }));
     if (type === 'SESSION') setSessionMap(prev => ({ ...prev, [versionId]: importedData }));
     setBulkModal(null);
-    message.success(`${type} data imported successfully!`);
+    handleSuccess(`${type} data imported successfully!`);
   };
 
   const handleBulkModalClose = () => setBulkModal(null);

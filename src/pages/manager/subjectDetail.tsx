@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Button, Card, Divider, message, Select, Modal, Table, Space } from 'antd';
+import { Button, Card, Divider, Select, Modal, Table, Space } from 'antd';
 import { ArrowLeftOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useCRUDSyllabus, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { Syllabus, Subject, SyllabusSession, SyllabusOutcome } from '../../interfaces/ISchoolProgram';
 import styles from '../../css/manager/managerCustomTable.module.css';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const SubjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,7 @@ const SubjectDetail: React.FC = () => {
   const [addOutcomeModal, setAddOutcomeModal] = useState<{ open: boolean, sessionId: number | null }>({ open: false, sessionId: null });
   const [selectedOutcomeId, setSelectedOutcomeId] = useState<number | null>(null);
   const [outcomes, setOutcomes] = useState<SyllabusOutcome[]>([]);
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   const {
     fetchSyllabusBySubjectVersionMutation,
@@ -49,7 +51,7 @@ const SubjectDetail: React.FC = () => {
         setOutcomes(loadedSyllabus?.outcomes || []);
       } catch (error) {
         const errorMessage = getUserFriendlyErrorMessage(error);
-        message.error(errorMessage);
+        handleError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -248,12 +250,12 @@ const SubjectDetail: React.FC = () => {
     if (!addOutcomeModal.sessionId || !selectedOutcomeId) return;
     try {
       await addSyllabusOutcomesToSessionMutation.mutateAsync({ sessionId: addOutcomeModal.sessionId, outcomeId: selectedOutcomeId });
-      message.success('Outcome added to session!');
+      handleSuccess('Outcome added to session!');
       // TODO: Refresh session outcomes from API when available
       setAddOutcomeModal({ open: false, sessionId: null });
       setSelectedOutcomeId(null);
     } catch (err) {
-      message.error('Failed to add outcome to session');
+      handleError('Failed to add outcome to session');
     }
   };
 

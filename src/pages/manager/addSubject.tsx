@@ -9,6 +9,7 @@ import ManualInput from '../../components/manager/manual-input';
 import ReviewSection from '../../components/manager/review-section';
 import SummaryCard from '../../components/manager/summary-card';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 // Custom CSS for better table styling
 const customTableStyles = `
@@ -99,6 +100,7 @@ const AddSubjectPage: React.FC = () => {
   const [sessionsData, setSessionsData] = useState<SessionData[]>([]);
   const [assessmentsData, setAssessmentsData] = useState<AssessmentData[]>([]);
   const navigate = useNavigate();
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
 
 
@@ -110,12 +112,12 @@ const AddSubjectPage: React.FC = () => {
     };
     
     setPreviewData([newSubject]);
-    message.success('Subject data added successfully!');
+    handleSuccess('Subject data added successfully!');
   };
 
   // Handle final confirmation
   const handleConfirm = () => {
-    message.success('All data created successfully!');
+    handleSuccess('All data created successfully!');
     navigate('/manager/subject');
   };
 

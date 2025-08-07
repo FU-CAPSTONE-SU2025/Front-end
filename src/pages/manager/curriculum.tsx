@@ -9,12 +9,14 @@ import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title, Text } = Typography;
 
 
 const CurriculumPageManager: React.FC = () => {
   const [subjectsModalOpen, setSubjectsModalOpen] = useState(false);
+  const { handleError } = useApiErrorHandler();
 
   const [selectedCurriculum, setSelectedCurriculum] = useState<any>(null);
 
@@ -321,7 +323,7 @@ const CurriculumPageManager: React.FC = () => {
     } catch (error) {
       console.error('Failed to fetch curriculum subjects:', error);
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      handleError(errorMessage);
       setCurriculumSubjectVersions([]);
     } finally {
       setIsLoadingSubjectVersions(false);

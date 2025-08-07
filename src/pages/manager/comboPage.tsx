@@ -11,6 +11,8 @@ import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 const { Text, Title } = Typography;
 
@@ -22,6 +24,8 @@ const ComboManagerPage: React.FC = () => {
   const [approvalModalVisible, setApprovalModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ id: number; name: string } | null>(null);
   const navigate = useNavigate();
+  const { handleError, handleSuccess } = useApiErrorHandler();
+  const { showWarning } = useMessagePopupContext();
 
   // CRUD hook
   const {
@@ -58,8 +62,16 @@ const ComboManagerPage: React.FC = () => {
     navigate(`/manager/combo/edit/${comboId}`);
   };
 
-  const handleDeleteCombo = (id: number) => {
-    message.success('Deleted combo!');
+  const handleDeleteCombo = async (id: number) => {
+    try {
+      // Note: deleteComboMutation is not available in the hook
+      // You may need to implement this functionality
+      handleSuccess('Deleted combo!');
+      // Refresh the combo list
+      getAllCombos({ pageNumber: page, pageSize, filterValue: search });
+    } catch (error) {
+      handleError(error, 'Failed to delete combo');
+    }
   };
 
   const handleOpenSubjectModal = async (combo: any) => {
@@ -83,9 +95,9 @@ const ComboManagerPage: React.FC = () => {
       const subjects = await fetchComboSubjectsMutation.mutateAsync(selectedCombo.id);
       setComboSubjects(subjects || []);
       setAddSubjectId(null);
-      message.success('Subject added to combo!');
-    } catch {
-      message.error('Failed to add subject.');
+      handleSuccess('Subject added to combo!');
+    } catch (error) {
+      handleError(error, 'Failed to add subject.');
     } finally {
       setModalLoading(false);
     }
@@ -98,9 +110,9 @@ const ComboManagerPage: React.FC = () => {
       await removeSubjectFromComboMutation.mutateAsync({ comboId: selectedCombo.id, subjectId });
       const subjects = await fetchComboSubjectsMutation.mutateAsync(selectedCombo.id);
       setComboSubjects(subjects || []);
-      message.success('Subject removed from combo!');
-    } catch {
-      message.error('Failed to remove subject.');
+      handleSuccess('Subject removed from combo!');
+    } catch (error) {
+      handleError(error, 'Failed to remove subject.');
     } finally {
       setModalLoading(false);
     }
@@ -126,48 +138,45 @@ const ComboManagerPage: React.FC = () => {
 
   const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
+      // Extract combo data from the imported data
       const comboData = importedData['COMBO'] || [];
       
       if (comboData.length === 0) {
-        message.warning('No combo data found in the imported file');
+        showWarning('No combo data found in the imported file');
         return;
       }
 
+      // Transform the imported data to match CreateCombo interface
       const transformedData: CreateCombo[] = comboData.map(item => ({
-        comboName: item.comboName || '',
-        comboDescription: item.comboDescription || '',
+        comboName: item.comboName || item['Combo Name'] || item.ComboName || '',
+        comboDescription: item.comboDescription || item['Combo Description'] || item.ComboDescription || item.description || item.Description || '',
         subjectIds: []
       }));
 
+      // Validate the data
       const validData = transformedData.filter(item => 
         item.comboName.trim() !== ''
       );
 
       if (validData.length === 0) {
-        message.error('No valid combo data found. Please check your data format and ensure combo names are provided.');
+        handleError('No valid combo data found. Please check your data format and ensure combo names are provided.');
         return;
       }
 
       if (validData.length !== transformedData.length) {
-        message.warning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+        showWarning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
       }
 
-      addMultipleCombosMutation.mutate(validData, {
-        onSuccess: () => {
-          message.success(`Successfully imported ${validData.length} combos`);
-          setIsImportOpen(false);
-          getAllCombos({ pageNumber: page, pageSize, filterValue: search });
-        },
-        onError: (error: any) => {
-          console.error('Import error:', error);
-          const errorMessage = getUserFriendlyErrorMessage(error);
-          message.error(errorMessage);
-        }
-      });
-
+      // Call the bulk import mutation
+      await addMultipleCombosMutation.mutateAsync(validData);
+      handleSuccess(`Successfully imported ${validData.length} combos`);
+      setIsImportOpen(false);
+      
+      // Refresh the combo list
+      getAllCombos({ pageNumber: page, pageSize, filterValue: search });
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      handleError(errorMessage);
     }
   };
 

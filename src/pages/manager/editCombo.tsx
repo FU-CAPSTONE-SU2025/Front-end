@@ -6,6 +6,7 @@ import { useNavigate, useParams } from 'react-router';
 import { useCRUDCombo, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import SubjectSelect from '../../components/common/SubjectSelect';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const EditComboPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -16,6 +17,7 @@ const EditComboPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [comboSubjects, setComboSubjects] = useState<number[]>([]);
   const [addSubjectId, setAddSubjectId] = useState<number | null>(null);
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   const {
     getComboById,
@@ -38,13 +40,13 @@ const EditComboPage: React.FC = () => {
             setComboSubjects([]);
             setLoading(false);
           } else {
-            message.error('Combo not found!');
+            handleError('Combo not found!');
             navigate('/manager/combo');
           }
         },
         onError: (error) => {
           const errorMessage = getUserFriendlyErrorMessage(error);
-          message.error(errorMessage);
+          handleError(errorMessage);
           navigate('/manager/combo');
         }
       });
@@ -77,12 +79,12 @@ const EditComboPage: React.FC = () => {
       }
     }, {
       onSuccess: () => {
-        message.success('Combo updated successfully!');
+        handleSuccess('Combo updated successfully!');
         navigate('/manager/combo');
       },
       onError: (error) => {
         const errorMessage = getUserFriendlyErrorMessage(error);
-        message.error(errorMessage);
+        handleError(errorMessage);
       }
     });
   };

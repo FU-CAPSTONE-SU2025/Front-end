@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Button, Modal, Form, Input, Select, message, Card, Tag, Statistic, Row, Col } from 'antd';
 import { 
@@ -15,6 +15,10 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
+import { useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
+import { Combo, Subject } from '../../interfaces/ISchoolProgram';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Option } = Select;
 
@@ -143,6 +147,7 @@ const ComboDetail: React.FC = () => {
   const [form] = Form.useForm();
   const [combos, setCombos] = useState(initialCombos);
   const [modalOpen, setModalOpen] = useState(false);
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   const combo = combos.find(c => String(c.id) === String(id));
   const subjects = comboSubjects[Number(id)] || [];
@@ -178,7 +183,7 @@ const ComboDetail: React.FC = () => {
       okType: 'danger',
       cancelText: 'Cancel',
       onOk: () => {
-        message.success('Combo deleted successfully!');
+        handleSuccess('Combo deleted successfully!');
         navigate('/manager/combo');
       },
     });
@@ -187,7 +192,7 @@ const ComboDetail: React.FC = () => {
   const handleOk = () => {
     form.validateFields().then((values) => {
       setCombos(combos.map((c) => (c.id === combo.id ? { ...combo, ...values } : c)));
-      message.success('Combo updated successfully!');
+      handleSuccess('Combo updated successfully!');
       setModalOpen(false);
     });
   };
