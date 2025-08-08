@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Card, Form, Input, Typography, message } from 'antd';
+import { Button, Card, Form, Input, Typography } from 'antd';
 import { useGoogleLogin } from '@react-oauth/google';
 import { LoginGoogleAccount, LoginAccount } from '../../api/Account/AuthAPI';
 import { GoogleAccountRequestProps, LoginProps } from '../../interfaces/IAccount';
@@ -10,6 +10,7 @@ import { getAuthState } from '../../hooks/useAuths';
 import { showForNavigation, hideLoading, showForAuth } from '../../hooks/useLoading';
 import BackgroundWrapper from '../../components/common/backgroundWrapper';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 const { Title, Text } = Typography;
 
@@ -20,6 +21,8 @@ const Login: React.FC = () => {
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const { login,setAccessToken,setRefreshToken } = getAuthState();
   const nav = useNavigate();
+  const { showError, showSuccess } = useMessagePopupContext();
+  
   // Login navigation based on roleId
   // 1: Admin, 0: Student, others: Guest -> TOBEADDED
   function RoleNavigation (roleId:number){
@@ -75,7 +78,7 @@ const Login: React.FC = () => {
     
         const userAccount: GoogleAccountRequestProps = await LoginGoogleAccount(access_token);
         if (userAccount!=null) {
-          message.success('Login successful');
+          showSuccess('Login successful');
 
           setAccessToken(userAccount.accessToken);
           setRefreshToken(userAccount.refreshToken);
@@ -83,14 +86,14 @@ const Login: React.FC = () => {
           RoleNavigation(userAccount.roleId)
          
         }else{
-          message.error('Login failed. Please try again.');
+          showError('Login failed. Please try again.');
           hideLoading();
         }
 
       } catch (error) {
         console.error('Google Login Error:', error);
         const errorMessage = getUserFriendlyErrorMessage(error);
-        message.error(errorMessage);
+        showError(errorMessage);
         hideLoading();
       } finally {
         setIsGoogleLoading(false);
@@ -99,7 +102,7 @@ const Login: React.FC = () => {
     onError: (error) => {
       console.error('Google Login Failed:', error);
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      showError(errorMessage);
       hideLoading();
     },
   });
@@ -110,19 +113,19 @@ const Login: React.FC = () => {
     try {
       const userAccount:GoogleAccountRequestProps = await LoginAccount(values)
       if (userAccount) {
-        message.success('Login successful');
+        showSuccess('Login successful');
         setAccessToken(userAccount.accessToken);
         setRefreshToken(userAccount.refreshToken);
         login(userAccount.roleId)
         RoleNavigation(userAccount.roleId)
       }else{
-        message.error('Login failed. Please try again.');
+        showError('Login failed. Please try again.');
         hideLoading();
       }
     } catch (error) {
       console.error('Login Error:', error);
       const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      showError(errorMessage);
       hideLoading();
     } finally {
       setIsEmailLoading(false);

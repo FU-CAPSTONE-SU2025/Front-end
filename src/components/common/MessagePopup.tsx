@@ -1,9 +1,14 @@
 import React from 'react';
 import { Modal, Typography, Space } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import { MessagePopupState } from '../../hooks/useMessagePopup';
-
 const { Text } = Typography;
+
+interface MessagePopupState {
+  visible: boolean;
+  type: 'success' | 'error' | 'warning' | 'info';
+  title: string;
+  message: string;
+}
 
 interface MessagePopupProps {
   popupState: MessagePopupState;

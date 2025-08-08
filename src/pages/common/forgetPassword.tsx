@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { Form, Input, Button, ConfigProvider, Modal } from 'antd';
+import { Form, Input, Button, ConfigProvider } from 'antd';
 import { Mail, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../../css/forgetPassword.module.css';
@@ -9,6 +9,7 @@ import { ResetPassword, SendEmail } from '../../api/Account/AuthAPI';
 import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import BackgroundWrapper from '../../components/common/backgroundWrapper';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 // Custom hook for managing cooldown
 const useCooldown = (initialCooldown: number = 0) => {
@@ -90,6 +91,7 @@ const ForgetPassword: React.FC = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const [emailSent, setEmailSent] = useState<string | null>(null);
+  const { showError, showSuccess } = useMessagePopupContext();
 
   // Handle email submission
   const handleClickReset = async () => {
@@ -103,20 +105,12 @@ const ForgetPassword: React.FC = () => {
         setCurrentPage(2);
         setEmailSent(values.email);
       } else {
-        Modal.error({
-          title: 'Error',
-          content: 'Failed to send verification code. Please try again.',
-          className: styles.customModal,
-        });
+        showError('Failed to send verification code. Please try again.');
       }
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
       console.error('Reset password failed:', error);
-      Modal.error({
-        title: 'Error',
-        content: errorMessage,
-        className: styles.customModal,
-      });
+      showError(errorMessage);
     }
   };
 
@@ -131,27 +125,15 @@ const ForgetPassword: React.FC = () => {
       };
       const response = await ResetPassword(props);
       if (response) {
-        Modal.success({
-          title: 'Password Reset Complete',
-          content: 'Your password has been successfully reset. You will be redirected to the login page.',
-          className: styles.customModal,
-          onOk: () => navigate('/'),
-        });
+        showSuccess('Your password has been successfully reset. You will be redirected to the login page.');
+        setTimeout(() => navigate('/'), 2000);
       } else {
-        Modal.error({
-          title: 'Error',
-          content: 'Failed to reset password. Please try again.',
-          className: styles.customModal,
-        });
+        showError('Failed to reset password. Please try again.');
       }
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
       console.error('Reset password failed:', error);
-      Modal.error({
-        title: 'Error',
-        content: errorMessage,
-        className: styles.customModal,
-      });
+      showError(errorMessage);
     }
   };
 
@@ -166,11 +148,7 @@ const ForgetPassword: React.FC = () => {
       return response; // Return response for child component
     } catch (error) {
       console.error('Resend email failed:', error);
-      Modal.error({
-        title: 'Error',
-        content: 'Failed to resend verification code. Please try again.',
-        className: styles.customModal,
-      });
+      showError('Failed to resend verification code. Please try again.');
       return false;
     }
   };
@@ -247,11 +225,7 @@ const ForgetPassword: React.FC = () => {
       const response = await handleResendEmail();
       if (response) {
         startCooldown(30);
-        Modal.success({
-          title: 'Email Sent',
-          content: 'A new verification code has been sent to your email.',
-          className: styles.customModal,
-        });
+        showSuccess('A new verification code has been sent to your email.');
       }
     };
 
