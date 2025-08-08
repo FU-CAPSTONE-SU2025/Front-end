@@ -10,6 +10,7 @@ import CancelMeetingModal from './cancelMeetingModal';
 import CompleteMeetingModal from './completeMeetingModal';
 import FeedbackModal from './feedbackModal';
 import MarkAdvisorMissedModal from './markAdvisorMissedModal';
+import AddReasonForOverdueModal from './addReasonForOverdueModal';
 
 interface MeetingDetailModalProps {
   open: boolean;
@@ -35,12 +36,13 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
   const statusInfo = statusMap[status] || { color: 'default', text: 'Unknown' };
   
   // Use custom hooks
-  const { actionLoading, handleConfirmMeeting, handleStudentCancelMeeting } = useMeetingActions({ onActionComplete });
+  const { actionLoading, handleConfirmMeeting, handleStudentCancelMeeting, handleAddReasonForOverdue } = useMeetingActions({ onActionComplete });
   const {
     showCancelModal,
     showCompleteModal,
     showFeedbackModal,
     showMarkAdvisorMissedModal,
+    showAddReasonForOverdueModal,
     isDetailModalOpen,
     shouldRefreshData,
     openCancelModal,
@@ -51,6 +53,8 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
     closeFeedbackModal,
     openMarkAdvisorMissedModal,
     closeMarkAdvisorMissedModal,
+    openAddReasonForOverdueModal,
+    closeAddReasonForOverdueModal,
     handleActionSuccess,
     setIsDetailModalOpen,
     setShouldRefreshData,
@@ -62,6 +66,7 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
     canSendFeedback,
     canStudentCancel,
     canMarkAdvisorMissed,
+    canAddReasonForOverdue,
     getStatusText,
     getStatusColor,
     } = useMeetingPermissions(status);
@@ -120,6 +125,16 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
 
   const handleMarkAdvisorMissedCancel = () => {
     closeMarkAdvisorMissedModal();
+  };
+
+  const handleAddReasonForOverdueSuccess = (note: string) => {
+    if (!detail?.id) return;
+    handleAddReasonForOverdue(detail.id, note);
+    closeAddReasonForOverdueModal();
+  };
+
+  const handleAddReasonForOverdueCancel = () => {
+    closeAddReasonForOverdueModal();
   };
 
   return (
@@ -255,6 +270,16 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
               </Button>
             </div>
           )}
+          {canAddReasonForOverdue && (
+            <div className="flex gap-4 justify-end mt-4">
+              <Button 
+                danger
+                onClick={openAddReasonForOverdueModal}
+              >
+                Add Reason For Overdue
+              </Button>
+            </div>
+          )}
         </div>
       )}
       </Modal>
@@ -290,6 +315,14 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
         open={showMarkAdvisorMissedModal}
         onCancel={handleMarkAdvisorMissedCancel}
         onSuccess={handleMarkAdvisorMissedSuccess}
+        meetingId={detail?.id || 0}
+      />
+
+      {/* Add Reason For Overdue Modal */}
+      <AddReasonForOverdueModal
+        open={showAddReasonForOverdueModal}
+        onCancel={handleAddReasonForOverdueCancel}
+        onSuccess={handleAddReasonForOverdueSuccess}
         meetingId={detail?.id || 0}
       />
     </>

@@ -78,14 +78,14 @@ const AdvisorDashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-12 pt-5 px-6 bg-white">
       {/* Welcome Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+        <h1 className="text-3xl font-bold  text-gray-800 mb-2">
           Welcome back, Advisor!
         </h1>
         <p className="text-gray-600">
