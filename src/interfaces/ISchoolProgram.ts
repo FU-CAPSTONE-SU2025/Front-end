@@ -341,6 +341,14 @@ export interface SyllabusSession {
   learningOutcomeCodes:string[]
 }
 
+export interface Semester{
+  id: number,
+  semesterName: string
+}
+export interface JoinedSubject{
+
+}
+
 // Creation interfaces for syllabus-related objects
 export interface CreateSyllabusAssessment {
   syllabusId: number;
@@ -373,6 +381,27 @@ export interface CreateSyllabusSession {
   topic: string;
   mission: string;
 }
+// 1 student to 1 subject
+export interface CreateJoinedSubject{
+  studentUserName: string,
+  subjectCode: string,
+  subjectVersionCode: string,
+  semesterName: string
+}
+// 1 student to multiple subjects
+export interface BulkCreateJoinedSubjects{
+  studentUserNames: string,
+  subjectsData:BulkCreateJoinedSubjectsData[]
+}
+export interface BulkCreateJoinedSubjectsData{
+  subjectCodes: string,
+  subjectVersionCodes: string,
+  semesterName: string
+}
+// M students to multiple subjects
+export interface BulkCreateJoinedSubjectMultipleStudents{
+  userNameToSubjectsMap: BulkCreateJoinedSubjects[]
+}
 
 // ==================== PAGED DATA INTERFACES ====================
 
@@ -390,7 +419,8 @@ export interface PagedSyllabus extends PagedData<Syllabus> {}
 export interface PagedCombo extends PagedData<Combo> {}
 export interface PagedProgram extends PagedData<Program> {}
 export interface PagedSubjectVersion extends PagedData<SubjectVersion> {}
-
+export interface PagedJoinedSubject extends PagedData<JoinedSubject> {}
+export interface PagedSemester extends PagedData<Semester> {}
 // Search parameters for filtering
 export interface SearchParams {
   search?: string;

@@ -207,6 +207,15 @@ export const HEADER_CONFIGS = {
       'filepathOrUrl': 'filepathOrUrl'
     })
   },
+  BULK_JOINED_SUBJECT: {
+    headers: ['studentUserName', 'subjectCode', 'subjectVersionCode', 'semesterName'],
+    fieldMap: createFlexibleFieldMap({
+      'studentUserName': 'studentUserName',
+      'subjectCode': 'subjectCode',
+      'subjectVersionCode': 'subjectVersionCode',
+      'semesterName': 'semesterName'
+    })
+  },
   OUTCOME: {
     headers: ['syllabusId', 'outcomeCode', 'description'],
     fieldMap: createFlexibleFieldMap({

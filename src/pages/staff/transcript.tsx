@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Select, Button, Row, Col, ConfigProvider, Card, Space, Typography, Affix, Pagination, Empty } from 'antd';
-import { EditOutlined, SearchOutlined } from '@ant-design/icons';
+import { EditOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
@@ -8,6 +8,10 @@ import { GetPagedActiveStudent } from '../../api/Account/UserAPI';
 import { StudentBase } from '../../interfaces/IStudent';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { RegisterMultipleStudentsToMultipleSubjects } from '../../api/SchoolAPI/joinedSubjectAPI';
+import { BulkCreateJoinedSubjectMultipleStudents, CreateJoinedSubject } from '../../interfaces/ISchoolProgram';
+import BulkDataImport from '../../components/common/bulkDataImport';
+import ExcelImportButton from '../../components/common/ExcelImportButton';
 
 const { Title, Text } = Typography;
 
@@ -20,7 +24,12 @@ const StaffTranscript: React.FC = () => {
   const [pagination, setPagination] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { handleError } = useApiErrorHandler();
+  const { handleError, handleSuccess } = useApiErrorHandler();
+  
+  // Bulk import states
+  const [isBulkImportVisible, setIsBulkImportVisible] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadMessage, setUploadMessage] = useState('');
 
   // Program API for filter
   const {
@@ -31,7 +40,7 @@ const StaffTranscript: React.FC = () => {
 
   // Load programs for filter
   useEffect(() => {
-    getAllPrograms({ pageNumber: 1, pageSize: 10, searchQuery: '' });
+    getAllPrograms({ pageNumber: 1, pageSize: 10});
   }, []);
 
   // Load data when pagination or filters change
@@ -86,6 +95,77 @@ const StaffTranscript: React.FC = () => {
   // Handle edit action
   const handleEdit = (studentId: number) => {
     navigate(`/staff/editStudentTranscript/${studentId}`);
+  };
+
+  // Handle bulk import
+  const handleBulkImport = () => {
+    setIsBulkImportVisible(true);
+  };
+
+  const handleBulkImportClose = () => {
+    setIsBulkImportVisible(false);
+    setUploadStatus('idle');
+    setUploadMessage('');
+  };
+
+  const handleBulkImportData = async (importedData: { [type: string]: any[] }) => {
+    try {
+      setUploadStatus('uploading');
+      setUploadMessage('Uploading student-subject assignments...');
+
+      const joinedSubjectData = importedData['BULK_JOINED_SUBJECT'] || [];
+      
+      if (joinedSubjectData.length === 0) {
+        setUploadStatus('error');
+        setUploadMessage('No valid data found in the uploaded file.');
+        return;
+      }
+
+      // TODO: Revisit this implementation when BA is done with the task
+      // This is a temporary fix - the data transformation logic may need to be updated
+      // based on the final API requirements and data structure specifications
+      // Transform the data to match the expected API structure
+      // Group by studentUserName to create BulkCreateJoinedSubjectMultipleStudents structure
+      const studentGroups = new Map<string, CreateJoinedSubject[]>();
+      
+      joinedSubjectData.forEach((item: CreateJoinedSubject) => {
+        const studentUserName = item.studentUserName;
+        if (!studentGroups.has(studentUserName)) {
+          studentGroups.set(studentUserName, []);
+        }
+        studentGroups.get(studentUserName)!.push(item);
+      });
+
+      // Convert to BulkCreateJoinedSubjectMultipleStudents structure
+      const bulkData: BulkCreateJoinedSubjectMultipleStudents = {
+        userNameToSubjectsMap: Array.from(studentGroups.entries()).map(([studentUserName, subjects]) => ({
+          studentUserNames: studentUserName,
+          subjectsData: subjects.map(subject => ({
+            subjectCodes: subject.subjectCode,
+            subjectVersionCodes: subject.subjectVersionCode,
+            semesterName: subject.semesterName
+          }))
+        }))
+      };
+
+      const result = await RegisterMultipleStudentsToMultipleSubjects(bulkData);
+      
+      if (result) {
+        setUploadStatus('success');
+        setUploadMessage('Successfully imported student-subject assignments!');
+        handleSuccess('Bulk import completed successfully');
+        // Refresh the student list
+        loadStudentData();
+      } else {
+        setUploadStatus('error');
+        setUploadMessage('Failed to import student-subject assignments.');
+      }
+    } catch (error) {
+      console.error('Bulk import error:', error);
+      setUploadStatus('error');
+      setUploadMessage('An error occurred during import. Please check your file format.');
+      handleError('Bulk import failed');
+    }
   };
 
   // Table columns
@@ -217,6 +297,11 @@ const StaffTranscript: React.FC = () => {
                 Manage and view student transcripts
               </Text>
             </div>
+            <div>
+              <ExcelImportButton onClick={handleBulkImport}>
+                Bulk Import Students to Subjects
+              </ExcelImportButton>
+            </div>
           </div>
         </Card>
 
@@ -303,8 +388,19 @@ const StaffTranscript: React.FC = () => {
               />
             </div>
           )}
-      </div>
-    </ConfigProvider>
+          
+          {/* Bulk Import Modal */}
+          {isBulkImportVisible && (
+            <BulkDataImport
+              onClose={handleBulkImportClose}
+              onDataImported={handleBulkImportData}
+              supportedTypes={['BULK_JOINED_SUBJECT']}
+              uploadStatus={uploadStatus}
+              uploadMessage={uploadMessage}
+            />
+          )}
+        </div>
+      </ConfigProvider>
   );
 };
 
