@@ -122,10 +122,19 @@ const SubjectVersionPage: React.FC = () => {
     fetchSyllabusBySubjectVersionMutation,
     addSyllabusMutation,
     addSyllabusAssessmentMutation,
+    updateSyllabusAssessmentMutation,
+    deleteSyllabusAssessmentMutation,
     addSyllabusMaterialMutation,
+    updateSyllabusMaterialMutation,
+    deleteSyllabusMaterialMutation,
     addSyllabusOutcomeMutation,
+    updateSyllabusOutcomeMutation,
+    deleteSyllabusOutcomeMutation,
     addSyllabusSessionMutation,
-    addSyllabusOutcomesToSessionMutation
+    updateSyllabusSessionMutation,
+    deleteSyllabusSessionMutation,
+    addSyllabusOutcomesToSessionMutation,
+    removeOutcomeFromSessionMutation
   } = useCRUDSyllabus();
 
   const [subject, setSubject] = useState<any | null>(null);
@@ -551,11 +560,23 @@ const SubjectVersionPage: React.FC = () => {
 
   const handleDeleteAssessment = async (versionId: number, id: number): Promise<void> => {
     try {
-      // Since there's no delete API, we'll use local state management
-      setAssessmentMap(prev => ({ 
-        ...prev, 
-        [versionId]: (prev[versionId] || []).filter(a => a.id !== id) 
-      }));
+      await deleteSyllabusAssessmentMutation.mutateAsync(id);
+      
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update assessment map with new data
+        setAssessmentMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.assessments || []
+        }));
+      }
+      
       handleSuccess('Assessment deleted successfully!');
     } catch (error) {
       console.error('Error deleting assessment:', error);
@@ -565,11 +586,23 @@ const SubjectVersionPage: React.FC = () => {
 
   const handleUpdateAssessment = async (versionId: number, id: number, update: any): Promise<void> => {
     try {
-      // Since there's no update API, we'll use local state management
-      setAssessmentMap(prev => ({ 
-        ...prev, 
-        [versionId]: (prev[versionId] || []).map(a => a.id === id ? { ...a, ...update } : a) 
-      }));
+      await updateSyllabusAssessmentMutation.mutateAsync({ id, data: update });
+      
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update assessment map with new data
+        setAssessmentMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.assessments || []
+        }));
+      }
+      
       handleSuccess('Assessment updated successfully!');
     } catch (error) {
       console.error('Error updating assessment:', error);
@@ -616,11 +649,23 @@ const SubjectVersionPage: React.FC = () => {
 
   const handleDeleteMaterial = async (versionId: number, id: number): Promise<void> => {
     try {
-      // Since there's no delete API, we'll use local state management
-      setMaterialMap(prev => ({ 
-        ...prev, 
-        [versionId]: (prev[versionId] || []).filter(m => m.id !== id) 
-      }));
+      await deleteSyllabusMaterialMutation.mutateAsync(id);
+      
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update material map with new data
+        setMaterialMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.learningMaterials || []
+        }));
+      }
+      
       handleSuccess('Material deleted successfully!');
     } catch (error) {
       console.error('Error deleting material:', error);
@@ -630,11 +675,23 @@ const SubjectVersionPage: React.FC = () => {
 
   const handleUpdateMaterial = async (versionId: number, id: number, update: any): Promise<void> => {
     try {
-      // Since there's no update API, we'll use local state management
-      setMaterialMap(prev => ({ 
-        ...prev, 
-        [versionId]: (prev[versionId] || []).map(m => m.id === id ? { ...m, ...update } : m) 
-      }));
+      await updateSyllabusMaterialMutation.mutateAsync({ id, data: update });
+      
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update material map with new data
+        setMaterialMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.learningMaterials || []
+        }));
+      }
+      
       handleSuccess('Material updated successfully!');
     } catch (error) {
       console.error('Error updating material:', error);
@@ -681,11 +738,23 @@ const SubjectVersionPage: React.FC = () => {
 
   const handleDeleteOutcome = async (versionId: number, id: number): Promise<void> => {
     try {
-      // Since there's no delete API, we'll use local state management
-      setOutcomeMap(prev => ({ 
-        ...prev, 
-        [versionId]: (prev[versionId] || []).filter(o => o.id !== id) 
-      }));
+      await deleteSyllabusOutcomeMutation.mutateAsync(id);
+      
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update outcome map with new data
+        setOutcomeMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.learningOutcomes || []
+        }));
+      }
+      
       handleSuccess('Outcome deleted successfully!');
     } catch (error) {
       console.error('Error deleting outcome:', error);
@@ -695,11 +764,23 @@ const SubjectVersionPage: React.FC = () => {
 
   const handleUpdateOutcome = async (versionId: number, id: number, update: any): Promise<void> => {
     try {
-      // Since there's no update API, we'll use local state management
-      setOutcomeMap(prev => ({ 
-        ...prev, 
-        [versionId]: (prev[versionId] || []).map(o => o.id === id ? { ...o, ...update } : o) 
-      }));
+      await updateSyllabusOutcomeMutation.mutateAsync({ id, data: update });
+      
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update outcome map with new data
+        setOutcomeMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.learningOutcomes || []
+        }));
+      }
+      
       handleSuccess('Outcome updated successfully!');
     } catch (error) {
       console.error('Error updating outcome:', error);
@@ -746,11 +827,23 @@ const SubjectVersionPage: React.FC = () => {
 
   const handleDeleteSession = async (versionId: number, id: number): Promise<void> => {
     try {
-      // Since there's no delete API, we'll use local state management
-      setSessionMap(prev => ({ 
-        ...prev, 
-        [versionId]: (prev[versionId] || []).filter(s => s.id !== id) 
-      }));
+      await deleteSyllabusSessionMutation.mutateAsync(id);
+      
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update session map with new data
+        setSessionMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.sessions || []
+        }));
+      }
+      
       handleSuccess('Session deleted successfully!');
     } catch (error) {
       console.error('Error deleting session:', error);
@@ -760,11 +853,23 @@ const SubjectVersionPage: React.FC = () => {
 
   const handleUpdateSession = async (versionId: number, id: number, update: any): Promise<void> => {
     try {
-      // Since there's no update API, we'll use local state management
-      setSessionMap(prev => ({ 
-        ...prev, 
-        [versionId]: (prev[versionId] || []).map(s => s.id === id ? { ...s, ...update } : s) 
-      }));
+      await updateSyllabusSessionMutation.mutateAsync({ id, data: update });
+      
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update session map with new data
+        setSessionMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.sessions || []
+        }));
+      }
+      
       handleSuccess('Session updated successfully!');
     } catch (error) {
       console.error('Error updating session:', error);
@@ -779,6 +884,21 @@ const SubjectVersionPage: React.FC = () => {
         outcomeId
       });
       
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update session map with new data
+        setSessionMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.sessions || []
+        }));
+      }
+      
       handleSuccess('Outcome added to session successfully!');
     } catch (error) {
       console.error('Error adding outcome to session:', error);
@@ -786,9 +906,33 @@ const SubjectVersionPage: React.FC = () => {
     }
   };
 
-  // Bulk import handlers
-  const handleBulkImport = (type: string, versionId: number) => {
-    setBulkModal({ type, versionId });
+  const handleRemoveOutcomeFromSession = async (versionId: number, sessionId: number, outcomeId: number): Promise<void> => {
+    try {
+      await removeOutcomeFromSessionMutation.mutateAsync({
+        sessionId,
+        outcomeId
+      });
+      
+      // Refetch syllabus to update UI
+      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+      if (updatedSyllabus) {
+        setSyllabusMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus
+        }));
+        
+        // Update session map with new data
+        setSessionMap(prev => ({
+          ...prev,
+          [versionId]: updatedSyllabus.sessions || []
+        }));
+      }
+      
+      handleSuccess('Outcome removed from session successfully!');
+    } catch (error) {
+      console.error('Error removing outcome from session:', error);
+      handleError('Failed to remove outcome from session');
+    }
   };
 
   const handleBulkDataImported = (type: string, versionId: number, importedData: any[]) => {
@@ -818,7 +962,7 @@ const SubjectVersionPage: React.FC = () => {
     }
   }, [syllabusMap, prereqMap, prereqLoading, fetchOrCreateSyllabus, fetchPrerequisitesForVersion, subject]);
 
-  // Handler to copy prerequisites between versions
+  // Handler to copy prerequisites between versions. Might not needed
   const handleCopyPrerequisites = async (sourceVersionId: number, targetVersionId: number) => {
     try {
       await copyPrerequisitesBetweenVersionsMutation.mutateAsync({

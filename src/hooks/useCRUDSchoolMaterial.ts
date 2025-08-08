@@ -17,8 +17,16 @@ import {
   AddSyllabusMaterialsBulk,
   AddSyllabusOutcomesBulk,
   AddSyllabusSessionsBulk,
+  UpdateSyllabusAssessment,
+  DeleteSyllabusAssessment,
+  UpdateSyllabusMaterial,
+  DeleteSyllabusMaterial,
+  UpdateSyllabusOutcomes,
+  DeleteSyllabusOutcomes,
+  UpdateSyllabusSessions,
+  DeleteSyllabusSessions,
+  DeleteSyllabusOutcomesToSession,
   FetchSyllabusBySubjectVersion, 
-  FetchSyllabusBySubject, 
   UpdateSyllabusById, 
   DisableSyllabus 
 } from '../api/SchoolAPI/syllabusAPI';
@@ -382,17 +390,6 @@ export function useCRUDSyllabus() {
       return null;
     },
   });
-
-  const fetchSyllabusBySubjectMutation = useMutation<Syllabus | null, unknown, number>({
-    mutationFn: async (subjectId: number) => {
-      const result = await FetchSyllabusBySubject(subjectId);
-      return result;
-    },
-    onError: (error) => {
-      console.error(error);
-    },
-  });
-
   // Add syllabus
   const addSyllabusMutation = useMutation<Syllabus | null, unknown, CreateSyllabus>({
     mutationFn: async (data: CreateSyllabus) => {
@@ -481,6 +478,105 @@ export function useCRUDSyllabus() {
     },
   });
 
+  // Update syllabus assessment
+  const updateSyllabusAssessmentMutation = useMutation<any | null, unknown, { id: number; data: CreateSyllabusAssessment }>({
+    mutationFn: async ({ id, data }) => {
+      const result = await UpdateSyllabusAssessment(id, data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Delete syllabus assessment
+  const deleteSyllabusAssessmentMutation = useMutation<any | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await DeleteSyllabusAssessment(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Update syllabus material
+  const updateSyllabusMaterialMutation = useMutation<any | null, unknown, { id: number; data: CreateSyllabusMaterial }>({
+    mutationFn: async ({ id, data }) => {
+      const result = await UpdateSyllabusMaterial(id, data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Delete syllabus material
+  const deleteSyllabusMaterialMutation = useMutation<any | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await DeleteSyllabusMaterial(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Update syllabus outcome
+  const updateSyllabusOutcomeMutation = useMutation<any | null, unknown, { id: number; data: CreateSyllabusOutcome }>({
+    mutationFn: async ({ id, data }) => {
+      const result = await UpdateSyllabusOutcomes(id, data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Delete syllabus outcome
+  const deleteSyllabusOutcomeMutation = useMutation<any | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await DeleteSyllabusOutcomes(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Update syllabus session
+  const updateSyllabusSessionMutation = useMutation<any | null, unknown, { id: number; data: CreateSyllabusSession }>({
+    mutationFn: async ({ id, data }) => {
+      const result = await UpdateSyllabusSessions(id, data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Delete syllabus session
+  const deleteSyllabusSessionMutation = useMutation<any | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await DeleteSyllabusSessions(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  // Remove outcome from session
+  const removeOutcomeFromSessionMutation = useMutation<any | null, unknown, { sessionId: number; outcomeId: number }>({
+    mutationFn: async ({ sessionId, outcomeId }) => {
+      const result = await DeleteSyllabusOutcomesToSession(sessionId, outcomeId);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
   // Add syllabus materials bulk
   const addSyllabusMaterialsBulkMutation = useMutation<any | null, unknown, CreateSyllabusMaterial[]>({
     mutationFn: async (data: CreateSyllabusMaterial[]) => {
@@ -516,15 +612,23 @@ export function useCRUDSyllabus() {
 
   return {
     fetchSyllabusBySubjectVersionMutation,
-    fetchSyllabusBySubjectMutation,
     addSyllabusMutation,
     updateSyllabusMutation,
     disableSyllabusMutation,
     addSyllabusAssessmentMutation,
+    updateSyllabusAssessmentMutation,
+    deleteSyllabusAssessmentMutation,
     addSyllabusMaterialMutation,
+    updateSyllabusMaterialMutation,
+    deleteSyllabusMaterialMutation,
     addSyllabusOutcomeMutation,
+    updateSyllabusOutcomeMutation,
+    deleteSyllabusOutcomeMutation,
     addSyllabusSessionMutation,
+    updateSyllabusSessionMutation,
+    deleteSyllabusSessionMutation,
     addSyllabusOutcomesToSessionMutation,
+    removeOutcomeFromSessionMutation,
     addSyllabusMaterialsBulkMutation,
     addSyllabusOutcomesBulkMutation,
     addSyllabusSessionsBulkMutation
