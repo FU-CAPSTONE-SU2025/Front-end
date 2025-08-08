@@ -5,6 +5,7 @@ export const useMeetingModals = () => {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showMarkAdvisorMissedModal, setShowMarkAdvisorMissedModal] = useState(false);
+  const [showAddReasonForOverdueModal, setShowAddReasonForOverdueModal] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(true);
   const [shouldRefreshData, setShouldRefreshData] = useState(false);
 
@@ -42,12 +43,21 @@ export const useMeetingModals = () => {
     setShowMarkAdvisorMissedModal(false);
   };
 
+  const openAddReasonForOverdueModal = () => {
+    setShowAddReasonForOverdueModal(true);
+  };
+
+  const closeAddReasonForOverdueModal = () => {
+    setShowAddReasonForOverdueModal(false);
+  };
+
   const handleActionSuccess = (onActionComplete?: () => void) => {
     // Close all modals
     setShowCancelModal(false);
     setShowCompleteModal(false);
     setShowFeedbackModal(false);
     setShowMarkAdvisorMissedModal(false);
+    setShowAddReasonForOverdueModal(false);
     
     // Mark for data refresh and modal reopening
     setShouldRefreshData(true);
@@ -63,6 +73,7 @@ export const useMeetingModals = () => {
     setShowCompleteModal(false);
     setShowFeedbackModal(false);
     setShowMarkAdvisorMissedModal(false);
+    setShowAddReasonForOverdueModal(false);
     setIsDetailModalOpen(true);
     setShouldRefreshData(false);
   };
@@ -73,6 +84,7 @@ export const useMeetingModals = () => {
     showCompleteModal,
     showFeedbackModal,
     showMarkAdvisorMissedModal,
+    showAddReasonForOverdueModal,
     isDetailModalOpen,
     shouldRefreshData,
     
@@ -85,6 +97,8 @@ export const useMeetingModals = () => {
     closeFeedbackModal,
     openMarkAdvisorMissedModal,
     closeMarkAdvisorMissedModal,
+    openAddReasonForOverdueModal,
+    closeAddReasonForOverdueModal,
     handleActionSuccess,
     resetModalStates,
     

@@ -27,6 +27,7 @@ export const useMeetingPermissions = (meetingStatus: number) => {
   // Advisor permissions
   const canConfirmCancel = isAdvisor && meetingStatus === STATUS.PENDING;
   const canComplete = isAdvisor && meetingStatus === STATUS.CONFIRMED;
+  const canAddReasonForOverdue = isAdvisor && meetingStatus === STATUS.OVERDUE;
 
   // Student permissions
   const canSendFeedback = isStudent && (
@@ -59,6 +60,7 @@ export const useMeetingPermissions = (meetingStatus: number) => {
     // Permissions
     canConfirmCancel,
     canComplete,
+    canAddReasonForOverdue,
     canSendFeedback,
     canStudentCancel,
     canMarkAdvisorMissed,
