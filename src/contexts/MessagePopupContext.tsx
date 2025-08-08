@@ -6,7 +6,6 @@ interface MessagePopupContextType {
   showError: (description: string, message?: string) => void;
   showInfo: (description: string, message?: string) => void;
   showWarning: (description: string, message?: string) => void;
-  hidePopup: () => void;
 }
 
 const MessagePopupContext = createContext<MessagePopupContextType | undefined>(undefined);
@@ -29,7 +28,6 @@ export const MessagePopupProvider: React.FC<MessagePopupProviderProps> = ({ chil
     showError,
     showInfo,
     showWarning,
-    hidePopup
   } = useMessagePopup();
 
   const contextValue: MessagePopupContextType = {
@@ -37,7 +35,6 @@ export const MessagePopupProvider: React.FC<MessagePopupProviderProps> = ({ chil
     showError,
     showInfo,
     showWarning,
-    hidePopup
   };
 
   return (

@@ -43,6 +43,33 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       throwApiError(result);
     }
   };
+  export const UpdateSyllabusAssessment = async ( id:number,data: CreateSyllabusAssessment): Promise<any> => {
+    const props = {
+      data: data,
+      url: syllabusURL+`/assessments/${id}`,
+      headers: GetHeader(),
+    };
+    const result = await axiosUpdate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throwApiError(result);
+    }
+  };
+  export const DeleteSyllabusAssessment = async ( id:number): Promise<any> => {
+    const props = {
+      data: null,
+      url: syllabusURL+`/assessments/${id}`,
+      headers: GetHeader(),
+    };
+    const result = await axiosDelete(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throwApiError(result);
+    }
+  };
+
   export const AddSyllabusMaterial = async ( data: CreateSyllabusMaterial): Promise<any> => {
     const props = {
       data: data,
@@ -69,6 +96,32 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       throwApiError(result);
     }
   };
+  export const UpdateSyllabusMaterial = async (id:number, data: CreateSyllabusMaterial): Promise<any> => {
+    const props = {
+      data: data,
+      url: syllabusURL+`/materials/${id}`,
+      headers: GetHeader(),
+    };
+    const result = await axiosUpdate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throwApiError(result);
+    }
+  };
+  export const DeleteSyllabusMaterial = async (id:number): Promise<any> => {
+    const props = {
+      data:null,
+      url: syllabusURL+`/materials/${id}`,
+      headers: GetHeader(),
+    };
+    const result = await axiosDelete(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throwApiError(result);
+    }
+  };
   export const AddSyllabusSessions = async ( data: CreateSyllabusSession): Promise<any> => {
     const props = {
       data: data,
@@ -82,6 +135,32 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       throwApiError(result);
     }
   };
+  export const UpdateSyllabusSessions = async ( id:number,data: CreateSyllabusSession): Promise<any> => {
+    const props = {
+      data: data,
+      url: syllabusURL+`/sessions/${id}`,
+      headers: GetHeader(),
+    };
+    const result = await axiosUpdate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throwApiError(result);
+    }
+  };
+  export const DeleteSyllabusSessions = async ( id:number): Promise<any> => {
+    const props = {
+      data: null,
+      url: syllabusURL+`/sessions/${id}`,
+      headers: GetHeader(),
+    };
+    const result = await axiosDelete(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throwApiError(result);
+    }
+  };
   export const AddSyllabusOutcomesToSession = async (sessionId: number, outcomeId: number): Promise<Curriculum> => {
     const props = {
       data: null,
@@ -89,6 +168,19 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       headers: GetHeader(),
     };
     const result = await axiosCreate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throwApiError(result);
+    }
+  };
+  export const DeleteSyllabusOutcomesToSession = async (sessionId: number, outcomeId: number): Promise<any> => {
+    const props = {
+      data: null,
+      url: syllabusURL+"/sessions/"+sessionId+"/outcomes/"+outcomeId,
+      headers: GetHeader(),
+    };
+    const result = await axiosDelete(props);
     if (result.success) {
       return result.data;
     } else {
@@ -122,6 +214,32 @@ export const AddSyllabusAssessments = async ( data: CreateSyllabusAssessment): P
       throwApiError(result);
     }
   };
+  export const UpdateSyllabusOutcomes = async (id:number,data: CreateSyllabusOutcome): Promise<any> => {
+    const props = {
+      data: data,
+      url: syllabusURL + "/outcomes/"+id,
+      headers: GetHeader(),
+    };
+    const result = await axiosUpdate(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throwApiError(result);
+    }
+  };
+  export const DeleteSyllabusOutcomes = async (id:number): Promise<any> => {
+    const props = {
+      data: null,
+      url: syllabusURL + "/outcomes/"+id,
+      headers: GetHeader(),
+    };
+    const result = await axiosDelete(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throwApiError(result);
+    }
+  };
 
   export const AddSyllabusSessionsBulk = async (data: CreateSyllabusSession[]): Promise<any> => {
     const props = {
@@ -146,21 +264,6 @@ export const FetchSyllabusBySubjectVersion = async (subjectVersionId: number): P
   };
   const result = await axiosRead(props);
   console.log(result);
-  if (result.success) {
-    return result.data;
-  } else {
-    throwApiError(result);
-    return null as never;
-  }
-};
-
-export const FetchSyllabusBySubject = async (subjectId: number): Promise<Syllabus> => {
-  const props = {
-    data: null,
-    url: syllabusURL+"/by-subject/"+subjectId,
-    headers: GetHeader(),
-  };
-  const result = await axiosRead(props);
   if (result.success) {
     return result.data;
   } else {

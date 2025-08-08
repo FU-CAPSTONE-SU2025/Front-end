@@ -37,14 +37,10 @@ export const useMessagePopup = () => {
     });
   };
 
-  // No need for hidePopup with notification API
-  const hidePopup = () => notification.destroy();
-
   return {
     showSuccess,
     showError,
     showInfo,
     showWarning,
-    hidePopup,
   };
 }; 
