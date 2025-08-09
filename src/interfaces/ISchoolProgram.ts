@@ -3,6 +3,13 @@ export interface Program {
   id: number; // Primary key
   programName: string; // nvarchar(255)
   programCode: string; // varchar(50)
+  effectiveDate?: Date; // datetime2(0)
+  createdBy?: string | null;
+  approvalStatus?: number;
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
+  rejectionReason?: string | null;
+  
 }
 export interface CreateProgram {
   programName: string,
