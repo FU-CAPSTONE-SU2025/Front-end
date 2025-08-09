@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../../css/forgetPassword.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { ResetPassword, SendEmail } from '../../api/Account/AuthAPI';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import BackgroundWrapper from '../../components/common/backgroundWrapper';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
@@ -92,6 +92,7 @@ const ForgetPassword: React.FC = () => {
   const navigate = useNavigate();
   const [emailSent, setEmailSent] = useState<string | null>(null);
   const { showError, showSuccess } = useMessagePopupContext();
+  const { handleError } = useApiErrorHandler();
 
   // Handle email submission
   const handleClickReset = async () => {
@@ -108,9 +109,7 @@ const ForgetPassword: React.FC = () => {
         showError('Failed to send verification code. Please try again.');
       }
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      console.error('Reset password failed:', error);
-      showError(errorMessage);
+      handleError(error, 'Reset password failed');
     }
   };
 
@@ -131,9 +130,7 @@ const ForgetPassword: React.FC = () => {
         showError('Failed to reset password. Please try again.');
       }
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      console.error('Reset password failed:', error);
-      showError(errorMessage);
+      handleError(error, 'Reset password failed');
     }
   };
 

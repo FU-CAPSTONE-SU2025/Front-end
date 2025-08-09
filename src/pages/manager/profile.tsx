@@ -8,7 +8,6 @@ import { getAuthState } from '../../hooks/useAuths';
 import { jwtDecode } from 'jwt-decode';
 import { JWTAccountProps } from '../../interfaces/IAccount';
 import useUserProfile from '../../hooks/useUserProfile';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 // Animation variants
@@ -84,8 +83,7 @@ const ManagerProfile: React.FC = () => {
   // Handle update errors
   useEffect(() => {
     if (updateError) {
-      const errorMessage = getUserFriendlyErrorMessage(updateError);
-      handleError(errorMessage);
+      handleError(updateError, 'Update failed');
       console.error('Update error:', updateError);
     }
   }, [updateError]);
@@ -93,9 +91,7 @@ const ManagerProfile: React.FC = () => {
   // Handle current user fetch errors
   useEffect(() => {
     if (currentUserError) {
-      const errorMessage = getUserFriendlyErrorMessage(currentUserError);
-      console.error('Failed to fetch user data:', currentUserError);
-      handleError(errorMessage);
+      handleError(currentUserError, 'Failed to fetch user data');
     }
   }, [currentUserError]);
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, List, Button, Input, Select, Space, Typography, Spin, Empty } from 'antd';
 import { PlusOutlined, CheckOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useCRUDSubject, useCRUDSubjectVersion } from '../../hooks/useCRUDSchoolMaterial';
 import { Subject } from '../../interfaces/ISchoolProgram';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
@@ -239,8 +238,7 @@ const AddPrerequisiteSubjectVersionModal: React.FC<AddPrerequisiteSubjectVersion
       handleSuccess('Prerequisite added successfully!');
       onClose();
     } catch (err: any) {
-      const errorMessage = getUserFriendlyErrorMessage(err);
-      handleError('Failed to add prerequisite: ' + errorMessage);
+      handleError('Failed to add prerequisite: ' + err.message);
     } finally {
       setAddingId(null);
     }

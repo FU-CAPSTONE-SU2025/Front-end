@@ -6,7 +6,6 @@ import dayjs from 'dayjs';
 import styles from '../../css/admin/editAccount.module.css';
 import { GetCurrentStudentUser, GetCurrentStaffUser, UpdateCurrentStaffUser, UpdateCurrentStudentUser, RegisterUser } from '../../api/Account/UserAPI';
 import { AccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 import AvatarUpload from '../../components/common/AvatarUpload';

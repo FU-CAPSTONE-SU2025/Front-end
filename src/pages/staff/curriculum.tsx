@@ -7,7 +7,6 @@ import { useSearchParams, useNavigate } from 'react-router';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { Curriculum, SubjectVersionWithCurriculumInfo, CreateCurriculum, Program } from '../../interfaces/ISchoolProgram';
-import {  getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import dayjs from 'dayjs';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
@@ -183,10 +182,9 @@ const CurriculumPage: React.FC = () => {
       setIsImportOpen(false);
       
       // Refresh the curriculum list
-      getAllCurriculums({ pageNumber: page, pageSize, search: search || undefined, programId: selectedProgramId });
+      getAllCurriculums({ pageNumber: page, pageSize, filterType: 'search', filterValue: search });
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      handleError(errorMessage);
+      handleError(error);
       setUploadStatus('error');
     }
   };

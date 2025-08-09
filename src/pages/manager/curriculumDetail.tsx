@@ -6,7 +6,6 @@ import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateCurriculum } from '../../interfaces/ISchoolProgram';
-import BulkDataImport from '../../components/common/bulkDataImport';
 import { subjects, combos, comboSubjects, curriculums } from '../../data/schoolData';
 import { AddSubjectVersionToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
 import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
@@ -26,7 +25,6 @@ const lineColor = 'rgba(30,64,175,0.18)';
 
 const CurriculumManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
-  const [isImportOpen, setIsImportOpen] = useState(false);
   const [approvalModalVisible, setApprovalModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ id: number; name: string } | null>(null);
   const navigate = useNavigate();
@@ -57,71 +55,13 @@ const CurriculumManagerPage: React.FC = () => {
     navigate(`/manager/editCurriculum/${curriculumId}`);
   };
 
-  const handleImportCurriculum = () => {
-    setIsImportOpen(true);
-  };
+  // Deprecated: bulk import removed
 
   const handleViewSubjectVersions = (curriculumId: number) => {
     navigate(`/manager/curriculum/${curriculumId}/subjects`);
   };
 
-  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    try {
-      const curriculumData = importedData['CURRICULUM'] || [];
-      
-      if (curriculumData.length === 0) {
-        showWarning('No curriculum data found in the imported file');
-        return;
-      }
-
-      const transformedData: CreateCurriculum[] = curriculumData.map(item => {
-        let effectiveDate: Date;
-        if (item.effectiveDate) {
-          effectiveDate = new Date(item.effectiveDate);
-          if (isNaN(effectiveDate.getTime())) {
-            effectiveDate = new Date();
-          }
-        } else {
-          effectiveDate = new Date();
-        }
-
-        return {
-          programId: parseInt(item.programId) || 0,
-          curriculumCode: item.curriculumCode || '',
-          curriculumName: item.curriculumName || '',
-          effectiveDate: effectiveDate
-        };
-      });
-
-      const validData = transformedData.filter(item => 
-        item.curriculumCode.trim() !== '' && 
-        item.curriculumName.trim() !== '' && 
-        item.programId > 0
-      );
-
-      if (validData.length === 0) {
-        handleError('No valid curriculum data found. Please check your data format and ensure all required fields are filled.');
-        return;
-      }
-
-      if (validData.length !== transformedData.length) {
-        showWarning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
-      }
-
-      try {
-        await addMultipleCurriculumsMutation.mutateAsync(validData);
-        handleSuccess(`Successfully imported ${validData.length} curriculums`);
-        setIsImportOpen(false);
-      } catch (error) {
-        const errorMessage = getUserFriendlyErrorMessage(error);
-        handleError(errorMessage);
-      }
-
-    } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      handleError(errorMessage);
-    }
-  };
+  // Deprecated: import handlers removed
 
   const handleApprove = (id: number, name: string) => {
     setSelectedItem({ id, name });
@@ -296,13 +236,7 @@ const CurriculumManagerPage: React.FC = () => {
                   >
                     Add Curriculum
                   </Button>
-                  <Button
-                    icon={<ImportOutlined />}
-                    onClick={handleImportCurriculum}
-                    style={{borderRadius: 12}}
-                  >
-                    Import
-                  </Button>
+                  {/* Import removed */}
                 </Space>
               </Space>
             </Col>
@@ -345,14 +279,7 @@ const CurriculumManagerPage: React.FC = () => {
         />
       </Card>
 
-      {/* Data Import Modal */}
-      {isImportOpen && (
-        <BulkDataImport 
-          onClose={() => setIsImportOpen(false)} 
-          onDataImported={handleDataImported}
-          supportedTypes={['CURRICULUM']}
-        />
-      )}
+      {/* Import removed */}
 
       {/* Add Subject Version Modal */}
       <Modal

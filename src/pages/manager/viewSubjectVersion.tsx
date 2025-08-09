@@ -12,12 +12,9 @@ import OutcomeTable from '../../components/staff/OutcomeTable';
 import SessionTable from '../../components/staff/SessionTable';
 import SubjectSelect from '../../components/common/SubjectSelect';
 import { Modal } from 'antd';
-import BulkDataImport from '../../components/common/bulkDataImport';
-import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { SubjectVersion, Syllabus, CreateSubjectVersion } from '../../interfaces/ISchoolProgram';
 import { useCRUDSubject, useCRUDSubjectVersion, useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
 import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../data/mockData';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
@@ -39,7 +36,7 @@ const createDefaultVersion = async (
       return [newVersion];
     }
   } catch (err: any) {
-    const errorMessage = getUserFriendlyErrorMessage(err);
+    const errorMessage = err.message || 'Failed to create default version.';
     message.error('Failed to create default version: ' + errorMessage);
   }
   return [];
@@ -65,7 +62,7 @@ const createDefaultSyllabus = async (
       return newSyllabus;
     }
   } catch (err: any) {
-    const errorMessage = getUserFriendlyErrorMessage(err);
+    const errorMessage = err.message || 'Failed to create default syllabus.';
     message.error('Failed to create default syllabus: ' + errorMessage);
   }
   return null;
@@ -93,8 +90,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
   const [outcomeMap, setOutcomeMap] = useState<Record<number, any[]>>({});
   const [sessionMap, setSessionMap] = useState<Record<number, any[]>>({});
   
-  // Bulk import modal state
-  const [bulkModal, setBulkModal] = useState<{ type: string, versionId: number } | null>(null);
+  // Deprecated: bulk import removed for Manager
 
   // API hooks
   const { getSubjectById } = useCRUDSubject();
@@ -103,6 +99,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
     addSubjectVersionMutation, 
     deleteSubjectVersionMutation,
     toggleActiveSubjectVersionMutation,
+    setDefaultSubjectVersionMutation,
     addPrerequisiteToSubjectVersionMutation,
     getPrerequisitesBySubjectVersionMutation,
     deletePrerequisiteFromSubjectVersionMutation,
@@ -539,21 +536,21 @@ const ManagerSubjectVersionPage: React.FC = () => {
     alert("Feature disabled for Manager")
   };
 
-  // Bulk import handlers
-  const handleBulkImport = (type: string, versionId: number) => {
-    setBulkModal({ type, versionId });
-  };
+  // Deprecated bulk handlers removed
 
-  const handleBulkDataImported = (type: string, versionId: number, importedData: any[]) => {
-    if (type === 'ASSESSMENT') setAssessmentMap(prev => ({ ...prev, [versionId]: importedData }));
-    if (type === 'MATERIAL') setMaterialMap(prev => ({ ...prev, [versionId]: importedData }));
-    if (type === 'OUTCOME') setOutcomeMap(prev => ({ ...prev, [versionId]: importedData }));
-    if (type === 'SESSION') setSessionMap(prev => ({ ...prev, [versionId]: importedData }));
-    setBulkModal(null);
-    handleSuccess(`${type} data imported successfully!`);
-  };
-
-  const handleBulkModalClose = () => setBulkModal(null);
+  // Set default handler
+  const handleSetDefault = useCallback(async (versionId: number) => {
+    try {
+      await setDefaultSubjectVersionMutation.mutateAsync(versionId);
+      handleSuccess('Version set as default successfully!');
+      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+      if (updatedVersions) {
+        setSubjectVersions(updatedVersions);
+      }
+    } catch (err: any) {
+      handleError('Failed to set default version: ' + err.message);
+    }
+  }, [setDefaultSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, handleSuccess, handleError]);
 
   if (loading) {
     return (
@@ -785,7 +782,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                         <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
                           📚 Prerequisite Subjects
                         </h3>
-                        <ExcelImportButton
+                        <Button
                           onClick={() => handleAddPrerequisite(version.id)}
                           style={{
                             borderColor: '#1E40AF',
@@ -799,7 +796,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                           size="large"
                         >
                           Add Prerequisite
-                        </ExcelImportButton>
+                        </Button>
                       </div>
                       {/* Prerequisite chips */}
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, minHeight: '40px', alignItems: 'center' }}>
@@ -831,12 +828,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                     {/* Assessment Table Section */}
                     <div style={{ marginBottom: 32 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          📊 Assessments
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('ASSESSMENT', version.id)}>
-                          Import Excel
-                        </ExcelImportButton>
+                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>📊 Assessments</h3>
                       </div>
                       <div style={{ overflow: 'auto' }}>
                         <AssessmentTable
@@ -852,12 +844,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                     {/* Material Table Section */}
                     <div style={{ marginBottom: 32 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          📚 Learning Materials
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('MATERIAL', version.id)}>
-                          Import Excel
-                        </ExcelImportButton>
+                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>📚 Learning Materials</h3>
                       </div>
                       <div style={{ overflow: 'auto' }}>
                         <MaterialTable
@@ -873,12 +860,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                     {/* Outcome Table Section */}
                     <div style={{ marginBottom: 32 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          🎯 Learning Outcomes
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('OUTCOME', version.id)}>
-                          Import Excel
-                        </ExcelImportButton>
+                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>🎯 Learning Outcomes</h3>
                       </div>
                       <div style={{ overflow: 'auto' }}>
                         <OutcomeTable
@@ -894,12 +876,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                     {/* Session Table Section */}
                     <div style={{ marginBottom: 32 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>
-                          📅 Course Sessions
-                        </h3>
-                        <ExcelImportButton onClick={() => handleBulkImport('SESSION', version.id)}>
-                          Import Excel
-                        </ExcelImportButton>
+                        <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', margin: 0, letterSpacing: '-0.5px' }}>📅 Course Sessions</h3>
                       </div>
                       <div style={{ overflow: 'auto' }}>
                         <SessionTable
@@ -931,22 +908,18 @@ const ManagerSubjectVersionPage: React.FC = () => {
                       />
                     </Modal>
 
-                    {/* Bulk Import Modal */}
-                    <Modal
-                      open={!!bulkModal && bulkModal.versionId === version.id}
-                      onCancel={handleBulkModalClose}
-                      footer={null}
-                      title={`Bulk Import ${bulkModal?.type || ''}`}
-                    >
-                      <BulkDataImport
-                        onClose={handleBulkModalClose}
-                        onDataImported={data => {
-                          const imported = data[bulkModal?.type || ''] || [];
-                          handleBulkDataImported(bulkModal?.type || '', version.id, imported);
-                        }}
-                        supportedTypes={[bulkModal?.type as any]}
-                      />
-                    </Modal>
+                    {/* Set Default Button */}
+                    {!version.isDefault && (
+                      <div style={{ marginBottom: 16 }}>
+                        <Button
+                          type="primary"
+                          onClick={() => handleSetDefault(version.id)}
+                          style={{ borderRadius: 8, background: '#10b981', borderColor: '#10b981' }}
+                        >
+                          Set as Default Version
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ),
               };

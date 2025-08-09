@@ -1,5 +1,5 @@
 import { message } from 'antd';
-import { getUserFriendlyErrorMessage } from '../api/AxiosCRUD';
+import { useApiErrorHandler } from './useApiErrorHandler';
 import { useCancelPendingMeeting, useCancelConfirmedMeeting, useSendMeetingFeedback, useMarkAdvisorMissed, useConfirmMeeting, useCancelPendingMeetingAdvisor, useCompleteMeeting, useAddReasonForOverdue } from './useStudentHistoryMeetings';
 
 interface UseMeetingActionsProps {
@@ -7,6 +7,7 @@ interface UseMeetingActionsProps {
 }
 
 export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps = {}) => {
+  const { handleError, handleSuccess } = useApiErrorHandler();
   // React Query mutations
   const cancelPendingMutation = useCancelPendingMeeting();
   const cancelConfirmedMutation = useCancelConfirmedMeeting();
@@ -25,8 +26,7 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       message.success('Meeting confirmed successfully!');
       onActionComplete?.();
     } catch (err) {
-      const errorMessage = getUserFriendlyErrorMessage(err);
-      message.error(errorMessage);
+      handleError(err, 'Confirm meeting failed');
     }
   };
 
@@ -38,9 +38,7 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       message.success('Meeting cancelled successfully!');
       onActionComplete?.();
     } catch (err) {
-      console.error('Error cancelling meeting:', err);
-      const errorMessage = getUserFriendlyErrorMessage(err);
-      message.error(errorMessage);
+      handleError(err, 'Cancel meeting failed');
     }
   };
 
@@ -55,9 +53,7 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       message.success('Meeting completed successfully!');
       onActionComplete?.();
     } catch (err) {
-      console.error('Error completing meeting:', err);
-      const errorMessage = getUserFriendlyErrorMessage(err);
-      message.error(errorMessage);
+      handleError(err, 'Complete meeting failed');
     }
   };
 
@@ -76,9 +72,7 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       message.success('Feedback sent successfully!');
       onActionComplete?.();
     } catch (err) {
-      console.error('Error sending feedback:', err);
-      const errorMessage = getUserFriendlyErrorMessage(err);
-      message.error(errorMessage);
+      handleError(err, 'Send feedback failed');
     }
   };
 
@@ -96,9 +90,7 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       message.success('Meeting cancelled successfully!');
       onActionComplete?.();
     } catch (err) {
-      console.error('Error cancelling meeting:', err);
-      const errorMessage = getUserFriendlyErrorMessage(err);
-      message.error(errorMessage);
+      handleError(err, 'Student cancel meeting failed');
     }
   };
 
@@ -110,9 +102,7 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       message.success('Advisor marked as missed successfully!');
       onActionComplete?.();
     } catch (err) {
-      console.error('Error marking advisor missed:', err);
-      const errorMessage = getUserFriendlyErrorMessage(err);
-      message.error(errorMessage);
+      handleError(err, 'Mark advisor missed failed');
     }
   };
 
@@ -124,9 +114,7 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       message.success('Reason for overdue added successfully!');
       onActionComplete?.();
     } catch (err) {
-      console.error('Error adding reason for overdue:', err);
-      const errorMessage = getUserFriendlyErrorMessage(err);
-      message.error(errorMessage);
+      handleError(err, 'Add reason for overdue failed');
     }
   };
 

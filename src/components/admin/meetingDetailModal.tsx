@@ -3,7 +3,6 @@ import { Modal, Button, Descriptions, message, Popconfirm } from 'antd';
 import { DeleteOutlined, CloseOutlined } from '@ant-design/icons';
 import { AdminViewBooking } from '../../interfaces/IBookingAvailability';
 import { DeleteMeetingById } from '../../api/admin/auditlogAPI';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 interface MeetingDetailModalProps {
@@ -34,8 +33,7 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({
       onDelete();
       onClose();
     } catch (err) {
-      const errorMessage = getUserFriendlyErrorMessage(err);
-      handleError(errorMessage);
+      handleError(err, 'Failed to delete meeting');
       console.error('Delete meeting error:', err);
     } finally {
       setDeleteLoading(false);
