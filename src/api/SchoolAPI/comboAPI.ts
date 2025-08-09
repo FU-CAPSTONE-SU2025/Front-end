@@ -47,7 +47,7 @@ export const AddSubjectToCombo = async (comboId:number,subjectId:number): Promis
   }
 };
 
-export const RemoveSubjectToCombo = async (comboId:number,subjectId:number): Promise<Combo | null> => {
+export const RemoveSubjectToCombo = async (comboId:number,subjectId:number): Promise<any | null> => {
     const props = {
       data: null,
       url: comboURL+"/"+comboId+"/subjects/"+subjectId,

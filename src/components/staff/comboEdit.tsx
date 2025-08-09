@@ -1,14 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Space, Typography, Select, Tag } from 'antd';
+import { Form, Input, Button, Space, Typography, Select, Tag, Card } from 'antd';
 import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Combo, CreateCombo, Subject } from '../../interfaces/ISchoolProgram';
 import { useCRUDCombo, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
+import cardStyles from '../../css/staff/curriculumEdit.module.css';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
+
+// Normalize combo subjects coming from API (which may return either `id` or `subjectId`)
+type ComboSubjectDisplay = { id: number; subjectName: string; subjectCode: string };
+
+// Deterministic color palette for subject chips
+const TAG_COLORS = [
+  'magenta',
+  'red',
+  'volcano',
+  'orange',
+  'gold',
+  'lime',
+  'green',
+  'cyan',
+  'blue',
+  'geekblue',
+  'purple',
+] as const;
+type TagColor = (typeof TAG_COLORS)[number];
+const getTagColor = (key: string): TagColor => {
+  let hash = 0;
+  for (let i = 0; i < key.length; i += 1) {
+    hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  }
+  return TAG_COLORS[hash % TAG_COLORS.length];
+};
 
 interface ComboEditProps {
   id?: number;
@@ -26,14 +53,19 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
     updateComboMutation,
     getComboById,
     addSubjectToComboMutation,
-    removeSubjectFromComboMutation
+    removeSubjectFromComboMutation,
+    fetchComboSubjectsMutation
   } = useCRUDCombo();
 
   const { getSubjectMutation } = useCRUDSubject();
 
   const [loading, setLoading] = useState(false);
-  const [comboSubjects, setComboSubjects] = useState<Subject[]>([]);
+  const [comboSubjects, setComboSubjects] = useState<ComboSubjectDisplay[]>([]);
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
+  const [subjectsPage, setSubjectsPage] = useState<number>(1);
+  const [subjectsHasMore, setSubjectsHasMore] = useState<boolean>(true);
+  const [subjectsLoading, setSubjectsLoading] = useState<boolean>(false);
+  const [subjectSearch, setSubjectSearch] = useState<string>('');
   const [addSubjectId, setAddSubjectId] = useState<number | null>(null);
 
   // Fetch combo by ID on mount (edit mode)
@@ -55,40 +87,78 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
     }
   }, [getComboById.data, isEditMode, form]);
 
-  // Load all subjects for dropdown
-  useEffect(() => {
-    getSubjectMutation.mutate({ pageNumber: 1, pageSize: 100 });
-  }, []);
+  // Helper to fetch subjects with pagination (for infinite scroll)
+  const fetchSubjects = (page: number, searchText: string = '') => {
+    setSubjectsLoading(true);
+    getSubjectMutation.mutate(
+      { pageNumber: page, pageSize: 20, search: searchText },
+      {
+        onSuccess: (data) => {
+          const items = data?.items || [];
+          setAllSubjects((prev) => {
+            const map = new Map<number, Subject>();
+            prev.forEach((s) => map.set(s.id, s));
+            items.forEach((s) => map.set(s.id, s));
+            return Array.from(map.values());
+          });
+          const total = data?.totalCount ?? 0;
+          const pageSize = data?.pageSize ?? 20;
+          setSubjectsHasMore(page * pageSize < total);
+          setSubjectsPage(page);
+          setSubjectsLoading(false);
+        },
+        onError: () => {
+          setSubjectsLoading(false);
+        },
+      }
+    );
+  };
 
-  // Update all subjects when fetched
+  // Initial subjects load
   useEffect(() => {
-    if (getSubjectMutation.data) {
-      setAllSubjects(getSubjectMutation.data.items || []);
-    }
-  }, [getSubjectMutation.data]);
+    fetchSubjects(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadComboSubjects = async () => {
     if (!id) return;
     setLoading(true);
     try {
-      // This would need to be implemented in the API
-      // For now, we'll use a mock approach
-      getComboById.mutate(id, {
-        onSuccess: (combo) => {
-          // Since Combo doesn't have subjects property, we'll need to fetch subjects separately
-          // For now, we'll use an empty array
-          setComboSubjects([]);
+      fetchComboSubjectsMutation.mutate(id, {
+        onSuccess: (subjects) => {
+          const normalized: ComboSubjectDisplay[] = (subjects || []).map((s: any) => ({
+            id: typeof s.id === 'number' ? s.id : Number(s.subjectId),
+            subjectName: s.subjectName,
+            subjectCode: s.subjectCode,
+          }));
+          setComboSubjects(normalized);
           setLoading(false);
         },
         onError: () => {
           setLoading(false);
-          handleError('Failed to fetch combo data.');
+          handleError('Failed to fetch combo subjects.');
         }
       });
     } catch (error) {
       setLoading(false);
-      handleError('Failed to fetch combo data.');
+      handleError('Failed to fetch combo subjects.');
     }
+  };
+
+  const handleSubjectsPopupScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 32;
+    if (nearBottom && subjectsHasMore && !subjectsLoading) {
+      fetchSubjects(subjectsPage + 1, subjectSearch);
+    }
+  };
+
+  const handleSubjectSearch = (value: string) => {
+    setSubjectSearch(value);
+    setAllSubjects([]);
+    setSubjectsPage(1);
+    setSubjectsHasMore(true);
+    fetchSubjects(1, value);
   };
 
   if (loading || getComboById.isPending) {
@@ -139,6 +209,7 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
     setLoading(true);
     try {
       //console.log(id, subjectId);
+      console.log("Deleteing Data",id, subjectId)
       await removeSubjectFromComboMutation.mutateAsync({ comboId: id, subjectId });
       handleSuccess('Subject removed from combo!');
       await loadComboSubjects();
@@ -150,96 +221,110 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
   };
 
   return (
-    <div className={styles.comboContainer}>
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={onFinish}
-        className={styles.comboForm}
-        initialValues={{ comboName: '', comboDescription: '' }}
+    <div className={cardStyles.curriculumContainer}>
+      <Card
+        title={<div className={cardStyles.cardTitle}>📝 Edit Combo</div>}
+        className={cardStyles.curriculumInfoCard}
+        classNames={{ header: cardStyles.cardHeader, body: cardStyles.cardBody }}
       >
-        <Form.Item
-          label="Combo Name"
-          name="comboName"
-          rules={[
-            { required: true, message: 'Please enter combo name!' },
-            { min: 3, message: 'Combo name must be at least 3 characters!' }
-          ]}
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          className={styles.comboForm}
+          initialValues={{ comboName: '', comboDescription: '' }}
         >
-          <Input placeholder="e.g., AI Electives" className={styles.comboFormInput} />
-        </Form.Item>
-        <Form.Item
-          label="Combo Description"
-          name="comboDescription"
-          rules={[
-            { required: true, message: 'Please enter combo description!' },
-            { min: 10, message: 'Description must be at least 10 characters!' }
-          ]}
-        >
-          <TextArea placeholder="Enter a detailed description of the combo..." rows={4} className={styles.comboFormTextArea} />
-        </Form.Item>
-        <Form.Item className={styles.comboFormActions}>
-          <Space size="large">
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={<SaveOutlined />}
-              loading={loading}
-              className={styles.comboFormButton}
-            >
-              {isCreateMode ? 'Create Combo' : 'Update Combo'}
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
+          <Form.Item
+            label="Combo Name"
+            name="comboName"
+            rules={[
+              { required: true, message: 'Please enter combo name!' },
+              { min: 3, message: 'Combo name must be at least 3 characters!' }
+            ]}
+          >
+            <Input placeholder="e.g., AI Electives" className={styles.comboFormInput} />
+          </Form.Item>
+          <Form.Item
+            label="Combo Description"
+            name="comboDescription"
+            rules={[
+              { required: true, message: 'Please enter combo description!' },
+              { min: 10, message: 'Description must be at least 10 characters!' }
+            ]}
+          >
+            <TextArea placeholder="Enter a detailed description of the combo..." rows={4} className={styles.comboFormTextArea} />
+          </Form.Item>
+          <Form.Item className={cardStyles.formActions}>
+            <Space size="large">
+              <Button
+                type="primary"
+                htmlType="submit"
+                icon={<SaveOutlined />}
+                loading={loading}
+                className={styles.comboFormButton}
+              >
+                {isCreateMode ? 'Create Combo' : 'Update Combo'}
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Card>
 
       {isEditMode && (
-        <div className={styles.comboSubjects}>
-          <Title level={5} className={styles.comboSubjectsTitle}>
-            Subjects in this Combo
-          </Title>
-          <div className={styles.comboSubjectsList}>
-            {comboSubjects.map(subject => (
-              <Tag
-                key={subject.id}
-                closable
-                onClose={() => handleRemoveSubject(subject.id)}
-                className={styles.comboSubjectsItem}
-              >
-                {subject.subjectName} ({subject.subjectCode})
-              </Tag>
-            ))}
+        <Card
+          title={<div className={cardStyles.cardTitle}>📚 Subjects in this Combo</div>}
+          className={cardStyles.subjectsCard}
+          classNames={{ header: cardStyles.cardHeader, body: cardStyles.cardBody }}
+        >
+          <div className={styles.comboSubjects}>
+            <div className={styles.comboSubjectsList}>
+              {comboSubjects.map(subject => (
+                <Tag
+                  key={subject.id}
+                  closable
+                  color={getTagColor(subject.subjectCode || subject.subjectName)}
+                  onClose={() => handleRemoveSubject(subject.id)}
+                  className={styles.comboSubjectsItem}
+                  style={{ borderRadius: 999, fontWeight: 600, padding: '4px 10px' }}
+                >
+                  {subject.subjectName} ({subject.subjectCode})
+                </Tag>
+              ))}
+            </div>
+            <div className={cardStyles.addSubjectControls}>
+              <Space wrap>
+                <Select
+                  placeholder="Select a subject to add"
+                  value={addSubjectId}
+                  onChange={setAddSubjectId}
+                  className={cardStyles.subjectSelect}
+                  showSearch
+                  filterOption={false}
+                  onSearch={handleSubjectSearch}
+                  onPopupScroll={handleSubjectsPopupScroll}
+                  notFoundContent={subjectsLoading ? 'Loading...' : undefined}
+                >
+                  {allSubjects
+                    .filter(subject => !comboSubjects.some(cs => cs.id === subject.id))
+                    .map(subject => (
+                      <Option key={subject.id} value={subject.id}>
+                        {subject.subjectName} ({subject.subjectCode})
+                      </Option>
+                    ))}
+                </Select>
+                <Button
+                  type="primary"
+                  onClick={handleAddSubject}
+                  disabled={!addSubjectId}
+                  loading={loading}
+                  className={styles.comboFormButton}
+                >
+                  Add Subject
+                </Button>
+              </Space>
+            </div>
           </div>
-          <div className={styles.comboSubjectsAdd}>
-            <Select
-              placeholder="Select a subject to add"
-              value={addSubjectId}
-              onChange={setAddSubjectId}
-              className={styles.comboSubjectsAddSelect}
-              showSearch
-              filterOption={(input, option) =>
-                (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
-              }
-            >
-              {allSubjects
-                .filter(subject => !comboSubjects.some(cs => cs.id === subject.id))
-                .map(subject => (
-                  <Option key={subject.id} value={subject.id}>
-                    {subject.subjectName} ({subject.subjectCode})
-                  </Option>
-                ))}
-            </Select>
-            <Button
-              type="primary"
-              onClick={handleAddSubject}
-              disabled={!addSubjectId}
-              loading={loading}
-              className={styles.comboFormButton}
-            >
-              Add Subject
-            </Button>
-          </div>
-        </div>
+        </Card>
       )}
     </div>
   );
