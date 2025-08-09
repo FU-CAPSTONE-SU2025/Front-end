@@ -12,7 +12,6 @@ import { Modal } from 'antd';
 import { SubjectVersion, Syllabus, CreateSubjectVersion } from '../../interfaces/ISchoolProgram';
 import { useCRUDSubject, useCRUDSubjectVersion, useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
 import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../data/mockData';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import AddPrerequisiteSubjectVersionModal from '../../components/staff/AddPrerequisiteSubjectVersionModal';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
@@ -43,8 +42,7 @@ const createDefaultVersion = async (
       return Array.isArray(newVersion) ? newVersion : [newVersion];
     }
   } catch (err: any) {
-    const errorMessage = getUserFriendlyErrorMessage(err);
-    handleError('Failed to create default version: ' + errorMessage);
+    handleError(err, 'Failed to create default version');
   }
   return [];
 };
@@ -71,8 +69,7 @@ const createDefaultSyllabus = async (
       return newSyllabus;
     }
   } catch (err: any) {
-    const errorMessage = getUserFriendlyErrorMessage(err);
-    handleError('Failed to create default syllabus: ' + errorMessage);
+    handleError(err, 'Failed to create default syllabus');
   }
   return null;
 };

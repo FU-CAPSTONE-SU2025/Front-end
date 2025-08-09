@@ -9,7 +9,7 @@ import { Link, useNavigate } from 'react-router';
 import { getAuthState } from '../../hooks/useAuths';
 import { showForNavigation, hideLoading, showForAuth } from '../../hooks/useLoading';
 import BackgroundWrapper from '../../components/common/backgroundWrapper';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 const { Title, Text } = Typography;
@@ -22,6 +22,7 @@ const Login: React.FC = () => {
   const { login,setAccessToken,setRefreshToken } = getAuthState();
   const nav = useNavigate();
   const { showError, showSuccess } = useMessagePopupContext();
+  const { handleError } = useApiErrorHandler();
   
   // Login navigation based on roleId
   // 1: Admin, 0: Student, others: Guest -> TOBEADDED
@@ -92,8 +93,7 @@ const Login: React.FC = () => {
 
       } catch (error) {
         console.error('Google Login Error:', error);
-        const errorMessage = getUserFriendlyErrorMessage(error);
-        showError(errorMessage);
+        handleError(error, 'Login failed');
         hideLoading();
       } finally {
         setIsGoogleLoading(false);
@@ -101,8 +101,7 @@ const Login: React.FC = () => {
     },
     onError: (error) => {
       console.error('Google Login Failed:', error);
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      showError(errorMessage);
+      handleError(error, 'Login failed');
       hideLoading();
     },
   });
@@ -124,8 +123,7 @@ const Login: React.FC = () => {
       }
     } catch (error) {
       console.error('Login Error:', error);
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      showError(errorMessage);
+      handleError(error, 'Login failed');
       hideLoading();
     } finally {
       setIsEmailLoading(false);

@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router';
 import { useCRUDCombo, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import SubjectSelect from '../../components/common/SubjectSelect';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const EditComboPage: React.FC = () => {

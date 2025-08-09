@@ -3,9 +3,8 @@ import { Modal, Table, DatePicker, Button, Space, Typography } from 'antd';
 import { CalendarOutlined, CloseOutlined } from '@ant-design/icons';
 import { GetPagedLeaveSchedulesOneStaff } from '../../api/student/StudentAPI';
 import { LeaveSchedule } from '../../interfaces/ILeaveSchedule';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
-import dayjs, { Dayjs } from 'dayjs';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import dayjs, { Dayjs } from 'dayjs';
 
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
@@ -43,8 +42,7 @@ const LeaveScheduleModal: React.FC<LeaveScheduleModalProps> = ({
       setCurrentPage(data.pageNumber);
       setPageSize(data.pageSize);
     } catch (err) {
-      const errorMessage = getUserFriendlyErrorMessage(err);
-      handleError(errorMessage);
+      handleError(err, 'Failed to fetch leave schedules');
       console.error('Fetch leave schedules error:', err);
     } finally {
       setLoading(false);

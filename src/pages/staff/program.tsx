@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDProgram, useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateProgram } from '../../interfaces/ISchoolProgram';
-import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { isErrorResponse } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Panel } = Collapse;
@@ -108,8 +108,7 @@ const ProgramPage: React.FC = () => {
         search: search
       });
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      handleError(errorMessage);
+      handleError(error, 'Failed to import programs');
     }
   };
 

@@ -12,7 +12,6 @@ import { ManagerBase } from '../../interfaces/IManager';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { BulkRegisterManager } from '../../api/Account/UserAPI';
 import { parseExcelDate } from '../../utils/dateUtils';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Option } = Select;

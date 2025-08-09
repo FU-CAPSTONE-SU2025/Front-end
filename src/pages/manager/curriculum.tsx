@@ -5,11 +5,10 @@ import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useCRUDCurriculum, useCRUDSubjectVersion } from '../../hooks/useCRUDSchoolMaterial';
 import { SubjectVersionWithCurriculumInfo} from '../../interfaces/ISchoolProgram';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
-import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title, Text } = Typography;
 
@@ -322,8 +321,7 @@ const CurriculumPageManager: React.FC = () => {
       setCurriculumSubjectVersions(versions || []);
     } catch (error) {
       console.error('Failed to fetch curriculum subjects:', error);
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      handleError(errorMessage);
+      handleError(error, 'Failed to load curriculum subjects');
       setCurriculumSubjectVersions([]);
     } finally {
       setIsLoadingSubjectVersions(false);

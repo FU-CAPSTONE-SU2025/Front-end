@@ -13,7 +13,6 @@ import { StudentBase } from '../../interfaces/IStudent';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { BulkRegisterStudent, DisableUser, ResetBanNumberForStudent } from '../../api/Account/UserAPI';
 import { parseExcelDate } from '../../utils/dateUtils';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
@@ -144,10 +143,9 @@ const StudentList: React.FC = () => {
       try {
         response = await BulkRegisterStudent(validData);
       } catch (err) {
-        const errorMessage = getUserFriendlyErrorMessage(err);
+        const errorMessage = handleError(err, 'Failed to import students');
         setUploadStatus('error');
         setUploadMessage(errorMessage);
-        handleError(errorMessage);
         return;
       }
       // Treat null/undefined (204 No Content) as success
@@ -242,8 +240,7 @@ const StudentList: React.FC = () => {
       // Close the popconfirm by clearing the student ID
       setResetBanStudentId(null);
     } catch (err) {
-      const errorMessage = getUserFriendlyErrorMessage(err);
-      handleError(errorMessage);
+      const errorMessage = handleError(err, 'Failed to reset ban number');
       console.error('Reset ban number error:', err);
     }
   };

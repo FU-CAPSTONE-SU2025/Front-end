@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Space, Typography, Modal } from 'antd';
+import { Form, Input, Button, Space, Typography, Modal, Card, Spin } from 'antd';
 import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 import { CreateProgram, Program } from '../../interfaces/ISchoolProgram';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
+import cardStyles from '../../css/staff/curriculumEdit.module.css';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title } = Typography;
@@ -24,7 +25,6 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
     updateProgramMutation,
     getProgramById,
     disableProgramMutation,
-    deleteProgramMutation,
     isLoading,
   } = useCRUDProgram();
 
@@ -51,7 +51,7 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
 
   const onFinish = async (values: CreateProgram) => {
     try {
-      const programData: Partial<Program> = {
+      const programData:CreateProgram = {
         ...values
       };
 
@@ -78,7 +78,7 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
       onOk: async () => {
         try {
           if (id) {
-            await deleteProgramMutation.mutateAsync(id);
+            await disableProgramMutation.mutateAsync(id);
             handleSuccess('Program deleted successfully!');
           }
         } catch (error) {
@@ -92,92 +92,91 @@ const ProgramEdit: React.FC<ProgramEditProps> = ({ id }) => {
   const isLoadingData = getProgramById.isPending;
 
   if (isEditMode && isLoadingData) {
-    return (
-      <div className={styles.formContainer}>
-        <Title level={4} className={styles.formTitle}>
-          Loading program data...
-        </Title>
-      </div>
-    );
-  } 
+    return <Spin tip="Loading program..." className={cardStyles.loadingSpinner} />;
+  }
 
   return (
-    <div className={styles.programContainer}>
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={onFinish}
-        className={styles.programForm}
+    <div className={cardStyles.curriculumContainer}>
+      <Card
+        title={<div className={cardStyles.cardTitle}>{isCreateMode ? 'Create Program' : 'Edit Program'}</div>}
+        className={cardStyles.curriculumInfoCard}
+        classNames={{ header: cardStyles.cardHeader, body: cardStyles.cardBody }}
       >
-        <Form.Item
-          label="Program Code"
-          name="programCode"
-          rules={[
-            { required: true, message: 'Please enter program code!' },
-            { min: 2, message: 'Program code must be at least 2 characters!' },
-            { pattern: /^[A-Z0-9_-]+$/, message: 'Program code must contain only "-", "_", uppercase letters and numbers!' }
-          ]}
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          className={styles.programForm}
         >
-          <Input 
-            placeholder="e.g., SE, IT, BA" 
-            className={styles.programFormInput}
-            maxLength={30}
-          />
-        </Form.Item>
+          <Form.Item
+            label="Program Code"
+            name="programCode"
+            rules={[
+              { required: true, message: 'Please enter program code!' },
+              { min: 2, message: 'Program code must be at least 2 characters!' },
+              { pattern: /^[A-Z0-9_-]+$/, message: 'Program code must contain only "-", "_", uppercase letters and numbers!' }
+            ]}
+          >
+            <Input 
+              placeholder="e.g., SE, IT, BA" 
+              className={styles.programFormInput}
+              maxLength={30}
+            />
+          </Form.Item>
 
-        <Form.Item
-          label="Program Name"
-          name="programName"
-          rules={[
-            { required: true, message: 'Please enter program name!' },
-            { min: 3, message: 'Program name must be at least 3 characters!' },
-            { max: 100, message: 'Program name must not exceed 100 characters!' }
-          ]}
-        >
-          <Input 
-            placeholder="e.g., Software Engineering, Information Technology" 
-            className={styles.programFormInput}
-            maxLength={100}
-          />
-        </Form.Item>
+          <Form.Item
+            label="Program Name"
+            name="programName"
+            rules={[
+              { required: true, message: 'Please enter program name!' },
+              { min: 3, message: 'Program name must be at least 3 characters!' },
+              { max: 100, message: 'Program name must not exceed 100 characters!' }
+            ]}
+          >
+            <Input 
+              placeholder="e.g., Software Engineering, Information Technology" 
+              className={styles.programFormInput}
+              maxLength={100}
+            />
+          </Form.Item>
 
-        <Form.Item className={styles.programFormActions}>
-          <Space size="large">
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={<SaveOutlined />}
-              loading={isLoading}
-              className={styles.programFormButton}
-            >
-              {isCreateMode ? 'Create Program' : 'Update Program'}
-            </Button>
-            
-            {isEditMode && initialData && (
+          <Form.Item className={cardStyles.formActions}>
+            <Space size="large">
               <Button
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleDelete}
+                type="primary"
+                htmlType="submit"
+                icon={<SaveOutlined />}
                 loading={isLoading}
                 className={styles.programFormButton}
               >
-                Delete Program
+                {isCreateMode ? 'Create Program' : 'Update Program'}
               </Button>
-            )}
-          </Space>
-        </Form.Item>
+              {isEditMode && initialData && (
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={handleDelete}
+                  loading={isLoading}
+                  className={styles.programFormButton}
+                >
+                  Delete Program
+                </Button>
+              )}
+            </Space>
+          </Form.Item>
 
-        {isEditMode && initialData && (
-          <div className={styles.programInfo}>
-            <Title level={5} className={styles.programInfoTitle}>Program Information</Title>
-            <p className={styles.programInfoDescription}>
-              <strong>ID:</strong> {initialData.id} | 
-              <strong> Code:</strong> {initialData.programCode} | 
-              <strong> Name:</strong> {initialData.programName}
-            </p>
-          </div>
-        )}
-      </Form>
+          {isEditMode && initialData && (
+            <div className={styles.programInfo}>
+              <Title level={5} className={styles.programInfoTitle}>Program Information</Title>
+              <p className={styles.programInfoDescription}>
+                <strong>ID:</strong> {initialData.id} | 
+                <strong> Code:</strong> {initialData.programCode} | 
+                <strong> Name:</strong> {initialData.programName}
+              </p>
+            </div>
+          )}
+        </Form>
+      </Card>
     </div>
   );
 };

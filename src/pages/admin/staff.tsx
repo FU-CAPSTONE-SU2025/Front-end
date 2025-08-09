@@ -13,7 +13,6 @@ import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { BulkRegisterStaff, BulkRegisterManager, BulkRegisterAdvisor, BulkRegisterAdmin } from '../../api/Account/UserAPI';
 import { transformBulkImportData, validateBulkData, getApiFunctionName } from '../../utils/bulkImportTransformers';
 import { AccountProps } from '../../interfaces/IAccount';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 

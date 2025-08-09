@@ -13,7 +13,6 @@ import useUserProfile from '../../hooks/useUserProfile';
 import { JWTAccountProps } from '../../interfaces/IAccount';
 import { validateEmail } from '../../components/common/validation';
 import { useNavigate } from 'react-router';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const cardVariants = {

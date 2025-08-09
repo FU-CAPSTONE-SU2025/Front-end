@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Affix, Tag, message, Pagination, Spin, Empty, Modal, Space, Card, Typography, Row, Col } from 'antd';
-import { PlusOutlined,CheckOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
+import { PlusOutlined,CheckOutlined, SearchOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateCombo } from '../../interfaces/ISchoolProgram';
-import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
@@ -20,7 +18,6 @@ const ComboManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [approvalModalVisible, setApprovalModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ id: number; name: string } | null>(null);
   const navigate = useNavigate();
@@ -135,49 +132,7 @@ const ComboManagerPage: React.FC = () => {
     }
   };
 
-  const handleDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    try {
-      // Extract combo data from the imported data
-      const comboData = importedData['COMBO'] || [];
-      
-      if (comboData.length === 0) {
-        showWarning('No combo data found in the imported file');
-        return;
-      }
-
-      // Transform the imported data to match CreateCombo interface
-      const transformedData: CreateCombo[] = comboData.map(item => ({
-        comboName: item.comboName || item['Combo Name'] || item.ComboName || '',
-        comboDescription: item.comboDescription || item['Combo Description'] || item.ComboDescription || item.description || item.Description || '',
-        subjectIds: []
-      }));
-
-      // Validate the data
-      const validData = transformedData.filter(item => 
-        item.comboName.trim() !== ''
-      );
-
-      if (validData.length === 0) {
-        handleError('No valid combo data found. Please check your data format and ensure combo names are provided.');
-        return;
-      }
-
-      if (validData.length !== transformedData.length) {
-        showWarning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
-      }
-
-      // Call the bulk import mutation
-      await addMultipleCombosMutation.mutateAsync(validData);
-      handleSuccess(`Successfully imported ${validData.length} combos`);
-      setIsImportOpen(false);
-      
-      // Refresh the combo list
-      getAllCombos({ pageNumber: page, pageSize, search: search });
-    } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      handleError(errorMessage);
-    }
-  };
+  // Deprecated: bulk import removed from Manager Combo page
 
   const columns = [
     {
@@ -355,13 +310,6 @@ const ComboManagerPage: React.FC = () => {
                   >
                     Add Combo
                   </Button>
-                  <Button
-                    icon={<UploadOutlined />}
-                    onClick={() => setIsImportOpen(true)}
-                    style={{borderRadius: 12}}
-                  >
-                    Import
-                  </Button>
                 </Space>
               </Space>
             </Col>
@@ -405,14 +353,7 @@ const ComboManagerPage: React.FC = () => {
         </Spin>
       </Card>
       
-      {/* Data Import Modal */}
-      {isImportOpen && (
-        <BulkDataImport 
-          onClose={() => setIsImportOpen(false)} 
-          onDataImported={handleDataImported}
-          supportedTypes={['COMBO']}
-        />
-      )}
+      {/* Import removed */}
 
       {/* Subject Management Modal */}
       <Modal

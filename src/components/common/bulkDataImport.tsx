@@ -6,7 +6,7 @@ import * as XLSX from 'xlsx';
 import { getHeaderConfig, HeaderConfiguration, matchesConfiguration, findFieldMapping } from '../../data/importConfigurations';
 import { transformBulkImportData, createPreviewData } from '../../utils/bulkImportTransformers';
 import styles from '../../css/bulkImport.module.css';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Dragger } = Upload;
 const { Step } = Steps;
@@ -38,6 +38,7 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
   const [editableData, setEditableData] = useState<{ [key: string]: string }[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const { handleError } = useApiErrorHandler();
 
   // React to upload status changes from parent
   React.useEffect(() => {
@@ -68,8 +69,7 @@ const BulkDataImport: React.FC<BulkDataImportProps> = ({
           workbook = XLSX.read(data, { type: 'array' });
         } catch (xlsxError) {
           console.error('XLSX parsing error:', xlsxError);
-          const errorMessage = getUserFriendlyErrorMessage(xlsxError);
-          message.error(errorMessage);
+          handleError(xlsxError, 'XLSX parsing error');
           setIsProcessing(false);
           return;
         }
@@ -205,8 +205,7 @@ Please use the correct file format for ${expectedType} import or go to the appro
         setCurrentStep(1); // Move to preview step
       } catch (error) {
         console.error('File processing error:', error);
-        message.error('Error processing file. Please check the file format and try again.');
-        setIsProcessing(false);
+        handleError(error, 'Error processing file');
       }
     };
 
