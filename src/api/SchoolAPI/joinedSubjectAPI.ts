@@ -1,7 +1,7 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 
-import {BulkCreateJoinedSubjectMultipleStudents, BulkCreateJoinedSubjects, CreateJoinedSubject,PagedSemester } from "../../interfaces/ISchoolProgram";
+import { BulkCreateJoinedSubjectMultipleStudents, BulkCreateJoinedSubjects, CreateJoinedSubject, PagedSemester, JoinedSubject, PagedJoinedSubject, PagedSemesterBlock } from '../../interfaces/ISchoolProgram';
 
 const joinedSubjectURL = baseUrl + "/JoinedSubject";
 const semesterURL = baseUrl + "/SemesterRefer";
@@ -48,6 +48,32 @@ export const RegisterMultipleStudentsToMultipleSubjects = async (data: BulkCreat
     }
   };
 
+  // for Staff, manager, admin
+export const FetchJoinedSubjectList = async (
+  pageNumber: number = 1,
+  pageSize: number = 10,
+  studentProfileId: number
+): Promise<PagedJoinedSubject | null> => {
+  // Build query parameters
+  const params = new URLSearchParams({
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString(),
+  });
+
+  const props = {
+    data: null,
+    url: joinedSubjectURL+`/${studentProfileId}/all` + "?" + params.toString(),
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+  }
+};
+
+// Semester Data Fetching
 export const FetchPagedSemesterList = async (
   pageNumber: number = 1,
   pageSize: number = 10,
@@ -70,3 +96,28 @@ export const FetchPagedSemesterList = async (
     throwApiError(result);
   }
 };
+
+export const FetchPagedSemesterBlockType = async (
+  pageNumber: number = 1,
+  pageSize: number = 10,
+): Promise<PagedSemesterBlock> => {
+  // Build query parameters
+  const params = new URLSearchParams({
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString(),
+  });
+
+  const props = {
+    data: null,
+    url: semesterURL+"/block-types" + "?" + params.toString(),
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    console.log("FetchPagedSemesterBlockType",result.data)
+    return result.data;
+  } else {
+    throwApiError(result);
+  }
+};
+

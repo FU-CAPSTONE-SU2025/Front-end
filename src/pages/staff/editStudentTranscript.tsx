@@ -8,8 +8,8 @@ import TranscriptEdit from '../../components/staff/transcriptEdit';
 import { FetchSubjectVersionsToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
 import { SubjectVersionWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
-import { RegisterOneStudentsToMultipleSubjects, RegisterStudentToSubject, FetchPagedSemesterList } from '../../api/SchoolAPI/joinedSubjectAPI';
-import { CreateJoinedSubject, BulkCreateJoinedSubjects, PagedSemester } from '../../interfaces/ISchoolProgram';
+import { RegisterOneStudentsToMultipleSubjects, RegisterStudentToSubject, FetchPagedSemesterList, FetchPagedSemesterBlockType, FetchJoinedSubjectList } from '../../api/SchoolAPI/joinedSubjectAPI';
+import { CreateJoinedSubject, BulkCreateJoinedSubjects, JoinedSubject } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
@@ -49,41 +49,12 @@ interface Subject {
   grade?: string;
 }
 
-// Mock data
-const mockStudent: StudentProfile = {
-  id: 1,
-  firstName: 'John',
-  lastName: 'Doe',
-  email: 'john.doe@student.edu',
-  phone: '+1 234 567 8900',
-  dateOfBirth: new Date('2000-05-15'),
-  enrolledAt: new Date('2023-09-01'),
-  avatarUrl: '/img/avatar-placeholder.png',
-  studentId: 'SE171234',
-  program: 'Software Engineering',
-  semester: 5,
-  gpa: 3.75,
-  status: 'Active'
-};
-
-const mockSubjects: Subject[] = [
-  { id: 1, title: 'Advanced Algorithms', code: 'CS301', credits: 3, description: 'Advanced algorithmic concepts and analysis', progress: 75, status: 'Current', semester: 5 },
-  { id: 2, title: 'Database Systems', code: 'CS302', credits: 4, description: 'Database design and management systems', progress: 60, status: 'Current', semester: 5 },
-  { id: 3, title: 'Software Engineering', code: 'SE301', credits: 3, description: 'Software development methodologies', progress: 85, status: 'Current', semester: 5 },
-  { id: 4, title: 'Web Development', code: 'WD301', credits: 3, description: 'Modern web development frameworks', progress: 45, status: 'Current', semester: 5 },
-  { id: 5, title: 'Data Structures', code: 'CS201', credits: 3, description: 'Fundamental data structures', progress: 100, status: 'Completed', semester: 3, grade: 'A' },
-  { id: 6, title: 'Programming Fundamentals', code: 'CS101', credits: 4, description: 'Basic programming concepts', progress: 100, status: 'Completed', semester: 1, grade: 'A-' },
-  { id: 7, title: 'Mathematics', code: 'MATH101', credits: 3, description: 'Calculus and linear algebra', progress: 100, status: 'Completed', semester: 1, grade: 'B+' },
-  { id: 8, title: 'Physics', code: 'PHY101', credits: 3, description: 'Basic physics principles', progress: 100, status: 'Completed', semester: 2, grade: 'B' },
-];
-
 const EditStudentTranscript: React.FC = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
   const { handleError, handleSuccess } = useApiErrorHandler();
   const { showError, showSuccess, showInfo, showWarning } = useMessagePopupContext();
-  const [student, setStudent] = useState<StudentProfile>(mockStudent);
-  const [subjects, setSubjects] = useState<Subject[]>(mockSubjects);
+  const [student, setStudent] = useState<StudentProfile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -106,24 +77,24 @@ const EditStudentTranscript: React.FC = () => {
   const [semesterHasMore, setSemesterHasMore] = useState(true);
   const [selectedSemester, setSelectedSemester] = useState<any>(null);
 
+  // Block Type states
+  const [blockTypes, setBlockTypes] = useState<any[]>([]);
+  const [loadingBlockTypes, setLoadingBlockTypes] = useState(false);
+  const [blockTypePage, setBlockTypePage] = useState(1);
+  const [blockTypeHasMore, setBlockTypeHasMore] = useState(true);
+  const [selectedBlockType, setSelectedBlockType] = useState<any>(null);
+
   // Bulk import states
   const [isBulkImportVisible, setIsBulkImportVisible] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadMessage, setUploadMessage] = useState('');
 
-  // Filter subjects based on search
-  const filteredSubjects = subjects.filter(subject =>
-    subject.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    subject.code.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Joined subjects state
+  const [joinedSubjects, setJoinedSubjects] = useState<JoinedSubject[]>([]);
+  const [joinedLoading, setJoinedLoading] = useState(false);
 
-  // Get current subjects (in progress)
-  const currentSubjects = subjects.filter(subject => subject.status === 'Current');
-
-  // Load student account data
   const loadStudentAccount = async () => {
     if (!studentId) return;
-    
     try {
       setLoadingStudentAccount(true);
       const accountData = await FetchStudentById(parseInt(studentId));
@@ -140,26 +111,59 @@ const EditStudentTranscript: React.FC = () => {
     }
   };
 
-  // Load student account data on component mount
+  const loadJoinedSubjects = async () => {
+    if (!studentAccount?.studentDataDetailResponse?.id) return;
+    try {
+      setJoinedLoading(true);
+      const res = await FetchJoinedSubjectList(1, 10, studentAccount.studentDataDetailResponse.id);
+      if (res) {
+        setJoinedSubjects((res as any).items as JoinedSubject[]);
+      }
+    } catch (e) {
+      console.error('Failed to load joined subjects', e);
+    } finally {
+      setJoinedLoading(false);
+    }
+  };
+
+  // Load student account when route param changes
   useEffect(() => {
     loadStudentAccount();
   }, [studentId]);
+
+  // Map AccountProps -> StudentProfile and load joined subjects
+  useEffect(() => {
+    if (studentAccount) {
+      const sp: StudentProfile = {
+        id: studentAccount.id,
+        firstName: studentAccount.firstName,
+        lastName: studentAccount.lastName,
+        email: studentAccount.email,
+        phone: (studentAccount as any)?.studentDataDetailResponse?.phoneNumber ?? '',
+        dateOfBirth: new Date(studentAccount.dateOfBirth),
+        enrolledAt: new Date((studentAccount as any)?.studentDataDetailResponse?.enrolledAt ?? Date.now()),
+        avatarUrl: studentAccount.avatarUrl,
+        studentId: (studentAccount as any)?.studentDataDetailResponse?.studentId ?? studentAccount.username,
+        program: (studentAccount as any)?.studentDataDetailResponse?.programName ?? '',
+        semester: (studentAccount as any)?.studentDataDetailResponse?.currentSemester ?? 0,
+        gpa: (studentAccount as any)?.studentDataDetailResponse?.gpa ?? 0,
+        status: (studentAccount.status === 1 || studentAccount.status === true) ? 'Active' : 'Inactive'
+      };
+      setStudent(sp);
+      loadJoinedSubjects();
+    }
+  }, [studentAccount]);
 
   // Load semesters with infinite scroll
   const loadSemesters = async (page: number = 1, append: boolean = false) => {
     try {
       setLoadingSemesters(true);
-      const result = await FetchPagedSemesterList(page, 20);
-      
+      const result = await FetchPagedSemesterList(page, 10);
       if (result) {
         const newSemesters = result.items || [];
-        if (append) {
-          setSemesters(prev => [...prev, ...newSemesters]);
-        } else {
-          setSemesters(newSemesters);
-        }
-        
-        setSemesterHasMore(newSemesters.length === 20 && result.totalCount > (page * 20));
+        if (append) setSemesters(prev => [...prev, ...newSemesters]);
+        else setSemesters(newSemesters);
+        setSemesterHasMore(newSemesters.length === 10 && result.totalCount > (page * 10));
         setSemesterPage(page);
       }
     } catch (error) {
@@ -170,115 +174,107 @@ const EditStudentTranscript: React.FC = () => {
     }
   };
 
-  // Handle semester selection
-  const handleSemesterSelect = (semester: any) => {
-    setSelectedSemester(semester);
-  };
-
-  // Handle semester scroll for infinite loading
-  const handleSemesterScroll = (e: any) => {
-    const { target } = e;
-    if (target.scrollTop + target.offsetHeight === target.scrollHeight && !loadingSemesters && semesterHasMore) {
-      loadSemesters(semesterPage + 1, true);
+  // Load block types with infinite scroll
+  const loadBlockTypes = async (page: number = 1, append: boolean = false) => {
+    try {
+      setLoadingBlockTypes(true);
+      const result = await FetchPagedSemesterBlockType(page, 10);
+      if (result) {
+        const newTypes = ((result as any)?.items ?? (result as any)?.data ?? []) as any[];
+        const totalCount = (result as any)?.totalCount ?? newTypes.length;
+        if (append) setBlockTypes(prev => [...prev, ...newTypes]);
+        else setBlockTypes(newTypes);
+        setBlockTypeHasMore(newTypes.length === 10 && totalCount > (page * 10));
+        setBlockTypePage(page);
+      }
+    } catch (error) {
+      console.error('Error loading block types:', error);
+      handleError('Failed to load block types');
+    } finally {
+      setLoadingBlockTypes(false);
     }
   };
 
-  // Handle subject click
+  // Handle selections & scroll
+  const handleSemesterSelect = (semester: any) => setSelectedSemester(semester);
+  const handleBlockTypeSelect = (blockType: any) => setSelectedBlockType(blockType);
+  const handleSemesterScroll = (e: any) => {
+    const { target } = e;
+    if (target.scrollTop + target.offsetHeight >= target.scrollHeight - 2 && !loadingSemesters && semesterHasMore) {
+      loadSemesters(semesterPage + 1, true);
+    }
+  };
+  const handleBlockTypeScroll = (e: any) => {
+    const { target } = e;
+    if (target.scrollTop + target.offsetHeight >= target.scrollHeight - 2 && !loadingBlockTypes && blockTypeHasMore) {
+      loadBlockTypes(blockTypePage + 1, true);
+    }
+  };
+
+  // Modal: Add Subject
   const handleSubjectClick = (subject: Subject) => {
     setSelectedSubject(subject);
     setIsModalVisible(true);
   };
-
-  // Handle modal close
   const handleModalClose = () => {
     setIsModalVisible(false);
     setSelectedSubject(null);
   };
 
-  // Handle add subject click
   const handleAddSubjectClick = async () => {
     setIsAddSubjectModalVisible(true);
     setLoadingSubjectVersions(true);
     setLoadingSemesters(true);
+    setLoadingBlockTypes(true);
     try {
-      // Fetch subject versions for the student's curriculum
-      const subjectVersions = await FetchSubjectVersionsToCurriculum(1); // Assuming curriculum ID 1 for now
+      const subjectVersions = await FetchSubjectVersionsToCurriculum(1); // TODO: replace with actual curriculumId
       setSubjectVersions(subjectVersions || []);
-      
-      // Load initial semesters
-      await loadSemesters(1, false);
+      await Promise.all([
+        loadSemesters(1, false),
+        loadBlockTypes(1, false)
+      ]);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoadingSubjectVersions(false);
       setLoadingSemesters(false);
+      setLoadingBlockTypes(false);
     }
   };
 
-  // Handle Add Subject modal close
   const handleAddSubjectModalClose = () => {
     setIsAddSubjectModalVisible(false);
     setSearchSubjectVersion('');
     setSelectedSubjectVersion(null);
   };
+  const handleSubjectVersionSelect = (subjectVersion: SubjectVersionWithCurriculumInfo) => setSelectedSubjectVersion(subjectVersion);
 
-  // Handle subject version selection
-  const handleSubjectVersionSelect = (subjectVersion: SubjectVersionWithCurriculumInfo) => {
-    setSelectedSubjectVersion(subjectVersion);
-  };
-
-  // Handle adding student to subject version
   const handleAddStudentToSubjectVersion = async () => {
-    if (!selectedSubjectVersion) {
-      showWarning('Please select a subject version');
-      return;
-    }
+    if (!selectedSubjectVersion) return showWarning('Please select a subject version');
+    if (!selectedSemester) return showWarning('Please select a semester');
+    if (!selectedBlockType) return showWarning('Please select a block type');
+    if (!studentAccount) return showWarning('Student account data not loaded');
 
-    if (!selectedSemester) {
-      showWarning('Please select a semester');
-      return;
-    }
-
-    if (!studentAccount) {
-      showWarning('Student account data not loaded');
-      return;
-    }
-
-    // Show loading state
     showInfo('Adding student to subject version...');
-
     try {
-      // Create the joined subject data
       const joinedSubjectData: CreateJoinedSubject = {
-        studentUserName: studentAccount.username, // Use account username
+        studentUserName: studentAccount.username,
         subjectCode: selectedSubjectVersion.subjectCode,
         subjectVersionCode: selectedSubjectVersion.versionCode,
-        semesterName: selectedSemester.semesterName // Use selected semester name
+        semesterId: selectedSemester.id,
+        subjectName: (selectedSubjectVersion as any)?.subjectName ?? (selectedSubjectVersion as any)?.subject?.subjectName ?? '',
+        semesterStudyBlockType: selectedBlockType.id
       };
-
-      // Call the API
       const result = await RegisterStudentToSubject(joinedSubjectData);
-      
       if (result) {
-        // Add the subject to the student's transcript
-        const newSubject: Subject = {
-          id: selectedSubjectVersion.subjectVersionId,
-          title: selectedSubjectVersion.subjectName,
-          code: selectedSubjectVersion.subjectCode,
-          credits: selectedSubjectVersion.credits,
-          description: `Version: ${selectedSubjectVersion.versionName}`,
-          progress: 0,
-          status: 'Current',
-          semester: selectedSubjectVersion.semesterNumber,
-        };
-        
-        setSubjects(prev => [...prev, newSubject]);
         handleSuccess(`Successfully added ${selectedSubjectVersion.subjectName} to student's transcript`);
-        
-        // Close modal and reset state
+        // Refresh server data
+        loadJoinedSubjects();
+        // Reset
         setIsAddSubjectModalVisible(false);
         setSelectedSubjectVersion(null);
         setSelectedSemester(null);
+        setSelectedBlockType(null);
         setSearchSubjectVersion('');
       } else {
         handleError('Failed to add student to subject version');
@@ -289,7 +285,28 @@ const EditStudentTranscript: React.FC = () => {
     }
   };
 
-  // Handle bulk import
+  // Derive current subjects from joinedSubjects (not completed)
+  const currentSubjects: Subject[] = joinedSubjects
+    .filter(js => !js.isCompleted)
+    .map((js, idx) => ({
+      id: idx,
+      title: js.subjectName || js.name || js.subjectCode,
+      code: js.subjectCode,
+      credits: (js.credits as number) ?? 0,
+      description: `Block: ${js.semesterStudyBlockType}`,
+      progress: js.isCompleted ? 100 : 0,
+      status: 'Current' as const,
+      semester: parseInt(String(js.semesterName || '').replace(/\D/g, '')) || 0,
+    }));
+
+  const getProgressColor = (progress: number) => {
+    if (progress < 30) return '#ef4444';
+    if (progress < 60) return '#f59e0b';
+    if (progress < 80) return '#eab308';
+    return '#22c55e';
+  };
+
+  // Bulk import open/close
   const handleBulkImport = () => {
     setIsBulkImportVisible(true);
   };
@@ -300,41 +317,40 @@ const EditStudentTranscript: React.FC = () => {
     setUploadMessage('');
   };
 
+  // Bulk import data handler (per new interface)
   const handleBulkImportData = async (importedData: { [type: string]: any[] }) => {
     try {
       setUploadStatus('uploading');
       setUploadMessage('Uploading subject assignments...');
 
-      const joinedSubjectData = importedData['BULK_JOINED_SUBJECT'] || [];
-      
-      if (joinedSubjectData.length === 0) {
+      const rows = importedData['BULK_JOINED_SUBJECT'] || [];
+      if (!rows.length) {
         setUploadStatus('error');
         setUploadMessage('No valid data found in the uploaded file.');
         return;
       }
+      if (!studentAccount?.username) {
+        setUploadStatus('error');
+        setUploadMessage('Student account not loaded.');
+        return;
+      }
 
-      // TODO: Revisit this implementation when BA is done with the task
-      // This is a temporary fix - the data transformation logic may need to be updated
-      // based on the final API requirements and data structure specifications
-      // For individual student page, we use RegisterOneStudentsToMultipleSubjects
-      // Transform the data to match the expected API structure
       const bulkData: BulkCreateJoinedSubjects = {
-        studentUserNames: studentAccount?.username || '', // Use account username
-        subjectsData: joinedSubjectData.map((item: CreateJoinedSubject) => ({
-          subjectCodes: item.subjectCode,
-          subjectVersionCodes: item.subjectVersionCode,
-          semesterName: item.semesterName
-        }))
+        studentUserNames: studentAccount.username,
+        subjectsData: rows.map((row: any) => ({
+          subjectCode: row.subjectCode,
+          subjectVersionCode: row.subjectVersionCode,
+          semesterId: Number(row.semesterId),
+          subjectName: row.subjectName,
+          semesterStudyBlockType: Number(row.semesterStudyBlockType),
+        })),
       };
 
       const result = await RegisterOneStudentsToMultipleSubjects(bulkData);
-      
       if (result) {
         setUploadStatus('success');
         setUploadMessage('Successfully imported subject assignments!');
-        // Refresh the subjects list
-        // Note: You might need to implement a function to refresh subjects
-        // loadSubjects();
+        await loadJoinedSubjects();
       } else {
         setUploadStatus('error');
         setUploadMessage('Failed to import subject assignments.');
@@ -344,21 +360,6 @@ const EditStudentTranscript: React.FC = () => {
       setUploadStatus('error');
       setUploadMessage('An error occurred during import. Please check your file format.');
     }
-  };
-
-  // Filter subject versions based on search
-  const filteredSubjectVersions = subjectVersions.filter(subjectVersion =>
-    subjectVersion.subjectName.toLowerCase().includes(searchSubjectVersion.toLowerCase()) ||
-    subjectVersion.subjectCode.toLowerCase().includes(searchSubjectVersion.toLowerCase()) ||
-    subjectVersion.versionName.toLowerCase().includes(searchSubjectVersion.toLowerCase())
-  );
-
-  // Function to get progress bar color based on percentage
-  const getProgressColor = (progress: number) => {
-    if (progress < 30) return '#ef4444'; // Red
-    if (progress < 60) return '#f59e0b'; // Orange
-    if (progress < 80) return '#eab308'; // Yellow
-    return '#22c55e'; // Green
   };
 
   return (
@@ -373,7 +374,7 @@ const EditStudentTranscript: React.FC = () => {
           Back to Transcript List
         </Button>
         <Title level={2} className={styles.pageTitle}>
-          Student Transcript - {student.firstName} {student.lastName}
+          {`Student Transcript${student ? ` - ${student.firstName} ${student.lastName}` : ''}`}
         </Title>
       </div>
 
@@ -387,14 +388,14 @@ const EditStudentTranscript: React.FC = () => {
           >
             <Card className={styles.profileCard}>
               <div className={styles.profileHeader}>
-                <Avatar size={120} src={student.avatarUrl} icon={<UserOutlined />} />
+                <Avatar size={120} src={student?.avatarUrl} icon={<UserOutlined />} />
                 <div className={styles.profileInfo}>
                   <Title level={3} className={styles.studentName}>
-                    {student.firstName} {student.lastName}
+                    {student ? `${student.firstName} ${student.lastName}` : ''}
                   </Title>
-                  <Text className={styles.studentId}>{student.studentId}</Text>
-                  <Tag color={student.status === 'Active' ? 'green' : 'orange'} className={styles.statusTag}>
-                    {student.status}
+                  <Text className={styles.studentId}>{student?.studentId ?? ''}</Text>
+                  <Tag color={(student?.status === 'Active') ? 'green' : 'orange'} className={styles.statusTag}>
+                    {student?.status ?? ''}
                   </Tag>
                 </div>
               </div>
@@ -402,19 +403,19 @@ const EditStudentTranscript: React.FC = () => {
               <div className={styles.profileDetails}>
                 <div className={styles.detailItem}>
                   <MailOutlined className={styles.detailIcon} />
-                  <Text>{student.email}</Text>
+                  <Text>{student?.email ?? ''}</Text>
                 </div>
                 <div className={styles.detailItem}>
                   <PhoneOutlined className={styles.detailIcon} />
-                  <Text>{student.phone}</Text>
+                  <Text>{student?.phone ?? ''}</Text>
                 </div>
                 <div className={styles.detailItem}>
                   <CalendarOutlined className={styles.detailIcon} />
-                  <Text>Born: {student.dateOfBirth.toLocaleDateString()}</Text>
+                  <Text>Born: {student?.dateOfBirth ? student.dateOfBirth.toLocaleDateString() : '-'}</Text>
                 </div>
                 <div className={styles.detailItem}>
                   <BookOutlined className={styles.detailIcon} />
-                  <Text>Enrolled: {student.enrolledAt.toLocaleDateString()}</Text>
+                  <Text>Enrolled: {student?.enrolledAt ? student.enrolledAt.toLocaleDateString() : '-'}</Text>
                 </div>
               </div>
 
@@ -423,15 +424,15 @@ const EditStudentTranscript: React.FC = () => {
                 <div className={styles.academicGrid}>
                   <div className={styles.academicItem}>
                     <Text strong>Program</Text>
-                    <Text>{student.program}</Text>
+                    <Text>{student?.program ?? ''}</Text>
                   </div>
                   <div className={styles.academicItem}>
                     <Text strong>Current Semester</Text>
-                    <Text>{student.semester}</Text>
+                    <Text>{student?.semester ?? ''}</Text>
                   </div>
                   <div className={styles.academicItem}>
                     <Text strong>GPA</Text>
-                    <Text className={styles.gpa}>{student.gpa.toFixed(2)}</Text>
+                    <Text className={styles.gpa}>{student?.gpa !== undefined ? student?.gpa.toFixed(2) : '-'}</Text>
                   </div>
                 </div>
               </div>
@@ -516,47 +517,42 @@ const EditStudentTranscript: React.FC = () => {
               </div>
               
               <div className={styles.subjectsList}>
-                {filteredSubjects.map((subject, index) => (
-                  <motion.div
-                    key={subject.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                  >
-                    <Card 
-                      className={styles.subjectListItem}
-                      hoverable
-                      onClick={() => handleSubjectClick(subject)}
+                {joinedLoading ? (
+                  <div style={{ textAlign: 'center', padding: '24px' }}>
+                    <Spin />
+                  </div>
+                ) : (
+                  joinedSubjects.map((js, index) => (
+                    <motion.div
+                      key={`${js.subjectCode}-${js.subjectVersionCode}-${js.semesterName}-${index}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25 }}
                     >
-                      <Row align="middle">
-                        <Col span={8}>
-                          <Text strong>{subject.title}</Text>
-                          <br />
-                          <Text type="secondary">{subject.code}</Text>
-                        </Col>
-                        <Col span={6}>
-                          <Text>Credits: {subject.credits}</Text>
-                        </Col>
-                        <Col span={4}>
-                          <Text>Semester {subject.semester}</Text>
-                        </Col>
-                        <Col span={3}>
-                          <Tag color={
-                            subject.status === 'Current' ? 'blue' : 
-                            subject.status === 'Completed' ? 'green' : 'red'
-                          }>
-                            {subject.status}
-                          </Tag>
-                        </Col>
-                        <Col span={3}>
-                          {subject.grade && (
-                            <Text strong className={styles.grade}>{subject.grade}</Text>
-                          )}
-                        </Col>
-                      </Row>
-                    </Card>
-                  </motion.div>
-                ))}
+                      <Card className={styles.subjectListItem}>
+                        <Row align="middle">
+                          <Col span={8}>
+                            <Text strong>{js.name || js.subjectName}</Text>
+                            <br />
+                            <Text type="secondary">{js.subjectCode} • v{js.subjectVersionCode}</Text>
+                          </Col>
+                          <Col span={4}>
+                            <Text>Credits: {js.credits ?? '-'}</Text>
+                          </Col>
+                          <Col span={6}>
+                            <Tag color={js.isPassed ? 'green' : 'red'}>{js.isPassed ? 'Passed' : 'Not passed'}</Tag>
+                            <Tag color={js.isCompleted ? 'blue' : 'orange'} style={{ marginLeft: 8 }}>
+                              {js.isCompleted ? 'Completed' : 'In progress'}
+                            </Tag>
+                          </Col>
+                          <Col span={4} style={{ textAlign: 'right' }}>
+                            <Tag>{js.semesterStudyBlockType}</Tag>
+                          </Col>
+                        </Row>
+                      </Card>
+                    </motion.div>
+                  ))
+                )}
               </div>
             </Card>
           </motion.div>
@@ -614,7 +610,11 @@ const EditStudentTranscript: React.FC = () => {
             ) : (
               <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 <List
-                  dataSource={filteredSubjectVersions}
+                  dataSource={subjectVersions.filter(subjectVersion =>
+                    subjectVersion.subjectName.toLowerCase().includes(searchSubjectVersion.toLowerCase()) ||
+                    subjectVersion.subjectCode.toLowerCase().includes(searchSubjectVersion.toLowerCase()) ||
+                    subjectVersion.versionName.toLowerCase().includes(searchSubjectVersion.toLowerCase())
+                  )}
                   renderItem={(subjectVersion) => (
                     <List.Item
                       className={styles.subjectVersionItem}
@@ -677,11 +677,12 @@ const EditStudentTranscript: React.FC = () => {
             ) : (
               <div 
                 style={{ 
-                  maxHeight: '400px', 
+                  maxHeight: '180px', 
                   overflowY: 'auto',
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
-                  padding: '8px'
+                  padding: '8px',
+                  marginBottom: '16px'
                 }}
                 onScroll={handleSemesterScroll}
               >
@@ -716,6 +717,61 @@ const EditStudentTranscript: React.FC = () => {
                 )}
               </div>
             )}
+
+            {/* Block Type Selection */}
+            <div style={{ marginBottom: 8 }}>
+              <Text strong style={{ fontSize: '16px', marginBottom: '8px', display: 'block' }}>
+                Select Block Type
+              </Text>
+            </div>
+
+            {loadingBlockTypes ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <Spin size="large" />
+                <div style={{ marginTop: 16 }}>Loading block types...</div>
+              </div>
+            ) : (
+              <div 
+                style={{ 
+                  maxHeight: '180px', 
+                  overflowY: 'auto',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  padding: '8px'
+                }}
+                onScroll={handleBlockTypeScroll}
+              >
+                <List
+                  dataSource={blockTypes}
+                  renderItem={(bt) => (
+                    <List.Item
+                      style={{
+                        cursor: 'pointer',
+                        backgroundColor: selectedBlockType?.id === bt.id ? '#f0f9ff' : 'transparent',
+                        border: selectedBlockType?.id === bt.id ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        marginBottom: '4px',
+                        padding: '12px'
+                      }}
+                      onClick={() => handleBlockTypeSelect(bt)}
+                    >
+                      <div style={{ width: '100%' }}>
+                        <Text strong style={{ fontSize: '14px' }}>
+                          {bt.name || bt.blockTypeName || `Type #${bt.id}`}
+                        </Text>
+                      </div>
+                    </List.Item>
+                  )}
+                  locale={{ emptyText: 'No block types found.' }}
+                />
+                {loadingBlockTypes && blockTypeHasMore && (
+                  <div style={{ textAlign: 'center', padding: '16px' }}>
+                    <Spin size="small" />
+                    <div style={{ marginTop: 8, fontSize: '12px' }}>Loading more...</div>
+                  </div>
+                )}
+              </div>
+            )}
           </Col>
         </Row>
 
@@ -734,7 +790,7 @@ const EditStudentTranscript: React.FC = () => {
           <Button 
             type="primary" 
             onClick={handleAddStudentToSubjectVersion}
-            disabled={!selectedSubjectVersion || !selectedSemester}
+            disabled={!selectedSubjectVersion || !selectedSemester || !selectedBlockType}
           >
             Add Subject
           </Button>

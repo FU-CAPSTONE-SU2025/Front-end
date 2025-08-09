@@ -352,8 +352,26 @@ export interface Semester{
   id: number,
   semesterName: string
 }
-export interface JoinedSubject{
+export interface SemesterBlock{
+   id: number,
+   name: "BLOCK_10W" | "BLOCK_3W" | "BLOCK_5W" | string
+}
 
+export interface JoinedSubject{
+  id: number;
+  createdAt: string;
+  githubRepositoryURL: string | null;
+  subjectCode: string;
+  subjectVersionCode: string;
+  subjectName: string;
+  name: string;
+  semesterName: string | null;
+  isPassed: boolean;
+  isCompleted: boolean;
+  isActive: boolean;
+  credits: number | null;
+  studentProfileId: number;
+  semesterStudyBlockType: number;
 }
 
 // Creation interfaces for syllabus-related objects
@@ -390,10 +408,12 @@ export interface CreateSyllabusSession {
 }
 // 1 student to 1 subject
 export interface CreateJoinedSubject{
-  studentUserName: string,
-  subjectCode: string,
-  subjectVersionCode: string,
-  semesterName: string
+ studentUserName: string;
+ subjectCode: string;
+ subjectVersionCode: string;
+ semesterId: number;
+ subjectName: string;
+ semesterStudyBlockType: number;
 }
 // 1 student to multiple subjects
 export interface BulkCreateJoinedSubjects{
@@ -401,9 +421,11 @@ export interface BulkCreateJoinedSubjects{
   subjectsData:BulkCreateJoinedSubjectsData[]
 }
 export interface BulkCreateJoinedSubjectsData{
-  subjectCodes: string,
-  subjectVersionCodes: string,
-  semesterName: string
+  subjectCode: string;
+  subjectVersionCode: string;
+  semesterId: number;
+  subjectName: string;
+  semesterStudyBlockType: number;
 }
 // M students to multiple subjects
 export interface BulkCreateJoinedSubjectMultipleStudents{
@@ -428,6 +450,7 @@ export interface PagedProgram extends PagedData<Program> {}
 export interface PagedSubjectVersion extends PagedData<SubjectVersion> {}
 export interface PagedJoinedSubject extends PagedData<JoinedSubject> {}
 export interface PagedSemester extends PagedData<Semester> {}
+export interface PagedSemesterBlock extends PagedData<SemesterBlock> {}
 // Search parameters for filtering
 export interface SearchParams {
   search?: string;
