@@ -12,6 +12,7 @@ import { RegisterMultipleStudentsToMultipleSubjects } from '../../api/SchoolAPI/
 import { BulkCreateJoinedSubjectMultipleStudents, CreateJoinedSubject } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
+import { transformMultiStudentBulkImportData } from '../../utils/bulkImportTransformers';
 
 const { Title, Text } = Typography;
 
@@ -113,38 +114,54 @@ const StaffTranscript: React.FC = () => {
       setUploadStatus('uploading');
       setUploadMessage('Uploading student-subject assignments...');
 
+      // Check for multi-student bulk import first
+      const multiStudentData = importedData['BULK_JOINED_SUBJECT_MULTI_STUDENT'] || [];
+      if (multiStudentData.length > 0) {
+        // Handle multi-student bulk import
+        const bulkData = transformMultiStudentBulkImportData(multiStudentData);
+        const result = await RegisterMultipleStudentsToMultipleSubjects(bulkData);
+        
+        if (result) {
+          setUploadStatus('success');
+          setUploadMessage(`Successfully imported subject assignments for ${bulkData.userNameToSubjectsMap.length} students!`);
+          handleSuccess('Multi-student bulk import completed successfully');
+          loadStudentData();
+        } else {
+          setUploadStatus('error');
+          setUploadMessage('Failed to import multi-student subject assignments.');
+        }
+        return;
+      }
+
+      // Check for single-student bulk import (existing functionality)
       const joinedSubjectData = importedData['BULK_JOINED_SUBJECT'] || [];
-      
       if (joinedSubjectData.length === 0) {
         setUploadStatus('error');
         setUploadMessage('No valid data found in the uploaded file.');
         return;
       }
 
-      // TODO: Revisit this implementation when BA is done with the task
-      // This is a temporary fix - the data transformation logic may need to be updated
-      // based on the final API requirements and data structure specifications
-      // Transform the data to match the expected API structure
-      // Group by studentUserName to create BulkCreateJoinedSubjectMultipleStudents structure
-      const studentGroups = new Map<string, CreateJoinedSubject[]>();
+      // For single-student bulk import, we need to group by studentUserName
+      const studentGroups = new Map<string, any[]>();
       
-      joinedSubjectData.forEach((item: CreateJoinedSubject) => {
-        const studentUserName = item.studentUserName;
+      joinedSubjectData.forEach((item: any) => {
+        const studentUserName = item.studentUserName || 'default';
         if (!studentGroups.has(studentUserName)) {
           studentGroups.set(studentUserName, []);
         }
-        studentGroups.get(studentUserName)!.push(item);
+        studentGroups.get(studentUserName)!.push({
+          subjectCode: item.subjectCode,
+          subjectVersionCode: item.subjectVersionCode,
+          semesterId: Number(item.semesterId),
+          semesterStudyBlockType: Number(item.semesterStudyBlockType)
+        });
       });
 
       // Convert to BulkCreateJoinedSubjectMultipleStudents structure
       const bulkData: BulkCreateJoinedSubjectMultipleStudents = {
         userNameToSubjectsMap: Array.from(studentGroups.entries()).map(([studentUserName, subjects]) => ({
-          studentUserNames: studentUserName,
-          subjectsData: subjects.map(subject => ({
-            subjectCodes: subject.subjectCode,
-            subjectVersionCodes: subject.subjectVersionCode,
-            semesterName: subject.semesterName
-          }))
+          studentUserName,
+          subjectsData: subjects
         }))
       };
 
@@ -152,9 +169,8 @@ const StaffTranscript: React.FC = () => {
       
       if (result) {
         setUploadStatus('success');
-        setUploadMessage('Successfully imported student-subject assignments!');
+        setUploadMessage(`Successfully imported subject assignments for ${bulkData.userNameToSubjectsMap.length} students!`);
         handleSuccess('Bulk import completed successfully');
-        // Refresh the student list
         loadStudentData();
       } else {
         setUploadStatus('error');
@@ -299,7 +315,7 @@ const StaffTranscript: React.FC = () => {
             </div>
             <div>
               <ExcelImportButton onClick={handleBulkImport}>
-                Bulk Import Students to Subjects
+                Bulk Import Subject Assignments
               </ExcelImportButton>
             </div>
           </div>
@@ -394,7 +410,7 @@ const StaffTranscript: React.FC = () => {
             <BulkDataImport
               onClose={handleBulkImportClose}
               onDataImported={handleBulkImportData}
-              supportedTypes={['BULK_JOINED_SUBJECT']}
+              supportedTypes={['BULK_JOINED_SUBJECT', 'BULK_JOINED_SUBJECT_MULTI_STUDENT']}
               uploadStatus={uploadStatus}
               uploadMessage={uploadMessage}
             />

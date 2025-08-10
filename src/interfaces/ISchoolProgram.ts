@@ -412,19 +412,17 @@ export interface CreateJoinedSubject{
  subjectCode: string;
  subjectVersionCode: string;
  semesterId: number;
- subjectName: string;
  semesterStudyBlockType: number;
 }
 // 1 student to multiple subjects
 export interface BulkCreateJoinedSubjects{
-  studentUserNames: string,
+  studentUserName: string,
   subjectsData:BulkCreateJoinedSubjectsData[]
 }
 export interface BulkCreateJoinedSubjectsData{
   subjectCode: string;
   subjectVersionCode: string;
   semesterId: number;
-  subjectName: string;
   semesterStudyBlockType: number;
 }
 // M students to multiple subjects

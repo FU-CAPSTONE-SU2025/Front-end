@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Card, Row, Col, Avatar, Typography, Tag, Input, Button, Modal, Progress, List, Spin, Select } from 'antd';
-import { ArrowLeftOutlined, BookOutlined, UserOutlined, CalendarOutlined, MailOutlined, PhoneOutlined, PlusOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, BookOutlined, UserOutlined, CalendarOutlined, MailOutlined, PlusOutlined, AccountBookOutlined, SmileOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffEditTranscript.module.css';
 import TranscriptEdit from '../../components/staff/transcriptEdit';
@@ -18,24 +18,7 @@ import { AccountProps } from '../../interfaces/IAccount';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
-const { Option } = Select;
 
-// Mock interfaces for the data
-interface StudentProfile {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  dateOfBirth: Date;
-  enrolledAt: Date;
-  avatarUrl: string;
-  studentId: string;
-  program: string;
-  semester: number;
-  gpa: number;
-  status: 'Active' | 'Inactive' | 'Graduated';
-}
 
 interface Subject {
   id: number;
@@ -53,15 +36,13 @@ const EditStudentTranscript: React.FC = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
   const { handleError, handleSuccess } = useApiErrorHandler();
-  const { showError, showSuccess, showInfo, showWarning } = useMessagePopupContext();
-  const [student, setStudent] = useState<StudentProfile | null>(null);
+  const { showInfo, showWarning } = useMessagePopupContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   
   // Student account data for API calls
   const [studentAccount, setStudentAccount] = useState<AccountProps | null>(null);
-  const [loadingStudentAccount, setLoadingStudentAccount] = useState(false);
   
   // Add Subject Modal states
   const [isAddSubjectModalVisible, setIsAddSubjectModalVisible] = useState(false);
@@ -96,8 +77,8 @@ const EditStudentTranscript: React.FC = () => {
   const loadStudentAccount = async () => {
     if (!studentId) return;
     try {
-      setLoadingStudentAccount(true);
       const accountData = await FetchStudentById(parseInt(studentId));
+      console.log("Account Data", accountData);
       if (accountData) {
         setStudentAccount(accountData);
       } else {
@@ -107,7 +88,6 @@ const EditStudentTranscript: React.FC = () => {
       console.error('Error loading student account:', error);
       handleError('Failed to load student account data');
     } finally {
-      setLoadingStudentAccount(false);
     }
   };
 
@@ -130,30 +110,6 @@ const EditStudentTranscript: React.FC = () => {
   useEffect(() => {
     loadStudentAccount();
   }, [studentId]);
-
-  // Map AccountProps -> StudentProfile and load joined subjects
-  useEffect(() => {
-    if (studentAccount) {
-      const sp: StudentProfile = {
-        id: studentAccount.id,
-        firstName: studentAccount.firstName,
-        lastName: studentAccount.lastName,
-        email: studentAccount.email,
-        phone: (studentAccount as any)?.studentDataDetailResponse?.phoneNumber ?? '',
-        dateOfBirth: new Date(studentAccount.dateOfBirth),
-        enrolledAt: new Date((studentAccount as any)?.studentDataDetailResponse?.enrolledAt ?? Date.now()),
-        avatarUrl: studentAccount.avatarUrl,
-        studentId: (studentAccount as any)?.studentDataDetailResponse?.studentId ?? studentAccount.username,
-        program: (studentAccount as any)?.studentDataDetailResponse?.programName ?? '',
-        semester: (studentAccount as any)?.studentDataDetailResponse?.currentSemester ?? 0,
-        gpa: (studentAccount as any)?.studentDataDetailResponse?.gpa ?? 0,
-        status: (studentAccount.status === 1 || studentAccount.status === true) ? 'Active' : 'Inactive'
-      };
-      setStudent(sp);
-      loadJoinedSubjects();
-    }
-  }, [studentAccount]);
-
   // Load semesters with infinite scroll
   const loadSemesters = async (page: number = 1, append: boolean = false) => {
     try {
@@ -262,7 +218,6 @@ const EditStudentTranscript: React.FC = () => {
         subjectCode: selectedSubjectVersion.subjectCode,
         subjectVersionCode: selectedSubjectVersion.versionCode,
         semesterId: selectedSemester.id,
-        subjectName: (selectedSubjectVersion as any)?.subjectName ?? (selectedSubjectVersion as any)?.subject?.subjectName ?? '',
         semesterStudyBlockType: selectedBlockType.id
       };
       const result = await RegisterStudentToSubject(joinedSubjectData);
@@ -336,12 +291,11 @@ const EditStudentTranscript: React.FC = () => {
       }
 
       const bulkData: BulkCreateJoinedSubjects = {
-        studentUserNames: studentAccount.username,
+        studentUserName: studentAccount.username,
         subjectsData: rows.map((row: any) => ({
           subjectCode: row.subjectCode,
           subjectVersionCode: row.subjectVersionCode,
           semesterId: Number(row.semesterId),
-          subjectName: row.subjectName,
           semesterStudyBlockType: Number(row.semesterStudyBlockType),
         })),
       };
@@ -349,7 +303,7 @@ const EditStudentTranscript: React.FC = () => {
       const result = await RegisterOneStudentsToMultipleSubjects(bulkData);
       if (result) {
         setUploadStatus('success');
-        setUploadMessage('Successfully imported subject assignments!');
+        setUploadMessage(`Successfully imported ${rows.length} subject assignments!`);
         await loadJoinedSubjects();
       } else {
         setUploadStatus('error');
@@ -374,7 +328,7 @@ const EditStudentTranscript: React.FC = () => {
           Back to Transcript List
         </Button>
         <Title level={2} className={styles.pageTitle}>
-          {`Student Transcript${student ? ` - ${student.firstName} ${student.lastName}` : ''}`}
+          {`Student Transcript${studentAccount ? ` - ${studentAccount.firstName} ${studentAccount.lastName}` : 'Student Name'}`}
         </Title>
       </div>
 
@@ -388,14 +342,14 @@ const EditStudentTranscript: React.FC = () => {
           >
             <Card className={styles.profileCard}>
               <div className={styles.profileHeader}>
-                <Avatar size={120} src={student?.avatarUrl} icon={<UserOutlined />} />
+                <Avatar size={120} src={studentAccount?.avatarUrl} icon={<UserOutlined />} />
                 <div className={styles.profileInfo}>
                   <Title level={3} className={styles.studentName}>
-                    {student ? `${student.firstName} ${student.lastName}` : ''}
+                    {studentAccount ? `${studentAccount.firstName} ${studentAccount.lastName}` : ''}
                   </Title>
-                  <Text className={styles.studentId}>{student?.studentId ?? ''}</Text>
-                  <Tag color={(student?.status === 'Active') ? 'green' : 'orange'} className={styles.statusTag}>
-                    {student?.status ?? ''}
+                  <Text className={styles.studentId}>{studentAccount?.id ?? ''}</Text>
+                  <Tag color={(studentAccount?.studentDataDetailResponse.doGraduate) ? 'green' : 'orange'} className={styles.statusTag}>
+                    {studentAccount?.studentDataDetailResponse.doGraduate? 'Graduated' : 'Enrolled'}
                   </Tag>
                 </div>
               </div>
@@ -403,19 +357,27 @@ const EditStudentTranscript: React.FC = () => {
               <div className={styles.profileDetails}>
                 <div className={styles.detailItem}>
                   <MailOutlined className={styles.detailIcon} />
-                  <Text>{student?.email ?? ''}</Text>
+                  <Text>{studentAccount?.email ?? 'N/A'}</Text>
                 </div>
                 <div className={styles.detailItem}>
-                  <PhoneOutlined className={styles.detailIcon} />
-                  <Text>{student?.phone ?? ''}</Text>
+                  <SmileOutlined className={styles.detailIcon} />
+                  <Text>{studentAccount?.username ?? 'N/A'}</Text>
                 </div>
                 <div className={styles.detailItem}>
                   <CalendarOutlined className={styles.detailIcon} />
-                  <Text>Born: {student?.dateOfBirth ? student.dateOfBirth.toLocaleDateString() : '-'}</Text>
+                  <Text>Born: {studentAccount?.dateOfBirth ? studentAccount.dateOfBirth : "N/A"}</Text>
                 </div>
                 <div className={styles.detailItem}>
                   <BookOutlined className={styles.detailIcon} />
-                  <Text>Enrolled: {student?.enrolledAt ? student.enrolledAt.toLocaleDateString() : '-'}</Text>
+                  <Text>Enrolled: {studentAccount?.studentDataDetailResponse.enrolledAt ? studentAccount.studentDataDetailResponse.enrolledAt : "N/A"}</Text>
+                </div>
+                <div className={styles.detailItem}>
+                  <BookOutlined className={styles.detailIcon} />
+                  <Text>Curriculum: {studentAccount?.studentDataDetailResponse.curriculumCode || 'N/A'}</Text>
+                </div>
+                <div className={styles.detailItem}>
+                  <BookOutlined className={styles.detailIcon} />
+                  <Text>Combo: {studentAccount?.studentDataDetailResponse.registeredComboCode || 'Not Yet Selected A Combo'}</Text>
                 </div>
               </div>
 
@@ -424,15 +386,27 @@ const EditStudentTranscript: React.FC = () => {
                 <div className={styles.academicGrid}>
                   <div className={styles.academicItem}>
                     <Text strong>Program</Text>
-                    <Text>{student?.program ?? ''}</Text>
+                    <Text>{studentAccount?.studentDataDetailResponse.programId ?? ''}</Text>
                   </div>
-                  <div className={styles.academicItem}>
-                    <Text strong>Current Semester</Text>
-                    <Text>{student?.semester ?? ''}</Text>
-                  </div>
-                  <div className={styles.academicItem}>
+                  {/* <div className={styles.academicItem}>
                     <Text strong>GPA</Text>
-                    <Text className={styles.gpa}>{student?.gpa !== undefined ? student?.gpa.toFixed(2) : '-'}</Text>
+                    <Text className={styles.gpa}>{studentAccount?.studentDataDetailResponse.gpa !== undefined ? studentAccount?.studentDataDetailResponse.gpa.toFixed(2) : '-'}</Text>
+                  </div> */}
+                  <div className={styles.academicItem}>
+                    <Text strong>Curriculum Code</Text>
+                    <Text>{studentAccount?.studentDataDetailResponse.curriculumCode || '-'}</Text>
+                  </div>
+                  <div className={styles.academicItem}>
+                    <Text strong>Registered Combo</Text>
+                    <Text>{studentAccount?.studentDataDetailResponse.registeredComboCode || 'Not Yet Selected A Combo'}</Text>
+                  </div>
+                  <div className={styles.academicItem}>
+                    <Text strong>Career Goal</Text>
+                    <Text>{studentAccount?.studentDataDetailResponse.careerGoal || '-'}</Text>
+                  </div>
+                  <div className={styles.academicItem}>
+                    <Text strong>Number of Bans</Text>
+                    <Text>{studentAccount?.studentDataDetailResponse.numberOfBan ?? 0}</Text>
                   </div>
                 </div>
               </div>

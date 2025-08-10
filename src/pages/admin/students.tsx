@@ -115,7 +115,11 @@ const StudentList: React.FC = () => {
         studentProfileData: {
           numberOfBan: item.numberOfBan ? parseInt(item.numberOfBan) : 0,
           enrolledAt: parseExcelDate(item.enrolledAt || item.enrollDate),
-          careerGoal: item.careerGoal || 'Not specified'
+          careerGoal: item.careerGoal || 'Not specified',
+          programId: item.programId ? parseInt(item.programId) : 1,
+          curriculumCode: item.curriculumCode || '',
+          registeredComboCode: item.registeredComboCode || '',
+          doGraduate: false,
         },
         staffProfileData: null
       }));
@@ -139,17 +143,27 @@ const StudentList: React.FC = () => {
       }
 
       // Call the bulk registration API
-      let response;
+      let response:any;
       try {
-        response = await BulkRegisterStudent(validData);
+        // Fix: Ensure enrolledAt is a string, not a Date, to match BulkAccountPropsCreate
+        const fixedValidData = validData.map(item => ({
+          ...item,
+          studentProfileData: {
+            ...item.studentProfileData,
+            enrolledAt: typeof item.studentProfileData.enrolledAt === 'string'
+              ? item.studentProfileData.enrolledAt
+              : item.studentProfileData.enrolledAt?.toISOString?.() || ''
+          }
+        }));
+        response = await BulkRegisterStudent(fixedValidData);
       } catch (err) {
-        const errorMessage = handleError(err, 'Failed to import students');
         setUploadStatus('error');
-        setUploadMessage(errorMessage);
+        setUploadMessage('Failed to import students');
+        handleError(err, 'Failed to import students');
         return;
       }
       // Treat null/undefined (204 No Content) as success
-      if (response !== null && response !== undefined || response === null) {
+      if (response !== null && response !== undefined) {
         setUploadStatus('success');
         setUploadMessage(`Successfully imported ${validData.length} students`);
         handleSuccess(`Successfully imported ${validData.length} students`);

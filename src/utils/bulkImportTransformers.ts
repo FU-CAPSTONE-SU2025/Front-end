@@ -2,6 +2,7 @@ import { BulkAccountPropsCreate } from '../interfaces/IAccount';
 import { StudentProfileData } from '../interfaces/IStudent';
 import { StaffProfileData } from '../interfaces/IStaff';
 import { parseExcelDate, formatDateForDisplay } from './dateUtils';
+import { BulkCreateJoinedSubjectMultipleStudents } from '../interfaces/ISchoolProgram';
 
 /**
  * Transform flat Excel data into proper nested structure for bulk account creation
@@ -15,7 +16,7 @@ export const transformBulkImportData = (
     // Main fields with safe date parsing
     const baseAccount = {
       email: item.email || '',
-      username: item.username || item.email?.split('@')[0] || '',
+      username: item.username || (item.email ? item.email.split('@')[0] : ''),
       password: item.password || 'defaultPassword123',
       firstName: item.firstName || '',
       lastName: item.lastName || '',
@@ -31,8 +32,12 @@ export const transformBulkImportData = (
           ...baseAccount,
           studentProfileData: {
             numberOfBan: item.numberOfBan ? parseInt(item.numberOfBan) : 0,
-            enrolledAt: parseExcelDate(item.enrolledAt || item.enrollDate),
-            careerGoal: item.careerGoal || 'Not specified'
+            enrolledAt: parseExcelDate(item.enrolledAt || item.enrollDate) as unknown as string,
+            careerGoal: item.careerGoal || 'Not specified',
+            programId: item.programId ? parseInt(item.programId) : 1,
+            curriculumCode: item.curriculumCode || '',
+            doGraduate: item.doGraduate ? true : false,
+            registeredComboCode: item.registeredComboCode || ''
           },
           staffProfileData: null
         };
@@ -121,7 +126,9 @@ export const createPreviewData = (
         return {
           ...basePreview,
           enrolledAt: formatDateForDisplay(item.studentProfileData?.enrolledAt),
-          careerGoal: item.studentProfileData?.careerGoal || ''
+          careerGoal: item.studentProfileData?.careerGoal || '',
+          programId: item.studentProfileData?.programId?.toString() || '1',
+          curriculumCode: item.studentProfileData?.curriculumCode || ''
         };
       case 'STAFF':
       case 'MANAGER':
@@ -140,4 +147,33 @@ export const createPreviewData = (
         return basePreview;
     }
   });
+}; 
+
+/**
+ * Transform multi-student bulk import data to BulkCreateJoinedSubjectMultipleStudents format
+ */
+export const transformMultiStudentBulkImportData = (rows: any[]): BulkCreateJoinedSubjectMultipleStudents => {
+  // Group rows by studentUserName
+  const studentGroups = rows.reduce((studentJoinedSubject, row) => {
+    const studentUserName = row.studentUserName;
+    if (!studentJoinedSubject[studentUserName]) {
+      studentJoinedSubject[studentUserName] = [];
+    }
+    studentJoinedSubject[studentUserName].push({
+      subjectCode: row.subjectCode,
+      subjectVersionCode: row.subjectVersionCode,
+      semesterId: parseInt(row.semesterId),
+      semesterStudyBlockType: parseInt(row.semesterStudyBlockType)
+    });
+    
+    return studentJoinedSubject;
+  }, {});
+
+  // Transform to the expected API format
+  return {
+    userNameToSubjectsMap: Object.entries(studentGroups).map(([studentUserName, subjects]) => ({
+      studentUserName,
+      subjectsData: subjects as any[]
+    }))
+  };
 }; 

@@ -99,7 +99,7 @@ export const findFieldMapping = (excelHeader: string, fieldMap: { readonly [key:
 // Predefined header configurations for different data types
 export const HEADER_CONFIGS = {
   STUDENT: {
-    headers: ['firstName', 'lastName', 'email', 'password', 'dateOfBirth', 'enrolledAt', 'careerGoal'],
+    headers: ['firstName', 'lastName', 'email', 'password', 'dateOfBirth', 'enrolledAt', 'careerGoal', 'programId', 'curriculumCode'],
     fieldMap: createFlexibleFieldMap({
       'firstName': 'firstName',
       'lastName': 'lastName', 
@@ -107,7 +107,9 @@ export const HEADER_CONFIGS = {
       'password': 'password',
       'dateOfBirth': 'dateOfBirth',
       'enrolledAt': 'enrolledAt',
-      'careerGoal': 'careerGoal'
+      'careerGoal': 'careerGoal',
+      'programId': 'programId',
+      'curriculumCode': 'curriculumCode'
     })
   },
   STAFF: {
@@ -208,12 +210,22 @@ export const HEADER_CONFIGS = {
     })
   },
   BULK_JOINED_SUBJECT: {
-    headers: ['studentUserName', 'subjectCode', 'subjectVersionCode', 'semesterName'],
+    headers: ['subjectCode', 'subjectVersionCode', 'semesterId', 'semesterStudyBlockType'],
+    fieldMap: createFlexibleFieldMap({
+      'subjectCode': 'subjectCode',
+      'subjectVersionCode': 'subjectVersionCode',
+      'semesterId': 'semesterId',
+      'semesterStudyBlockType': 'semesterStudyBlockType'
+    })
+  },
+  BULK_JOINED_SUBJECT_MULTI_STUDENT: {
+    headers: ['studentUserName', 'subjectCode', 'subjectVersionCode', 'semesterId', 'semesterStudyBlockType'],
     fieldMap: createFlexibleFieldMap({
       'studentUserName': 'studentUserName',
       'subjectCode': 'subjectCode',
       'subjectVersionCode': 'subjectVersionCode',
-      'semesterName': 'semesterName'
+      'semesterId': 'semesterId',
+      'semesterStudyBlockType': 'semesterStudyBlockType'
     })
   },
   OUTCOME: {

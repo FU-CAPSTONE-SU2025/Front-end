@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Form, Input, Select, DatePicker, ConfigProvider, message } from 'antd';
 import { motion } from 'framer-motion';
@@ -7,6 +7,10 @@ import styles from '../../css/admin/editAccount.module.css';
 import { GetCurrentStudentUser, GetCurrentStaffUser, UpdateCurrentStaffUser, UpdateCurrentStudentUser, RegisterUser } from '../../api/Account/UserAPI';
 import { AccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { FetchProgramList } from '../../api/SchoolAPI/programAPI';
+import { FetchCurriculumList } from '../../api/SchoolAPI/curriculumAPI';
+import { Program, Curriculum } from '../../interfaces/ISchoolProgram';
+import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 import AvatarUpload from '../../components/common/AvatarUpload';
 
@@ -58,9 +62,83 @@ const EditAccount: React.FC = () => {
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string>('');
   const { handleError, handleSuccess } = useApiErrorHandler();
 
+  // Program and Curriculum state for infinite scroll
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [curriculums, setCurriculums] = useState<Curriculum[]>([]);
+  const [programLoading, setProgramLoading] = useState(false);
+  const [curriculumLoading, setCurriculumLoading] = useState(false);
+  const [programPage, setProgramPage] = useState(1);
+  const [curriculumPage, setCurriculumPage] = useState(1);
+  const [hasMorePrograms, setHasMorePrograms] = useState(true);
+  const [hasMoreCurriculums, setHasMoreCurriculums] = useState(true);
+  const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
+
   // Role checks
   const isStudent = role === 'student';
   const isStaff = role === 'staff' || role === 'manager' || role === 'advisor';
+
+  // Fetch programs with infinite scroll
+  const fetchPrograms = async (page: number = 1, search: string = '') => {
+    if (programLoading) return;
+    setProgramLoading(true);
+    try {
+      const result = await FetchProgramList(page, 10, search);
+      if (result) {
+        const newPrograms = result.items || [];
+        if (page === 1) {
+          setPrograms(newPrograms);
+        } else {
+          setPrograms(prev => {
+            const existingIds = new Set(prev.map(p => p.id));
+            const uniqueNewPrograms = newPrograms.filter(p => !existingIds.has(p.id));
+            return [...prev, ...uniqueNewPrograms];
+          });
+        }
+        const totalPages = Math.ceil(result.totalCount / 10);
+        setHasMorePrograms(page < totalPages);
+        setProgramPage(page);
+      }
+    } catch (error) {
+      console.error('Failed to fetch programs:', error);
+    } finally {
+      setProgramLoading(false);
+    }
+  };
+
+  // Fetch curriculums with infinite scroll
+  const fetchCurriculums = async (page: number = 1, search: string = '', programId?: number) => {
+    if (curriculumLoading) return;
+    setCurriculumLoading(true);
+    try {
+      const result = await FetchCurriculumList(page, 10, search, programId);
+      if (result) {
+        const newCurriculums = result.items || [];
+        if (page === 1) {
+          setCurriculums(newCurriculums);
+        } else {
+          setCurriculums(prev => {
+            const existingIds = new Set(prev.map(c => c.id));
+            const uniqueNewCurriculums = newCurriculums.filter(c => !existingIds.has(c.id));
+            return [...prev, ...uniqueNewCurriculums];
+          });
+        }
+        const totalPages = Math.ceil(result.totalCount / 10);
+        setHasMoreCurriculums(page < totalPages);
+        setCurriculumPage(page);
+      }
+    } catch (error) {
+      console.error('Failed to fetch curriculums:', error);
+    } finally {
+      setCurriculumLoading(false);
+    }
+  };
+
+  // Load initial data
+  useEffect(() => {
+    if (isStudent) {
+      fetchPrograms(1);
+    }
+  }, [isStudent]);
 
   // Only fetch user data if editing (id is present)
   useEffect(() => {
@@ -72,7 +150,7 @@ const EditAccount: React.FC = () => {
       setIsLoadingUser(false);
       return;
     }
-    // Edit mode: fetch user data
+
     const loadUserData = async () => {
       setIsLoadingUser(true);
       try {
@@ -99,12 +177,20 @@ const EditAccount: React.FC = () => {
             dateOfBirth: userData.dateOfBirth ? dayjs(userData.dateOfBirth) : null,
             enrolledAt: userData.studentDataDetailResponse?.enrolledAt ? dayjs(userData.studentDataDetailResponse.enrolledAt) : null,
             careerGoal: userData.studentDataDetailResponse?.careerGoal || '',
+            programId: userData.studentDataListResponse?.programId || 1,
+            curriculumCode: userData.studentDataListResponse?.curriculumCode || '',
             campus: userData.staffDataDetailResponse?.campus || '',
             department: userData.staffDataDetailResponse?.department || '',
             position: userData.staffDataDetailResponse?.position || '',
             startWorkAt: userData.staffDataDetailResponse?.startWorkAt ? dayjs(userData.staffDataDetailResponse.startWorkAt) : null,
             endWorkAt: userData.staffDataDetailResponse?.endWorkAt ? dayjs(userData.staffDataDetailResponse.endWorkAt) : null,
           });
+          
+          // Set selected program and fetch curriculums if editing student
+          if (isStudent && userData.studentDataListResponse?.programId) {
+            setSelectedProgramId(userData.studentDataListResponse.programId);
+            fetchCurriculums(1, '', userData.studentDataListResponse.programId);
+          }
         } else {
           handleError('Failed to load user data');
           nav(-1);
@@ -119,6 +205,54 @@ const EditAccount: React.FC = () => {
     };
     loadUserData();
   }, [id, role, form, nav, isStudent, isStaff]);
+
+  // Handle program selection change
+  const handleProgramChange = (programId: number) => {
+    setSelectedProgramId(programId);
+    setCurriculums([]); // Clear curriculums
+    setCurriculumPage(1);
+    setHasMoreCurriculums(true);
+    form.setFieldValue('curriculumCode', ''); // Clear curriculum selection
+    if (programId) {
+      fetchCurriculums(1, '', programId);
+    }
+  };
+
+  // Handle program dropdown scroll
+  const handleProgramScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.target as HTMLDivElement;
+    const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 5;
+    if (nearBottom && hasMorePrograms && !programLoading) {
+      fetchPrograms(programPage + 1);
+    }
+  };
+
+  // Handle curriculum dropdown scroll
+  const handleCurriculumScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.target as HTMLDivElement;
+    const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 5;
+    if (nearBottom && hasMoreCurriculums && !curriculumLoading && selectedProgramId) {
+      fetchCurriculums(curriculumPage + 1, '', selectedProgramId);
+    }
+  };
+
+  // Handle program search
+  const handleProgramSearch = (value: string) => {
+    setPrograms([]);
+    setProgramPage(1);
+    setHasMorePrograms(true);
+    fetchPrograms(1, value);
+  };
+
+  // Handle curriculum search
+  const handleCurriculumSearch = (value: string) => {
+    setCurriculums([]);
+    setCurriculumPage(1);
+    setHasMoreCurriculums(true);
+    if (selectedProgramId) {
+      fetchCurriculums(1, value, selectedProgramId);
+    }
+  };
 
   // Submit handler
   const handleSubmit = async () => {
@@ -145,8 +279,11 @@ const EditAccount: React.FC = () => {
           studentProfileData: isStudent ? {
             numberOfBan: 0,
             enrolledAt: values.enrolledAt ? values.enrolledAt.toDate() : new Date(),
-            doGraduate: true,
+            doGraduate: false,
             careerGoal: values.careerGoal || '',
+            programId: values.programId || 1,
+            curriculumCode: values.curriculumCode || '',
+            registeredComboCode: values.registeredComboCode || '',
           } : null,
           staffProfileData: isStaff ? {
             campus: values.campus || '',
@@ -197,9 +334,13 @@ const EditAccount: React.FC = () => {
           enrolledAt: values.enrolledAt ? values.enrolledAt.toDate() : new Date(),
           doGraduate: true,
           careerGoal: values.careerGoal || '',
+          programId: values.programId || 1,
+          curriculumCode: values.curriculumCode || '',
+          registeredComboCode: values.registeredComboCode || '',
+          numberOfBan: values.numberOfBan || 0,
         } : null,
       };
-      let response;
+      let response:any
       if (isStudent) {
         response = await UpdateCurrentStudentUser(userId, updateData as any);
       } else {
@@ -439,6 +580,79 @@ const EditAccount: React.FC = () => {
                       >
                         <Input placeholder="Enter career goal" />
                       </Form.Item>
+                    </div>
+                  </div>
+
+                  <div className={styles.fieldRow}>
+                    <div className={styles.fieldColumn}>
+                                             <Form.Item 
+                         label="Program" 
+                         name="programId" 
+                         rules={[{ required: true, message: 'Please select program' }]}
+                       >
+                         <Select
+                           placeholder="Select program"
+                           loading={programLoading}
+                           onSearch={handleProgramSearch}
+                           onPopupScroll={handleProgramScroll}
+                           onChange={handleProgramChange}
+                           onClear={() => {
+                             setPrograms([]);
+                             setProgramPage(1);
+                             setHasMorePrograms(true);
+                             setSelectedProgramId(null);
+                             setCurriculums([]);
+                             setCurriculumPage(1);
+                             setHasMoreCurriculums(true);
+                             form.setFieldValue('curriculumCode', '');
+                           }}
+                           showSearch
+                           optionFilterProp="children"
+                           filterOption={(input, option) =>
+                             String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                           }
+                           notFoundContent={programLoading ? 'Loading programs...' : 'No programs found'}
+                         >
+                           {programs.map(program => (
+                             <Option key={program.id} value={program.id} label={program.programName}>
+                               {program.programName}
+                             </Option>
+                           ))}
+                         </Select>
+                       </Form.Item>
+                    </div>
+                    <div className={styles.fieldColumn}>
+                                             <Form.Item 
+                         label="Curriculum Code" 
+                         name="curriculumCode" 
+                         rules={[{ required: true, message: 'Please select curriculum' }]}
+                       >
+                         <Select
+                           placeholder="Select curriculum"
+                           loading={curriculumLoading}
+                           onSearch={handleCurriculumSearch}
+                           onPopupScroll={handleCurriculumScroll}
+                           onClear={() => {
+                             setCurriculums([]);
+                             setCurriculumPage(1);
+                             setHasMoreCurriculums(true);
+                             form.setFieldValue('curriculumCode', '');
+                           }}
+                           showSearch
+                           optionFilterProp="children"
+                           filterOption={(input, option) =>
+                             String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                           }
+                           notFoundContent={curriculumLoading ? 'Loading curriculums...' : 'No curriculums found'}
+                           disabled={!selectedProgramId}
+                         >
+                           {curriculums.map(curriculum => (
+                             <Option key={curriculum.id} value={curriculum.curriculumCode} label={curriculum.curriculumName}>
+                               {curriculum.curriculumName} ({curriculum.curriculumCode})
+                             </Option>
+                           ))}
+                         </Select>
+                       </Form.Item>
                     </div>
                   </div>
                 </>

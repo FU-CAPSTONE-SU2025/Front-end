@@ -5,7 +5,7 @@ export interface StudentBase extends AccountProps {
       email: string
       firstName: string
       lastName: string
-      dateOfBirth: Date
+      dateOfBirth: string
       avatarUrl: string,
       roleName: string
       status: number,
@@ -28,27 +28,41 @@ export interface CreateStudent {
 export interface StudentProfileData{
     id:number
     numberOfBan: number | null
-    enrolledAt: Date
-    careerGoal: string
+    doGraduate: boolean;
+  enrolledAt: string;
+  careerGoal: string;
+  programId: number;
+  registeredComboCode: string;
+  curriculumCode: string;
 }
 export interface CreateStudentProfileData{
-  numberOfBan: number | null
-  enrolledAt: Date
-  careerGoal: string
+doGraduate: boolean;
+enrolledAt: string;
+careerGoal: string;
+programId: number;
+registeredComboCode: string;
+curriculumCode: string;
 }
 
 export interface StudentDataListResponse {
-    id:number
-    enrolledAt:Date
-    doGraduate: boolean
-    careerGoal: string
-    numberOfBan:number
+  id: number;
+  enrolledAt: string;
+  doGraduate: boolean;
+  careerGoal: string;
+  numberOfBan: number;
+  programId: number | 0;
+  registeredComboCode: string | "";
+  curriculumCode: string | "";
 }
 
 export interface StudentDataUpdateRequest {
-    enrolledAt: string | Date,
-    doGraduate: true,
-    careerGoal: string
+  enrolledAt: string;
+  doGraduate: boolean;
+  careerGoal: string;
+  numberOfBan: number;
+  programId: number | 0;
+  registeredComboCode: string | "";
+  curriculumCode: string | "";
 }
 
 export interface CreateBookingMeetingRequest {

@@ -29,10 +29,20 @@ export interface AccountProps{
   avatarUrl :string
   firstName :string
   lastName :string
-  dateOfBirth :Date
+  dateOfBirth :string
   roleName: string
   staffDataDetailResponse: StaffProfileData | null
   studentDataDetailResponse: StudentProfileData |null
+  studentDataListResponse?: {
+    id: number;
+    enrolledAt: string | Date;
+    doGraduate: boolean;
+    careerGoal: string;
+    numberOfBan: number;
+    programId: number | 0;
+    registeredComboCode: string | "";
+    curriculumCode: string | "";
+  } | null
   status: number | boolean
 }
 export interface UpdateAccountProps{
