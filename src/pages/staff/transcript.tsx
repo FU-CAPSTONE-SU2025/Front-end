@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Select, Button, Row, Col, ConfigProvider, Card, Space, Typography, Affix, Pagination, Empty } from 'antd';
-import { EditOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
+import { EditOutlined, SearchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
@@ -9,7 +9,7 @@ import { StudentBase } from '../../interfaces/IStudent';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { RegisterMultipleStudentsToMultipleSubjects } from '../../api/SchoolAPI/joinedSubjectAPI';
-import { BulkCreateJoinedSubjectMultipleStudents, CreateJoinedSubject } from '../../interfaces/ISchoolProgram';
+import { BulkCreateJoinedSubjectMultipleStudents } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { transformMultiStudentBulkImportData } from '../../utils/bulkImportTransformers';
@@ -208,11 +208,11 @@ const StaffTranscript: React.FC = () => {
       render: (text: string) => <span style={{ color: '#1E293B' }}>{text}</span> 
     },
     { 
-      title: 'Date of Birth', 
-      dataIndex: 'dateOfBirth', 
-      key: 'dateOfBirth', 
+      title: 'Account Name', 
+      dataIndex: 'username', 
+      key: 'username', 
       align: 'left' as 'left', 
-      render: (date: Date) => <span style={{ color: '#1E293B' }}>{date ? new Date(date).toLocaleDateString('en-GB') : '-'}</span> 
+      render: (username: string) => <span style={{ color: '#1E293B' }}>{username ? username : 'N/A'}</span> 
     },
     { 
       title: 'Status', 

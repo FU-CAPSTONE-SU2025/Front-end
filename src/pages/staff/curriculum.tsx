@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Input, Button, Collapse, Typography, Affix, Pagination, Spin, Empty, Table, Tag, Select } from 'antd';
 import { PlusOutlined, SearchOutlined, EditOutlined, BookOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
-import { useSearchParams, useNavigate } from 'react-router';
+import { useSearchParams, useNavigate, useParams } from 'react-router';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { Curriculum, SubjectVersionWithCurriculumInfo, CreateCurriculum, Program } from '../../interfaces/ISchoolProgram';
@@ -22,7 +22,7 @@ const CurriculumPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [expandedCurriculum, setExpandedCurriculum] = useState<number | null>(null);
-  const { handleError, handleSuccess, showWarning } = useApiErrorHandler();
+  const { handleError, handleSuccess } = useApiErrorHandler();
   
   // Pagination state
   const [page, setPage] = useState(1);
@@ -30,7 +30,7 @@ const CurriculumPage: React.FC = () => {
 
   // Program filter state with infinite scroll
   const [programs, setPrograms] = useState<Program[]>([]);
-  const [selectedProgramId, setSelectedProgramId] = useState<number | undefined>(undefined);
+  const [selectedProgramId, setSelectedProgramId] = useState<number | undefined>();
   const [programPage, setProgramPage] = useState(1);
   const [programPageSize] = useState(10);
   const [hasMorePrograms, setHasMorePrograms] = useState(true);
@@ -48,12 +48,20 @@ const CurriculumPage: React.FC = () => {
 
   // State to store subject versions for each curriculum
   const [curriculumSubjectVersionsMap, setCurriculumSubjectVersionsMap] = useState<{[key: number]: SubjectVersionWithCurriculumInfo[]}>({});
+  // Add default Filter if navigate from the Program page
+  const [programId] = useSearchParams();
+  useEffect(() => {
+    if(programId!==null && programId!==undefined){
+      setSelectedProgramId(parseInt(programId.get('programId') || '0'));
+    }
+    //console.log("programId",programId)
+  }, [programId]);
 
   // Fetch data on mount, page, pageSize, or search change
   useEffect(() => {
-    getAllCurriculums({ pageNumber: page, pageSize, search: search || undefined, programId: selectedProgramId });
+   
+    getAllCurriculums({ pageNumber: page, pageSize, search: search || undefined, programId: selectedProgramId || undefined });
   }, [page, pageSize, search, selectedProgramId]);
-
   useEffect(() => {
     const title = searchParams.get('title');
     if (title) setSearch(title);
@@ -144,7 +152,7 @@ const CurriculumPage: React.FC = () => {
       const curriculumData = importedData['CURRICULUM'] || [];
       
       if (curriculumData.length === 0) {
-        showWarning('No curriculum data found in the imported file');
+        handleError('No curriculum data found in the imported file');
         setUploadStatus('error');
         return;
       }
@@ -172,7 +180,7 @@ const CurriculumPage: React.FC = () => {
       }
 
       if (validData.length < transformedData.length) {
-        showWarning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+        handleError(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
       }
 
       // Import the valid data
@@ -182,7 +190,7 @@ const CurriculumPage: React.FC = () => {
       setIsImportOpen(false);
       
       // Refresh the curriculum list
-      getAllCurriculums({ pageNumber: page, pageSize, filterType: 'search', filterValue: search });
+      getAllCurriculums({ pageNumber: page, pageSize, search: search });
     } catch (error) {
       handleError(error);
       setUploadStatus('error');
