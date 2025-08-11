@@ -19,7 +19,6 @@ import { AccountProps } from '../../interfaces/IAccount';
 const { Title, Text } = Typography;
 const { Search } = Input;
 
-
 interface Subject {
   id: number;
   title: string;
@@ -110,6 +109,13 @@ const EditStudentTranscript: React.FC = () => {
   useEffect(() => {
     loadStudentAccount();
   }, [studentId]);
+
+  // Load joined subjects when student account is loaded
+  useEffect(() => {
+    if (studentAccount?.studentDataDetailResponse?.id) {
+      loadJoinedSubjects();
+    }
+  }, [studentAccount]);
   // Load semesters with infinite scroll
   const loadSemesters = async (page: number = 1, append: boolean = false) => {
     try {
@@ -245,7 +251,7 @@ const EditStudentTranscript: React.FC = () => {
     .filter(js => !js.isCompleted)
     .map((js, idx) => ({
       id: idx,
-      title: js.subjectName || js.name || js.subjectCode,
+      title: js.name || js.subjectName,
       code: js.subjectCode,
       credits: (js.credits as number) ?? 0,
       description: `Block: ${js.semesterStudyBlockType}`,

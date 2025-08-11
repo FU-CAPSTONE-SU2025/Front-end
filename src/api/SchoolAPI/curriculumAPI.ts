@@ -138,10 +138,10 @@ export const UpdateCurriculumById = async (id: number, data: any): Promise<Curri
   }
 };
 
-export const DisableCurriculum = async (userId: number): Promise<AccountProps | null> => {
+export const DisableCurriculum = async (curriculumId: number): Promise<any | null> => {
   const props = {
     data: null,
-    url: curriculumURL + `/${userId}`,
+    url: curriculumURL + `/${curriculumId}`,
     headers: GetHeader(),
   };
   const result = await axiosDelete(props);

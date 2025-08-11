@@ -35,42 +35,7 @@ export const AddPrerequisitesSubject = async (id:number,prerequisitesId:number):
       throwApiError(result);
     }
   };
-  
-/**
- * @deprecated Use DeletePrerequisiteFromSubjectVersion from subjectVersionAPI instead
- * This function will be removed in a future version
- */
-export const DeletePrerequisitesSubject = async (id:number,prerequisitesId:number): Promise<Subject | null> => {
-  const props = {
-    data: null,
-    url: subjectURL + `/${id}/prerequisites/${prerequisitesId}`,
-    headers: GetHeader(),
-  };
-  const result = await axiosDelete(props);
-  if (result.success) {
-    return result.data;
-  } else {
-    throwApiError(result);
-  }
-};
 
-/**
- * @deprecated Use GetPrerequisitesBySubjectVersion from subjectVersionAPI instead
- * This function will be removed in a future version
- */
-export const GetPrerequisitesSubject = async (id:number): Promise<Subject[] | null> => {
-  const props = {
-    data: null,
-    url: subjectURL + `/${id}/prerequisites`,
-    headers: GetHeader(),
-  };
-  const result = await axiosRead(props);
-  if (result.success) {
-    return result.data;
-  } else {
-    throwApiError(result);
-  }
-}
 
 export const RegisterMultipleSubject = async (data: CreateSubject[]): Promise<any> => {
   const props = {
@@ -138,10 +103,10 @@ export const FetchSubjectById = async (id: number): Promise<Subject | null> => {
   }
 };
 
-export const UpdateSubjectById = async (id: number, data: UpdateSubject): Promise<Subject | null> => {
+export const UpdateSubjectById = async (subjectId: number, data: UpdateSubject): Promise<Subject | null> => {
   const props = {
     data: data,
-    url: subjectURL + `/${id}`,
+    url: subjectURL + `/${subjectId}`,
     headers: GetHeader(),
   };
   const result = await axiosUpdate(props);
@@ -152,13 +117,13 @@ export const UpdateSubjectById = async (id: number, data: UpdateSubject): Promis
   }
 };
 
-export const DisableSubject = async (userId: number): Promise<any | null> => {
+export const DisableSubject = async (subjectId: number): Promise<any | null> => {
   const props = {
     data: null,
-    url: subjectURL + `/${userId}/disable`,
+    url: subjectURL + `/${subjectId}`,
     headers: GetHeader(),
   };
-  const result = await axiosUpdate(props);
+  const result = await axiosDelete(props);
   if (result.success) {
     return result.data;
   } else {
