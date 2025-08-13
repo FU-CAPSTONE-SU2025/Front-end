@@ -95,12 +95,12 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({
   const goToNextWeek = () => setSelectedDate(selectedDate.startOf('week').add(1, 'week'));
   const weekRange = `${selectedDate.startOf('week').format('DD MMM YYYY')} - ${selectedDate.endOf('week').format('DD MMM YYYY')}`;
 
-  const upcomingBookings = bookingsList.filter(b => dayjs(b.startDateTime).isSameOrAfter(dayjs(), 'day'))
-    .sort((a, b) => dayjs(b.startDateTime).valueOf() - dayjs(a.startDateTime).valueOf());
-
+  // Sort all bookings by date (newest first)
+  const sortedBookings = bookingsList.sort((a, b) => dayjs(b.startDateTime).valueOf() - dayjs(a.startDateTime).valueOf());
+  console.log("asdsad",sortedBookings)
   // Get displayed bookings
-  const displayedUpcomingBookings = upcomingBookings.slice(0, displayedBookings);
-  const hasMoreBookings = displayedBookings < upcomingBookings.length;
+  const displayedSortedBookings = sortedBookings.slice(0, displayedBookings);
+  const hasMoreBookings = displayedBookings < sortedBookings.length;
 
   // Custom calendarView chỉ render slot đã book
   const CustomCalendarView = () => (
@@ -162,13 +162,13 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({
           <div className="flex items-center gap-3 mb-1">
             <CalendarOutlined className="text-blue-500 text-2xl" />
             <span className="text-xl font-bold text-blue-900">Bookings</span>
-            <span className="bg-blue-100 text-blue-700 font-semibold rounded-full px-3 py-1 text-xs ml-2">{upcomingBookings.length}</span>
+            <span className="bg-blue-100 text-blue-700 font-semibold rounded-full px-3 py-1 text-xs ml-2">{bookingsList.length}</span>
           </div>
           {bookingsLoading ? (
             <div className="flex justify-center items-center h-32">
               <Spin size="small" />
             </div>
-          ) : upcomingBookings.length === 0 ? (
+          ) : sortedBookings.length === 0 ? (
             <div className="text-gray-400 italic text-sm pl-2">No bookings</div>
           ) : (
             <div 
@@ -177,7 +177,7 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({
               className="flex flex-col gap-2 w-full max-h-[300px] overflow-y-auto pr-2"
               style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e0 #f1f5f9' }}
             >
-              {displayedUpcomingBookings.map(b => {
+              {displayedSortedBookings.map(b => {
                 const statusInfo = statusMap[b.status] || { color: 'default', text: 'Unknown' };
                 return (
                   <div key={b.id} className="flex flex-col bg-white/80 rounded-xl px-4 py-3 shadow-sm border border-blue-100 w-full hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleSlotClick({ meeting: b, id: b.id }, dayjs(b.startDateTime))}>

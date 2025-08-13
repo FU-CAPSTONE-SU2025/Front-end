@@ -7,9 +7,18 @@ import { NotificationItem } from '../../interfaces/INotification';
 
 function timeAgo(dateString?: string) {
   if (!dateString) return '';
-  const date = new Date(dateString);
+
+  // Normalize: if no timezone info, assume UTC
+  const hasZone = /[zZ]|[+-]\d{2}:\d{2}$/.test(dateString);
+  const normalized = hasZone ? dateString : (dateString.replace(' ', 'T') + 'Z');
+
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return '';
+
   const now = new Date();
   const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diff < 5) return 'just now';
   if (diff < 60) return `${diff}s ago`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -23,37 +32,23 @@ interface NotificationProps {
 const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { notifications, loading, markAsRead, markAllAsRead, unreadCount, refreshNotifications } = useNotificationHub();
+  const { notifications, loading, markAllAsRead, unreadCount, refreshNotifications } = useNotificationHub();
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [localRead, setLocalRead] = useState<{ [id: number]: boolean }>({});
   const [markingAll, setMarkingAll] = useState(false);
 
-  const badgeCount = unreadCount > 10 ? '10+' : unreadCount;
+  // Calculate actual unread count considering localRead state
+  const actualUnreadCount = notifications.filter(n => !n.isRead && !localRead[n.id]).length;
+  const badgeCount = actualUnreadCount > 10 ? '10+' : actualUnreadCount;
 
   // ALL FUNCTIONS DEFINED WITH useCallback TO AVOID HOISTING ISSUES
-  const handleNotificationClick = useCallback(async (n: NotificationItem, e?: React.MouseEvent) => {
+  const handleNotificationClick = useCallback((n: NotificationItem, e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
     }
     
     setSelectedNotification(n);
-    
-    if (!n.isRead && !localRead[n.id]) {
-      setLocalRead((prev) => ({ ...prev, [n.id]: true }));
-      
-      try {
-        await markAsRead(n.id);
-        console.log(`✅ Marked notification ${n.id} as read`);
-      } catch (error) {
-        console.error('❌ Failed to mark notification as read:', error);
-        setLocalRead((prev) => {
-          const newState = { ...prev };
-          delete newState[n.id];
-          return newState;
-        });
-      }
-    }
-  }, [localRead, markAsRead]);
+  }, []);
 
   const handleMarkAllAsRead = useCallback(async (e?: React.MouseEvent) => {
     if (e) {
@@ -61,39 +56,28 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
       e.stopPropagation();
     }
     
-    if (unreadCount === 0) return;
+    if (actualUnreadCount === 0) return;
     
     setMarkingAll(true);
     
     try {
-      const newLocalRead = { ...localRead };
       const unreadNotifications = notifications.filter(n => !n.isRead && !localRead[n.id]);
-      
-      unreadNotifications.forEach(n => {
-        newLocalRead[n.id] = true;
-      });
-      setLocalRead(newLocalRead);
       
       console.log(`🔄 Marking ${unreadNotifications.length} notifications as read...`);
       
       await markAllAsRead();
+      
+      // Clear localRead state after successful mark all as read
+      setLocalRead({});
+      
       console.log(`✅ Successfully marked all ${unreadNotifications.length} notifications as read`);
       
     } catch (error) {
       console.error('❌ Failed to mark all notifications as read:', error);
-      setLocalRead((prev) => {
-        const newState = { ...prev };
-        notifications.forEach(n => {
-          if (!n.isRead) {
-            delete newState[n.id];
-          }
-        });
-        return newState;
-      });
     } finally {
       setMarkingAll(false);
     }
-  }, [unreadCount, localRead, notifications, markAllAsRead]);
+  }, [actualUnreadCount, localRead, notifications, markAllAsRead]);
 
   const handleModalClose = useCallback(() => {
     setSelectedNotification(null);
@@ -198,13 +182,10 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
             <div className="p-4 border-b border-gray-100 font-bold text-gray-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span>Notifications</span>
-                {unreadCount > 0 && (
-                  <Badge count={unreadCount} size="small" className="ml-1" />
-                )}
               </div>
               <div className="flex items-center gap-2">
-                {unreadCount > 0 && (
-                  <Tooltip title={`Mark all ${unreadCount} notifications as read`}>
+                {actualUnreadCount > 0 && (
+                  <Tooltip title={`Mark all ${actualUnreadCount} notifications as read`}>
                     <Button
                       type="text"
                       size="small"
@@ -218,7 +199,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                     </Button>
                   </Tooltip>
                 )}
-                {unreadCount === 0 && (
+                {actualUnreadCount === 0 && (
                   <span className="text-xs text-gray-400">All caught up! 🎉</span>
                 )}
               </div>
@@ -269,21 +250,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                         </div>
                         <div className="flex flex-col items-center gap-2 mt-1">
                           {!isRead && (
-                            <>
-                              <Tooltip title="Mark as read">
-                                <Button
-                                  type="text"
-                                  size="small"
-                                  icon={<CheckOutlined />}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleNotificationClick(n, e);
-                                  }}
-                                  className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
-                                />
-                              </Tooltip>
-                              <span className={`w-3 h-3 ${getUnreadDotColor()} rounded-full animate-pulse`} />
-                            </>
+                            <span className={`w-3 h-3 ${getUnreadDotColor()} rounded-full animate-pulse`} />
                           )}
                           {isRead && (
                             <Tooltip title="Read">
@@ -301,7 +268,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
               <div className="px-4 py-2 border-t border-gray-100 bg-gray-50">
                 <div className="text-xs text-gray-500 flex items-center justify-between">
                   <span>💡 Press Esc to close</span>
-                  {unreadCount > 0 && (
+                  {actualUnreadCount > 0 && (
                     <span>Ctrl+Enter to mark all read</span>
                   )}
                 </div>
