@@ -68,7 +68,7 @@ export function useChatSessionMessages(chatSessionId?: number, pageSize: number 
       };
     },
     enabled: !!chatSessionId,
-    getNextPageParam: (lastPage) => lastPage.nextPage,
+    getNextPageParam: (lastPage) => lastPage?.nextPage ?? undefined,
     initialPageParam: 1,
     // Tối ưu caching cho messages: cache lâu hơn vì messages ít thay đổi
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -140,6 +140,7 @@ export function useInitChatSession() {
             pageSize: response.pageSize
           };
         },
+        getNextPageParam: (lastPage) => lastPage?.nextPage ?? undefined,
         initialPageParam: 1,
       });
     },
@@ -251,6 +252,7 @@ export function usePrefetchChatMessages() {
           pageSize: response.pageSize
         };
       },
+      getNextPageParam: (lastPage) => lastPage?.nextPage ?? undefined,
       initialPageParam: 1,
       staleTime: 5 * 60 * 1000,
       gcTime: 10 * 60 * 1000,

@@ -13,7 +13,7 @@ const HistoryMeeting = () => {
   // Hook cho bookings list (cột trái)
   const { data: bookingsData, isLoading: bookingsLoading, refetch: refetchBookings } = useStudentHistoryMeetingsOriginal(1, 50);
   const bookingsList = bookingsData?.items || [];
-  
+    console.log(bookingsList)
 
   const handleDataRefresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['studentHistoryMeetings'] });
