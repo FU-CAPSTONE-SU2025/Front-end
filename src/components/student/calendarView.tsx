@@ -3,8 +3,8 @@ import { ClockCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import dayjs, { Dayjs } from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
-import { AdvisorData, LeaveScheduleData } from '../../api/student/StudentAPI';
-import { AdvisorMeetingItem } from '../../interfaces/IStudent';
+
+import { AdvisorData, AdvisorMeetingItem, LeaveScheduleData } from '../../interfaces/IStudent';
 
 // Extend dayjs with isBetween plugin
 dayjs.extend(isBetween);
@@ -86,7 +86,22 @@ const CalendarView = ({
   };
 
   // Check if a date is today
- 
+  const isDateToday = (date: Dayjs) => {
+    return date.isSame(dayjs(), 'day');
+  };
+
+  // Check if a slot is in the past (for current day)
+  const isSlotInPast = (slot: WorkSlot, date: Dayjs) => {
+    // If it's not today, use the existing logic for past days
+    if (!isDateToday(date)) {
+      return isDateInPast(date);
+    }
+    
+    // For today, check if the slot's start time has already passed
+    const now = dayjs();
+    const slotStartTime = dayjs(`${date.format('YYYY-MM-DD')}T${slot.startTime.slice(0,5)}`);
+    return slotStartTime.isBefore(now);
+  };
 
   // Check if a specific hour is within leave schedule
 
@@ -268,36 +283,36 @@ const CalendarView = ({
           </Tooltip>
         )}
         
-        {/* Available slots - compact version */}
-        {displaySlots.map(slot => {
-          const booked = isSlotBooked(slot, date);
-          if (booked) {
-            return (
-              <motion.div
-                key={slot.id}
-                className="bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded px-1.5 py-1 text-xs flex items-center justify-center shadow-sm border border-white/20 cursor-not-allowed opacity-80 gap-1"
-                whileHover={{}}
-              >
-                <CloseCircleOutlined className="text-xs" />
-                <span className="font-medium truncate text-xs">Booked</span>
-              </motion.div>
-            );
-          }
-          return (
-          <motion.div
-            key={slot.id}
-            className={`bg-gradient-to-r ${getSlotTypeColor(slot.type)} text-white rounded px-1.5 py-1 text-xs flex items-center justify-center shadow-sm transition-all duration-200 border border-white/20 ${
-              isPast ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'
-            }`}
-            whileHover={isPast ? {} : { scale: 1.02 }}
-            whileTap={isPast ? {} : { scale: 0.98 }}
-            onClick={isPast ? undefined : () => handleSlotClick(slot, date)}
-          >
-            <ClockCircleOutlined className="text-xs mr-1" />
-            <span className="font-medium truncate text-xs">{slot.startTime.slice(0,5)}-{slot.endTime.slice(0,5)}</span>
-          </motion.div>
-          );
-        })}
+                 {/* Available slots - compact version */}
+         {displaySlots.map(slot => {
+           const booked = isSlotBooked(slot, date);
+           if (booked) {
+             return (
+               <motion.div
+                 key={slot.id}
+                 className="bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded px-1.5 py-1 text-xs flex items-center justify-center shadow-sm border border-white/20 cursor-not-allowed opacity-80 gap-1"
+                 whileHover={{}}
+               >
+                 <CloseCircleOutlined className="text-xs" />
+                 <span className="font-medium truncate text-xs">Booked</span>
+               </motion.div>
+             );
+           }
+           return (
+           <motion.div
+             key={slot.id}
+             className={`bg-gradient-to-r ${getSlotTypeColor(slot.type)} text-white rounded px-1.5 py-1 text-xs flex items-center justify-center shadow-sm transition-all duration-200 border border-white/20 ${
+               isSlotInPast(slot, date) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'
+             }`}
+             whileHover={isSlotInPast(slot, date) ? {} : { scale: 1.02 }}
+             whileTap={isSlotInPast(slot, date) ? {} : { scale: 0.98 }}
+             onClick={isSlotInPast(slot, date) ? undefined : () => handleSlotClick(slot, date)}
+           >
+             <ClockCircleOutlined className="text-xs mr-1" />
+             <span className="font-medium truncate text-xs">{slot.startTime.slice(0,5)}-{slot.endTime.slice(0,5)}</span>
+           </motion.div>
+           );
+         })}
         
         {/* Show more indicator */}
         {hasMoreSlots && (
@@ -392,21 +407,21 @@ const CalendarView = ({
                   );
                 }
                 
-                // Available slots - hiển thị khung giờ rõ ràng
-                return (
-                  <motion.div
-                    key={slot.id}
-                    className={`absolute left-4 right-4 bg-gradient-to-r ${getSlotTypeColor(slot.type)} rounded-xl shadow-lg transition-all duration-200 ${
-                      isDateInPast(selectedDate) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-xl'
-                    }`}
-                    style={{
-                      top: `${topPosition}px`,
-                      height: `${height}px`,
-                      minHeight: '60px'
-                    }}
-                    whileHover={isDateInPast(selectedDate) ? {} : { scale: 1.02, y: -2 }}
-                    onClick={isDateInPast(selectedDate) ? undefined : () => onSlotClick(slot, selectedDate)}
-                  >
+                                 // Available slots - hiển thị khung giờ rõ ràng
+                 return (
+                   <motion.div
+                     key={slot.id}
+                     className={`absolute left-4 right-4 bg-gradient-to-r ${getSlotTypeColor(slot.type)} rounded-xl shadow-lg transition-all duration-200 ${
+                       isSlotInPast(slot, selectedDate) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-xl'
+                     }`}
+                     style={{
+                       top: `${topPosition}px`,
+                       height: `${height}px`,
+                       minHeight: '60px'
+                     }}
+                     whileHover={isSlotInPast(slot, selectedDate) ? {} : { scale: 1.02, y: -2 }}
+                     onClick={isSlotInPast(slot, selectedDate) ? undefined : () => onSlotClick(slot, selectedDate)}
+                   >
                     <div className="flex items-center justify-center h-full text-white font-medium">
                       <ClockCircleOutlined className="mr-2" />
                       {slot.startTime.slice(0,5)} - {slot.endTime.slice(0,5)}
@@ -531,21 +546,21 @@ const CalendarView = ({
                         );
                       }
                       
-                      // Available slots - hiển thị khung giờ rõ ràng
-                      return (
-                        <motion.div
-                          key={slot.id}
-                          className={`absolute left-1 right-1 bg-gradient-to-r ${getSlotTypeColor(slot.type)} rounded-lg shadow-md transition-all duration-200 ${
-                            isDateInPast(day) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-lg'
-                          }`}
-                          style={{
-                            top: `${topPosition}px`,
-                            height: `${height}px`,
-                            minHeight: '30px'
-                          }}
-                          whileHover={isDateInPast(day) ? {} : { scale: 1.02 }}
-                          onClick={isDateInPast(day) ? undefined : () => onSlotClick(slot, day)}
-                        >
+                                             // Available slots - hiển thị khung giờ rõ ràng
+                       return (
+                         <motion.div
+                           key={slot.id}
+                           className={`absolute left-1 right-1 bg-gradient-to-r ${getSlotTypeColor(slot.type)} rounded-lg shadow-md transition-all duration-200 ${
+                             isSlotInPast(slot, day) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-lg'
+                           }`}
+                           style={{
+                             top: `${topPosition}px`,
+                             height: `${height}px`,
+                             minHeight: '30px'
+                           }}
+                           whileHover={isSlotInPast(slot, day) ? {} : { scale: 1.02 }}
+                           onClick={isSlotInPast(slot, day) ? undefined : () => onSlotClick(slot, day)}
+                         >
                           <div className="flex items-center justify-center h-full text-white text-xs font-medium">
                             <ClockCircleOutlined className="mr-1" />
                             {slot.startTime.slice(0,5)} - {slot.endTime.slice(0,5)}

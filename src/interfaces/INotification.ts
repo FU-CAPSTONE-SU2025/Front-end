@@ -16,7 +16,11 @@ export interface NotificationItemResponse {
     title: string;
     content: string;
     link?: string;
+    isRead?: boolean;
     createdAt?: string;
+    type?: string;
+    userId?: number;
+    notificationType?: string;
 }
 
 export const NOTI_HUB_METHODS = {

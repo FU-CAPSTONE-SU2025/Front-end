@@ -1,10 +1,10 @@
 import { UserOutlined, CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dayjs } from 'dayjs';
-import { AdvisorData } from '../../api/student/StudentAPI';
 import { useState } from 'react';
 import { Input, Button, Form } from 'antd';
 import { dayOptions } from '../../interfaces/IDayOptions';
+import { AdvisorData } from '../../interfaces/IStudent';
 
 interface WorkSlot {
   id: number | string;

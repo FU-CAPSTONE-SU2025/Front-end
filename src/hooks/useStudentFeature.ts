@@ -27,7 +27,7 @@ export const useStudentFeature = ({ search, page, pageSize, searchType = 'code' 
       console.log('Calling API with search:', search);
       return fetchSyllabusPaged({ search, page, pageSize, searchType });
     },
-    enabled: search !== undefined && search !== null, // Chỉ gọi API khi search được định nghĩa và không null
+    enabled: search !== undefined && search !== null, 
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes

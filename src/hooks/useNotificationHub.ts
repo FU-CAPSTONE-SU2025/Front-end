@@ -44,8 +44,10 @@ export function useNotificationHub() {
     setError(null);
     
     try {
-      await connection.invoke(SIGNALR_CONFIG.HUB_METHODS.GET_NOTIFICATIONS, { pageNumber: 1, pageSize: 15 });
+      // Call GetNotifications method on backend hub
+      await connection.invoke('GetNotifications', { pageNumber: 1, pageSize: 100 });
       retryCountRef.current = 0; 
+      console.log('🔔 GetNotifications called successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch notifications';
       console.error('🔔 Failed to fetch notifications:', err);
@@ -65,25 +67,13 @@ export function useNotificationHub() {
     }
   }, [loading]);
 
-  // Mark as read với optimistic update và better error handling
+  // Mark as read với backend API call
   const markAsRead = useCallback(async (notificationId: number) => {
     const connection = connectionRef.current;
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
       const errorMsg = 'Connection not available';
       setError(errorMsg);
       throw new Error(errorMsg);
-    }
-
-    // Check if notification exists and is not already read
-    const notification = notifications.find(n => n.id === notificationId);
-    if (!notification) {
-      console.warn(`⚠️ Notification ${notificationId} not found`);
-      return;
-    }
-
-    if (notification.isRead) {
-      console.log(`ℹ️ Notification ${notificationId} is already read`);
-      return;
     }
 
     console.log(`🔄 Marking notification ${notificationId} as read...`);
@@ -95,7 +85,7 @@ export function useNotificationHub() {
     );
 
     try {
-      await connection.invoke(SIGNALR_CONFIG.HUB_METHODS.MARK_AS_READ, notificationId);
+      await connection.invoke('MarkAsRead', notificationId);
       console.log(`✅ Successfully marked notification ${notificationId} as read`);
       setError(null);
     } catch (err) {
@@ -108,7 +98,7 @@ export function useNotificationHub() {
     }
   }, [notifications]);
 
-  // Mark all as read với optimistic update và batch processing
+  // Mark all as read bằng cách gọi MarkAsRead cho từng notification
   const markAllAsRead = useCallback(async () => {
     const connection = connectionRef.current;
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
@@ -116,13 +106,15 @@ export function useNotificationHub() {
       throw new Error('Connection not available');
     }
 
-    // Get unread notifications before optimistic update
+    // Get unread notifications before update
     const unreadNotifications = notifications.filter(n => !n.isRead);
     if (unreadNotifications.length === 0) {
+      console.log('ℹ️ No unread notifications to mark');
       return; // Nothing to mark
     }
 
-    console.log(`🔄 Starting to mark ${unreadNotifications.length} notifications as read...`);
+    console.log(`🔄 Marking all ${unreadNotifications.length} notifications as read using MarkAsRead...`);
+    console.log('Unread notification IDs:', unreadNotifications.map(n => n.id));
 
     // Optimistic update
     const originalNotifications = [...notifications];
@@ -131,15 +123,15 @@ export function useNotificationHub() {
     );
 
     try {
-      // Process notifications in batches to avoid overwhelming the server
-      const batchSize = 5;
+      // Mark each notification as read using MarkAsRead method
+      const batchSize = 5; // Process in small batches to avoid overwhelming server
       for (let i = 0; i < unreadNotifications.length; i += batchSize) {
         const batch = unreadNotifications.slice(i, i + batchSize);
         
-        // Process batch concurrently but with error handling
+        // Process batch concurrently
         const promises = batch.map(async (notification) => {
           try {
-            await connection.invoke(SIGNALR_CONFIG.HUB_METHODS.MARK_AS_READ, notification.id);
+            await connection.invoke('MarkAsRead', notification.id);
             console.log(`✅ Marked notification ${notification.id} as read`);
           } catch (err) {
             console.error(`❌ Failed to mark notification ${notification.id} as read:`, err);
@@ -149,7 +141,7 @@ export function useNotificationHub() {
 
         await Promise.all(promises);
         
-        // Small delay between batches to be gentle on the server
+        // Small delay between batches
         if (i + batchSize < unreadNotifications.length) {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
@@ -211,17 +203,24 @@ export function useNotificationHub() {
       if (!isUnmountedRef.current && data && typeof data === 'object') {
         // Handle PagedResult<NotificationItemResponse> from backend
         if ('items' in data && Array.isArray(data.items)) {
+          console.log('📥 Received notifications from backend:', data.items.length);
+          console.log('First few notifications isRead status:', data.items.slice(0, 3).map(item => ({ id: item.id, isRead: item.isRead, title: item.title?.substring(0, 30) })));
+          
           const mappedNotifications = data.items.map((item: any) => ({
             id: item.id,
             title: item.title,
             content: item.content,
             link: item.link,
-            isRead: false, // Default to false since backend doesn't include this
+            isRead: item.isRead !== undefined ? item.isRead : false, // Use backend value if available
             createdAt: item.createdAt,
             type: item.type,
             userId: item.userId,
             notificationType: item.notificationType
           }));
+          
+          const unreadCount = mappedNotifications.filter(n => !n.isRead).length;
+          console.log(`📊 Total notifications: ${mappedNotifications.length}, Unread: ${unreadCount}`);
+          
           setNotifications(mappedNotifications);
         } 
         // Handle single notification
@@ -252,29 +251,19 @@ export function useNotificationHub() {
       }
     };
 
-    // PRIMARY EVENT LISTENERS - using exact backend method names
-    connection.on(SIGNALR_CONFIG.HUB_METHODS.NOTIFICATION_RECEIVED, (data) => {
-      handleNotificationEvent('NOTIFICATION_RECEIVED', data);
+    // PRIMARY EVENT LISTENERS - using exact backend method names from NotificationSettings
+    connection.on('NotificationReceivedMethod', (data) => {
+      console.log('📨 NotificationReceivedMethod event received:', data);
+      handleNotificationEvent('NotificationReceivedMethod', data);
     });
 
-    connection.on(SIGNALR_CONFIG.HUB_METHODS.NOTIFICATION_CREATED, (data) => {
-      handleNotificationEvent('NOTIFICATION_CREATED', data);
+    connection.on('NotificationCreatedMethod', (data) => {
+      console.log('📨 NotificationCreatedMethod event received:', data);
+      handleNotificationEvent('NotificationCreatedMethod', data);
     });
 
-    connection.on(SIGNALR_CONFIG.HUB_METHODS.NOTIFICATION_READ, (notificationId: number) => {
-      handleNotificationRead(notificationId);
-    });
-
-    // FALLBACK EVENT LISTENERS - only for debugging and compatibility
-    connection.on('NotificationReceived', (data) => {
-      handleNotificationEvent('NotificationReceived', data);
-    });
-
-    connection.on('NotificationCreated', (data) => {
-      handleNotificationEvent('NotificationCreated', data);
-    });
-
-    connection.on('NotificationRead', (notificationId: number) => {
+    connection.on('NotificationReadMethod', (notificationId: number) => {
+      console.log('📨 NotificationReadMethod event received for ID:', notificationId);
       handleNotificationRead(notificationId);
     });
   }, [addNotification, fetchNotifications]);
