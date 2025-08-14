@@ -13,7 +13,8 @@ import {
     PagedAdvisorData,
     LeaveScheduleData,
     PagedLeaveScheduleData,
-    BookingAvailabilityData
+    BookingAvailabilityData,
+    JoinedSubject
 } from "../../interfaces/IStudent";
 import { ChatSessionRequest, ChatSessionResponse } from "../../interfaces/IChat";
 
@@ -401,6 +402,23 @@ export const initChatSession = async (message: string): Promise<ChatSessionRespo
   };
   const result = await axiosCreate(props);
   if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+// Get joined subjects for current student
+export const getJoinedSubjects = async (): Promise<JoinedSubject[]> => {
+  const props = {
+    data: null,
+    url: baseUrl + "/JoinedSubject/self",
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    console.log("Joined subjects data:", result.data);
     return result.data;
   } else {
     throwApiError(result);

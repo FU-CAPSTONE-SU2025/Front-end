@@ -2,10 +2,11 @@ import CourseList from '../../components/student/courseList';
 import AcademicCharts from '../../components/student/academicCharts';
 import UserInfoCard from '../../components/student/userInfoCard';
 import { motion } from 'framer-motion';
-
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import SemesterSelect from '../../components/student/selectSemester';
-
+import { useJoinedSubjects } from '../../hooks/useStudentFeature';
+import { JoinedSubject, SemesterSubjects } from '../../interfaces/IStudent';
+import { groupSubjectsBySemester, getSemesterOptions, getSubjectsStats } from '../../utils/subjectUtils';
 
 
 const user = {
@@ -29,14 +30,6 @@ const user = {
     { semester: 'Summer 24', gpa: 3.9 },
   ],
 };
-
-const courses = [
-  { name: 'Basic Cross-Platform Application Programming With .NET', code: 'PRN212', progress: 80 },
-  { name: 'Basic Cross-Platform Application Programming With .NET', code: 'PRN212', progress: 65 },
-  { name: 'Basic Cross-Platform Application Programming With .NET', code: 'PRN212', progress: 90 },
-  { name: 'Basic Cross-Platform Application Programming With .NET', code: 'PRN212', progress: 75 },
-  { name: 'Basic Cross-Platform Application Programming With .NET', code: 'PRN212', progress: 60 },
-];
 
 const semestersAcademicData = [
   {
@@ -91,14 +84,59 @@ const semestersAcademicData = [
   },
 ];
 
-const semesterOptions = [
-  { label: 'SUMMER 2024', value: 'Summer 24' },
-  { label: 'SPRING 2024', value: 'Spring 24' },
-  { label: 'FALL 2023', value: 'Fall 23' },
-];
-
 const Dashboard = () => {
-  const [selectedSemester, setSelectedSemester] = useState('Summer 24');
+  const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
+  
+  // Fetch joined subjects
+  const { data: joinedSubjects, isLoading, error } = useJoinedSubjects();
+
+  // Group subjects by semester
+  const semesterSubjects: SemesterSubjects = useMemo(() => {
+    if (!joinedSubjects) return {};
+    return groupSubjectsBySemester(joinedSubjects);
+  }, [joinedSubjects]);
+
+  // Get available semesters for dropdown
+  const semesterOptions = useMemo(() => {
+    return getSemesterOptions(semesterSubjects);
+  }, [semesterSubjects]);
+
+  // Set default selected semester to the most recent one
+  useMemo(() => {
+    if (semesterOptions.length > 0 && !selectedSemester) {
+      setSelectedSemester(Number(semesterOptions[0].value));
+    }
+  }, [semesterOptions, selectedSemester]);
+
+  // Get current semester subjects
+  const currentSemesterSubjects = selectedSemester ? semesterSubjects[selectedSemester] || [] : [];
+  
+  // Get current semester name
+  const currentSemesterName = useMemo(() => {
+    if (!selectedSemester || !currentSemesterSubjects.length) return '';
+    return currentSemesterSubjects[0]?.semesterName || `Semester ${selectedSemester}`;
+  }, [selectedSemester, currentSemesterSubjects]);
+  
+  // Get statistics for current semester
+  const semesterStats = useMemo(() => {
+    return getSubjectsStats(currentSemesterSubjects);
+  }, [currentSemesterSubjects]);
+
+  if (isLoading) {
+    return (
+      <div className="pt-20 mt-2 pb-8 flex-1 min-h-screen bg-transparent flex items-center justify-center">
+        <div className="text-white text-xl">Loading subjects...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="pt-20 mt-2 pb-8 flex-1 min-h-screen bg-transparent flex items-center justify-center">
+        <div className="text-red-400 text-xl">Error loading subjects: {error.message}</div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -148,20 +186,49 @@ const Dashboard = () => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.5 }}
             >
-              <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 sm:mb-0">
-                  {selectedSemester}
-                </h2>
+                             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                 <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 sm:mb-0">
+                   {currentSemesterName || 'Select Semester'}
+                 </h2>
                 <SemesterSelect
-                  value={selectedSemester}
+                  value={selectedSemester?.toString() || ''}
                   options={semesterOptions}
-                  onChange={setSelectedSemester}
+                  onChange={(value) => setSelectedSemester(value ? Number(value) : null)}
                 />
               </div>
               <p className="text-gray-200 opacity-80 mb-4">
                 Track your academic progress across all enrolled subjects
               </p>
-              <CourseList courses={courses} />
+              
+              {/* Statistics Section */}
+              {currentSemesterSubjects.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-white">{semesterStats.total}</div>
+                    <div className="text-gray-200 text-sm">Total Subjects</div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-green-400">{semesterStats.completed}</div>
+                    <div className="text-gray-200 text-sm">Completed</div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-400">{semesterStats.passed}</div>
+                    <div className="text-gray-200 text-sm">Passed</div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-yellow-400">{semesterStats.totalCredits}</div>
+                    <div className="text-gray-200 text-sm">Total Credits</div>
+                  </div>
+                </div>
+              )}
+              
+              {currentSemesterSubjects.length > 0 ? (
+                <CourseList subjects={currentSemesterSubjects} />
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-200 opacity-60">No subjects found for this semester</p>
+                </div>
+              )}
             </motion.div>
 
             {/* Analytics Section */}
@@ -179,7 +246,7 @@ const Dashboard = () => {
                   Visualize your performance and track your achievements
                 </p>
               </div>
-              <AcademicCharts semesters={semestersAcademicData} selectedSemester={selectedSemester} />
+              <AcademicCharts semesters={semestersAcademicData} selectedSemester={selectedSemester?.toString() || 'Summer 24'} />
             </motion.div>
           </motion.div>
         </div>

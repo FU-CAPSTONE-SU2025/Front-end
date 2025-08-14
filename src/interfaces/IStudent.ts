@@ -231,3 +231,26 @@ export interface MaxBanData {
 export interface CurrentBanData {
     curNoOfBan: number;
 }
+
+// Interface for joined subject data
+export interface JoinedSubject {
+  id: number;
+  createdAt: string;
+  githubRepositoryURL: string | null;
+  subjectCode: string;
+  subjectVersionCode: string;
+  name: string;
+  semesterName: string | null;
+  isPassed: boolean;
+  isCompleted: boolean;
+  isActive: boolean;
+  credits: number;
+  studentProfileId: number;
+  semesterStudyBlockType: number;
+  semesterId: number;
+}
+
+// Interface for grouped subjects by semester
+export interface SemesterSubjects {
+  [semesterId: number]: JoinedSubject[];
+}
