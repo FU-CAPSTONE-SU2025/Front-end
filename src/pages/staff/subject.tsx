@@ -8,12 +8,11 @@ import { useCRUDSubject, useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial'
 import { CreateSubject } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+import {getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { Subject } from '../../interfaces/ISchoolProgram';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Option } = Select;
-const { Panel } = Collapse;
 
 const SubjectPage: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -24,7 +23,7 @@ const SubjectPage: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { handleError, handleSuccess, showWarning } = useApiErrorHandler();
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   // CRUD hook
   const {
@@ -81,7 +80,7 @@ const SubjectPage: React.FC = () => {
 
   useEffect(() => {
     // Backend search: pass search as filterValue
-    getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+    getAllSubjects({ pageNumber: page, pageSize, search: search });
   }, [page, pageSize, search]);
 
   useEffect(() => {
@@ -118,7 +117,7 @@ const SubjectPage: React.FC = () => {
       const subjectData = importedData['SUBJECT'] || [];
       
       if (subjectData.length === 0) {
-        showWarning('No subject data found in the imported file');
+        handleError('No subject data found in the imported file');
         return;
       }
 
@@ -143,7 +142,7 @@ const SubjectPage: React.FC = () => {
       }
 
       if (validData.length !== transformedData.length) {
-        showWarning(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
+        handleError(`${transformedData.length - validData.length} rows were skipped due to missing required fields.`);
       }
 
       // Call the bulk import mutation
@@ -152,7 +151,7 @@ const SubjectPage: React.FC = () => {
       setIsImportOpen(false);
       
       // Refresh the subject list
-      getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+      getAllSubjects({ pageNumber: page, pageSize, search: search });
     } catch (error) {
       const errorMessage = getUserFriendlyErrorMessage(error);
       handleError(errorMessage);
@@ -277,32 +276,8 @@ const SubjectPage: React.FC = () => {
   ];
 
   useEffect(() => {
-    getAllCombos({ pageNumber: comboPage, pageSize: comboPageSize, filterValue: comboSearch });
+    getAllCombos({ pageNumber: comboPage, pageSize: comboPageSize, search: comboSearch });
   }, [comboPage, comboPageSize, comboSearch]);
-
-  const filteredCombos = comboList;
-
-  const comboColumns = [
-    { title: 'ID', dataIndex: 'id', key: 'id', align: 'left' as 'left', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
-    { title: 'Combo Name', dataIndex: 'comboName', key: 'comboName', align: 'left' as 'left', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
-    {
-      title: 'Actions',
-      key: 'actions',
-      align: 'center' as 'center',
-      render: (_: any, record: any) => (
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-          <Button
-            type="link"
-            icon={<EditOutlined style={{ color: '#f97316' }} />}
-            onClick={(e) => { e.stopPropagation(); handleEditCombo(record.id); }}
-            className={styles.sttFreshEditButton}
-            style={{ color: '#f97316' }}
-            title="Edit Combo"
-          />
-        </div>
-      ),
-    },
-  ];
 
   return (
     <div className={styles.sttContainer}>

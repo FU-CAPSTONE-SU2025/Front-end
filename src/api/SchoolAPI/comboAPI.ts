@@ -131,7 +131,7 @@ export const UpdateComboById = async (id: number, data: any): Promise<Combo | nu
   }
 };
 
-export const DisableCombo = async (comboId: number): Promise<AccountProps | null> => {
+export const DisableCombo = async (comboId: number): Promise<any | null> => {
   const props = {
     data: null,
     url: comboURL + `/${comboId}`,

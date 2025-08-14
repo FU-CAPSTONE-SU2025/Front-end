@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Select, Button, Row, Col, ConfigProvider, Card, Space, Typography, Affix, Pagination, Empty } from 'antd';
-import { EditOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
+import { EditOutlined, SearchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
@@ -9,7 +9,7 @@ import { StudentBase } from '../../interfaces/IStudent';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { RegisterMultipleStudentsToMultipleSubjects } from '../../api/SchoolAPI/joinedSubjectAPI';
-import { BulkCreateJoinedSubjectMultipleStudents, CreateJoinedSubject } from '../../interfaces/ISchoolProgram';
+import { BulkCreateJoinedSubjectMultipleStudents } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { transformMultiStudentBulkImportData } from '../../utils/bulkImportTransformers';
@@ -132,50 +132,6 @@ const StaffTranscript: React.FC = () => {
         }
         return;
       }
-
-      // Check for single-student bulk import (existing functionality)
-      const joinedSubjectData = importedData['BULK_JOINED_SUBJECT'] || [];
-      if (joinedSubjectData.length === 0) {
-        setUploadStatus('error');
-        setUploadMessage('No valid data found in the uploaded file.');
-        return;
-      }
-
-      // For single-student bulk import, we need to group by studentUserName
-      const studentGroups = new Map<string, any[]>();
-      
-      joinedSubjectData.forEach((item: any) => {
-        const studentUserName = item.studentUserName || 'default';
-        if (!studentGroups.has(studentUserName)) {
-          studentGroups.set(studentUserName, []);
-        }
-        studentGroups.get(studentUserName)!.push({
-          subjectCode: item.subjectCode,
-          subjectVersionCode: item.subjectVersionCode,
-          semesterId: Number(item.semesterId),
-          semesterStudyBlockType: Number(item.semesterStudyBlockType)
-        });
-      });
-
-      // Convert to BulkCreateJoinedSubjectMultipleStudents structure
-      const bulkData: BulkCreateJoinedSubjectMultipleStudents = {
-        userNameToSubjectsMap: Array.from(studentGroups.entries()).map(([studentUserName, subjects]) => ({
-          studentUserName,
-          subjectsData: subjects
-        }))
-      };
-
-      const result = await RegisterMultipleStudentsToMultipleSubjects(bulkData);
-      
-      if (result) {
-        setUploadStatus('success');
-        setUploadMessage(`Successfully imported subject assignments for ${bulkData.userNameToSubjectsMap.length} students!`);
-        handleSuccess('Bulk import completed successfully');
-        loadStudentData();
-      } else {
-        setUploadStatus('error');
-        setUploadMessage('Failed to import student-subject assignments.');
-      }
     } catch (error) {
       console.error('Bulk import error:', error);
       setUploadStatus('error');
@@ -208,11 +164,11 @@ const StaffTranscript: React.FC = () => {
       render: (text: string) => <span style={{ color: '#1E293B' }}>{text}</span> 
     },
     { 
-      title: 'Date of Birth', 
-      dataIndex: 'dateOfBirth', 
-      key: 'dateOfBirth', 
+      title: 'Account Name', 
+      dataIndex: 'username', 
+      key: 'username', 
       align: 'left' as 'left', 
-      render: (date: Date) => <span style={{ color: '#1E293B' }}>{date ? new Date(date).toLocaleDateString('en-GB') : '-'}</span> 
+      render: (username: string) => <span style={{ color: '#1E293B' }}>{username ? username : 'N/A'}</span> 
     },
     { 
       title: 'Status', 
@@ -336,7 +292,7 @@ const StaffTranscript: React.FC = () => {
             <Row gutter={[16, 16]} align="middle">
               <Col xs={24} sm={12}>
                 <Space direction="vertical" style={{ width: '100%' }}>
-                  <Text strong>Search Students</Text>
+                  <Text style={{color:"black"}} strong>Search Students</Text>
                   <Input
                     placeholder="Search by name, email or ID"
                     prefix={<SearchOutlined />}
@@ -350,7 +306,7 @@ const StaffTranscript: React.FC = () => {
               </Col>
               <Col xs={24} sm={12}>
                 <Space direction="vertical" style={{ width: '100%' }}>
-                  <Text strong>Filter by Program</Text>
+                  <Text style={{color:"black"}} strong>Filter by Program</Text>
                   <Select
                     allowClear
                     placeholder="Select Program"

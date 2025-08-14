@@ -1,20 +1,23 @@
-import React, { useEffect } from 'react';
-import { Form, Input, InputNumber, Button, Space, Typography } from 'antd';
-import { SaveOutlined } from '@ant-design/icons';
-import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
+import React, { useEffect, useState } from 'react';
+import { Form, Input, InputNumber, Button, Space, Typography, Modal, Popconfirm } from 'antd';
+import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useCRUDSubject, useCRUDSubjectVersion } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateSubject, Subject } from '../../interfaces/ISchoolProgram';
 import styles from '../../css/staff/subjectEdit.module.css';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { DisableSubject } from '../../api/SchoolAPI/subjectAPI';
 
-const { Title } = Typography;
 const { TextArea } = Input;
+const { Title } = Typography;
 
 interface SubjectEditProps {
   id?: number;
+  onDelete?: () => void; // Callback to refresh parent component
 }
 
-const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
+const SubjectEdit: React.FC<SubjectEditProps> = ({ id, onDelete }) => {
   const [form] = Form.useForm();
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   const isCreateMode = !id;
   const isEditMode = !!id;
   const { handleError, handleSuccess } = useApiErrorHandler();
@@ -22,10 +25,8 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
   // CRUD hook
   const {
     getSubjectById,
-    addSubjectMutation,
     updateSubjectMutation,
     isLoading,
-    addPrerequisiteMutation,
   } = useCRUDSubject();
 
   // Fetch subject by ID on mount (edit mode)
@@ -49,21 +50,11 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
         ...values,
         credits: parseInt(values.credits)
       };
-      const selectedPrereqs: number[] = values.prerequisites || [];
-
       if (isCreateMode) {
         // Ensure subjectCode is a string (not undefined) to satisfy CreateSubject type
         if (!subjectData.subjectCode) {
           handleError('Subject code is required!', 'Validation Error');
           return;
-        }
-        const created = await addSubjectMutation.mutateAsync(subjectData as CreateSubject);
-        handleSuccess('Subject created successfully!');
-        // Add prerequisites if any
-        if (created && created.id && selectedPrereqs.length > 0) {
-          for (const prereqId of selectedPrereqs) {
-            await addPrerequisiteMutation.mutateAsync({ id: created.id, prerequisitesId: prereqId });
-          }
         }
         form.resetFields();
       } else if (id) {
@@ -101,6 +92,31 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
       handleError(error, 'Subject operation failed');
     }
   };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    
+    try {
+      setIsDeleteLoading(true);
+      const result = await DisableSubject(id);
+      
+      if (result) {
+        handleSuccess('Subject disabled successfully!');
+        // Call parent callback to refresh the list
+        if (onDelete) {
+          onDelete();
+        }
+      } else {
+        handleError('Failed to disable subject');
+      }
+    } catch (error) {
+      console.error('Error disabling subject:', error);
+      handleError(error, 'Failed to disable subject');
+    } finally {
+      setIsDeleteLoading(false);
+    }
+  };
+
   return (
     <div className={styles.subjectContainer}>
       <Form
@@ -176,6 +192,28 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id }) => {
             >
               {isCreateMode ? 'Create Subject' : 'Update Subject'}
             </Button>
+            
+            {/* Delete button - only show in edit mode */}
+            {isEditMode && (
+              <Popconfirm
+                title="Disable Subject"
+                description="Are you sure you want to disable this subject? This action cannot be undone."
+                onConfirm={handleDelete}
+                okText="Yes, Disable"
+                cancelText="Cancel"
+                okType="danger"
+              >
+                <Button
+                  type="primary"
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={isDeleteLoading}
+                  className={styles.subjectFormButton}
+                >
+                  Disable Subject
+                </Button>
+              </Popconfirm>
+            )}
           </Space>
         </Form.Item>
       </Form>

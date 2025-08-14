@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Steps, Button, Upload, message, Table, Space, Tag, Input, Tooltip, Spin } from 'antd';
-import { UploadOutlined, FileExcelOutlined, CheckCircleOutlined, LoadingOutlined, EyeOutlined, CloudUploadOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { Card, Steps, Button, Upload, message, Table, Tag, Input, Tooltip, Spin } from 'antd';
+import { UploadOutlined, FileExcelOutlined, CheckCircleOutlined, LoadingOutlined, EyeOutlined, CloudUploadOutlined, DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import { getHeaderConfig, HeaderConfiguration, matchesConfiguration, findFieldMapping } from '../../data/importConfigurations';
@@ -298,7 +298,7 @@ Please use the correct file format for ${expectedType} import or go to the appro
       key: 'actions',
       width: 80,
       fixed: 'right' as const,
-      render: (_: any, record: any, index: number) => (
+      render: (_: any, index: number) => (
         <Button
           type="text"
           danger
@@ -457,9 +457,11 @@ Please use the correct file format for ${expectedType} import or go to the appro
                
               />
             </div>
-
-                          <div className={styles.actionButtons}>
-                <Button onClick={handleReset}>
+                <div className={styles.actionButtons}>
+                <Button
+                 onClick={handleReset}
+                 type="link" 
+                 >
                   Start Over
                 </Button>
               <Button 

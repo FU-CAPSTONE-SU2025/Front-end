@@ -419,15 +419,18 @@ export interface BulkCreateJoinedSubjects{
   studentUserName: string,
   subjectsData:BulkCreateJoinedSubjectsData[]
 }
-export interface BulkCreateJoinedSubjectsData{
+ interface BulkCreateJoinedSubjectsData{
   subjectCode: string;
   subjectVersionCode: string;
   semesterId: number;
   semesterStudyBlockType: number;
 }
 // M students to multiple subjects
+interface CreateJoinedSubjectMultipleStudents{
+  data: { [userName: string]: BulkCreateJoinedSubjectsData[] }
+}
 export interface BulkCreateJoinedSubjectMultipleStudents{
-  userNameToSubjectsMap: BulkCreateJoinedSubjects[]
+  userNameToSubjectsMap: CreateJoinedSubjectMultipleStudents[]
 }
 
 // ==================== PAGED DATA INTERFACES ====================

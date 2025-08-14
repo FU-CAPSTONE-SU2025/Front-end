@@ -6,10 +6,8 @@ import { useNavigate } from 'react-router';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDProgram, useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateProgram } from '../../interfaces/ISchoolProgram';
-import { isErrorResponse } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
-const { Panel } = Collapse;
 
 const ProgramPage: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -23,12 +21,13 @@ const ProgramPage: React.FC = () => {
   const {
     getAllPrograms,
     programList,
-    paginationProgram,
     isLoading,
     addMultipleProgramsMutation
   } = useCRUDProgram();
 
-  const { getCurriculumMutation } = useCRUDCurriculum();
+  const handleViewCurriculum = (programId: number) => {
+    navigate(`/staff/curriculums?programId=${programId}`);
+  }
 
   // Fetch programs on component mount and when page changes
   useEffect(() => {
@@ -192,8 +191,10 @@ const ProgramPage: React.FC = () => {
                 <b>Program Name:</b> {program.id}<br/>
                 <b>Program Code:</b> {program.programCode}<br/>
                 <b>Program Name:</b> {program.programName}<br/>
-                {/* TODO: Add curriculum details when expanded */}
-                <div style={{marginTop: 12, fontStyle: 'italic', color: '#6B7280'}}>
+
+                <div style={{marginTop: 12, fontStyle: 'italic', color: '#6B7280',cursor: 'pointer'}}
+                  onClick={()=> handleViewCurriculum(program.id)}
+                >
                   Click to view curriculum details...
                 </div>
               </div>

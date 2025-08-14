@@ -408,13 +408,16 @@
 }
 
 .bulkImportModal .tableActionButton {
-  color: #22C55E !important;
+  color: #ff0000 !important;
+  border-color: #ff0000 !important;
   border-radius: 6px;
   transition: background 0.15s;
 }
 
 .bulkImportModal .tableActionButton:hover {
-  background: #bbf7d0 !important;
+  background: #ff0000 !important;
+  color: white !important;
+  border-color: #ffffff !important;
 }
 
 /* Enhanced button styling for better visibility with higher specificity */
@@ -646,11 +649,6 @@
   }
 }
 
-/* Table container class */
-.bulkImportTable {
-  /* Specific table styling */
-}
-
 /* Simplified table styling - single color background with maximum specificity */
 .bulkImportModal .bulkImportTable .ant-table-thead > tr > th,
 .bulkImportModal .ant-table-thead > tr > th {
@@ -673,14 +671,4 @@
 .bulkImportModal .bulkImportTable .ant-table-tbody > tr:hover > td,
 .bulkImportModal .ant-table-tbody > tr:hover > td {
   background: #fed7aa !important;
-}
-
-.bulkImportModal .tableActionButton {
-  color: #22C55E !important;
-  border-radius: 6px;
-  transition: background 0.15s;
-}
-
-.bulkImportModal .tableActionButton:hover {
-  background: #bbf7d0 !important;
 }

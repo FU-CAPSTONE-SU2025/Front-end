@@ -168,12 +168,7 @@ export const transformMultiStudentBulkImportData = (rows: any[]): BulkCreateJoin
     
     return studentJoinedSubject;
   }, {});
-
-  // Transform to the expected API format
   return {
-    userNameToSubjectsMap: Object.entries(studentGroups).map(([studentUserName, subjects]) => ({
-      studentUserName,
-      subjectsData: subjects as any[]
-    }))
+    userNameToSubjectsMap: studentGroups
   };
 }; 

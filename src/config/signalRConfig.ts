@@ -1,10 +1,20 @@
 import * as signalR from '@microsoft/signalr';
 
+let ADVISORY_CHAT_HUB_URL:string
+let NOTIFICATION_HUB_URL:string
+if(import.meta.env.DEV){
+    ADVISORY_CHAT_HUB_URL = `${import.meta.env.VITE_API_AISEA_API_HUBURL}/advisoryChat1to1Hub`
+  NOTIFICATION_HUB_URL = `${import.meta.env.VITE_API_AISEA_API_HUBURL}/notificationHub`
+}
+else{
+  ADVISORY_CHAT_HUB_URL = `${import.meta.env.VITE_API_AISEA_API_BASEURL}/advisoryChat1to1Hub`
+  NOTIFICATION_HUB_URL = `${import.meta.env.VITE_API_AISEA_API_BASEURL}/notificationHub`
+}
 // SignalR Configuration for Advisory Chat
 export const SIGNALR_CONFIG = {
   // Hub URLs - use environment variables for consistency
-  ADVISORY_CHAT_HUB_URL: `${import.meta.env.VITE_API_AISEA_API_BASEURL}/advisoryChat1to1Hub`,
-  NOTIFICATION_HUB_URL: `${import.meta.env.VITE_API_AISEA_API_BASEURL}/notificationHub`,
+  ADVISORY_CHAT_HUB_URL: ADVISORY_CHAT_HUB_URL,
+  NOTIFICATION_HUB_URL: NOTIFICATION_HUB_URL,
   
   // Hub method names from backend configuration - matching ChatSessionSettings
   HUB_METHODS: {
