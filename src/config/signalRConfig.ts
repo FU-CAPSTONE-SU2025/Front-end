@@ -3,8 +3,8 @@ import * as signalR from '@microsoft/signalr';
 // SignalR Configuration for Advisory Chat
 export const SIGNALR_CONFIG = {
   // Hub URLs - use environment variables for consistency
-  ADVISORY_CHAT_HUB_URL: `${import.meta.env.VITE_API_AISEA_API_HUBURL}/advisoryChat1to1Hub`,
-  NOTIFICATION_HUB_URL: `${import.meta.env.VITE_API_AISEA_API_HUBURL}/notificationHub`,
+  ADVISORY_CHAT_HUB_URL: `${import.meta.env.VITE_API_AISEA_API_BASEURL}/advisoryChat1to1Hub`,
+  NOTIFICATION_HUB_URL: `${import.meta.env.VITE_API_AISEA_API_BASEURL}/notificationHub`,
   
   // Hub method names from backend configuration - matching ChatSessionSettings
   HUB_METHODS: {
@@ -36,7 +36,7 @@ export const SIGNALR_CONFIG = {
     NOTIFICATION_READ: 'NotificationReadMethod',
   },
   
-  // Connection settings
+
   CONNECTION: {
     RETRY_INTERVALS: [0, 2000, 5000, 10000, 30000], // Exponential backoff
     MAX_RETRIES: 5,
@@ -47,7 +47,7 @@ export const SIGNALR_CONFIG = {
     SERVER_TIMEOUT: 30000, // 30 seconds
   },
   
-  // Session settings - matching ChatSessionSettings
+
   SESSION: {
     CACHE_PREFIX: 'SenderAdviSession:',
     CACHE_EXPIRY_DAYS: 1,
@@ -55,28 +55,28 @@ export const SIGNALR_CONFIG = {
     INTERVAL_MILLIS: 1800000,
   },
   
-  // Notification settings - matching NotificationSettings
+
   NOTIFICATION: {
     INDIVIDUAL_USER_GROUP_PREFIX: 'IndividualUserGroup',
     EXPIRED_DAYS: 10,
     INTERVAL_MILLIS: 1800000,
   },
   
-  // Group prefixes - matching ChatSessionSettings
+
   GROUPS: {
     CHAT_PREFIX: 'GroupChatADVssPrefix',
     STAFF_PREFIX: 'MulDataSessionsPrefixStaff',
     STUDENT_PREFIX: 'MulDataSessionsPrefixStudent',
   },
   
-  // Message settings
+
   MESSAGES: {
     DEFAULT_PAGE_SIZE: 20,
     MAX_LENGTH: 1000,
     TYPING_TIMEOUT: 3000,
   },
   
-  // UI settings
+
   UI: {
     CHAT_BOX_WIDTH: 320,
     CHAT_BOX_HEIGHT: 384,
@@ -84,7 +84,7 @@ export const SIGNALR_CONFIG = {
     TYPING_INDICATOR_DELAY: 1000,
   },
   
-  // Error messages
+ 
   ERRORS: {
     CONNECTION_FAILED: 'Failed to connect to chat server',
     SEND_MESSAGE_FAILED: 'Failed to send message',
@@ -95,7 +95,6 @@ export const SIGNALR_CONFIG = {
     SESSION_NOT_FOUND: 'Session not found',
   },
   
-  // Status messages
   STATUS: {
     CONNECTING: 'Connecting...',
     CONNECTED: 'Connected',
@@ -106,7 +105,6 @@ export const SIGNALR_CONFIG = {
   },
 };
 
-// Connection state enum
 export enum ConnectionState {
   Disconnected = 'Disconnected',
   Connecting = 'Connecting',
