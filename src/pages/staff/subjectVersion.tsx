@@ -305,7 +305,7 @@ const SubjectVersionPage: React.FC = () => {
         setSubject(subjectData);
         
         // Check if subject is approved before proceeding
-        if (subjectData.approvalStatus !== 1) {
+        if (subjectData.approvalStatus !== 2) {
           handleError('Cannot create versions for unapproved subjects. Please approve the subject first.');
           setError('Subject must be approved before creating versions.');
           setLoading(false);
