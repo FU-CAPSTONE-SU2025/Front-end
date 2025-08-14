@@ -121,51 +121,100 @@ const AdvisorDashboard: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
       >
-        <Card title="Quick Actions" className="mb-6">
+        <Card 
+          title={
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-semibold text-gray-800">Quick Actions</span>
+              <div className="h-1 w-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+            </div>
+          } 
+          className="mb-6 shadow-lg border-0"
+          bodyStyle={{ padding: '24px' }}
+        >
           <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12} md={6}>
-              <Button 
-                type="primary" 
-                size="large" 
-                block
-                icon={<UserOutlined />}
-                className="h-16 flex flex-col items-center justify-center"
+            <Col xs={24} sm={12} lg={6}>
+              <motion.div 
+                whileHover={{ scale: 1.02, y: -2 }} 
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
+                className="w-full"
               >
-                <span>Student Management</span>
-              </Button>
+                <div 
+                  className="w-full h-20 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+                  style={{
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    border: 'none'
+                  }}
+                >
+                  <div className="w-full h-full flex flex-col items-center justify-center text-white gap-1">
+                    <UserOutlined className="text-2xl" />
+                    <span className="text-sm font-medium">Student Management</span>
+                  </div>
+                </div>
+              </motion.div>
             </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Button 
-                type="default" 
-                size="large" 
-                block
-                icon={<CalendarOutlined />}
-                className="h-16 flex flex-col items-center justify-center"
+            <Col xs={24} sm={12} lg={6}>
+              <motion.div 
+                whileHover={{ scale: 1.02, y: -2 }} 
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
+                className="w-full"
               >
-                <span>Appointments</span>
-              </Button>
+                <div 
+                  className="w-full h-20 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    border: 'none'
+                  }}
+                >
+                  <div className="w-full h-full flex flex-col items-center justify-center text-white gap-1">
+                    <CalendarOutlined className="text-2xl" />
+                    <span className="text-sm font-medium">Appointments</span>
+                  </div>
+                </div>
+              </motion.div>
             </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Button 
-                type="default" 
-                size="large" 
-                block
-                icon={<FileTextOutlined />}
-                className="h-16 flex flex-col items-center justify-center"
+            <Col xs={24} sm={12} lg={6}>
+              <motion.div 
+                whileHover={{ scale: 1.02, y: -2 }} 
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
+                className="w-full"
               >
-                <span>Reports</span>
-              </Button>
+                <div 
+                  className="w-full h-20 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+                  style={{
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    border: 'none'
+                  }}
+                >
+                  <div className="w-full h-full flex flex-col items-center justify-center text-white gap-1">
+                    <FileTextOutlined className="text-2xl" />
+                    <span className="text-sm font-medium">Reports</span>
+                  </div>
+                </div>
+              </motion.div>
             </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Button 
-                type="default" 
-                size="large" 
-                block
-                icon={<SettingOutlined />}
-                className="h-16 flex flex-col items-center justify-center"
+            <Col xs={24} sm={12} lg={6}>
+              <motion.div 
+                whileHover={{ scale: 1.02, y: -2 }} 
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
+                className="w-full"
               >
-                <span>Settings</span>
-              </Button>
+                <div 
+                  className="w-full h-20 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+                  style={{
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                    border: 'none'
+                  }}
+                >
+                  <div className="w-full h-full flex flex-col items-center justify-center text-white gap-1">
+                    <SettingOutlined className="text-2xl" />
+                    <span className="text-sm font-medium">Settings</span>
+                  </div>
+                </div>
+              </motion.div>
             </Col>
           </Row>
         </Card>
