@@ -1,23 +1,12 @@
-import React, { useState } from 'react';
-import { Select, Card } from 'antd';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import SubjectCard from '../../components/student/subjectCard';
 import CommitChart from '../../components/student/commitChart';
 import ImportantExams from '../../components/student/importantExams';
-
-const semesters = [
-  { label: 'Summer 2025 Semester', value: 'summer2025' },
-  { label: 'Spring 2025 Semester', value: 'spring2025' },
-  { label: 'Fall 2024 Semester', value: 'fall2024' },
-];
-
-const courses = [
-  { code: 'PRN212', name: 'Basic Cross-Platform Application Programming With .NET', progress: 85 },
-  { code: 'PRM231', name: 'Project Management', progress: 72 },
-  { code: 'PMG201c', name: 'Programming Fundamentals', progress: 95 },
-  { code: 'CSD201', name: 'Data Structures and Algorithms', progress: 68 },
-  { code: 'WED201c', name: 'Web Development', progress: 88 },
-];
+import SemesterSelect from '../../components/student/selectSemester';
+import { useJoinedSubjects } from '../../hooks/useStudentFeature';
+import { JoinedSubject, SemesterSubjects } from '../../interfaces/IStudent';
+import { groupSubjectsBySemester, getSemesterOptions } from '../../utils/subjectUtils';
 
 const importantExams = [
   {
@@ -59,14 +48,60 @@ const importantExams = [
 ];
 
 const CourseTracking = () => {
-  const [semester, setSemester] = useState(semesters[0].value);
+  const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
   const [isGitHubConnected, setIsGitHubConnected] = useState(false);
+  
+  // Fetch joined subjects
+  const { data: joinedSubjects, isLoading, error } = useJoinedSubjects();
+
+  // Group subjects by semester
+  const semesterSubjects: SemesterSubjects = useMemo(() => {
+    if (!joinedSubjects) return {};
+    return groupSubjectsBySemester(joinedSubjects);
+  }, [joinedSubjects]);
+
+  // Get available semesters for dropdown
+  const semesterOptions = useMemo(() => {
+    return getSemesterOptions(semesterSubjects);
+  }, [semesterSubjects]);
+
+  // Set default selected semester to the most recent one
+  useMemo(() => {
+    if (semesterOptions.length > 0 && !selectedSemester) {
+      setSelectedSemester(Number(semesterOptions[0].value));
+    }
+  }, [semesterOptions, selectedSemester]);
+
+  // Get current semester subjects
+  const currentSemesterSubjects = selectedSemester ? semesterSubjects[selectedSemester] || [] : [];
+  
+  // Get current semester name
+  const currentSemesterName = useMemo(() => {
+    if (!selectedSemester || !currentSemesterSubjects.length) return '';
+    return currentSemesterSubjects[0]?.semesterName || `Semester ${selectedSemester}`;
+  }, [selectedSemester, currentSemesterSubjects]);
 
   const handleGitHubConnect = () => {
     setIsGitHubConnected(true);
     // Here you would typically redirect to GitHub OAuth or handle the authentication flow
     console.log('Connecting to GitHub...');
   };
+
+  if (isLoading) {
+    return (
+      <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden flex items-center justify-center">
+        <div className="text-white text-xl">Loading subjects...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden flex items-center justify-center">
+        <div className="text-red-400 text-xl">Error loading subjects: {error.message}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden">
@@ -89,14 +124,10 @@ const CourseTracking = () => {
           </div>
           
           <div className="flex justify-center">
-            <Select
-              value={semester}
-              onChange={setSemester}
-              options={semesters}
-              className="w-full max-w-md"
-              size="large"
-              popupClassName="bg-gray-800 text-white"
-              style={{ color: 'white' }}
+            <SemesterSelect
+              value={selectedSemester?.toString() || ''}
+              options={semesterOptions}
+              onChange={(value) => setSelectedSemester(value ? Number(value) : null)}
             />
           </div>
         </motion.div>
@@ -109,49 +140,39 @@ const CourseTracking = () => {
           className="mb-16"
         >
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2">Your Courses</h2>
+            <h2 className="text-3xl font-bold text-white mb-2">
+              {currentSemesterName || 'Select Semester'}
+            </h2>
             <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-blue-400 mx-auto rounded-full"></div>
           </div>
           
-          {/* First row - 3 cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8 max-w-6xl mx-auto">
-            {courses.slice(0, 3).map((course) => (
-              <motion.div
-                key={course.code}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
-                whileHover={{ scale: 1.02, y: -5 }}
-                className="w-full"
-              >
-                <SubjectCard
-                  code={course.code}
-                  name={course.name}
-                  progress={course.progress}
-                />
-              </motion.div>
-            ))}
-          </div>
-          
-          {/* Second row - 2 cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {courses.slice(3, 5).map((course) => (
-              <motion.div
-                key={course.code}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
-                whileHover={{ scale: 1.02, y: -5 }}
-                className="w-full"
-              >
-                <SubjectCard
-                  code={course.code}
-                  name={course.name}
-                  progress={course.progress}
-                />
-              </motion.div>
-            ))}
-          </div>
+          {currentSemesterSubjects.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {currentSemesterSubjects.map((subject, index) => (
+                <motion.div
+                  key={subject.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02, y: -5 }}
+                  className="w-full"
+                >
+                  <SubjectCard
+                    code={subject.subjectCode}
+                    name={subject.name}
+                    progress={subject.isCompleted ? 100 : subject.isPassed ? 80 : 30}
+                    credits={subject.credits}
+                    isPassed={subject.isPassed}
+                    isCompleted={subject.isCompleted}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <p className="text-gray-300 text-lg">No subjects found for this semester</p>
+            </div>
+          )}
         </motion.div>
 
         {/* Activity Overview Section */}
