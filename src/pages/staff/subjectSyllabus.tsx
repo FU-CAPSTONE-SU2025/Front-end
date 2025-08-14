@@ -17,7 +17,6 @@ import AssessmentTable from '../../components/staff/AssessmentTable';
 import MaterialTable from '../../components/staff/MaterialTable';
 import OutcomeTable from '../../components/staff/OutcomeTable';
 import SessionTable from '../../components/staff/SessionTable';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const SubjectSyllabus: React.FC = () => {
   const navigate = useNavigate();
@@ -96,8 +95,7 @@ const SubjectSyllabus: React.FC = () => {
       message.success('Syllabus saved successfully');
       setIsEditing(false);
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      message.error(error);
     } finally {
       setLoading(false);
     }
@@ -180,8 +178,7 @@ const SubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      message.error(error);
     }
   };
 
@@ -192,8 +189,8 @@ const SubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+
+      message.error(error);
     }
   };
 
@@ -204,8 +201,7 @@ const SubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      message.error(error);
     }
   };
 
@@ -216,8 +212,7 @@ const SubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      message.error(error);
     }
   };
 
@@ -228,8 +223,7 @@ const SubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      message.error(errorMessage);
+      message.error(error);
     }
   };
 

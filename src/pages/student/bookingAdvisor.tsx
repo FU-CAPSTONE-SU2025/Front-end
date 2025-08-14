@@ -15,7 +15,6 @@ import CalendarView from '../../components/student/calendarView';
 import BookingModal from '../../components/student/bookingModal';
 import { CreateBookingMeeting } from '../../api/student/StudentAPI';
 import { AdvisorData, BookingAvailabilityData, CreateBookingMeetingRequest } from '../../interfaces/IStudent';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 interface WorkSlot {
   id: number | string;
@@ -167,9 +166,7 @@ const BookingPage = () => {
       }
     } catch (error: any) {
       // Use the improved error handling
-      const errorMessage = getUserFriendlyErrorMessage(error);
       console.error('Booking API error:', error);
-      
       Modal.error({
         title: 'Booking Failed',
         content: <pre style={{whiteSpace:'pre-wrap',fontFamily:'inherit'}}>{errorMessage}</pre>,

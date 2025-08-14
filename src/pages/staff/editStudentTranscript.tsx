@@ -91,15 +91,51 @@ const EditStudentTranscript: React.FC = () => {
   };
 
   const loadJoinedSubjects = async () => {
-    if (!studentAccount?.studentDataDetailResponse?.id) return;
+    if (!studentAccount?.studentDataDetailResponse?.id) {
+      console.log('No student profile ID available');
+      return;
+    }
+    
+    const studentProfileId = studentAccount.studentDataDetailResponse.id;
+    console.log('Loading joined subjects for student profile ID:', studentProfileId);
+    
     try {
       setJoinedLoading(true);
-      const res = await FetchJoinedSubjectList(1, 10, studentAccount.studentDataDetailResponse.id);
+      const res = await FetchJoinedSubjectList(1, 10, studentProfileId);
+      console.log('FetchJoinedSubjectList response:', res);
+      console.log('Response type:', typeof res);
+      console.log('Response keys:', res ? Object.keys(res) : 'null');
+      
+      // Handle different possible response structures
+      let subjects: JoinedSubject[] = [];
+      
       if (res) {
-        setJoinedSubjects((res as any).items as JoinedSubject[]);
+        const response = res as any; // Type as any to handle different structures
+        if (response.items && Array.isArray(response.items)) {
+          // Expected PagedJoinedSubject structure
+          subjects = response.items as JoinedSubject[];
+          console.log('Using res.items:', subjects);
+        } else if (Array.isArray(response)) {
+          // Direct array response
+          subjects = response as JoinedSubject[];
+          console.log('Using direct array response:', subjects);
+        } else if (response.data && Array.isArray(response.data)) {
+          // Nested data structure
+          subjects = response.data as JoinedSubject[];
+          console.log('Using res.data:', subjects);
+        } else {
+          console.log('Unexpected response structure:', response);
+          subjects = [];
+        }
       }
+      
+      console.log('Final subjects to set:', subjects);
+      setJoinedSubjects(subjects);
+      
     } catch (e) {
-      console.error('Failed to load joined subjects', e);
+      console.error('Failed to load joined subjects:', e);
+      handleError('Failed to load joined subjects');
+      setJoinedSubjects([]);
     } finally {
       setJoinedLoading(false);
     }
@@ -247,7 +283,7 @@ const EditStudentTranscript: React.FC = () => {
   };
 
   // Derive current subjects from joinedSubjects (not completed)
-  const currentSubjects: Subject[] = joinedSubjects
+  const currentSubjects: Subject[] = (joinedSubjects || [])
     .filter(js => !js.isCompleted)
     .map((js, idx) => ({
       id: idx,
@@ -502,7 +538,7 @@ const EditStudentTranscript: React.FC = () => {
                     <Spin />
                   </div>
                 ) : (
-                  joinedSubjects.map((js, index) => (
+                  (joinedSubjects || []).map((js, index) => (
                     <motion.div
                       key={`${js.subjectCode}-${js.subjectVersionCode}-${js.semesterName}-${index}`}
                       initial={{ opacity: 0, y: 10 }}

@@ -4,12 +4,10 @@ import { Descriptions, Avatar, Button, ConfigProvider } from 'antd';
 import { LogOut, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffProfile.module.css';
-import { AccountProps } from '../../interfaces/IAccount';
 import { getAuthState } from '../../hooks/useAuths';
 import { jwtDecode } from 'jwt-decode';
 import { JWTAccountProps } from '../../interfaces/IAccount';
 import useUserProfile from '../../hooks/useUserProfile';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 // Animation variants
@@ -20,17 +18,17 @@ const containerVariants = {
 
 const leftCardVariants = {
   hidden: { opacity: 0, x: -50 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: 'easeOut', delay: 0.2 } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.5, delay: 0.2 } },
 };
 
 const rightCardVariants = {
   hidden: { opacity: 0, x: 50 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: 'easeOut', delay: 0.4 } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.5, delay: 0.4 } },
 };
 
 const actionCardVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut', delay: 0.6 } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.6 } },
 };
 
 const buttonVariants = {
@@ -87,8 +85,7 @@ const StaffProfile: React.FC = () => {
   // Handle update errors
   useEffect(() => {
     if (updateError) {
-      const errorMessage = getUserFriendlyErrorMessage(updateError);
-      handleError(errorMessage);
+      handleError(updateError);
       console.error('Update error:', updateError);
     }
   }, [updateError]);
@@ -96,9 +93,8 @@ const StaffProfile: React.FC = () => {
   // Handle current user fetch errors
   useEffect(() => {
     if (currentUserError) {
-      const errorMessage = getUserFriendlyErrorMessage(currentUserError);
       console.error('Failed to fetch user data:', currentUserError);
-      handleError(errorMessage);
+      handleError(currentUserError);
     }
   }, [currentUserError]);
 
@@ -208,7 +204,10 @@ const StaffProfile: React.FC = () => {
             >
               <h2 className={styles.title}>Actions</h2>
               <div className={styles.actionButtons}>
-                <motion.div variants={buttonVariants} whileHover="hover">
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
                   <Button
                     type="primary"
                     className={styles.actionButton}
@@ -219,7 +218,10 @@ const StaffProfile: React.FC = () => {
                     Logout
                   </Button>
                 </motion.div>
-                <motion.div variants={buttonVariants} whileHover="hover">
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
                   <Button
                     type="default"
                     className={styles.actionButton}

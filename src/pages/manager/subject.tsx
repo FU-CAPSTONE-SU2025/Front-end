@@ -36,7 +36,7 @@ const SubjectManagerPage: React.FC = () => {
   const { handleApproval, isApproving } = useApprovalActions();
 
   useEffect(() => {
-    getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+    getAllSubjects({ pageNumber: page, pageSize, search: search });
   }, [page, pageSize, search]);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const SubjectManagerPage: React.FC = () => {
     
     try {
       await handleApproval('subject', selectedItem.id, approvalStatus, rejectionReason);
-      getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+      getAllSubjects({ pageNumber: page, pageSize, search: search });
       setApprovalModalVisible(false);
       setSelectedItem(null);
     } catch (error) {
@@ -75,14 +75,14 @@ const SubjectManagerPage: React.FC = () => {
       align: 'left' as 'left',
       width: 200,
       render: (_: any, record: any) => {
-        if (record.approvalStatus === 1) {
+        if (record.approvalStatus === 2) {
           return (
             <div style={{ fontSize: 12, color: '#52c41a' }}>
               <div>Approved by: {record.approvedBy || 'Unknown'}</div>
               <div>Date: {record.approvedAt ? new Date(record.approvedAt).toLocaleDateString() : 'Unknown'}</div>
             </div>
           );
-        } else if (record.rejectionReason) {
+        } else if (record.approvalStatus === 3) {
           return (
             <div style={{ fontSize: 12, color: '#ff4d4f' }}>
               <div>Rejected</div>
@@ -104,12 +104,12 @@ const SubjectManagerPage: React.FC = () => {
       align: 'center' as 'center',
       width: 280,
       render: (_: any, record: any) => {
-        const isApproved = record.approvalStatus === 1;
+        const isApproved = record.approvalStatus === 2;
         return (
           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
             {/* Approved Status Display */}
-            <Tag color={isApproved ? 'green' : 'orange'} style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6, marginBottom: 0 }}>
-              {isApproved ? 'Approved' : 'Waiting'}
+            <Tag color={isApproved ? 'green' : record.approvalStatus === 3 ? 'red' : 'orange'} style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6, marginBottom: 0 }}>
+              {isApproved ? 'Approved' : record.approvalStatus === 3 ? 'Rejected' : 'Pending'}
             </Tag>
             
             {/* Edit Status Button */}
@@ -119,11 +119,11 @@ const SubjectManagerPage: React.FC = () => {
               size="small"
               onClick={async () => {
                 if (isApproved) {
-                  await handleApproval('subject', record.id, 0, null);
+                  await handleApproval('subject', record.id, 1, null); // Set back to pending
                 } else {
                   handleApprove(record.id, record.subjectName);
                 }
-                getAllSubjects({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+                getAllSubjects({ pageNumber: page, pageSize, search: search });
               }}
               style={{borderRadius: 6, height: 22, padding: '0 6px', fontSize: 12, marginBottom: 0}}
             >

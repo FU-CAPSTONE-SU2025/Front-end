@@ -19,7 +19,7 @@ import AssessmentTable from '../../components/staff/AssessmentTable';
 import MaterialTable from '../../components/staff/MaterialTable';
 import OutcomeTable from '../../components/staff/OutcomeTable';
 import SessionTable from '../../components/staff/SessionTable';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
+
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
@@ -108,8 +108,8 @@ const ManagerSubjectSyllabus: React.FC = () => {
       handleSuccess('Syllabus saved successfully');
       setIsEditing(false);
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      handleError(errorMessage);
+
+      handleError(error);
     } finally {
       setLoading(false);
     }
@@ -191,8 +191,8 @@ const ManagerSubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      handleError(errorMessage);
+  
+      handleError(error);
     }
   };
 
@@ -203,8 +203,8 @@ const ManagerSubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      handleError(errorMessage);
+
+      handleError(error);
     }
   };
 
@@ -215,8 +215,8 @@ const ManagerSubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      handleError(errorMessage);
+ 
+      handleError(error);
     }
   };
 
@@ -227,8 +227,7 @@ const ManagerSubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      handleError(errorMessage);
+      handleError(error);
     }
   };
 
@@ -239,8 +238,7 @@ const ManagerSubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      handleError(errorMessage);
+      handleError(error);
     }
   };
 
@@ -251,8 +249,7 @@ const ManagerSubjectSyllabus: React.FC = () => {
       const updated = await fetchSyllabusBySubjectVersionMutation.mutateAsync(Number(subjectId));
       setSyllabus(Array.isArray(updated) ? updated[0] : updated);
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      handleError(errorMessage);
+      handleError(error);
     }
   };
 
@@ -265,8 +262,7 @@ const ManagerSubjectSyllabus: React.FC = () => {
     
     try {
       await handleApproval('syllabus', syllabus.id, approvalStatus, rejectionReason);
-      // Update local state to reflect the approval
-      if (approvalStatus === 1) {
+      if (approvalStatus === 2) {
         setApprovalStatus('approved');
       }
       setApprovalModalVisible(false);

@@ -97,10 +97,10 @@ const ManagerList: React.FC = () => {
       try {
         response = await BulkRegisterManager(transformedData);
       } catch (err) {
-        const errorMessage = getUserFriendlyErrorMessage(err);
+
         setUploadStatus('error');
-        setUploadMessage(errorMessage);
-        handleError(errorMessage);
+        setUploadMessage(err);
+        handleError(err);
         return;
       }
       // Treat null/undefined (204 No Content) as success

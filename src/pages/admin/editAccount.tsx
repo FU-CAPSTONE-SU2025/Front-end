@@ -10,7 +10,6 @@ import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { FetchProgramList } from '../../api/SchoolAPI/programAPI';
 import { FetchCurriculumList } from '../../api/SchoolAPI/curriculumAPI';
 import { Program, Curriculum } from '../../interfaces/ISchoolProgram';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 import AvatarUpload from '../../components/common/AvatarUpload';
 
@@ -299,9 +298,8 @@ const EditAccount: React.FC = () => {
           nav(-1);
         } catch (err) {
           // Use the improved error handling
-          const errorMessage = getUserFriendlyErrorMessage(err);
           console.error('Account creation error:', err);
-          handleError(errorMessage, 'Failed to create account');
+          handleError(err, 'Failed to create account');
         }
         setLoading(false);
         return;

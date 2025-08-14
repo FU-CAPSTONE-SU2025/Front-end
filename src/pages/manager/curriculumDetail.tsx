@@ -1,27 +1,19 @@
 import React, { useState } from 'react';
-import {  Input, Button, Affix, Collapse, Modal, Typography, Progress, Select, Card, Space, Row, Col, Table, Empty } from 'antd';
+import {  Input, Button, Affix, Collapse, Modal, Typography, Progress, Select, Card, Space, Row, Col, Table, Empty, Tag } from 'antd';
 import { PlusOutlined, EditOutlined, SearchOutlined, CheckOutlined, ImportOutlined, EyeOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
-import { CreateCurriculum } from '../../interfaces/ISchoolProgram';
 import { subjects, combos, comboSubjects, curriculums } from '../../data/schoolData';
 import { AddSubjectVersionToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
-import { isErrorResponse, getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
-const { Panel } = Collapse;
-const { Title, Text } = Typography;
 
-const nodeColor = 'rgba(30,64,175,1)';
-const nodeBorder = '2.5px solid #fff';
-const nodeSize = 18;
-const lineWidth = 4;
-const lineColor = 'rgba(30,64,175,0.18)';
+const { Title, Text } = Typography;
 
 const CurriculumManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -31,12 +23,6 @@ const CurriculumManagerPage: React.FC = () => {
   const [addSubjectVersionModal, setAddSubjectVersionModal] = useState<{ open: boolean, curriculumId: number | null, semester: number | null }>({ open: false, curriculumId: null, semester: null });
   const [selectedSubjectVersionId, setSelectedSubjectVersionId] = useState<number | null>(null);
   const { handleError, handleSuccess } = useApiErrorHandler();
-  const { showWarning } = useMessagePopupContext();
-
-  // Add CRUD hooks
-  const {
-    addMultipleCurriculumsMutation
-  } = useCRUDCurriculum();
 
   // Approval hook
   const { handleApproval, isApproving } = useApprovalActions();
@@ -51,21 +37,11 @@ const CurriculumManagerPage: React.FC = () => {
     navigate('/manager/addCurriculum');
   };
 
-  const handleEditCurriculum = (curriculumId: number) => {
-    navigate(`/manager/editCurriculum/${curriculumId}`);
-  };
 
   // Deprecated: bulk import removed
 
   const handleViewSubjectVersions = (curriculumId: number) => {
     navigate(`/manager/curriculum/${curriculumId}/subjects`);
-  };
-
-  // Deprecated: import handlers removed
-
-  const handleApprove = (id: number, name: string) => {
-    setSelectedItem({ id, name });
-    setApprovalModalVisible(true);
   };
 
   const handleApprovalConfirm = async (approvalStatus: number, rejectionReason?: string) => {
@@ -131,12 +107,12 @@ const CurriculumManagerPage: React.FC = () => {
       align: 'center' as const,
       width: 120,
       render: (_: any, record: any) => (
-        <span style={{ 
-          color: record.approvalStatus === 1 ? '#52c41a' : '#faad14', 
-          fontWeight: 600 
-        }}>
-          {record.approvalStatus === 1 ? 'Approved' : 'Pending Approval'}
-        </span>
+        <Tag
+          color={record.approvalStatus === 2 ? '#52c41a' : record.approvalStatus === 3 ? '#ff4d4f' : '#faad14'}
+          style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6 }}
+        >
+          {record.approvalStatus === 2 ? 'Approved' : record.approvalStatus === 3 ? 'Rejected' : 'Pending Approval'}
+        </Tag>
       ),
     },
     {

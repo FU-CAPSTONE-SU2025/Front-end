@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { useCRUDSyllabus, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import { Syllabus, Subject, SyllabusSession, SyllabusOutcome } from '../../interfaces/ISchoolProgram';
 import styles from '../../css/manager/managerCustomTable.module.css';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const SubjectDetail: React.FC = () => {
@@ -50,8 +49,7 @@ const SubjectDetail: React.FC = () => {
         setSyllabus(loadedSyllabus);
         setOutcomes(loadedSyllabus?.outcomes || []);
       } catch (error) {
-        const errorMessage = getUserFriendlyErrorMessage(error);
-        handleError(errorMessage);
+        handleError(error);
       } finally {
         setLoading(false);
       }

@@ -167,12 +167,12 @@ const CurriculumPageManager: React.FC = () => {
       align: 'center' as const,
       width: 120,
       render: (_: any, record: any) => (
-        <span style={{ 
-          color: record.approvalStatus === 1 ? '#52c41a' : '#faad14', 
-          fontWeight: 600 
-        }}>
-          {record.approvalStatus === 1 ? 'Approved' : 'Pending Approval'}
-        </span>
+        <Tag
+          color={record.approvalStatus === 2 ? '#52c41a' : record.approvalStatus === 3 ? '#ff4d4f' : '#faad14'}
+          style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6 }}
+        >
+          {record.approvalStatus === 2 ? 'Approved' : record.approvalStatus === 3 ? 'Rejected' : 'Pending Approval'}
+        </Tag>
       ),
     },
     {
@@ -180,33 +180,33 @@ const CurriculumPageManager: React.FC = () => {
       key: 'actions',
       align: 'center' as const,
       width: 120,
-      render: (_: any, record: any) => (
-        <Button
-          type={record.approvalStatus === 1 ? 'default' : 'primary'}
-          icon={<CheckOutlined />}
-          size="small"
-          onClick={async () => {
-            if (record.approvalStatus === 1) {
-              try {
-                await handleApproval('curriculum', record.id, 0, null);
-                // Refresh curriculum table data after unapproving
+      render: (_: any, record: any) => {
+        const isApproved = record.approvalStatus === 2;
+        return (
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+            <Button
+              type={isApproved ? 'default' : 'primary'}
+              icon={<CheckOutlined style={{ fontSize: 12 }} />}
+              size="small"
+              onClick={async () => {
+                if (isApproved) {
+                  await handleApproval('curriculum', record.id, 1, null); // Set back to pending
+                } else {
+                  handleApprove(record.id, record.curriculumName);
+                }
                 getCurriculumMutation.mutate({
                   pageNumber: currentPage,
                   pageSize,
                   search: search
                 });
-              } catch (error) {
-                // Error is already handled in the hook
-              }
-            } else {
-              handleApprove(record.id, record.curriculumName);
-            }
-          }}
-          style={{borderRadius: 6}}
-        >
-          {record.approvalStatus === 1 ? 'Edit status' : 'Approve'}
-        </Button>
-      ),
+              }}
+              style={{borderRadius: 6, height: 22, padding: '0 6px', fontSize: 12, marginBottom: 0}}
+            >
+              {isApproved ? 'Edit status' : 'Approve'}
+            </Button>
+          </div>
+        );
+      },
     },
     {
       title: 'View Subject Versions',

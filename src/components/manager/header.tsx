@@ -1,8 +1,9 @@
 import { NavLink, useNavigate } from 'react-router';
 import { SearchOutlined, BellOutlined, LogoutOutlined } from '@ant-design/icons';
-import { Input, Button, Avatar, Badge, Tooltip } from 'antd';
+import { Input, Button, Avatar, Badge, Tooltip, Tag } from 'antd';
 import { motion } from 'framer-motion';
 import { getAuthState } from '../../hooks/useAuths';
+import Notification from '../common/Notification';
 
 const navLinks = [
   { name: 'Programs', path: '/manager/program' },
@@ -14,12 +15,6 @@ const navLinks = [
 
 const ManagerHeader = () => {
   const navigate = useNavigate();
-  const { logout } = getAuthState();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
 
   return (
     <motion.header
@@ -63,20 +58,27 @@ const ManagerHeader = () => {
                 </motion.div>
               ))}
             </nav>
+            <Tag color="orange" style={{
+              fontSize: '12px',
+              fontWeight: '600',
+              padding: '4px 12px',
+              borderRadius: '16px',
+              border: '2px solid #fa8c16',
+              backgroundColor: 'rgba(250, 140, 22, 0.1)',
+              color: '#fa8c16',
+              marginLeft: '16px',
+              boxShadow: '0 2px 4px rgba(250, 140, 22, 0.2)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              alignSelf: 'center'
+            }}>
+              Manager
+            </Tag>
           </div>
-
+          <Notification/>
           {/* Search, User Info */}
           <div className="flex items-center space-x-4">
             <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.97 }}>
-              <Button 
-                type="primary" 
-                icon={<LogoutOutlined />}
-                onClick={handleLogout}
-                style={{ background: '#f59e42', border: 'none' }} 
-                size="middle"
-              >
-                Logout
-              </Button>
             </motion.div>
             <div className="flex items-center space-x-4">
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.97 }}>

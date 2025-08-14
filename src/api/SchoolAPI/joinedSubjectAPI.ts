@@ -73,6 +73,21 @@ export const FetchJoinedSubjectList = async (
   }
 };
 
+export const DeleteJoinedSubject = async (joinedSubjectId: number): Promise<any> => {
+  const props = {
+    data: null,
+    url: joinedSubjectURL + `/${joinedSubjectId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosDelete(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+  }
+};
+
+
 // Semester Data Fetching
 export const FetchPagedSemesterList = async (
   pageNumber: number = 1,
@@ -120,4 +135,6 @@ export const FetchPagedSemesterBlockType = async (
     throwApiError(result);
   }
 };
+
+
 

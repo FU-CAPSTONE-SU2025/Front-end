@@ -52,7 +52,7 @@ export const useApprovalActions = (): UseApprovalActionsReturn => {
           throw new Error(`Unknown approval type: ${type}`);
       }
 
-      const action = approvalStatus === 1 ? 'approved' : 'rejected';
+      const action = approvalStatus === 2 ? 'approved' : 'rejected';
       const typeName = type.charAt(0).toUpperCase() + type.slice(1);
       message.success(`${typeName} ${action} successfully!`);
       

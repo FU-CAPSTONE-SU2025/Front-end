@@ -3,7 +3,6 @@ import { Card, Typography, Space, Button, message, Tag, Segmented } from 'antd';
 import { CalendarOutlined, PlusOutlined } from '@ant-design/icons';
 import { useLeaveScheduleList, useDeleteLeaveSchedule } from '../../hooks/useCRUDLeaveSchedule';
 import { LeaveSchedule } from '../../interfaces/ILeaveSchedule';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import dayjs, { Dayjs } from 'dayjs';
 import styles from '../../css/advisor/workSchedule.module.css';
 import AddLeaveScheduleModal from '../../components/advisor/addLeaveScheduleModal';
@@ -17,9 +16,7 @@ const { Title, Text } = Typography;
 const LeaveSchedulePage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [isBulkAddModalVisible, setIsBulkAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedLeaveId, setSelectedLeaveId] = useState<number | null>(null);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
@@ -30,7 +27,7 @@ const LeaveSchedulePage: React.FC = () => {
 
   const effectivePageSize = viewMode === 'week' ? 50 : 10; // Week view = hết data, Day view = 10
 
-  const { data, isLoading, error } = useLeaveScheduleList(currentPage, effectivePageSize);
+  const { data} = useLeaveScheduleList(currentPage, effectivePageSize);
   const leaveList = data?.items || [];
   const totalCount = data?.totalCount || 0;
 
@@ -42,67 +39,19 @@ const LeaveSchedulePage: React.FC = () => {
     setIsAddModalVisible(false);
     message.success('Leave schedule added successfully!');
   };
-  const handleBulkAddSuccess = () => {
-    setIsBulkAddModalVisible(false);
-    message.success('Bulk leave schedules added successfully!');
-  };
   const handleEditSuccess = () => {
     setIsEditModalVisible(false);
     setSelectedLeaveId(null);
     message.success('Leave schedule updated successfully!');
   };
 
-  const columns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 80,
-      align: 'center' as const,
-      render: (_: number, __: LeaveSchedule, index: number) => <Text strong>{index + 1 + (currentPage - 1) * pageSize}</Text>,
-    },
-    {
-      title: 'Start Time',
-      dataIndex: 'startDateTime',
-      key: 'startDateTime',
-      width: 180,
-      align: 'center' as const,
-      render: (value: string) => (
-        <Text>{dayjs.utc(value).format('YYYY-MM-DD HH:mm')}</Text>
-      ),
-    },
-    {
-      title: 'End Time',
-      dataIndex: 'endDateTime',
-      key: 'endDateTime',
-      width: 180,
-      align: 'center' as const,
-      render: (value: string) => (
-        <Text>{dayjs.utc(value).format('YYYY-MM-DD HH:mm')}</Text>
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 200,
-      align: 'center' as const,
-      render: (_: any, record: LeaveSchedule) => (
-        <Space>
-          <Button size="small" onClick={() => { setViewLeaveId(record.id); setIsViewModalVisible(true); }}>View</Button>
-          <Button size="small" onClick={() => { setSelectedLeaveId(record.id); setIsEditModalVisible(true); }}>Edit</Button>
-          <Button danger size="small" onClick={() => handleDelete(record.id)}>Delete</Button>
-        </Space>
-      ),
-    },
-  ];
   const deleteLeaveSchedule = useDeleteLeaveSchedule();
   const handleDelete = async (id: number) => {
     try {
       await deleteLeaveSchedule.mutateAsync(id);
       message.success('Leave schedule deleted successfully!');
     } catch (err) {
-      const errorMessage = getUserFriendlyErrorMessage(err);
-      message.error(errorMessage);
+      message.error(err);
     }
   };
   const filteredLeaves = viewMode === 'day'

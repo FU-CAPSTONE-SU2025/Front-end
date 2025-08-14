@@ -26,14 +26,14 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
   itemName,
   loading = false
 }) => {
-  const [approvalStatus, setApprovalStatus] = useState<number>(1); // 1 for approve, 0 for reject
+  const [approvalStatus, setApprovalStatus] = useState<number>(2); // 2 for approve, 3 for reject
   const [rejectionReason, setRejectionReason] = useState<string>('');
 
   const handleConfirm = async () => {
     try {
-      await onConfirm(approvalStatus, approvalStatus === 0 ? rejectionReason : undefined);
+      await onConfirm(approvalStatus, approvalStatus === 3 ? rejectionReason : undefined);
       // Reset form
-      setApprovalStatus(1);
+      setApprovalStatus(2);
       setRejectionReason('');
     } catch (error) {
       // Error handling is done in the parent component
@@ -42,7 +42,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
 
   const handleCancel = () => {
     // Reset form
-    setApprovalStatus(1);
+    setApprovalStatus(2);
     setRejectionReason('');
     onCancel();
   };
@@ -76,12 +76,12 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
           </Button>
           <Button
             type="primary"
-            icon={approvalStatus === 1 ? <CheckOutlined /> : <CloseOutlined />}
+            icon={approvalStatus === 2 ? <CheckOutlined /> : <CloseOutlined />}
             onClick={handleConfirm}
             loading={loading}
-            danger={approvalStatus === 0}
+            danger={approvalStatus === 3}
           >
-            {approvalStatus === 1 ? 'Approve' : 'Reject'}
+            {approvalStatus === 2 ? 'Approve' : 'Reject'}
           </Button>
         </div>
       }
@@ -106,13 +106,13 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
           style={{ marginTop: 8 }}
         >
           <Space direction="vertical">
-            <Radio value={1}>
+            <Radio value={2}>
               <Space>
                 <CheckOutlined style={{ color: '#52c41a' }} />
                 Approve this {getTypeDisplayName(type).toLowerCase()}
               </Space>
             </Radio>
-            <Radio value={0}>
+            <Radio value={3}>
               <Space>
                 <CloseOutlined style={{ color: '#ff4d4f' }} />
                 Reject this {getTypeDisplayName(type).toLowerCase()}
@@ -122,7 +122,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
         </Radio.Group>
       </div>
 
-      {approvalStatus === 0 && (
+      {approvalStatus === 3 && (
         <div style={{ marginBottom: 16 }}>
           <Text strong>Rejection Reason: </Text>
           <TextArea
@@ -145,7 +145,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
       }}>
         <Text type="secondary" style={{ fontSize: 12 }}>
           <strong>Note:</strong> This action will update the approval status of this {getTypeDisplayName(type).toLowerCase()}. 
-          {approvalStatus === 0 && ' Rejection requires a reason.'}
+          {approvalStatus === 3 && ' Rejection requires a reason.'}
         </Text>
       </div>
     </Modal>

@@ -126,10 +126,10 @@ const StaffList: React.FC = () => {
       try {
         response = await BulkRegisterStaff(validData);
       } catch (err) {
-        const errorMessage = getUserFriendlyErrorMessage(err);
+
         setUploadStatus('error');
-        setUploadMessage(errorMessage);
-        handleError(errorMessage);
+        setUploadMessage(err);
+        handleError(err);
         return;
       }
       // Treat null/undefined (204 No Content) as success

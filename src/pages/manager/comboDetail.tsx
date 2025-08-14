@@ -15,9 +15,6 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
-import { useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
-import { Combo, Subject } from '../../interfaces/ISchoolProgram';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Option } = Select;

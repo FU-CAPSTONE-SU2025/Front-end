@@ -122,49 +122,6 @@ export const extractValidationErrors = (error: any): Record<string, string[]> =>
     return {};
 };
 
-// Utility function to get a user-friendly error message
-export const getUserFriendlyErrorMessage = (error: any): string => {
-    if (!error) return "An unknown error occurred";
-    
-    // If it's an ErrorResponse
-    if (isErrorResponse(error)) {
-        return error.message;
-    }
-    
-    // If it's a string
-    if (typeof error === 'string') {
-        return error;
-    }
-    
-    // If it's an Error object
-    if (error instanceof Error) {
-        return error.message;
-    }
-    
-    // If it's an object with validation errors
-    if (typeof error === 'object' && error.errors) {
-        const validationErrors = extractValidationErrors(error);
-        const errorMessages: string[] = [];
-        
-        for (const field in validationErrors) {
-            const fieldErrors = validationErrors[field];
-            if (Array.isArray(fieldErrors)) {
-                errorMessages.push(...fieldErrors);
-            }
-        }
-        
-        if (errorMessages.length > 0) {
-            return errorMessages.join('\n');
-        }
-    }
-    
-    // If it has a message property
-    if (typeof error === 'object' && error.message) {
-        return error.message;
-    }
-    
-    return "An unknown error occurred";
-};
 
 const MAX_REFRESH_RETRIES = 3;
 var current_retry = 0

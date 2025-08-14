@@ -8,7 +8,6 @@ import { useCRUDSubject, useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial'
 import { CreateSubject } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
-import {getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 import { Subject } from '../../interfaces/ISchoolProgram';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
@@ -67,8 +66,7 @@ const SubjectPage: React.FC = () => {
             setComboSubjectsMap(prev => ({ ...prev, [comboId]: subjects }));
           }
         } catch (error) {
-          const errorMessage = getUserFriendlyErrorMessage(error);
-          handleError(errorMessage);
+          handleError(error);
         } finally {
           setLoadingComboSubjects(false);
         }
@@ -153,8 +151,7 @@ const SubjectPage: React.FC = () => {
       // Refresh the subject list
       getAllSubjects({ pageNumber: page, pageSize, search: search });
     } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      handleError(errorMessage);
+      handleError(error);
     }
   };
 

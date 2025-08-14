@@ -130,24 +130,6 @@ const Profile: React.FC = () => {
     }
   }, [isUpdateSuccess, refetchUser]);
 
-  // Handle update errors
-  useEffect(() => {
-    if (updateError) {
-      const errorMessage = getUserFriendlyErrorMessage(updateError);
-      handleError(errorMessage);
-      console.error('Update error:', updateError);
-    }
-  }, [updateError]);
-
-  // Handle current user fetch errors
-  useEffect(() => {
-    if (currentUserError) {
-      const errorMessage = getUserFriendlyErrorMessage(currentUserError);
-      console.error('Failed to fetch user data:', currentUserError);
-      handleError(errorMessage);
-    }
-  }, [currentUserError]);
-
   // Fetch categorized data on component mount
   useEffect(() => {
     refetch();

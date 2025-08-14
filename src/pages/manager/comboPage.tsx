@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Affix, Tag, message, Pagination, Spin, Empty, Modal, Space, Card, Typography, Row, Col } from 'antd';
-import { PlusOutlined,CheckOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined,CheckOutlined, SearchOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
@@ -155,14 +155,14 @@ const ComboManagerPage: React.FC = () => {
       align: 'left' as const,
       width: 200,
       render: (_: any, record: any) => {
-        if (record.approvalStatus === 1) {
+        if (record.approvalStatus === 2) {
           return (
             <div style={{ fontSize: 12, color: '#52c41a' }}>
               <div>Approved by: {record.approvedBy || 'Unknown'}</div>
               <div>Date: {record.approvedAt ? new Date(record.approvedAt).toLocaleDateString() : 'Unknown'}</div>
             </div>
           );
-        } else if (record.rejectionReason) {
+        } else if (record.approvalStatus === 3) {
           return (
             <div style={{ fontSize: 12, color: '#ff4d4f' }}>
               <div>Rejected</div>
@@ -183,11 +183,68 @@ const ComboManagerPage: React.FC = () => {
       key: 'status',
       align: 'center' as const,
       render: (_: any, record: any) => {
-        const isApproved = record.approvalStatus === 1;
+        const isApproved = record.approvalStatus === 2;
         return (
-          <Tag color={isApproved ? 'green' : 'orange'} style={{ fontWeight: 600, fontSize: 14 }}>
-            {isApproved ? 'Approved' : 'Waiting for Approval'}
+          <Tag color={isApproved ? 'green' : record.approvalStatus === 3 ? 'red' : 'orange'} style={{ fontWeight: 600, fontSize: 14 }}>
+            {isApproved ? 'Approved' : record.approvalStatus === 3 ? 'Rejected' : 'Pending'}
           </Tag>
+        );
+      },
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      align: 'center' as const,
+      width: 200,
+      render: (_: any, record: any) => {
+        const isApproved = record.approvalStatus === 2;
+        const isRejected = record.approvalStatus === 3;
+        const isPending = record.approvalStatus === 1;
+        
+        return (
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+            {/* Status Tag */}
+            <Tag color={isApproved ? 'green' : isRejected ? 'red' : 'orange'} style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6, marginBottom: 0 }}>
+              {isApproved ? 'Approved' : isRejected ? 'Rejected' : 'Pending'}
+            </Tag>
+            
+            {/* Approve Button - only show for pending combos */}
+            {isPending && (
+              <Button
+                type="primary"
+                icon={<CheckOutlined style={{ fontSize: 12 }} />}
+                size="small"
+                onClick={() => handleApprove(record.id, record.comboName)}
+                style={{
+                  borderRadius: 6, 
+                  height: 22, 
+                  padding: '0 6px', 
+                  fontSize: 12, 
+                  marginBottom: 0,
+                  background: 'linear-gradient(135deg, #52c41a 0%, #389e0d 100%)',
+                  border: 'none'
+                }}
+              >
+                Approve
+              </Button>
+            )}
+            
+            {/* Edit Status Button - only show for approved combos */}
+            {isApproved && (
+              <Button
+                type="default"
+                icon={<CheckOutlined style={{ fontSize: 12 }} />}
+                size="small"
+                onClick={async () => {
+                  await handleApproval('combo', record.id, 1, null); // Set back to pending
+                  getAllCombos({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
+                }}
+                style={{borderRadius: 6, height: 22, padding: '0 6px', fontSize: 12, marginBottom: 0}}
+              >
+                Edit Status
+              </Button>
+            )}
+          </div>
         );
       },
     },
@@ -211,32 +268,6 @@ const ComboManagerPage: React.FC = () => {
           View Subjects
         </Button>
       ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      align: 'center' as const,
-      width: 200,
-      render: (_: any, record: any) => {
-        const isApproved = record.approvalStatus === 1;
-        return (
-          <Button
-            type={isApproved ? 'default' : 'primary'}
-            icon={<CheckOutlined />}
-            onClick={async () => {
-              if (isApproved) {
-                await handleApproval('combo', record.id, 0, null);
-              } else {
-                handleApprove(record.id, record.comboName);
-              }
-              getAllCombos({ pageNumber: page, pageSize, search: search });
-            }}
-            style={{borderRadius: 8, height: 28, padding: '0 8px', marginLeft: 8}}
-          >
-            {isApproved ? 'Edit Status' : 'Approve'}
-          </Button>
-        );
-      },
     },
   ];
 

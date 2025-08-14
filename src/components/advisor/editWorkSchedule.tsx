@@ -5,7 +5,6 @@ import { useGetBookingAvailabilityById, useUpdateBookingAvailability } from '../
 import { BookingAvailability, UpdateBookingAvailabilityRequest } from '../../interfaces/IBookingAvailability';
 import dayjs, { Dayjs } from 'dayjs';
 import { dayOptions } from '../../interfaces/IDayOptions';
-import { getUserFriendlyErrorMessage } from '../../api/AxiosCRUD';
 
 const { Option } = Select;
 
