@@ -8,9 +8,10 @@ import {
     getAdvisorMeetings,
     GetPagedLeaveSchedulesOneStaff,
     getMaxNumberOfBan,
-    getCurrentNumberOfBan
+    getCurrentNumberOfBan,
+    getJoinedSubjects
 } from '../api/student/StudentAPI';
-import { AdvisorMeetingPaged, BookingAvailabilityData, PagedAdvisorData, PagedLeaveScheduleData, MaxBanData, CurrentBanData } from '../interfaces/IStudent';
+import { AdvisorMeetingPaged, BookingAvailabilityData, PagedAdvisorData, PagedLeaveScheduleData, MaxBanData, CurrentBanData, JoinedSubject } from '../interfaces/IStudent';
 
 interface UseStudentFeatureParams {
   search: string;
@@ -173,6 +174,19 @@ export const useCurrentNumberOfBan = () => {
     queryFn: () => getCurrentNumberOfBan(),
     staleTime: 1000 * 60 * 5, // 5 minutes (shorter for current data)
     gcTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
+};
+
+// Hook for fetching joined subjects
+export const useJoinedSubjects = () => {
+  return useQuery<JoinedSubject[] | null, Error>({
+    queryKey: ['joinedSubjects'],
+    queryFn: () => getJoinedSubjects(),
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
