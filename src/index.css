@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "./css/modalFixes.css";
 
-:root {
-}
 body {
   background: linear-gradient(to bottom right, #f97316, #1e3a8a);
   background-repeat: no-repeat;
