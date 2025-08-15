@@ -419,7 +419,8 @@ export const getJoinedSubjects = async (): Promise<JoinedSubject[]> => {
   const result = await axiosRead(props);
   if (result.success) {
     console.log("Joined subjects data:", result.data);
-    return result.data;
+    // Ensure we always return an array
+    return Array.isArray(result.data) ? result.data : [];
   } else {
     throwApiError(result);
     return null as never;

@@ -182,9 +182,13 @@ export const useCurrentNumberOfBan = () => {
 
 // Hook for fetching joined subjects
 export const useJoinedSubjects = () => {
-  return useQuery<JoinedSubject[] | null, Error>({
+  return useQuery<JoinedSubject[], Error>({
     queryKey: ['joinedSubjects'],
-    queryFn: () => getJoinedSubjects(),
+    queryFn: async () => {
+      const data = await getJoinedSubjects();
+      // Ensure we always return an array, even if the API returns null
+      return Array.isArray(data) ? data : [];
+    },
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
     refetchOnWindowFocus: false,
