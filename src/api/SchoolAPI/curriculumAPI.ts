@@ -1,6 +1,5 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate,throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { AccountProps } from "../../interfaces/IAccount";
 import { CreateCurriculum, CreateSubjectToCurriculum, Curriculum, CurriculumApproval, SubjectVersionWithCurriculumInfo } from "../../interfaces/ISchoolProgram";
 import { PagedData } from "../../interfaces/ISchoolProgram";
 
@@ -25,6 +24,21 @@ export const FetchSubjectVersionsToCurriculum = async (id: number): Promise<Subj
   const props = {
     data: null,
     url: curriculumURL+"/"+id+"/subjects",
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    console.log(result.error);
+    throwApiError(result);
+  }
+};
+// Fetch subject versions in curriculum code
+export const FetchSubjectVersionsToCurriculumByCode = async (code: string): Promise<SubjectVersionWithCurriculumInfo[] | null> => {
+  const props = {
+    data: null,
+    url: curriculumURL+"/by-code/"+code+"/subjects",
     headers: GetHeader(),
   };
   const result = await axiosRead(props);

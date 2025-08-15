@@ -5,7 +5,7 @@ import { ArrowLeftOutlined, BookOutlined, UserOutlined, CalendarOutlined, MailOu
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffEditTranscript.module.css';
 import TranscriptEdit from '../../components/staff/transcriptEdit';
-import { FetchSubjectVersionsToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
+import { FetchSubjectVersionsToCurriculum, FetchSubjectVersionsToCurriculumByCode } from '../../api/SchoolAPI/curriculumAPI';
 import { SubjectVersionWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { RegisterOneStudentsToMultipleSubjects, RegisterStudentToSubject, FetchPagedSemesterList, FetchPagedSemesterBlockType, FetchJoinedSubjectList } from '../../api/SchoolAPI/joinedSubjectAPI';
@@ -156,9 +156,12 @@ const EditStudentTranscript: React.FC = () => {
   const loadSemesters = async (page: number = 1, append: boolean = false) => {
     try {
       setLoadingSemesters(true);
+      console.log('Loading semesters, page:', page);
       const result = await FetchPagedSemesterList(page, 10);
+      console.log('Semester result:', result);
       if (result) {
         const newSemesters = result.items || [];
+        console.log('New semesters:', newSemesters);
         if (append) setSemesters(prev => [...prev, ...newSemesters]);
         else setSemesters(newSemesters);
         setSemesterHasMore(newSemesters.length === 10 && result.totalCount > (page * 10));
@@ -176,9 +179,12 @@ const EditStudentTranscript: React.FC = () => {
   const loadBlockTypes = async (page: number = 1, append: boolean = false) => {
     try {
       setLoadingBlockTypes(true);
+      console.log('Loading block types, page:', page);
       const result = await FetchPagedSemesterBlockType(page, 10);
+      console.log('Block type result:', result);
       if (result) {
         const newTypes = ((result as any)?.items ?? (result as any)?.data ?? []) as any[];
+        console.log('New block types:', newTypes);
         const totalCount = (result as any)?.totalCount ?? newTypes.length;
         if (append) setBlockTypes(prev => [...prev, ...newTypes]);
         else setBlockTypes(newTypes);
@@ -220,12 +226,23 @@ const EditStudentTranscript: React.FC = () => {
   };
 
   const handleAddSubjectClick = async () => {
+    if (!studentAccount?.studentDataDetailResponse?.curriculumCode) {
+      handleError('Student curriculum information not available');
+      return;
+    }
+
     setIsAddSubjectModalVisible(true);
     setLoadingSubjectVersions(true);
     setLoadingSemesters(true);
     setLoadingBlockTypes(true);
     try {
-      const subjectVersions = await FetchSubjectVersionsToCurriculum(1); // TODO: replace with actual curriculumId
+      // For now, use curriculum ID 1 as fallback since we don't have curriculumCode to ID mapping
+      // TODO: Implement curriculumCode to curriculumId mapping
+      const curriculumId = studentAccount.studentDataDetailResponse.curriculumCode; // studentAccount.studentDataDetailResponse.curriculumCode;
+      console.log('Fetching subject versions for curriculum ID:', curriculumId);
+      console.log('Student curriculum code:', studentAccount.studentDataDetailResponse.curriculumCode);
+      const subjectVersions = await FetchSubjectVersionsToCurriculumByCode(curriculumId);
+      console.log('Subject versions response:', subjectVersions);
       setSubjectVersions(subjectVersions || []);
       await Promise.all([
         loadSemesters(1, false),
@@ -233,6 +250,7 @@ const EditStudentTranscript: React.FC = () => {
       ]);
     } catch (error) {
       console.error('Error fetching data:', error);
+      handleError('Failed to load subject versions, semesters, or block types');
     } finally {
       setLoadingSubjectVersions(false);
       setLoadingSemesters(false);

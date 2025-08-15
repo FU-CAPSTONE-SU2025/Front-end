@@ -6,9 +6,10 @@
   align-items: center;
   z-index: 2; /* Below NavBar (z-index: 1000) */
   position: relative;
-  padding: 2.5rem 0 2rem 0;
+  padding: 2rem 2rem 2rem 2rem;
   min-width: 80vw;
   background: none;
+
 }
 
 .cardWrapper {

@@ -26,7 +26,7 @@ const createDefaultVersion = async (
 ): Promise<SubjectVersion[]> => {
   try {
     // Check if subject is approved before creating version
-    if (subjectData.approvalStatus !== 1) {
+    if (subjectData.approvalStatus !== 2) {
       throw new Error('Cannot create versions for unapproved subjects. Please approve the subject first.');
     }
     

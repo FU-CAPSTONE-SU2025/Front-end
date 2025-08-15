@@ -26,6 +26,7 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id, onDelete }) => {
   const {
     getSubjectById,
     updateSubjectMutation,
+    addSubjectMutation,
     isLoading,
   } = useCRUDSubject();
 
@@ -56,6 +57,17 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id, onDelete }) => {
           handleError('Subject code is required!', 'Validation Error');
           return;
         }
+        
+        // Create the subject using the API
+        const createSubjectData: CreateSubject = {
+          subjectCode: subjectData.subjectCode as string,
+          subjectName: subjectData.subjectName as string,
+          credits: subjectData.credits as number,
+          description: subjectData.description as string
+        };
+        
+        await addSubjectMutation.mutateAsync(createSubjectData);
+        handleSuccess('Subject created successfully!');
         form.resetFields();
       } else if (id) {
         // Ensure subjectCode is a string (not undefined) to satisfy UpdateSubject type

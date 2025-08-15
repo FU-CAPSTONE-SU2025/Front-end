@@ -10,7 +10,9 @@ export const AddSubject = async (data: CreateSubject): Promise<Subject | null> =
     url: subjectURL,
     headers: GetHeader(),
   };
+  console.log("AddSubject", props)
   const result = await axiosCreate(props);
+  console.log("AddSubject Result", result)
   if (result.success) {
     return result.data;
   } else {

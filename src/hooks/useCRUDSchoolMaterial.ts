@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { CreateCurriculum, CreateSubject, Curriculum, Subject, UpdateCurriculum, Program, CreateProgram, SubjectPrerequisite, SubjectVersionWithCurriculumInfo } from '../interfaces/ISchoolProgram';
 import { AddCurriculum, FetchCurriculumById, FetchCurriculumList, UpdateCurriculumById, RegisterMultipleCurriculum, FetchSubjectVersionsToCurriculum, AddSubjectVersionToCurriculum, RemoveSubjectVersionFromCurriculum } from '../api/SchoolAPI/curriculumAPI';
 import { PagedData } from '../interfaces/ISchoolProgram';
-import { AddSubject, FetchSubjectById, FetchSubjectList, UpdateSubjectById, AddPrerequisitesSubject, RegisterMultipleSubject } from '../api/SchoolAPI/subjectAPI';
+import { AddSubject, FetchSubjectById, FetchSubjectList, UpdateSubjectById, RegisterMultipleSubject } from '../api/SchoolAPI/subjectAPI';
 import { AddProgram, FetchProgramList, FetchProgramById, UpdateProgramById, DisableProgram, RegisterMultiplePrograms } from '../api/SchoolAPI/programAPI';
 import { Combo, CreateCombo, UpdateCombo } from '../interfaces/ISchoolProgram';
 import { AddCombo, FetchComboList, FetchComboById, UpdateComboById, AddSubjectToCombo, RemoveSubjectToCombo, RegisterMultipleCombo, FetchComboSubjects, DisableCombo } from '../api/SchoolAPI/comboAPI';
