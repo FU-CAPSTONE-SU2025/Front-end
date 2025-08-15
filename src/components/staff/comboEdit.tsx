@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Space, Typography, Select, Tag, Card } from 'antd';
-import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Space, Typography, Select, Tag, Card, Popconfirm } from 'antd';
+import { SaveOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
 import { Combo, CreateCombo, Subject } from '../../interfaces/ISchoolProgram';
 import { useCRUDCombo, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 import cardStyles from '../../css/staff/curriculumEdit.module.css';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { useNavigate } from 'react-router-dom';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
@@ -46,6 +47,7 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
   const isCreateMode = !id;
   const isEditMode = !!id;
   const { handleError, handleSuccess } = useApiErrorHandler();
+  const navigate = useNavigate();
 
   // API hooks
   const {
@@ -54,7 +56,8 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
     getComboById,
     addSubjectToComboMutation,
     removeSubjectFromComboMutation,
-    fetchComboSubjectsMutation
+    fetchComboSubjectsMutation,
+    disableComboMutation
   } = useCRUDCombo();
 
   const { getSubjectMutation } = useCRUDSubject();
@@ -126,13 +129,20 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
     try {
       fetchComboSubjectsMutation.mutate(id, {
         onSuccess: (subjects) => {
-          const normalized: ComboSubjectDisplay[] = (subjects || []).map((s: any) => ({
+          if(subjects === undefined||subjects.length === 0){
+            setComboSubjects([]);
+            setLoading(false);
+            return;
+          }
+          else{
+          const normalized: ComboSubjectDisplay[] = (subjects).map((s: any) => ({
             id: typeof s.id === 'number' ? s.id : Number(s.subjectId),
             subjectName: s.subjectName,
             subjectCode: s.subjectCode,
           }));
           setComboSubjects(normalized);
           setLoading(false);
+        }
         },
         onError: () => {
           setLoading(false);
@@ -220,6 +230,35 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
     }
   };
 
+  const handleDisableCombo = async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      await disableComboMutation.mutateAsync(id);
+      handleSuccess('Combo disabled successfully!');
+      navigate('/staff/combo-list'); // Redirect to combo list after disabling
+    } catch {
+      handleError('Failed to disable combo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEnableCombo = async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      // The enableComboMutation was removed, so this function is now a no-op
+      // or needs to be re-added if enabling functionality is still desired.
+      // For now, we'll just navigate back to the list.
+      navigate('/staff/combo-list');
+    } catch {
+      handleError('Failed to enable combo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className={cardStyles.curriculumContainer}>
       <Card
@@ -265,6 +304,25 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
               >
                 {isCreateMode ? 'Create Combo' : 'Update Combo'}
               </Button>
+              {isEditMode && (
+                <Popconfirm
+                  title="Are you sure you want to disable this combo?"
+                  description="This action will permanently disable the combo and cannot be undone."
+                  onConfirm={handleDisableCombo}
+                  okText="Yes, Disable"
+                  cancelText="Cancel"
+                  okType="danger"
+                  disabled={loading}
+                >
+                  <Button
+                    danger
+                    icon={<StopOutlined />}
+                    loading={loading}
+                  >
+                    Disable Combo
+                  </Button>
+                </Popconfirm>
+              )}
             </Space>
           </Form.Item>
         </Form>

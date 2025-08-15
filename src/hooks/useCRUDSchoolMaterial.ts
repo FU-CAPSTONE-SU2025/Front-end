@@ -5,7 +5,7 @@ import { PagedData } from '../interfaces/ISchoolProgram';
 import { AddSubject, FetchSubjectById, FetchSubjectList, UpdateSubjectById, AddPrerequisitesSubject, RegisterMultipleSubject } from '../api/SchoolAPI/subjectAPI';
 import { AddProgram, FetchProgramList, FetchProgramById, UpdateProgramById, DisableProgram, RegisterMultiplePrograms } from '../api/SchoolAPI/programAPI';
 import { Combo, CreateCombo, UpdateCombo } from '../interfaces/ISchoolProgram';
-import { AddCombo, FetchComboList, FetchComboById, UpdateComboById, AddSubjectToCombo, RemoveSubjectToCombo, RegisterMultipleCombo, FetchComboSubjects } from '../api/SchoolAPI/comboAPI';
+import { AddCombo, FetchComboList, FetchComboById, UpdateComboById, AddSubjectToCombo, RemoveSubjectToCombo, RegisterMultipleCombo, FetchComboSubjects, DisableCombo } from '../api/SchoolAPI/comboAPI';
 import { useState } from 'react';
 import { 
   AddSyllabus, 
@@ -342,6 +342,16 @@ export function useCRUDCombo() {
     },
   });
 
+  const disableComboMutation = useMutation<Combo | null, unknown, number>({
+    mutationFn: async (id: number) => {
+      const result = await DisableCombo(id);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
   const isSuccessBulkImport = addMultipleCombosMutation.isSuccess;
 
   const metaData = getComboMutation.data || null;
@@ -374,7 +384,8 @@ export function useCRUDCombo() {
     comboSearch,
     setComboSearch,
     isComboLoading,
-    fetchComboSubjectsMutation
+    fetchComboSubjectsMutation,
+    disableComboMutation
   }
 }
 
