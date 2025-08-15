@@ -146,7 +146,7 @@ export const makeRequest = async (
             response.status === 204 ||
             ((response.status === 200 || response.status === 201) && (typeof response.data === 'undefined' || response.data === null || (typeof response.data === 'object' && Object.keys(response.data).length === 0)))
         ) {
-            return { success: true, data: true };
+            return { success: true, data:[] };
         }
         return { success: true, data: response.data };
     } catch (error) {

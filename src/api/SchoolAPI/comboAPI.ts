@@ -1,6 +1,6 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { AccountProps } from "../../interfaces/IAccount";
+
 import { CreateCombo, Combo, SubjectInCombo, Subject, ComboApproval } from "../../interfaces/ISchoolProgram";
 import { PagedData } from "../../interfaces/ISchoolProgram";
 
@@ -152,6 +152,7 @@ export const FetchComboSubjects = async (comboId: number): Promise<Subject[] | n
     headers: GetHeader(),
   };
   const result = await axiosRead(props);
+  //console.log("FetchComboSubjects", result) -> {success=true, data=true}
   if (result.success) {
     return result.data;
   } else {

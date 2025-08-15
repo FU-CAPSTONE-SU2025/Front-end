@@ -158,9 +158,9 @@ const SubjectPage: React.FC = () => {
   // Helper function to render approval status
   const renderApprovalStatus = (record: any) => {
     const approvalStatus = record.approvalStatus;
-    const isApproved = approvalStatus === 1;
-    const isRejected = approvalStatus === 0;
-    const isPending = approvalStatus === null || approvalStatus === undefined;
+    const isApproved = approvalStatus === 2;
+    const isRejected = approvalStatus === 3;
+    const isPending = approvalStatus === 1 || approvalStatus === undefined;
 
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
