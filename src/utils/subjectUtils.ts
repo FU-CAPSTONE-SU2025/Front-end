@@ -4,6 +4,10 @@ import { JoinedSubject, SemesterSubjects } from '../interfaces/IStudent';
  * Groups subjects by semester ID
  */
 export const groupSubjectsBySemester = (subjects: JoinedSubject[]): SemesterSubjects => {
+  if (!subjects || !Array.isArray(subjects)) {
+    return {};
+  }
+  
   return subjects.reduce((acc, subject) => {
     const semesterId = subject.semesterId;
     if (!acc[semesterId]) {
@@ -27,6 +31,10 @@ export const calculateSubjectProgress = (subject: JoinedSubject): number => {
  * Gets semester options for dropdown
  */
 export const getSemesterOptions = (semesterSubjects: SemesterSubjects) => {
+  if (!semesterSubjects || Object.keys(semesterSubjects).length === 0) {
+    return [];
+  }
+  
   const semesterIds = Object.keys(semesterSubjects).map(Number).sort((a, b) => b - a);
   return semesterIds.map(semesterId => {
     const subjects = semesterSubjects[semesterId];
@@ -43,6 +51,10 @@ export const getSemesterOptions = (semesterSubjects: SemesterSubjects) => {
  * Calculates total credits for a list of subjects
  */
 export const calculateTotalCredits = (subjects: JoinedSubject[]): number => {
+  if (!subjects || !Array.isArray(subjects)) {
+    return 0;
+  }
+  
   return subjects.reduce((total, subject) => total + subject.credits, 0);
 };
 
@@ -50,6 +62,17 @@ export const calculateTotalCredits = (subjects: JoinedSubject[]): number => {
  * Gets subjects statistics
  */
 export const getSubjectsStats = (subjects: JoinedSubject[]) => {
+  if (!subjects || !Array.isArray(subjects)) {
+    return {
+      total: 0,
+      completed: 0,
+      passed: 0,
+      inProgress: 0,
+      totalCredits: 0,
+      completionRate: 0
+    };
+  }
+  
   const total = subjects.length;
   const completed = subjects.filter(s => s.isCompleted).length;
   const passed = subjects.filter(s => s.isPassed && !s.isCompleted).length;

@@ -103,6 +103,122 @@ const CourseTracking = () => {
     );
   }
 
+  // Check if no data is available
+  if (!joinedSubjects || joinedSubjects.length === 0) {
+    return (
+      <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden">
+        {/* Main Container */}
+        <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          {/* Header Section */}
+          <motion.div
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-12"
+          >
+            <div className="text-center mb-8">
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                Course Dashboard
+              </h1>
+              <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+                Track your academic progress and stay on top of important deadlines
+              </p>
+            </div>
+          </motion.div>
+
+          {/* No Data Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mb-16"
+          >
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-white mb-2">Course Tracking</h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-blue-400 mx-auto rounded-full"></div>
+            </div>
+            
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8 sm:p-12">
+                <div className="text-center">
+                  <div className="mb-6">
+                    <div className="w-24 h-24 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
+                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+                      No Courses Found
+                    </h3>
+                    <p className="text-gray-200 opacity-80 text-lg mb-6 max-w-md mx-auto">
+                      You haven't enrolled in any courses yet. Please contact your academic advisor to register for subjects.
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-white">0</div>
+                      <div className="text-gray-200 text-sm">Total Courses</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-green-400">0</div>
+                      <div className="text-gray-200 text-sm">Completed</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-blue-400">0</div>
+                      <div className="text-gray-200 text-sm">In Progress</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-yellow-400">0</div>
+                      <div className="text-gray-200 text-sm">Total Credits</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Activity Overview Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mb-16"
+          >
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-white mb-2">Activity Overview</h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-blue-400 mx-auto rounded-full"></div>
+            </div>
+            
+            <div className="max-w-5xl mx-auto">
+              <CommitChart 
+                isConnected={isGitHubConnected}
+                onConnect={handleGitHubConnect}
+              />
+            </div>
+          </motion.div>
+
+          {/* Important Exams Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mb-16"
+          >
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-white mb-2">Important Exams</h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-blue-400 mx-auto rounded-full"></div>
+            </div>
+            
+            <div className="max-w-6xl mx-auto">
+              <ImportantExams exams={importantExams} />
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden">
       {/* Main Container */}

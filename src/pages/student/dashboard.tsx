@@ -138,6 +138,116 @@ const Dashboard = () => {
     );
   }
 
+  // Check if no data is available
+  if (!joinedSubjects || joinedSubjects.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+        className="pt-20 mt-2 pb-8 flex-1 min-h-screen bg-transparent"
+      >
+        {/* Header Section */}
+        <motion.div
+          className="px-4 sm:px-6 lg:px-8 mb-8"
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          <p className="text-lg sm:text-xl text-gray-200 opacity-80 max-w-2xl mx-auto text-center">
+            Welcome back! Here's your academic overview and progress tracking.
+          </p>
+        </motion.div>
+
+        {/* Main Content Grid */}
+        <div className="w-full sm:px-4 flex flex-col gap-8">
+          <div className="w-full grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* User Profile Section */}
+            <motion.div
+              className="xl:col-span-1 w-full"
+              initial={{ x: -100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+            >
+              <div className="w-full">
+                <UserInfoCard user={user} />
+              </div>
+            </motion.div>
+
+            {/* Main Content Section */}
+            <motion.div
+              className="xl:col-span-2 w-full flex flex-col gap-8"
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+            >
+              {/* No Data Section */}
+              <motion.div
+                className="w-full bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8 sm:p-12"
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+              >
+                <div className="text-center">
+                  <div className="mb-6">
+                    <div className="w-24 h-24 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
+                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+                      No Subjects Found
+                    </h2>
+                    <p className="text-gray-200 opacity-80 text-lg mb-6 max-w-md mx-auto">
+                      You haven't enrolled in any subjects yet. Please contact your academic advisor to register for courses.
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-white">0</div>
+                      <div className="text-gray-200 text-sm">Total Subjects</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-green-400">0</div>
+                      <div className="text-gray-200 text-sm">Completed</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-blue-400">0</div>
+                      <div className="text-gray-200 text-sm">Passed</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-yellow-400">0</div>
+                      <div className="text-gray-200 text-sm">Total Credits</div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Analytics Section */}
+              <motion.div
+                className="w-full p-4 sm:p-6 lg:p-8"
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+              >
+                <div className="mb-6">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                    Academic Analytics
+                  </h2>
+                  <p className="text-gray-200 opacity-80">
+                    Visualize your performance and track your achievements
+                  </p>
+                </div>
+                <AcademicCharts semesters={semestersAcademicData} selectedSemester={selectedSemester?.toString() || 'Summer 24'} />
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
