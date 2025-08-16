@@ -453,7 +453,7 @@ const AdvisorList: React.FC = () => {
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible"
         >
           <div className={styles.userInfo}>
-            <h2>{isDeleteMode ? 'Delete Advisor Account' : 'List Of Advisors On the System'}</h2>
+            <b>{isDeleteMode ? 'Delete Advisor Account' : 'List Of Advisors On the System'}</b>
             <div className={styles.controlBar}>
               <div className={styles.searchBar}>
                 <Input

@@ -449,7 +449,7 @@ const StudentList: React.FC = () => {
         <AccountCounter label="Student" student={categorizedData?.student} />
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
           <div className={styles.userInfo}>
-            <h2>{isDeleteMode ? 'Delete Student Account' : 'List Of Students On the System'}</h2>
+            <b>{isDeleteMode ? 'Delete Student Account' : 'List Of Students On the System'}</b>
             <div className={styles.controlBar}>
               <div className={styles.searchBar}>
                 <Input

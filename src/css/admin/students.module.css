@@ -1,14 +1,9 @@
 .container {
-  width: calc(100% - 250px);
-  position: absolute;
-  left: 0;
-  top: 0;
   height: auto;
-  min-height: calc(100vh - 6.625rem);
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  margin-top: 6.625rem;
+  margin-top: 7rem;
   margin-left: 250px;
   box-sizing: border-box;
   background: transparent;
@@ -31,7 +26,6 @@
   box-shadow: 
     0 20px 40px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-  margin-top: 2rem !important;
   max-height: none;
   height: auto;
 }

@@ -215,8 +215,8 @@ const Profile: React.FC = () => {
         manager={categorizedData?.manager}
       />
       <div className={styles.twoCardContainer}>
-        {/* Left Card: Profile Data */}
-        <motion.div className={styles.leftCard} variants={cardVariants} initial="hidden" animate="visible">
+        {/* Card: Profile Data */}
+        <motion.div className={styles.topCard} variants={cardVariants} initial="hidden" animate="visible">
           {/* Centered Avatar, Name, Role, Email */}
           <div className={styles.profileAvatar}>
             <AvatarUpload
@@ -261,9 +261,7 @@ const Profile: React.FC = () => {
               {errors.email && <div className={styles.error}>Email: {errors.email}</div>}
             </motion.div>
           )}
-        </motion.div>
-        {/* Right Card: Actions */}
-        <motion.div className={styles.rightCard} variants={cardVariants} initial="hidden" animate="visible">
+            <motion.div className={styles.toolCard} variants={cardVariants} initial="hidden" animate="visible">
           <div className={styles.actionTitle}>ACTION</div>
           <div className={styles.actionCardContent}>
             {!isEditing ? (
@@ -306,14 +304,8 @@ const Profile: React.FC = () => {
             </motion.button>
           </div>
         </motion.div>
+        </motion.div>
       </div>
-      {isImportOpen && (
-        <BulkDataImport
-          onClose={() => setIsImportOpen(false)}
-          onDataImported={handleDataImported}
-          supportedTypes={['ADMIN_PROFILE']}
-        />
-      )}
     </>
   );
 };

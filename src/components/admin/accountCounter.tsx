@@ -49,14 +49,20 @@ const AccountCounter: React.FC<AccountCounterProps> = ({label="user", student,st
   }
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container}`} style={{
+      background: 'rgba(255, 255, 255, 0.25)',
+      backdropFilter: 'blur(30px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.05)'
+    }}>
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <div className={styles.titleWrapper}>
             <div className={styles.title}>AISEA System</div>
           </div>
           <div className={styles.subtitleWrapper}>
-            <div className={styles.subtitle}>Showing total {Array.isArray(label)?"Users":label.length>1?label:""} across the system</div>
+            <div className={styles.subtitle}>Showing active {Array.isArray(label)?"users":label.length>1?label:""} across the system</div>
           </div>
         </div>
         

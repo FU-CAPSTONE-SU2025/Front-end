@@ -298,7 +298,7 @@ const StaffList: React.FC = () => {
         <AccountCounter label="Academic Staff" staff={categorizedData?.staff} />
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
           <div className={styles.userInfo}>
-            <h2>{isDeleteMode ? 'Delete Staff Account' : 'List Of Staff On the System'}</h2>
+            <b>{isDeleteMode ? 'Delete Staff Account' : 'List Of Staff On the System'}</b>
             <div className={styles.controlBar}>
               <div className={styles.searchBar}>
                 <Input

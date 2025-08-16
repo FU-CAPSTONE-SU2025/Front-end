@@ -267,7 +267,7 @@ const ManagerList: React.FC = () => {
         <AccountCounter label="Manager" manager={categorizedData?.manager} />
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
           <div className={styles.userInfo}>
-            <h2>{isDeleteMode ? 'Delete Manager Account' : 'List Of Managers On the System'}</h2>
+            <b>{isDeleteMode ? 'Delete Manager Account' : 'List Of Managers On the System'}</b>
             <div className={styles.controlBar}>
               <div className={styles.searchBar}>
                 <Input
