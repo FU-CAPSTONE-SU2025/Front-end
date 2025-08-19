@@ -209,7 +209,7 @@ const CurriculumPageManager: React.FC = () => {
       },
     },
     {
-      title: 'View Subject Versions',
+      title: 'View Subjects',
       key: 'viewVersions',
       align: 'center' as const,
       width: 160,
@@ -227,7 +227,7 @@ const CurriculumPageManager: React.FC = () => {
             boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)'
           }}
         >
-          View Subject Versions
+          View Subjects
         </Button>
       ),
     },
@@ -460,7 +460,7 @@ const CurriculumPageManager: React.FC = () => {
             fontWeight: '600'
           }}>
             <BookOutlined style={{ fontSize: '18px' }} />
-            View Subject Versions - {selectedCurriculum?.curriculumName || 'Curriculum'}
+            View Subjects - {selectedCurriculum?.curriculumName || 'Curriculum'}
           </div>
         }
         onCancel={() => setSubjectsModalOpen(false)}

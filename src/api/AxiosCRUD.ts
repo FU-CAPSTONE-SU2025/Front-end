@@ -125,7 +125,25 @@ export const extractValidationErrors = (error: any): Record<string, string[]> =>
 
 const MAX_REFRESH_RETRIES = 3;
 var current_retry = 0
-// Generic Axios request handler with retry logic
+let refreshPromise: Promise<boolean> | null = null;
+
+const ensureTokenRefreshed = async (): Promise<boolean> => {
+    if (!refreshPromise) {
+        refreshPromise = RefreshToken()
+            .then((refersh) => {
+                if (refersh) {
+                    current_retry = 0;
+                } else {
+                    current_retry += 1;
+                }
+                return refersh;
+            })
+            .finally(() => {
+                refreshPromise = null;
+            });
+    }
+    return refreshPromise;
+}// Generic Axios request handler with retry logic
 export const makeRequest = async (
     method: Method,
     url: string,
@@ -137,7 +155,7 @@ export const makeRequest = async (
             method,
             url,
             headers: header ?? GetHeader(),
-            data: method === "GET" || method === "PATCH" || method === "DELETE" ? undefined : data,
+            data: method === "GET" || method === "DELETE" ? undefined : data,
             params: method === "GET" || method === "DELETE" ? data : undefined,
         };
         const response = await axios(config);
@@ -158,19 +176,19 @@ export const makeRequest = async (
             if (errorResponse && errorResponse.status === 401) {
                 console.error("Unauthorized access - possibly token expired or invalid");
                 if (current_retry < MAX_REFRESH_RETRIES) {
-                    const refreshResult:boolean = await RefreshToken();
-                    if (refreshResult) {
-                        console.log("New token accquired!")
-                        current_retry = 0;
-                    }else{
-                        current_retry += 1;
-                        return await makeRequest(method, url, data);
+                    const refreshedToken: boolean = await ensureTokenRefreshed();
+                    if (refreshedToken) {
+                        // Retry the original request with preserved args and merged fresh auth headers
+                        const mergedHeaders = { ...(header ?? {}), ...(GetHeader() ?? {}) };
+                        return await makeRequest(method, url, data, mergedHeaders);
                     }
                 }
-                else{
-                    alert("Invalid Request or Token is expired. Please log in again")
-                    window.location.href = "/";
-                }
+                alert("Invalid Request or Token is expired. Please log in again")
+                window.location.href = "/";
+                return {
+                    success: false,
+                    error: createErrorResponse("Unauthorized", 401)
+                };
             }
             
             // Try to parse the backend error response
