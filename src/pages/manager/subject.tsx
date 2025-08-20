@@ -3,7 +3,7 @@ import { Table, Input, Button, Select, Affix, Tag, Pagination, Spin, Empty, Card
 import {SearchOutlined, CheckOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
-import { curriculums, combos } from '../../data/schoolData';
+import { curriculums, combos } from '../../datas/schoolData';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import ApprovalModal from '../../components/manager/approvalModal';

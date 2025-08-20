@@ -131,7 +131,6 @@ const Login: React.FC = () => {
   };
 
   return (
-    <BackgroundWrapper variant="animated">
       <Card className={styles.loginCard}>
         <Title level={2} className={styles.title}>
           Login to AISEA
@@ -191,7 +190,6 @@ const Login: React.FC = () => {
             </Form.Item>
         </Form>
       </Card>
-    </BackgroundWrapper>
   );
 };
 

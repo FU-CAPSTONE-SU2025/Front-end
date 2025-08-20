@@ -14,7 +14,7 @@ import SubjectSelect from '../../components/common/SubjectSelect';
 import { Modal } from 'antd';
 import { SubjectVersion, Syllabus, CreateSubjectVersion } from '../../interfaces/ISchoolProgram';
 import { useCRUDSubject, useCRUDSubjectVersion, useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
-import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../data/mockData';
+import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../datas/mockData';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 

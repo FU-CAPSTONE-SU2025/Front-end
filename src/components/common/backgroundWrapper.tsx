@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from '../../css/backgroundWrapper.module.css';
+import { Outlet } from 'react-router';
 
 interface BackgroundWrapperProps {
   children: React.ReactNode;
@@ -8,14 +9,13 @@ interface BackgroundWrapperProps {
 }
 
 const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({ 
-  children, 
   variant = 'animated',
   className = ''
 }) => {
   return (
     <div className={`${styles.background} ${styles[variant]} ${className}`}>
       <div className={styles.container}>
-        {children}
+        <Outlet/>
       </div>
     </div>
   );

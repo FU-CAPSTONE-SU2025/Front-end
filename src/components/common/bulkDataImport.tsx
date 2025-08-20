@@ -3,7 +3,7 @@ import { Card, Steps, Button, Upload, message, Table, Tag, Input, Tooltip, Spin 
 import { UploadOutlined, FileExcelOutlined, CheckCircleOutlined, LoadingOutlined, EyeOutlined, CloudUploadOutlined, DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
-import { getHeaderConfig, HeaderConfiguration, matchesConfiguration, findFieldMapping } from '../../data/importConfigurations';
+import { getHeaderConfig, HeaderConfiguration, matchesConfiguration, findFieldMapping } from '../../config/importConfig';
 import { transformBulkImportData, createPreviewData } from '../../utils/bulkImportTransformers';
 import styles from '../../css/bulkImport.module.css';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';

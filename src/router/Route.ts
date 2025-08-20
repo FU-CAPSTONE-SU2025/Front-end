@@ -50,6 +50,7 @@ import ManagerSubjectVersionPage from "../pages/manager/viewSubjectVersion";
 import StudentInCoursePage from "../pages/manager/studentInCoursePage";
 import HistoryMeeting from "../pages/student/historyMeeting";
 import MeetingPage from "../pages/advisor/meetingPage";
+import BackgroundWrapper from "../components/common/backgroundWrapper";
 
 
 export const routes = createBrowserRouter([
@@ -267,18 +268,25 @@ export const routes = createBrowserRouter([
   },
   {
     path: "/",
-    Component: Login,
+    Component: BackgroundWrapper,
+    children:[
+      {
+        index:true,
+        Component: Login,
+      },
+      {
+        path: "/forgetpassword",
+        Component: ForgetPassword,
+      },
+      {
+        path: "/404",
+        Component: NotFound,
+      },
+      {
+        path: "*",
+        Component: NotFound,
+      }
+    ]
   },
-  {
-    path: "/forgetpassword",
-    Component: ForgetPassword,
-  },
-  {
-    path: "/404",
-    Component: NotFound,
-  },
-  {
-    path: "*",
-    Component: NotFound,
-  }
+ 
 ]); 

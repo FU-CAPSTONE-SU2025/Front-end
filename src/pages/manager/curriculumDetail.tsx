@@ -5,7 +5,7 @@ import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
-import { subjects, combos, comboSubjects, curriculums } from '../../data/schoolData';
+import { subjects, combos, comboSubjects, curriculums } from '../../datas/schoolData';
 import { AddSubjectVersionToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
