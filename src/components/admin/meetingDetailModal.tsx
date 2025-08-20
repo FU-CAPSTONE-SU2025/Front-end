@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Modal, Button, Descriptions, message, Popconfirm } from 'antd';
 import { DeleteOutlined, CloseOutlined } from '@ant-design/icons';
 import { AdminViewBooking } from '../../interfaces/IBookingAvailability';
-import { DeleteMeetingById } from '../../api/admin/auditlogAPI';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { useAdminApi } from '../../hooks/useAdminApi';
 
 interface MeetingDetailModalProps {
   visible: boolean;
@@ -22,13 +22,14 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({
 }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const { handleError, handleSuccess } = useApiErrorHandler();
+  const { deleteMeeting } = useAdminApi();
 
   const handleDelete = async () => {
     if (!meeting) return;
     
     setDeleteLoading(true);
     try {
-      await DeleteMeetingById(meeting.id);
+      await deleteMeeting(meeting.id);
       handleSuccess('Meeting deleted successfully');
       onDelete();
       onClose();

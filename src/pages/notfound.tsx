@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router';
 import { Button } from 'antd';
 import { motion } from 'framer-motion';
 import styles from "../css/notFound.module.css";
-import BackgroundWrapper from '../components/common/backgroundWrapper';
 
 // Animation variants for text and button
 const itemVariants = {
@@ -15,7 +14,6 @@ const NotFound: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <BackgroundWrapper variant="transparent" className={styles.container}>
       <motion.div
         className={styles.card}
         variants={{
@@ -50,7 +48,6 @@ const NotFound: React.FC = () => {
           </Button>
         </motion.div>
       </motion.div>
-    </BackgroundWrapper>
   );
 };
 

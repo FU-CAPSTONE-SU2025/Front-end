@@ -9,7 +9,7 @@
 
 /* Animated background variant (for login and forgot password) */
 .animated {
-  background-image: url('src/assets/img/login.png');
+  background-image: url('/src/assets/img/login.png');
   background-repeat: repeat-x;
   background-size: 150% auto; /* Make background larger for panorama effect */
   background-position: 0% center;

@@ -438,6 +438,7 @@ export interface BulkCreateJoinedSubjectMultipleStudents{
 // Base paged data interface following backend response pattern
 export interface PagedData<T> {
   items: T[];
+  data?:T[]
   pageNumber: number;
   pageSize: number;
   totalCount: number;

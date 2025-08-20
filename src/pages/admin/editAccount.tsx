@@ -7,9 +7,8 @@ import styles from '../../css/admin/editAccount.module.css';
 import { useAdminUsers } from '../../hooks/useAdminUsers';
 import { AccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
-import { FetchProgramList } from '../../api/SchoolAPI/programAPI';
-import { FetchCurriculumList } from '../../api/SchoolAPI/curriculumAPI';
 import { Program, Curriculum } from '../../interfaces/ISchoolProgram';
+import { useSchoolApi } from '../../hooks/useSchoolApi';
 
 import AvatarUpload from '../../components/common/AvatarUpload';
 
@@ -61,6 +60,7 @@ const EditAccount: React.FC = () => {
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string>('');
   const { handleError, handleSuccess } = useApiErrorHandler();
   const { getCurrentStudent, getCurrentStaff, updateCurrentStaff, updateCurrentStudent, registerUser } = useAdminUsers();
+  const { usePagedProgramList, usePagedCurriculumList } = useSchoolApi();
 
   // Program and Curriculum state for infinite scroll
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -77,60 +77,56 @@ const EditAccount: React.FC = () => {
   const isStudent = role === 'student';
   const isStaff = role === 'staff' || role === 'manager' || role === 'advisor';
 
-  // Fetch programs with infinite scroll
-  const fetchPrograms = async (page: number = 1, search: string = '') => {
-    if (programLoading) return;
-    setProgramLoading(true);
-    try {
-      const result = await FetchProgramList(page, 10, search);
-      if (result) {
-        const newPrograms = result.items || [];
-        if (page === 1) {
-          setPrograms(newPrograms);
-        } else {
-          setPrograms(prev => {
-            const existingIds = new Set(prev.map(p => p.id));
-            const uniqueNewPrograms = newPrograms.filter(p => !existingIds.has(p.id));
-            return [...prev, ...uniqueNewPrograms];
-          });
-        }
-        const totalPages = Math.ceil(result.totalCount / 10);
-        setHasMorePrograms(page < totalPages);
-        setProgramPage(page);
+  // Use the hook to get programs
+  const { data: programsData, isLoading: programsLoading } = usePagedProgramList(programPage, 10, '');
+  
+  // Update programs when data is loaded
+  useEffect(() => {
+    if (programsData?.items) {
+      const newPrograms = programsData.items;
+      if (programPage === 1) {
+        setPrograms(newPrograms);
+      } else {
+        setPrograms(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const uniqueNewPrograms = newPrograms.filter(p => !existingIds.has(p.id));
+          return [...prev, ...uniqueNewPrograms];
+        });
       }
-    } catch (error) {
-      console.error('Failed to fetch programs:', error);
-    } finally {
-      setProgramLoading(false);
+      const totalPages = Math.ceil(programsData.totalCount / 10);
+      setHasMorePrograms(programPage < totalPages);
     }
+  }, [programsData, programPage]);
+
+  // Fetch programs with infinite scroll (legacy function for compatibility)
+  const fetchPrograms = async (page: number = 1, search: string = '') => {
+    setProgramPage(page);
   };
 
-  // Fetch curriculums with infinite scroll
-  const fetchCurriculums = async (page: number = 1, search: string = '', programId?: number) => {
-    if (curriculumLoading) return;
-    setCurriculumLoading(true);
-    try {
-      const result = await FetchCurriculumList(page, 10, search, programId);
-      if (result) {
-        const newCurriculums = result.items || [];
-        if (page === 1) {
-          setCurriculums(newCurriculums);
-        } else {
-          setCurriculums(prev => {
-            const existingIds = new Set(prev.map(c => c.id));
-            const uniqueNewCurriculums = newCurriculums.filter(c => !existingIds.has(c.id));
-            return [...prev, ...uniqueNewCurriculums];
-          });
-        }
-        const totalPages = Math.ceil(result.totalCount / 10);
-        setHasMoreCurriculums(page < totalPages);
-        setCurriculumPage(page);
+  // Use the hook to get curriculums
+  const { data: curriculumsData, isLoading: curriculumsLoading } = usePagedCurriculumList(curriculumPage, 10, '', selectedProgramId || undefined);
+  
+  // Update curriculums when data is loaded
+  useEffect(() => {
+    if (curriculumsData?.items) {
+      const newCurriculums = curriculumsData.items;
+      if (curriculumPage === 1) {
+        setCurriculums(newCurriculums);
+      } else {
+        setCurriculums(prev => {
+          const existingIds = new Set(prev.map(c => c.id));
+          const uniqueNewCurriculums = newCurriculums.filter(c => !existingIds.has(c.id));
+          return [...prev, ...uniqueNewCurriculums];
+        });
       }
-    } catch (error) {
-      console.error('Failed to fetch curriculums:', error);
-    } finally {
-      setCurriculumLoading(false);
+      const totalPages = Math.ceil(curriculumsData.totalCount / 10);
+      setHasMoreCurriculums(curriculumPage < totalPages);
     }
+  }, [curriculumsData, curriculumPage, selectedProgramId]);
+
+  // Fetch curriculums with infinite scroll (legacy function for compatibility)
+  const fetchCurriculums = async (page: number = 1, search: string = '', programId?: number) => {
+    setCurriculumPage(page);
   };
 
   // Load initial data
