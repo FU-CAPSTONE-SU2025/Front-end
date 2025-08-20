@@ -1,4 +1,4 @@
-import { useAuths } from './useAuths';
+import { useAuths } from './useAuthState';
 
 export const useMeetingPermissions = (meetingStatus: number) => {
   const userRole = useAuths(state => state.userRole);

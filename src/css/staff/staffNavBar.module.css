@@ -53,13 +53,13 @@
 }
 
 .navItem:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background:  rgba(255, 145, 77, 0.85);
   transform: scale(1.05);
   color: #E6F0FA;
 }
 
 .navItem.active {
-  background: rgba(255, 145, 77, 1); /* Orange accent from AdminNavBar */
+  background: rgba(255, 145, 77, 0.85); /* Orange accent from AdminNavBar */
   color: #ffffff !important;
   font-weight: 700;
   transform: scale(1.05);

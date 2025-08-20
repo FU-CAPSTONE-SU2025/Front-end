@@ -1,4 +1,4 @@
-import { getAuthState } from "../hooks/useAuths"
+import { getAuthState } from "../hooks/useAuthState"
 
 
 function GetHeader(){
