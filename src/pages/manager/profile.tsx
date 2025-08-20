@@ -4,7 +4,7 @@ import { Descriptions, Avatar, Button, ConfigProvider } from 'antd';
 import { LogOut, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffProfile.module.css';
-import { getAuthState } from '../../hooks/useAuths';
+import { getAuthState } from '../../hooks/useAuthState';
 import { jwtDecode } from 'jwt-decode';
 import { JWTAccountProps } from '../../interfaces/IAccount';
 import useUserProfile from '../../hooks/useUserProfile';
@@ -155,7 +155,7 @@ const ManagerProfile: React.FC = () => {
           {/* Left Card: Personal Information */}
           <motion.div
             className={styles.card}
-            variants={leftCardVariants}
+            variants={leftCardVariants as any}
             initial="hidden"
             animate="visible"
          
@@ -178,7 +178,7 @@ const ManagerProfile: React.FC = () => {
           <div className={styles.rightColumn}>
             <motion.div
               className={styles.card}
-              variants={rightCardVariants}
+              variants={rightCardVariants as any}
               initial="hidden"
               animate="visible"
           
@@ -196,7 +196,7 @@ const ManagerProfile: React.FC = () => {
             {/* Action Card */}
             <motion.div
               className={styles.actionCard}
-              variants={actionCardVariants}
+              variants={actionCardVariants as any}
               initial="hidden"
               animate="visible"
             >

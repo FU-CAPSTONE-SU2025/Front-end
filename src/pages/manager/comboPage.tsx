@@ -5,8 +5,6 @@ import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
 import { useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
-import { CreateCombo } from '../../interfaces/ISchoolProgram';
-import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
@@ -83,36 +81,8 @@ const ComboManagerPage: React.FC = () => {
     }
   };
 
-  const handleAddSubject = async () => {
-    if (!selectedCombo || !addSubjectId || comboSubjects.some(s => s.subjectId === addSubjectId)) return;
-    setModalLoading(true);
-    try {
-      await addSubjectToComboMutation.mutateAsync({ comboId: selectedCombo.id, subjectId: addSubjectId });
-      const subjects = await fetchComboSubjectsMutation.mutateAsync(selectedCombo.id);
-      setComboSubjects(subjects || []);
-      setAddSubjectId(null);
-      handleSuccess('Subject added to combo!');
-    } catch (error) {
-      handleError(error, 'Failed to add subject.');
-    } finally {
-      setModalLoading(false);
-    }
-  };
 
-  const handleRemoveSubject = async (subjectId: number) => {
-    if (!selectedCombo) return;
-    setModalLoading(true);
-    try {
-      await removeSubjectFromComboMutation.mutateAsync({ comboId: selectedCombo.id, subjectId });
-      const subjects = await fetchComboSubjectsMutation.mutateAsync(selectedCombo.id);
-      setComboSubjects(subjects || []);
-      handleSuccess('Subject removed from combo!');
-    } catch (error) {
-      handleError(error, 'Failed to remove subject.');
-    } finally {
-      setModalLoading(false);
-    }
-  };
+
 
   const handleApprove = (id: number, name: string) => {
     setSelectedItem({ id, name });
@@ -198,52 +168,33 @@ const ComboManagerPage: React.FC = () => {
       width: 200,
       render: (_: any, record: any) => {
         const isApproved = record.approvalStatus === 2;
-        const isRejected = record.approvalStatus === 3;
-        const isPending = record.approvalStatus === 1;
-        
         return (
           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-            {/* Status Tag */}
-            <Tag color={isApproved ? 'green' : isRejected ? 'red' : 'orange'} style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6, marginBottom: 0 }}>
-              {isApproved ? 'Approved' : isRejected ? 'Rejected' : 'Pending'}
-            </Tag>
-            
-            {/* Approve Button - only show for pending combos */}
-            {isPending && (
-              <Button
-                type="primary"
-                icon={<CheckOutlined style={{ fontSize: 12 }} />}
-                size="small"
-                onClick={() => handleApprove(record.id, record.comboName)}
-                style={{
-                  borderRadius: 6, 
-                  height: 22, 
-                  padding: '0 6px', 
-                  fontSize: 12, 
-                  marginBottom: 0,
-                  background: 'linear-gradient(135deg, #52c41a 0%, #389e0d 100%)',
-                  border: 'none'
-                }}
-              >
-                Approve
-              </Button>
-            )}
-            
-            {/* Edit Status Button - only show for approved combos */}
-            {isApproved && (
-              <Button
-                type="default"
-                icon={<CheckOutlined style={{ fontSize: 12 }} />}
-                size="small"
-                onClick={async () => {
+            <Button
+              type={isApproved ? 'default' : 'primary'}
+              icon={<CheckOutlined style={{ fontSize: 12 }} />}
+              size="small"
+              onClick={async () => {
+                if (isApproved) {
                   await handleApproval('combo', record.id, 1, null); // Set back to pending
-                  getAllCombos({ pageNumber: page, pageSize, filterType: undefined, filterValue: search });
-                }}
-                style={{borderRadius: 6, height: 22, padding: '0 6px', fontSize: 12, marginBottom: 0}}
-              >
-                Edit Status
-              </Button>
-            )}
+                } else {
+                  handleApprove(record.id, record.comboName);
+                }
+                getAllCombos({ pageNumber: page, pageSize, search: search });
+              }}
+              style={{
+                borderRadius: 6,
+                height: 22,
+                padding: '0 6px',
+                fontSize: 12,
+                marginBottom: 0,
+                ...(isApproved
+                  ? {}
+                  : { background: 'linear-gradient(135deg, #52c41a 0%, #389e0d 100%)', border: 'none' })
+              }}
+            >
+              {isApproved ? 'Edit Status' : 'Approve'}
+            </Button>
           </div>
         );
       },

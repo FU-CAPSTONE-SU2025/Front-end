@@ -90,7 +90,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
   const [outcomeMap, setOutcomeMap] = useState<Record<number, any[]>>({});
   const [sessionMap, setSessionMap] = useState<Record<number, any[]>>({});
   
-  // Deprecated: bulk import removed for Manager
+  const { showInfo } = useMessagePopupContext();
 
   // API hooks
   const { getSubjectById } = useCRUDSubject();
@@ -102,9 +102,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
     setDefaultSubjectVersionMutation,
     addPrerequisiteToSubjectVersionMutation,
     getPrerequisitesBySubjectVersionMutation,
-    deletePrerequisiteFromSubjectVersionMutation,
     getPrerequisitesBySubjectMutation,
-    copyPrerequisitesBetweenVersionsMutation
   } = useCRUDSubjectVersion();
   const {
     fetchSyllabusBySubjectVersionMutation,
@@ -117,8 +115,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { handleError, handleSuccess, showInfo } = useApiErrorHandler();
-  const { showMessage } = useMessagePopupContext();
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   // Function to fetch prerequisites for a specific version
   const fetchPrerequisitesForVersion = useCallback(async (versionId: number) => {

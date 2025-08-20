@@ -4,13 +4,11 @@ import { PlusOutlined, EditOutlined, SearchOutlined, CheckOutlined, ImportOutlin
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
-import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
-import { subjects, combos, comboSubjects, curriculums } from '../../datas/schoolData';
-import { AddSubjectVersionToCurriculum } from '../../api/SchoolAPI/curriculumAPI';
+import { subjects, curriculums } from '../../datas/schoolData';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
-import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
+import { useSchoolApi } from '../../hooks/useSchoolApi';
 
 
 const { Title, Text } = Typography;
@@ -23,6 +21,7 @@ const CurriculumManagerPage: React.FC = () => {
   const [addSubjectVersionModal, setAddSubjectVersionModal] = useState<{ open: boolean, curriculumId: number | null, semester: number | null }>({ open: false, curriculumId: null, semester: null });
   const [selectedSubjectVersionId, setSelectedSubjectVersionId] = useState<number | null>(null);
   const { handleError, handleSuccess } = useApiErrorHandler();
+  const { addSubjectVersionToCurriculum } = useSchoolApi();
 
   // Approval hook
   const { handleApproval, isApproving } = useApprovalActions();
@@ -60,11 +59,9 @@ const CurriculumManagerPage: React.FC = () => {
     if (!addSubjectVersionModal.curriculumId || !addSubjectVersionModal.semester || !selectedSubjectVersionId) return;
     
     try {
-      await AddSubjectVersionToCurriculum(addSubjectVersionModal.curriculumId,
-        {
-        semesterNumber: addSubjectVersionModal.semester,
-        subjectVersionId: selectedSubjectVersionId,
-        isMandatory: true
+      await addSubjectVersionToCurriculum({
+        curriculumId: addSubjectVersionModal.curriculumId,
+        subjectVersionId: selectedSubjectVersionId
       });
       handleSuccess('Subject version added to curriculum!');
       setAddSubjectVersionModal({ open: false, curriculumId: null, semester: null });

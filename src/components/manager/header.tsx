@@ -1,8 +1,6 @@
 import { NavLink, useNavigate } from 'react-router';
-import { SearchOutlined, BellOutlined, LogoutOutlined } from '@ant-design/icons';
-import { Input, Button, Avatar, Badge, Tooltip, Tag } from 'antd';
+import {Avatar, Badge, Tooltip, Tag } from 'antd';
 import { motion } from 'framer-motion';
-import { getAuthState } from '../../hooks/useAuths';
 import Notification from '../common/Notification';
 
 const navLinks = [
@@ -15,7 +13,6 @@ const navLinks = [
 
 const ManagerHeader = () => {
   const navigate = useNavigate();
-
   return (
     <motion.header
       className="fixed w-full bg-blue-800 text-white shadow-md z-50"
@@ -32,7 +29,7 @@ const ManagerHeader = () => {
               whileTap={{ scale: 0.98 }}
               className="flex items-center"
             >
-              <img src="/img/Logo.svg" alt="AI SEA Logo" className="h-10" />
+              <img  src="/Logo.svg" alt="AI SEA Logo" className="h-10" />
             </motion.div>
             <nav className="hidden md:flex items-center space-x-1">
               {navLinks.map((link, idx) => (
@@ -75,26 +72,27 @@ const ManagerHeader = () => {
               Manager
             </Tag>
           </div>
-          <Notification/>
-          {/* Search, User Info */}
           <div className="flex items-center space-x-4">
-            <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.97 }}>
-            </motion.div>
-            <div className="flex items-center space-x-4">
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.97 }}>
                 <Tooltip title="Profile">
-                  <Badge dot color="#52c41a" offset={[-2, 2]}>
-                    <Avatar
-                      size={40}
-                      src="https://via.placeholder.com/150"
-                      style={{ border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', cursor: 'pointer' }}
-                      onClick={() => navigate('/manager')}
-                    />
-                  </Badge>
+                  <span
+                    style={{
+                      fontSize: 16,
+                      cursor: 'pointer',
+                      color: 'white',
+                      padding: '4px 12px',
+                      borderRadius: '8px',
+                      background: 'rgba(30, 64, 175, 0.08)',
+                      transition: 'background 0.2s'
+                    }}
+                    onClick={() => navigate('/manager')}
+                  >
+                    View Profile
+                  </span>
                 </Tooltip>
               </motion.div>
             </div>
-          </div>
+          <Notification/>
         </div>
       </div>
     </motion.header>
