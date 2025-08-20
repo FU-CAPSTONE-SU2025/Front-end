@@ -5,7 +5,7 @@ import { Mail, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../../css/forgetPassword.module.css';
 import loginStyles from '../../css/loginform.module.css';
-import { ResetPassword, SendEmail } from '../../api/Account/AuthAPI';
+import { useAuthApi } from '../../hooks/useAuth';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
@@ -92,6 +92,7 @@ const ForgetPassword: React.FC = () => {
   const [emailSent, setEmailSent] = useState<string | null>(null);
   const { showError, showSuccess } = useMessagePopupContext();
   const { handleError } = useApiErrorHandler();
+  const { sendResetEmail, resetPassword } = useAuthApi();
 
   // Handle email submission
   const handleClickReset = async () => {
@@ -100,7 +101,7 @@ const ForgetPassword: React.FC = () => {
       const props = {
          email: values.email,
       };
-      const response = await SendEmail(props);
+      const response = await sendResetEmail(props);
       if (response) {
         setCurrentPage(2);
         setEmailSent(values.email);
@@ -121,7 +122,7 @@ const ForgetPassword: React.FC = () => {
         verificationCode: values.verificationCode,
         newPassword: values.newPassword,
       };
-      const response = await ResetPassword(props);
+      const response = await resetPassword(props);
       if (response) {
         showSuccess('Your password has been successfully reset. You will be redirected to the login page.');
         setTimeout(() => navigate('/'), 2000);
@@ -137,10 +138,8 @@ const ForgetPassword: React.FC = () => {
   const handleResendEmail = async () => {
     try {
       const values = await form.validateFields(['email']);
-      const props = {
-        data: { email: values.email },
-      };
-      const response = await SendEmail(props);
+      const props = { email: values.email };
+      const response = await sendResetEmail(props);
       return response; // Return response for child component
     } catch (error) {
       console.error('Resend email failed:', error);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import * as signalR from '@microsoft/signalr';
-import { useAuths } from './useAuths';
+import { useAuths } from './useAuthState';
 import { NOTI_HUB_METHODS, NotificationItem } from '../interfaces/INotification';
 import { SIGNALR_CONFIG, ConnectionState, signalRManager } from '../config/signalRConfig';
 
