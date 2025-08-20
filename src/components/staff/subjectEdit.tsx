@@ -5,7 +5,7 @@ import { useCRUDSubject, useCRUDSubjectVersion } from '../../hooks/useCRUDSchool
 import { CreateSubject, Subject } from '../../interfaces/ISchoolProgram';
 import styles from '../../css/staff/subjectEdit.module.css';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
-import { DisableSubject } from '../../api/SchoolAPI/subjectAPI';
+import { useSchoolApi } from '../../hooks/useSchoolApi';
 
 const { TextArea } = Input;
 const { Title } = Typography;
@@ -21,6 +21,7 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id, onDelete }) => {
   const isCreateMode = !id;
   const isEditMode = !!id;
   const { handleError, handleSuccess } = useApiErrorHandler();
+  const { disableSubject } = useSchoolApi();
 
   // CRUD hook
   const {
@@ -110,7 +111,7 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id, onDelete }) => {
     
     try {
       setIsDeleteLoading(true);
-      const result = await DisableSubject(id);
+      const result = await disableSubject(id);
       
       if (result) {
         handleSuccess('Subject disabled successfully!');

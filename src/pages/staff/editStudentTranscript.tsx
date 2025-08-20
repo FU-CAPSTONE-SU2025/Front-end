@@ -35,6 +35,15 @@ const EditStudentTranscript: React.FC = () => {
   const navigate = useNavigate();
   const { handleError, handleSuccess } = useApiErrorHandler();
   const { showInfo, showWarning } = useMessagePopupContext();
+  const { useStudentById } = useStudentApi();
+  const { 
+    useSubjectVersionsToCurriculumByCode,
+    useJoinedSubjectList, 
+    usePagedSemesterList, 
+    usePagedSemesterBlockType,
+    registerStudentToSubject,
+    registerOneStudentToMultipleSubjects
+  } = useSchoolApi();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -45,20 +54,17 @@ const EditStudentTranscript: React.FC = () => {
   // Add Subject Modal states
   const [isAddSubjectModalVisible, setIsAddSubjectModalVisible] = useState(false);
   const [subjectVersions, setSubjectVersions] = useState<SubjectVersionWithCurriculumInfo[]>([]);
-  const [loadingSubjectVersions, setLoadingSubjectVersions] = useState(false);
   const [searchSubjectVersion, setSearchSubjectVersion] = useState('');
   const [selectedSubjectVersion, setSelectedSubjectVersion] = useState<SubjectVersionWithCurriculumInfo | null>(null);
 
   // Semester states
   const [semesters, setSemesters] = useState<any[]>([]);
-  const [loadingSemesters, setLoadingSemesters] = useState(false);
   const [semesterPage, setSemesterPage] = useState(1);
   const [semesterHasMore, setSemesterHasMore] = useState(true);
   const [selectedSemester, setSelectedSemester] = useState<any>(null);
 
   // Block Type states
   const [blockTypes, setBlockTypes] = useState<any[]>([]);
-  const [loadingBlockTypes, setLoadingBlockTypes] = useState(false);
   const [blockTypePage, setBlockTypePage] = useState(1);
   const [blockTypeHasMore, setBlockTypeHasMore] = useState(true);
   const [selectedBlockType, setSelectedBlockType] = useState<any>(null);
@@ -70,133 +76,85 @@ const EditStudentTranscript: React.FC = () => {
 
   // Joined subjects state
   const [joinedSubjects, setJoinedSubjects] = useState<JoinedSubject[]>([]);
-  const [joinedLoading, setJoinedLoading] = useState(false);
 
-  const loadStudentAccount = async () => {
-    if (!studentId) return;
-    try {
-      const accountData = await FetchStudentById(parseInt(studentId));
-      console.log("Account Data", accountData);
-      if (accountData) {
-        setStudentAccount(accountData);
-      } else {
-        handleError('Failed to load student account data');
-      }
-    } catch (error) {
-      console.error('Error loading student account:', error);
-      handleError('Failed to load student account data');
-    } finally {
+  // Use the hook to get student data
+  const { data: accountData, isLoading: studentLoading } = useStudentById(studentId || '');
+  
+  // Update student account when data is loaded
+  useEffect(() => {
+    if (accountData) {
+      setStudentAccount(accountData);
     }
-  };
+  }, [accountData]);
 
-  const loadJoinedSubjects = async () => {
-    if (!studentAccount?.studentDataDetailResponse?.id) {
-      console.log('No student profile ID available');
-      return;
-    }
-    
-    const studentProfileId = studentAccount.studentDataDetailResponse.id;
-    console.log('Loading joined subjects for student profile ID:', studentProfileId);
-    
-    try {
-      setJoinedLoading(true);
-      const res = await FetchJoinedSubjectList(1, 10, studentProfileId);
-      console.log('FetchJoinedSubjectList response:', res);
-      console.log('Response type:', typeof res);
-      console.log('Response keys:', res ? Object.keys(res) : 'null');
-      
-      // Handle different possible response structures
-      let subjects: JoinedSubject[] = [];
-      
-      if (res) {
-        const response = res as any; // Type as any to handle different structures
-        if (response.items && Array.isArray(response.items)) {
-          // Expected PagedJoinedSubject structure
-          subjects = response.items as JoinedSubject[];
-          console.log('Using res.items:', subjects);
-        } else if (Array.isArray(response)) {
-          // Direct array response
-          subjects = response as JoinedSubject[];
-          console.log('Using direct array response:', subjects);
-        } else if (response.data && Array.isArray(response.data)) {
-          // Nested data structure
-          subjects = response.data as JoinedSubject[];
-          console.log('Using res.data:', subjects);
-        } else {
-          console.log('Unexpected response structure:', response);
-          subjects = [];
-        }
-      }
-      
-      console.log('Final subjects to set:', subjects);
-      setJoinedSubjects(subjects);
-      
-    } catch (e) {
-      console.error('Failed to load joined subjects:', e);
-      handleError('Failed to load joined subjects');
+  // Use the hook to get joined subjects
+  const { data: joinedSubjectsData, isLoading: joinedLoading, refetch: refetchJoinedSubjects } = useJoinedSubjectList(
+    studentAccount?.studentDataDetailResponse?.id || 0
+  );
+  
+  // Update joined subjects when data is loaded
+  useEffect(() => {
+    console.log('Joined subjects data:', joinedSubjectsData);
+    console.log('Student account ID:', studentAccount?.studentDataDetailResponse?.id);
+    if (joinedSubjectsData && Array.isArray(joinedSubjectsData)) {
+      // API returns data as direct array
+      console.log('Setting joined subjects from direct array:', joinedSubjectsData);
+      setJoinedSubjects(joinedSubjectsData);
+    } else if (joinedSubjectsData?.data) {
+      // API returns data in 'data' property, not 'items'
+      console.log('Setting joined subjects from data property:', joinedSubjectsData.data);
+      setJoinedSubjects(joinedSubjectsData.data);
+    } else if (joinedSubjectsData?.items) {
+      // Fallback for standard paged structure
+      console.log('Setting joined subjects from items property:', joinedSubjectsData.items);
+      setJoinedSubjects(joinedSubjectsData.items);
+    } else {
+      console.log('No joined subjects data or unexpected structure');
       setJoinedSubjects([]);
-    } finally {
-      setJoinedLoading(false);
     }
-  };
+  }, [joinedSubjectsData]);
 
-  // Load student account when route param changes
+
+  // Use the hook to get semesters
+  const { data: semestersData, isLoading: loadingSemesters } = usePagedSemesterList(semesterPage);
+  
+  // Update semesters when data is loaded
   useEffect(() => {
-    loadStudentAccount();
-  }, [studentId]);
+    if (semestersData?.items) {
+      setSemesters(semestersData.items);
+      setSemesterHasMore(semestersData.items.length === 10 && semestersData.totalCount > (semesterPage * 10));
+    }
+  }, [semestersData, semesterPage]);
 
-  // Load joined subjects when student account is loaded
+  // Use the hook to get block types
+  const { data: blockTypesData, isLoading: loadingBlockTypes } = usePagedSemesterBlockType(blockTypePage);
+  
+  // Update block types when data is loaded
   useEffect(() => {
-    if (studentAccount?.studentDataDetailResponse?.id) {
-      loadJoinedSubjects();
+    if (blockTypesData?.data) {
+      // API returns data in 'data' property, not 'items'
+      setBlockTypes(blockTypesData.data);
+      setBlockTypeHasMore(blockTypesData.data.length === 10 && blockTypesData.totalCount > (blockTypePage * 10));
+    } else if (blockTypesData?.items) {
+      // Fallback for standard paged structure
+      setBlockTypes(blockTypesData.items);
+      setBlockTypeHasMore(blockTypesData.items.length === 10 && blockTypesData.totalCount > (blockTypePage * 10));
+    } else {
+      setBlockTypes([]);
     }
-  }, [studentAccount]);
-  // Load semesters with infinite scroll
-  const loadSemesters = async (page: number = 1, append: boolean = false) => {
-    try {
-      setLoadingSemesters(true);
-      console.log('Loading semesters, page:', page);
-      const result = await FetchPagedSemesterList(page, 10);
-      console.log('Semester result:', result);
-      if (result) {
-        const newSemesters = result.items || [];
-        console.log('New semesters:', newSemesters);
-        if (append) setSemesters(prev => [...prev, ...newSemesters]);
-        else setSemesters(newSemesters);
-        setSemesterHasMore(newSemesters.length === 10 && result.totalCount > (page * 10));
-        setSemesterPage(page);
-      }
-    } catch (error) {
-      console.error('Error loading semesters:', error);
-      handleError('Failed to load semesters');
-    } finally {
-      setLoadingSemesters(false);
-    }
-  };
+  }, [blockTypesData, blockTypePage]);
 
-  // Load block types with infinite scroll
-  const loadBlockTypes = async (page: number = 1, append: boolean = false) => {
-    try {
-      setLoadingBlockTypes(true);
-      console.log('Loading block types, page:', page);
-      const result = await FetchPagedSemesterBlockType(page, 10);
-      console.log('Block type result:', result);
-      if (result) {
-        const newTypes = ((result as any)?.items ?? (result as any)?.data ?? []) as any[];
-        console.log('New block types:', newTypes);
-        const totalCount = (result as any)?.totalCount ?? newTypes.length;
-        if (append) setBlockTypes(prev => [...prev, ...newTypes]);
-        else setBlockTypes(newTypes);
-        setBlockTypeHasMore(newTypes.length === 10 && totalCount > (page * 10));
-        setBlockTypePage(page);
-      }
-    } catch (error) {
-      console.error('Error loading block types:', error);
-      handleError('Failed to load block types');
-    } finally {
-      setLoadingBlockTypes(false);
+  // Use the hook to get subject versions (moved to top level)
+  const { data: subjectVersionsData, isLoading: loadingSubjectVersions } = useSubjectVersionsToCurriculumByCode(
+    studentAccount?.studentDataDetailResponse?.curriculumCode || ''
+  );
+  
+  // Update subject versions when data is loaded
+  useEffect(() => {
+    if (subjectVersionsData) {
+      setSubjectVersions(subjectVersionsData);
     }
-  };
+  }, [subjectVersionsData]);
 
   // Handle selections & scroll
   const handleSemesterSelect = (semester: any) => setSelectedSemester(semester);
@@ -204,13 +162,13 @@ const EditStudentTranscript: React.FC = () => {
   const handleSemesterScroll = (e: any) => {
     const { target } = e;
     if (target.scrollTop + target.offsetHeight >= target.scrollHeight - 2 && !loadingSemesters && semesterHasMore) {
-      loadSemesters(semesterPage + 1, true);
+      setSemesterPage(semesterPage + 1);
     }
   };
   const handleBlockTypeScroll = (e: any) => {
     const { target } = e;
     if (target.scrollTop + target.offsetHeight >= target.scrollHeight - 2 && !loadingBlockTypes && blockTypeHasMore) {
-      loadBlockTypes(blockTypePage + 1, true);
+      setBlockTypePage(blockTypePage + 1);
     }
   };
 
@@ -229,32 +187,7 @@ const EditStudentTranscript: React.FC = () => {
       handleError('Student curriculum information not available');
       return;
     }
-
     setIsAddSubjectModalVisible(true);
-    setLoadingSubjectVersions(true);
-    setLoadingSemesters(true);
-    setLoadingBlockTypes(true);
-    try {
-      // For now, use curriculum ID 1 as fallback since we don't have curriculumCode to ID mapping
-      // TODO: Implement curriculumCode to curriculumId mapping
-      const curriculumId = studentAccount.studentDataDetailResponse.curriculumCode; // studentAccount.studentDataDetailResponse.curriculumCode;
-      console.log('Fetching subject versions for curriculum ID:', curriculumId);
-      console.log('Student curriculum code:', studentAccount.studentDataDetailResponse.curriculumCode);
-      const subjectVersions = await FetchSubjectVersionsToCurriculumByCode(curriculumId);
-      console.log('Subject versions response:', subjectVersions);
-      setSubjectVersions(subjectVersions || []);
-      await Promise.all([
-        loadSemesters(1, false),
-        loadBlockTypes(1, false)
-      ]);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      handleError('Failed to load subject versions, semesters, or block types');
-    } finally {
-      setLoadingSubjectVersions(false);
-      setLoadingSemesters(false);
-      setLoadingBlockTypes(false);
-    }
   };
 
   const handleAddSubjectModalClose = () => {
@@ -263,7 +196,6 @@ const EditStudentTranscript: React.FC = () => {
     setSelectedSubjectVersion(null);
   };
   const handleSubjectVersionSelect = (subjectVersion: SubjectVersionWithCurriculumInfo) => setSelectedSubjectVersion(subjectVersion);
-
   const handleAddStudentToSubjectVersion = async () => {
     if (!selectedSubjectVersion) return showWarning('Please select a subject version');
     if (!selectedSemester) return showWarning('Please select a semester');
@@ -279,11 +211,11 @@ const EditStudentTranscript: React.FC = () => {
         semesterId: selectedSemester.id,
         semesterStudyBlockType: selectedBlockType.id
       };
-      const result = await RegisterStudentToSubject(joinedSubjectData);
+      const result = await registerStudentToSubject(joinedSubjectData);
       if (result) {
         handleSuccess(`Successfully added ${selectedSubjectVersion.subjectName} to student's transcript`);
-        // Refresh server data
-        loadJoinedSubjects();
+        // Refresh joined subjects data
+        await refetchJoinedSubjects();
         // Reset
         setIsAddSubjectModalVisible(false);
         setSelectedSubjectVersion(null);
@@ -359,11 +291,12 @@ const EditStudentTranscript: React.FC = () => {
         })),
       };
 
-      const result = await RegisterOneStudentsToMultipleSubjects(bulkData);
+      const result = await registerOneStudentToMultipleSubjects(bulkData);
       if (result) {
         setUploadStatus('success');
         setUploadMessage(`Successfully imported ${rows.length} subject assignments!`);
-        await loadJoinedSubjects();
+        // Refresh joined subjects data
+        await refetchJoinedSubjects();
       } else {
         setUploadStatus('error');
         setUploadMessage('Failed to import subject assignments.');
