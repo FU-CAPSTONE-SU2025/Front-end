@@ -112,11 +112,12 @@ const SyllabusDetail: React.FC = () => {
           </Col>
           
           <Col xs={24} lg={16}>
-            <motion.div variants={itemVariants}>
+            <motion.div variants={itemVariants as any}>
               <Card
                 bordered={false}
                 className="bg-white shadow-sm border border-gray-100"
-                bodyStyle={{ padding: 24 }}
+                variant='borderless'
+                style={{padding: 24}}
               >
                 <Tabs
                   defaultActiveKey="1"
@@ -128,7 +129,7 @@ const SyllabusDetail: React.FC = () => {
           </Col>
         </Row>
 
-        <motion.div variants={itemVariants} className="mt-8 flex justify-center">
+        <motion.div variants={itemVariants as any} className="mt-8 flex justify-center">
           <Button
             type="primary"
             icon={<DownloadOutlined />}
