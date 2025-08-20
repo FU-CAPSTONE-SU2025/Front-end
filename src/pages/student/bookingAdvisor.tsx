@@ -13,7 +13,7 @@ import CalendarHeader from '../../components/student/calendarHeader';
 import SelectedAdvisorInfo from '../../components/student/selectedAdvisorInfo';
 import CalendarView from '../../components/student/calendarView';
 import BookingModal from '../../components/student/bookingModal';
-import { CreateBookingMeeting } from '../../api/student/StudentAPI';
+import { useBookingApi } from '../../hooks/useBooking';
 import { AdvisorData, BookingAvailabilityData, CreateBookingMeetingRequest } from '../../interfaces/IStudent';
 
 interface WorkSlot {
@@ -64,6 +64,7 @@ const BookingPage = () => {
 
   // Fetch meetings using the new hook
   const { data: meetingsData, isLoading: isMeetingsLoading, error: meetingsError } = useAdvisorMeetings(staffProfileId);
+  const { createBooking } = useBookingApi();
 
   // Convert booking availability to work slots
   const workSlots = Array.isArray(bookingAvailabilityData)
@@ -153,7 +154,7 @@ const BookingPage = () => {
         contentIssue: formData.contentIssue,
       };
       console.log("Booking payload:", payload);
-      const result = await CreateBookingMeeting(payload);
+      const result = await createBooking(payload);
       if (result) {
         setModalVisible(false);
         message.success('Booking successful!');
@@ -169,7 +170,7 @@ const BookingPage = () => {
       console.error('Booking API error:', error);
       Modal.error({
         title: 'Booking Failed',
-        content: <pre style={{whiteSpace:'pre-wrap',fontFamily:'inherit'}}>{errorMessage}</pre>,
+        content: <pre style={{whiteSpace:'pre-wrap',fontFamily:'inherit'}}>{error}</pre>,
         centered: true,
       });
     } finally {

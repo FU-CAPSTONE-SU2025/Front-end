@@ -33,7 +33,7 @@ interface ModalChatAIProps {
 
 const AI_BOT = {
   name: 'AISEA BOT',
-  avatar: '/img/Logo.svg',
+  avatar: '/Logo.svg',
 };
 
 const ModalChatAI: React.FC<ModalChatAIProps> = ({

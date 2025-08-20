@@ -5,16 +5,15 @@ import { ArrowLeftOutlined, BookOutlined, UserOutlined, CalendarOutlined, MailOu
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffEditTranscript.module.css';
 import TranscriptEdit from '../../components/staff/transcriptEdit';
-import { FetchSubjectVersionsToCurriculum, FetchSubjectVersionsToCurriculumByCode } from '../../api/SchoolAPI/curriculumAPI';
 import { SubjectVersionWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
-import { RegisterOneStudentsToMultipleSubjects, RegisterStudentToSubject, FetchPagedSemesterList, FetchPagedSemesterBlockType, FetchJoinedSubjectList } from '../../api/SchoolAPI/joinedSubjectAPI';
 import { CreateJoinedSubject, BulkCreateJoinedSubjects, JoinedSubject } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
-import { FetchStudentById } from '../../api/student/StudentAPI';
 import { AccountProps } from '../../interfaces/IAccount';
+import { useSchoolApi } from '../../hooks/useSchoolApi';
+import { useStudentApi } from '../../hooks/useStudentApi';
 
 const { Title, Text } = Typography;
 const { Search } = Input;

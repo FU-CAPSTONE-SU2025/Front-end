@@ -76,7 +76,7 @@ const Footer: React.FC = () => {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.3, duration: 0.5 }}
       >
-        <img src='/img/Logo.svg' alt="AI SEA Logo" className="h-8 sm:h-10 lg:h-12 w-auto mb-2" />
+        <img src='/Logo.svg' alt="AI SEA Logo" className="h-8 sm:h-10 lg:h-12 w-auto mb-2" />
         <span className="text-gray-300 text-xs sm:text-sm mt-2 text-center lg:text-right">
           &copy; {new Date().getFullYear()} AI SEA. All rights reserved.
         </span>

@@ -2,7 +2,7 @@ import { Button, Spin } from 'antd';
 import { DownOutlined, UpOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { AdvisorData } from '../../api/student/StudentAPI';
+import { AdvisorData } from '../../interfaces/IStudent';
 import AdvisorCard from './advisorCard';
 import AdvisorSearchBar from './advisorSearchBar';
 

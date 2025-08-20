@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const AI_BOT = {
   id: 1,
   name: 'AISEA BOT',
-  avatar: '/img/Logo.svg',
+  avatar: '/Logo.svg',
   lastMessage: 'Hello! How can I help you today?',
   time: 'Online',
   unread: false,

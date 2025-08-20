@@ -1,7 +1,7 @@
 import { Avatar, Tag } from 'antd';
 import { UserOutlined, EnvironmentOutlined, IdcardOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { AdvisorData } from '../../api/student/StudentAPI';
+import { AdvisorData } from '../../interfaces/IStudent';
 
 interface AdvisorCardProps {
   advisor: AdvisorData;

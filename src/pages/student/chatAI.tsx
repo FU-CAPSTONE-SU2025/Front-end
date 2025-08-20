@@ -8,7 +8,7 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 
 // API and Hooks
 import { useChatSessions, useChatSessionMessages, useInitChatSession, useDeleteChatSession, usePrefetchChatSessions, usePrefetchChatMessages } from '../../hooks/useChatApi';
-import { sendChatMessage } from '../../api/student/AiChatBox';
+import { useAiChatApi } from '../../hooks/useAiChatApi';
 import type { IChatMessage, IChatSession, ISendChatMessageRequest, ISendChatMessageResponse } from '../../interfaces/IChatAI';
 
 // Components
@@ -270,6 +270,8 @@ const ChatAI: React.FC = () => {
   const initChatMutation = useInitChatSession();
   const deleteSessionMutation = useDeleteChatSession();
   
+  const { sendChatMessage: sendChatMessageApi } = useAiChatApi();
+  
   // Custom send message mutation
   const sendMessageMutation = useMutation<ISendChatMessageResponse, Error, ISendChatMessageRequest>({
     mutationFn: async (request) => {
@@ -277,7 +279,7 @@ const ChatAI: React.FC = () => {
         chatSessionId: request.chatSessionId, 
         message: request.message 
       });
-      const response = await sendChatMessage(request);
+      const response = await sendChatMessageApi(request);
       debugLog('Send message response:', response);
       return response;
     },

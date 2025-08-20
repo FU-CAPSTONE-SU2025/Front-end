@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import * as signalR from '@microsoft/signalr';
-import { useAuths } from './useAuths';
+import { useAuths } from './useAuthState';
 import { SIGNALR_CONFIG, ConnectionState, signalRManager } from '../config/signalRConfig';
 import { StudentSession, ChatMessage, PagedResult } from '../interfaces/IChat';
 import { addMessageWithDeduplication, mapBackendMessage } from '../utils/messageUtils';

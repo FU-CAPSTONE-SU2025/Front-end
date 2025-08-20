@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router';
 import Messenger from './messenger';
 import Notification from '../common/Notification';
-import { useAuths } from '../../hooks/useAuths';
+import { useAuths } from '../../hooks/useAuthState';
 
 const navItems = [
   { name: 'Dashboard', path: '/student' },
@@ -103,7 +103,7 @@ const Header: React.FC = () => {
             onClick={() => navigate('/student')}
           >
             <img
-              src="/img/Logo.svg"
+              src="/Logo.svg"
               alt="AI SEA Logo"
               className="h-8 w-auto sm:h-10 transition-transform hover:scale-105"
             />
@@ -118,7 +118,7 @@ const Header: React.FC = () => {
           onClick={() => navigate('/student')}
         >
           <img
-            src="/img/Logo.svg"
+            src="/Logo.svg"
             alt="AI SEA Logo"
             className="h-6 sm:h-8 w-auto transition-transform hover:scale-105"
           />

@@ -4,7 +4,7 @@ import { Card, Tabs, Spin, Alert, Button, Row, Col } from 'antd';
 import type { TabsProps } from 'antd';
 import { DownloadOutlined, FileTextOutlined, BookOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { GetSyllabusById } from '../../api/syllabus/syllabusAPI';
+import { useSyllabusApi } from '../../hooks/useSyllabusApi';
 import Header from '../../components/student/syllabusDetail/header';
 import Sidebar from '../../components/student/syllabusDetail/sidebar';
 import { Assessments, Materials, Outcomes, Sessions } from '../../components/student/syllabusDetail/tabs';
@@ -28,24 +28,9 @@ const itemVariants = {
 const SyllabusDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [syllabus, setSyllabus] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (id) {
-      setLoading(true);
-      setError(null);
-      GetSyllabusById(parseInt(id))
-        .then(data => {
-          setSyllabus(data);
-        })
-        .catch(() => {
-          setError('Failed to fetch syllabus details.');
-        })
-        .finally(() => setLoading(false));
-    }
-  }, [id]);
+  const { useSyllabusById } = useSyllabusApi();
+  const { data: syllabus, isLoading: loading, error: syllabusError } = useSyllabusById(id || '');
+  const error = syllabusError ? 'Failed to fetch syllabus details.' : null;
 
 
 
