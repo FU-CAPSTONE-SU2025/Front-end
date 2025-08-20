@@ -2,8 +2,8 @@ import React, { useState, useRef, useCallback } from 'react';
 import { Spin, Modal, Segmented, Button, Tag, Progress } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import HistoryCalendarView from './historyCalendarView';
-import { getMeetingDetail } from '../../api/student/StudentAPI';
 import { AdvisorMeetingItem } from '../../interfaces/IStudent';
+import { useStudentApi } from '../../hooks/useStudentApi';
 import { CloseCircleOutlined, UserOutlined, CalendarOutlined, ClockCircleOutlined, MailOutlined, LeftOutlined, RightOutlined, CheckCircleTwoTone, InfoCircleTwoTone, WarningOutlined } from '@ant-design/icons';
 import MeetingDetailModal from './meetingDetailModal';
 import { useMaxNumberOfBan, useCurrentNumberOfBan } from '../../hooks/useStudentFeature';
@@ -23,6 +23,8 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({
   bookingsLoading,
   onDataRefresh 
 }) => {
+  const { useMeetingDetail } = useStudentApi();
+  
   // Hooks for ban data
   const { data: maxBanData, isLoading: maxBanLoading } = useMaxNumberOfBan();
   const { data: currentBanData, isLoading: currentBanLoading } = useCurrentNumberOfBan();
@@ -79,8 +81,9 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({
     if (!slot.meeting) return;
     setDetailLoading(true);
     setSelectedMeeting(slot.meeting);
-    const res = await getMeetingDetail(slot.id);
-    setDetail(res);
+    // Use the hook to get meeting detail
+    const { data: meetingDetail } = useMeetingDetail(slot.id.toString());
+    setDetail(meetingDetail);
     setDetailLoading(false);
   };
 

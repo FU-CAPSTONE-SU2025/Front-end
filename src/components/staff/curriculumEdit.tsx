@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Select, DatePicker, Button, Space, Typography, Spin, Card, Table, Checkbox, Modal } from 'antd';
+import { Form, Input, Select, DatePicker, Button, Space, Spin, Card, Table, Checkbox, Modal } from 'antd';
 import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Curriculum, SubjectVersion, SubjectVersionWithCurriculumInfo, Program } from '../../interfaces/ISchoolProgram';
 import dayjs from 'dayjs';
 import {useCRUDCurriculum, useCRUDSubjectVersion} from '../../hooks/useCRUDSchoolMaterial';
-import { AddSubjectVersionToCurriculum, RemoveSubjectVersionFromCurriculum } from '../../api/SchoolAPI/curriculumAPI';
-import { FetchProgramList } from '../../api/SchoolAPI/programAPI';
 import styles from '../../css/staff/curriculumEdit.module.css';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { useSchoolApi } from '../../hooks/useSchoolApi';
 
-const { Title } = Typography;
 const { Option } = Select;
 
 interface CurriculumEditProps {
@@ -31,6 +29,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
   } = useCRUDCurriculum();
 
   const { getSubjectVersionMutation } = useCRUDSubjectVersion();
+  const { usePagedProgramList, addSubjectVersionToCurriculum, removeSubjectVersionFromCurriculum } = useSchoolApi();
 
   const [loading, setLoading] = useState(false);
 
@@ -54,38 +53,32 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
   const [hasMoreSubjectVersions, setHasMoreSubjectVersions] = useState(true);
   const [availableSubjectVersions, setAvailableSubjectVersions] = useState<SubjectVersion[]>([]);
 
-  // Fetch programs on mount
+  // Use the hook to get programs
+  const { data: programsData, isLoading: programsLoading } = usePagedProgramList(programPage, programPageSize);
+  
+  // Update programs when data is loaded
   useEffect(() => {
-    fetchPrograms();
-  }, []);
-
-  // Fetch programs function
-  const fetchPrograms = async (page: number = 1) => {
-    setProgramLoading(true);
-    try {
-      const result = await FetchProgramList(page, programPageSize);
-      if (result) {
-        const newPrograms = result.items || [];
-        if (page === 1) {
-          setPrograms(newPrograms);
-        } else {
-          setPrograms(prev => {
-            const existingIds = new Set(prev.map(p => p.id));
-            const uniqueNewPrograms = newPrograms.filter(p => !existingIds.has(p.id));
-            return [...prev, ...uniqueNewPrograms];
-          });
-        }
-        
-        // Check if there are more pages
-        const totalPages = Math.ceil(result.totalCount / programPageSize);
-        setHasMorePrograms(page < totalPages);
+    if (programsData?.items) {
+      const newPrograms = programsData.items;
+      if (programPage === 1) {
+        setPrograms(newPrograms);
+      } else {
+        setPrograms(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const uniqueNewPrograms = newPrograms.filter(p => !existingIds.has(p.id));
+          return [...prev, ...uniqueNewPrograms];
+        });
       }
-    } catch (error) {
-      console.error('Failed to fetch programs:', error);
-      handleError(error, 'Failed to load programs');
-    } finally {
-      setProgramLoading(false);
+      
+      // Check if there are more pages
+      const totalPages = Math.ceil(programsData.totalCount / programPageSize);
+      setHasMorePrograms(programPage < totalPages);
     }
+  }, [programsData, programPage, programPageSize]);
+
+  // Fetch programs function (legacy for compatibility)
+  const fetchPrograms = async (page: number = 1) => {
+    setProgramPage(page);
   };
 
   // Load more programs
@@ -236,10 +229,9 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
     }
     setAddLoading(true);
     try {
-      await AddSubjectVersionToCurriculum(id!, {
-        subjectVersionId: addForm.subjectVersionId,
-        semesterNumber: addForm.semesterNumber,
-        isMandatory: !!addForm.isMandatory,
+      await addSubjectVersionToCurriculum({
+        curriculumId: id!,
+        subjectVersionId: addForm.subjectVersionId
       });
       handleSuccess('Subject version added successfully');
       
@@ -273,7 +265,10 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
             onClick={async () => {
               setDeleteLoading(subjectVersionId);
               try {
-                await RemoveSubjectVersionFromCurriculum(subjectVersionId, id!);
+                await removeSubjectVersionFromCurriculum({
+                  subjectVersionId: subjectVersionId,
+                  curriculumId: id!
+                });
                 handleSuccess('Subject version removed successfully');
                 
                 // Refresh curriculum subject versions

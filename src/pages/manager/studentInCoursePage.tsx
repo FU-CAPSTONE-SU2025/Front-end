@@ -17,7 +17,7 @@ import {
   ComboComparisonData,
   CurriculumData,
   SemesterData
-} from '../../data/mockStudentMonitoring';
+} from '../../datas/mockStudentMonitoring';
 
 const { Text, Title } = Typography;
 const { Option } = Select;

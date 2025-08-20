@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import * as signalR from '@microsoft/signalr';
-import { useAuths } from './useAuths';
+import { useAuths } from './useAuthState';
 import { ChatMessage, PagedResult } from '../interfaces/IChat';
 import { SIGNALR_CONFIG, ConnectionState, signalRManager } from '../config/signalRConfig';
 import { useChatSession } from './useChatSession';

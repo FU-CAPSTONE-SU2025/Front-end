@@ -10,7 +10,7 @@ import { Curriculum, SubjectVersionWithCurriculumInfo, CreateCurriculum, Program
 import dayjs from 'dayjs';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
-import { FetchProgramList } from '../../api/SchoolAPI/programAPI';
+import { useSchoolApi } from '../../hooks/useSchoolApi';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -28,13 +28,12 @@ const CurriculumPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
-  // Program filter state with infinite scroll
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const { useProgramList } = useSchoolApi();
+  const { data: programsData } = useProgramList();
+  const programs = programsData?.items || [];
+  
+  // Program filter state
   const [selectedProgramId, setSelectedProgramId] = useState<number | undefined>();
-  const [programPage, setProgramPage] = useState(1);
-  const [programPageSize] = useState(10);
-  const [hasMorePrograms, setHasMorePrograms] = useState(true);
-  const [programLoading, setProgramLoading] = useState(false);
 
   // CRUD hooks
   const {
@@ -67,44 +66,11 @@ const CurriculumPage: React.FC = () => {
     if (title) setSearch(title);
   }, [searchParams]);
 
-  // Fetch programs for filter
-  useEffect(() => {
-    fetchPrograms(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  const fetchPrograms = async (p: number = 1) => {
-    if (programLoading) return;
-    setProgramLoading(true);
-    try {
-      const result = await FetchProgramList(p, programPageSize);
-      if (result) {
-        const newPrograms = result.items || [];
-        if (p === 1) {
-          setPrograms(newPrograms);
-        } else {
-          setPrograms(prev => {
-            const existing = new Set(prev.map(pr => pr.id));
-            return [...prev, ...newPrograms.filter(pr => !existing.has(pr.id))];
-          });
-        }
-        const totalPages = Math.ceil((result.totalCount || 0) / programPageSize);
-        setHasMorePrograms(p < totalPages);
-        setProgramPage(p);
-      }
-    } catch (e) {
-      // swallow; UI will just not load more
-    } finally {
-      setProgramLoading(false);
-    }
-  };
 
   const handleProgramsPopupScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const el = e.target as HTMLDivElement;
-    const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 5;
-    if (nearBottom && hasMorePrograms && !programLoading) {
-      fetchPrograms(programPage + 1);
-    }
+    // Programs are loaded all at once, no pagination needed
+    // This function is kept for compatibility but doesn't need to do anything
   };
 
   // Remove the automatic success handling effect to prevent false positives
@@ -271,9 +237,6 @@ const CurriculumPage: React.FC = () => {
             value={selectedProgramId}
             onChange={(v) => { setSelectedProgramId(v); setPage(1); }}
             style={{ minWidth: 220, borderRadius: 8 }}
-            onPopupScroll={handleProgramsPopupScroll}
-            loading={programLoading}
-            notFoundContent={programLoading ? <Spin size="small" /> : undefined}
             size="large"
           >
             {(programs || []).map(pr => (
@@ -281,11 +244,6 @@ const CurriculumPage: React.FC = () => {
                 {pr.programName} ({pr.programCode})
               </Option>
             ))}
-            {hasMorePrograms && (
-              <Option key="load-more-programs" value="load-more-programs" disabled>
-                {programLoading ? 'Loading...' : 'Scroll to load more'}
-              </Option>
-            )}
           </Select>
           <Button 
             type="primary" 

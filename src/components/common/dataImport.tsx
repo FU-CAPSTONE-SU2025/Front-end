@@ -7,7 +7,7 @@ import styles from '../../css/admin/dataImport.module.css';
 import { 
   HeaderConfiguration, 
   getHeaderConfig 
-} from '../../data/importConfigurations';
+} from '../../config/importConfig';
 import { transformBulkImportData, createPreviewData } from '../../utils/bulkImportTransformers';
 
 type DataImportProps = {

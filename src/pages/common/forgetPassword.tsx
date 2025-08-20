@@ -4,11 +4,10 @@ import { Form, Input, Button, ConfigProvider } from 'antd';
 import { Mail, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../../css/forgetPassword.module.css';
-import glassStyles from '../../css/manager/appleGlassEffect.module.css';
-import { ResetPassword, SendEmail } from '../../api/Account/AuthAPI';
+import loginStyles from '../../css/loginform.module.css';
+import { useAuthApi } from '../../hooks/useAuth';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { InfoCircleOutlined } from '@ant-design/icons';
-import BackgroundWrapper from '../../components/common/backgroundWrapper';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 // Custom hook for managing cooldown
@@ -93,6 +92,7 @@ const ForgetPassword: React.FC = () => {
   const [emailSent, setEmailSent] = useState<string | null>(null);
   const { showError, showSuccess } = useMessagePopupContext();
   const { handleError } = useApiErrorHandler();
+  const { sendResetEmail, resetPassword } = useAuthApi();
 
   // Handle email submission
   const handleClickReset = async () => {
@@ -101,7 +101,7 @@ const ForgetPassword: React.FC = () => {
       const props = {
          email: values.email,
       };
-      const response = await SendEmail(props);
+      const response = await sendResetEmail(props);
       if (response) {
         setCurrentPage(2);
         setEmailSent(values.email);
@@ -122,7 +122,7 @@ const ForgetPassword: React.FC = () => {
         verificationCode: values.verificationCode,
         newPassword: values.newPassword,
       };
-      const response = await ResetPassword(props);
+      const response = await resetPassword(props);
       if (response) {
         showSuccess('Your password has been successfully reset. You will be redirected to the login page.');
         setTimeout(() => navigate('/'), 2000);
@@ -138,10 +138,8 @@ const ForgetPassword: React.FC = () => {
   const handleResendEmail = async () => {
     try {
       const values = await form.validateFields(['email']);
-      const props = {
-        data: { email: values.email },
-      };
-      const response = await SendEmail(props);
+      const props = { email: values.email };
+      const response = await sendResetEmail(props);
       return response; // Return response for child component
     } catch (error) {
       console.error('Resend email failed:', error);
@@ -153,7 +151,7 @@ const ForgetPassword: React.FC = () => {
   const InputEmail = React.memo(() => {
     return (
       <motion.div 
-        className={`${styles.card} ${glassStyles.appleGlassCard}`}
+        className={`${loginStyles.loginCard} ${styles.card}`}
         variants={cardVariants} 
         initial="hidden" 
         animate="visible"
@@ -182,7 +180,6 @@ const ForgetPassword: React.FC = () => {
             >
               <Input
                 placeholder="Enter your email"
-                className={glassStyles.appleGlassInput}
                 prefix={<Mail size={16} />}
                 onChange={(e) => {
                   form.setFieldsValue({ email: e.target.value });
@@ -193,7 +190,6 @@ const ForgetPassword: React.FC = () => {
               <Button
                 type="primary"
                 htmlType="submit"
-                className={glassStyles.appleGlassButton}
                 block
               >
                 <motion.span
@@ -228,7 +224,7 @@ const ForgetPassword: React.FC = () => {
 
     return (
       <motion.div 
-        className={`${styles.card} ${glassStyles.appleGlassCard}`}
+        className={`${loginStyles.loginCard} ${styles.card}`}
         variants={cardVariants} 
         initial="hidden" 
         animate="visible"
@@ -266,7 +262,6 @@ const ForgetPassword: React.FC = () => {
             >
               <Input
                 placeholder="Enter your email"
-                className={glassStyles.appleGlassInput}
                 prefix={<Mail size={16} />}
                 onChange={(e) => {
                   form.setFieldsValue({ email: e.target.value });
@@ -280,7 +275,6 @@ const ForgetPassword: React.FC = () => {
               <Input
                 type="text"
                 placeholder="Verification Code"
-                className={glassStyles.appleGlassInput}
                 prefix={<Shield size={16} />}
               />
             </Form.Item>
@@ -293,7 +287,6 @@ const ForgetPassword: React.FC = () => {
             >
               <Input.Password
                 placeholder="New Password"
-                className={glassStyles.appleGlassInput}
                 prefix={<Shield size={16} />}
               />
             </Form.Item>
@@ -301,7 +294,6 @@ const ForgetPassword: React.FC = () => {
               <Button
                 type="primary"
                 htmlType="submit"
-                className={glassStyles.appleGlassButton}
                 block
               >
                 <motion.span
@@ -336,14 +328,20 @@ const ForgetPassword: React.FC = () => {
 
   return (
     <ConfigProvider>
-      <BackgroundWrapper variant="animated">
         {/* Back Button */}
         <div className={styles.backButtonContainer}>
           <Button
             type="text"
             icon={<ArrowLeft size={20} />}
             onClick={() => navigate('/')}
-            className={`${styles.backButton} ${glassStyles.appleGlassButton}`}
+            className={styles.backButton}
+            style={{
+              background: 'rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+            }}
           >
             Back to Login
           </Button>
@@ -351,7 +349,7 @@ const ForgetPassword: React.FC = () => {
 
         <motion.div className={styles.stepIndicatorContainer}>
           <motion.span 
-            className={`${styles.stepIndicator} ${glassStyles.appleGlassCard}`}
+            className={styles.stepIndicator}
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -369,7 +367,6 @@ const ForgetPassword: React.FC = () => {
             <div className={styles.card}>Invalid Page</div>
           )}
         </AnimatePresence>
-      </BackgroundWrapper>
     </ConfigProvider>
   );
 };

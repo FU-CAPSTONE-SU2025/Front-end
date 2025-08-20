@@ -11,7 +11,7 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDStudent from '../../hooks/useCRUDStudent';
 import { StudentBase } from '../../interfaces/IStudent';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { BulkRegisterStudent, DisableUser, ResetBanNumberForStudent } from '../../api/Account/UserAPI';
+import { useAdminUsers } from '../../hooks/useAdminUsers';
 import { parseExcelDate } from '../../utils/dateUtils';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
@@ -37,6 +37,7 @@ const StudentList: React.FC = () => {
   const nav = useNavigate();
   const { handleError, handleSuccess } = useApiErrorHandler();
   const { showWarning } = useMessagePopupContext();
+  const { bulkRegisterStudents, disableUser, resetBanNumber } = useAdminUsers();
 
   // Load initial data
   useEffect(() => {
@@ -155,7 +156,7 @@ const StudentList: React.FC = () => {
               : item.studentProfileData.enrolledAt?.toISOString?.() || ''
           }
         }));
-        response = await BulkRegisterStudent(fixedValidData);
+        response = await bulkRegisterStudents(fixedValidData);
       } catch (err) {
         setUploadStatus('error');
         setUploadMessage('Failed to import students');
@@ -222,7 +223,7 @@ const StudentList: React.FC = () => {
       cancelText: 'Cancel',
       onOk: async () => {
         try {
-          await DisableUser(studentId);
+          await disableUser(studentId);
           handleSuccess('Student account deleted successfully');
           loadStudentData();
           setSelectedStudents([]);
@@ -246,7 +247,7 @@ const StudentList: React.FC = () => {
   // Handle reset ban number
   const handleResetBanNumber = async (studentId: number) => {
     try {
-      await ResetBanNumberForStudent(studentId);
+      await resetBanNumber(studentId);
       handleSuccess('Ban number reset successfully');
       // Refresh the data and refetch active user data
       loadStudentData();

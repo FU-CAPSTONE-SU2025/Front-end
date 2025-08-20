@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Table, DatePicker, Button, Space, Typography } from 'antd';
 import { CalendarOutlined, CloseOutlined } from '@ant-design/icons';
-import { GetPagedLeaveSchedulesOneStaff } from '../../api/student/StudentAPI';
 import { LeaveSchedule } from '../../interfaces/ILeaveSchedule';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { useStudentApi } from '../../hooks/useStudentApi';
 import dayjs, { Dayjs } from 'dayjs';
 
 const { RangePicker } = DatePicker;
@@ -29,24 +29,26 @@ const LeaveScheduleModal: React.FC<LeaveScheduleModalProps> = ({
   const [total, setTotal] = useState(0);
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
   const { handleError } = useApiErrorHandler();
+  const { useLeaveSchedulesOneStaff } = useStudentApi();
 
-  // Fetch leave schedules
-  const fetchLeaveSchedules = async () => {
-    if (!staffProfileId) return;
-    
-    setLoading(true);
-    try {
-      const data = await GetPagedLeaveSchedulesOneStaff(staffProfileId);
-      setLeaveSchedules(data.items);
-      setTotal(data.totalCount);
-      setCurrentPage(data.pageNumber);
-      setPageSize(data.pageSize);
-    } catch (err) {
-      handleError(err, 'Failed to fetch leave schedules');
-      console.error('Fetch leave schedules error:', err);
-    } finally {
-      setLoading(false);
+  // Use the hook to get leave schedules
+  const { data: leaveSchedulesData, isLoading: leaveSchedulesLoading } = useLeaveSchedulesOneStaff(
+    staffProfileId?.toString() || ''
+  );
+  
+  // Update state when data is loaded
+  useEffect(() => {
+    if (leaveSchedulesData) {
+      setLeaveSchedules(leaveSchedulesData.items || []);
+      setTotal(leaveSchedulesData.totalCount || 0);
+      setCurrentPage(leaveSchedulesData.pageNumber || 1);
+      setPageSize(leaveSchedulesData.pageSize || 10);
     }
+  }, [leaveSchedulesData]);
+
+  // Fetch leave schedules (legacy function for compatibility)
+  const fetchLeaveSchedules = async () => {
+    // Data is now handled by the hook
   };
 
   // Handle date range change

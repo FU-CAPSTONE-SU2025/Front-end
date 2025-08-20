@@ -7,7 +7,7 @@ import styles from '../../css/admin/account.module.css';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import AvatarUpload from '../../components/common/AvatarUpload';
-import { getAuthState } from '../../hooks/useAuths';
+import { getAuthState } from '../../hooks/useAuthState';
 import useActiveUserData from '../../hooks/useActiveUserData';
 import useUserProfile from '../../hooks/useUserProfile';
 import { JWTAccountProps } from '../../interfaces/IAccount';

@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { Button, Card, Form, Input, Typography } from 'antd';
 import { useGoogleLogin } from '@react-oauth/google';
-import { LoginGoogleAccount, LoginAccount } from '../../api/Account/AuthAPI';
+import { useAuthApi } from '../../hooks/useAuth';
 import { GoogleAccountRequestProps, LoginProps } from '../../interfaces/IAccount';
 import { GoogleOutlined } from '@ant-design/icons';
 import styles from '../../css/loginform.module.css';
 import { Link, useNavigate } from 'react-router';
-import { getAuthState } from '../../hooks/useAuths';
+import { getAuthState } from '../../hooks/useAuthState';
 import { showForNavigation, hideLoading, showForAuth } from '../../hooks/useLoading';
-import BackgroundWrapper from '../../components/common/backgroundWrapper';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
@@ -23,6 +22,7 @@ const Login: React.FC = () => {
   const nav = useNavigate();
   const { showError, showSuccess } = useMessagePopupContext();
   const { handleError } = useApiErrorHandler();
+  const { login: loginRequest, loginWithGoogle } = useAuthApi();
   
   // Login navigation based on roleId
   // 1: Admin, 0: Student, others: Guest -> TOBEADDED
@@ -76,8 +76,8 @@ const Login: React.FC = () => {
       try {
         
         const { access_token } = tokenResponse;
-    
-        const userAccount: GoogleAccountRequestProps = await LoginGoogleAccount(access_token);
+
+        const userAccount: GoogleAccountRequestProps = await loginWithGoogle(access_token);
         if (userAccount!=null) {
           showSuccess('Login successful');
 
@@ -110,7 +110,7 @@ const Login: React.FC = () => {
     setIsEmailLoading(true);
     showForAuth('Authenticating...');
     try {
-      const userAccount:GoogleAccountRequestProps = await LoginAccount(values)
+      const userAccount:GoogleAccountRequestProps = await loginRequest(values)
       if (userAccount) {
         showSuccess('Login successful');
         setAccessToken(userAccount.accessToken);
@@ -131,7 +131,6 @@ const Login: React.FC = () => {
   };
 
   return (
-    <BackgroundWrapper variant="animated">
       <Card className={styles.loginCard}>
         <Title level={2} className={styles.title}>
           Login to AISEA
@@ -191,7 +190,6 @@ const Login: React.FC = () => {
             </Form.Item>
         </Form>
       </Card>
-    </BackgroundWrapper>
   );
 };
 

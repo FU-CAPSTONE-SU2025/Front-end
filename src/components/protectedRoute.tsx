@@ -1,6 +1,6 @@
 // src/router/authLoader.ts
 import { redirect } from 'react-router';
-import { getAuthState } from '../hooks/useAuths';
+import { getAuthState } from '../hooks/useAuthState';
 
 export const protectedLoader = (allowedRoles: string[]) => {
   return () => {

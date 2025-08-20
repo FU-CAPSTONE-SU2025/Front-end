@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Menu } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Tag, Avatar, Badge, Tooltip } from 'antd';
+import { Tag} from 'antd';
 import styles from '../../css/staff/staffNavBar.module.css';
 import Notification from '../../components/common/Notification';
 
@@ -14,9 +14,7 @@ interface NavItem {
 
 const StaffNavBar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(true);
-  const location = useLocation();
   const navigate = useNavigate();
-
   const navItems: NavItem[] = [
     { label: 'Student Transcript', route: '/staff/transcript' },
     { label: 'Programs', route: '/staff/programs' },
@@ -97,7 +95,7 @@ const StaffNavBar: React.FC = () => {
       >
         <div className={styles.header}>
           <div className={styles.logo}>
-            <img src="/img/Logo.svg" alt="App Logo" />
+            <img src="/Logo.svg" alt="App Logo" />
           </div>
           <nav className={styles.nav}>
             {navItems.map((item, index) => (
@@ -135,16 +133,21 @@ const StaffNavBar: React.FC = () => {
             Academic Staff
           </Tag>
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.97 }} style={{ marginRight: '20px' }}>
-            <Tooltip title="Profile">
-              <Badge dot color="#52c41a" offset={[-2, 2]}>
-                <Avatar
-                  size={40}
-                  src="https://via.placeholder.com/150"
-                  style={{ border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', cursor: 'pointer' }}
-                  onClick={() => navigate('/staff')}
-                />
-              </Badge>
-            </Tooltip>
+              <span
+                style={{
+                  fontWeight: 600,
+                  fontSize: 16,
+                  color: 'black',
+                  padding: 0,
+                  margin: 0,
+                  letterSpacing: '0.5px',
+                  boxShadow: 'none',
+                  cursor:'pointer'
+                }}
+                onClick={() => navigate('/staff')}
+              >
+                View Profile
+              </span>
           </motion.div>
           <div className={styles.notificationContainer}>
             <Notification variant="staff" />

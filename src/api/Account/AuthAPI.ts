@@ -2,7 +2,7 @@ import { axiosCreate, throwApiError } from "../AxiosCRUD";
 import { baseUrl } from "../template";
 import { LoginProps } from "../../interfaces/IAccount";
 import { TokenProps } from "../../interfaces/IAuthen";
-import { getAuthState } from "../../hooks/useAuths";
+import { getAuthState } from "../../hooks/useAuthState";
 // const accountUrl = baseUrl+"/account"
 const accountUrl = baseUrl+"/Auth"
 const googleLoginURL = baseUrl+"/Auth/google"

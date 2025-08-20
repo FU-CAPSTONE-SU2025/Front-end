@@ -11,7 +11,7 @@ import SessionTable from '../../components/staff/SessionTable';
 import { Modal } from 'antd';
 import { SubjectVersion, Syllabus, CreateSubjectVersion } from '../../interfaces/ISchoolProgram';
 import { useCRUDSubject, useCRUDSubjectVersion, useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
-import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../data/mockData';
+import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../datas/mockData';
 import AddPrerequisiteSubjectVersionModal from '../../components/staff/AddPrerequisiteSubjectVersionModal';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';

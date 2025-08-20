@@ -4,12 +4,12 @@ import { EditOutlined, SearchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
-import { GetPagedActiveStudent } from '../../api/Account/UserAPI';
 import { StudentBase } from '../../interfaces/IStudent';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
-import { RegisterMultipleStudentsToMultipleSubjects } from '../../api/SchoolAPI/joinedSubjectAPI';
 import { BulkCreateJoinedSubjectMultipleStudents } from '../../interfaces/ISchoolProgram';
+import { useActiveStudentApi } from '../../hooks/useActiveStudentApi';
+import { useSchoolApi } from '../../hooks/useSchoolApi';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { transformMultiStudentBulkImportData } from '../../utils/bulkImportTransformers';
@@ -21,9 +21,6 @@ const StaffTranscript: React.FC = () => {
   const [selectedProgram, setSelectedProgram] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [studentList, setStudentList] = useState<StudentBase[]>([]);
-  const [pagination, setPagination] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { handleError, handleSuccess } = useApiErrorHandler();
   
@@ -32,6 +29,10 @@ const StaffTranscript: React.FC = () => {
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadMessage, setUploadMessage] = useState('');
 
+  // Hooks
+  const { usePagedActiveStudents } = useActiveStudentApi();
+  const { registerMultipleStudents } = useSchoolApi();
+  
   // Program API for filter
   const {
     getAllPrograms,
@@ -44,34 +45,17 @@ const StaffTranscript: React.FC = () => {
     getAllPrograms({ pageNumber: 1, pageSize: 10});
   }, []);
 
-  // Load data when pagination or filters change
-  useEffect(() => {
-    loadStudentData();
-  }, [currentPage, pageSize, searchQuery, selectedProgram]);
-
-  const loadStudentData = async () => {
-    setIsLoading(true);
-    try {
-      const result = await GetPagedActiveStudent(currentPage, pageSize, searchQuery, selectedProgram || undefined);
-      
-      if (result) {
-        setStudentList(result.items || []);
-        setPagination({
-          current: result.pageNumber,
-          pageSize: result.pageSize,
-          total: result.totalCount,
-          totalPages: Math.ceil(result.totalCount / result.pageSize)
-        });
-      } else {
-        handleError('Failed to fetch students');
-      }
-    } catch (error) {
-      console.error('Error fetching students:', error);
-      handleError('Failed to fetch students');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Use the hook to get active students
+  const { data: studentsData, isLoading } = usePagedActiveStudents(currentPage, pageSize, searchQuery || undefined, selectedProgram || undefined);
+  
+  // Extract data from the hook
+  const studentList = studentsData?.items || [];
+  const pagination = studentsData ? {
+    current: studentsData.pageNumber,
+    pageSize: studentsData.pageSize,
+    total: studentsData.totalCount,
+    totalPages: Math.ceil(studentsData.totalCount / studentsData.pageSize)
+  } : null;
 
   // Handle pagination change
   const handlePageChange = (page: number, size?: number) => {
@@ -119,13 +103,12 @@ const StaffTranscript: React.FC = () => {
       if (multiStudentData.length > 0) {
         // Handle multi-student bulk import
         const bulkData = transformMultiStudentBulkImportData(multiStudentData);
-        const result = await RegisterMultipleStudentsToMultipleSubjects(bulkData);
+        const result = await registerMultipleStudents(bulkData);
         
         if (result) {
           setUploadStatus('success');
           setUploadMessage(`Successfully imported subject assignments for ${bulkData.userNameToSubjectsMap.length} students!`);
           handleSuccess('Multi-student bulk import completed successfully');
-          loadStudentData();
         } else {
           setUploadStatus('error');
           setUploadMessage('Failed to import multi-student subject assignments.');

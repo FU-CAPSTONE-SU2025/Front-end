@@ -5,11 +5,12 @@ import MeetingDetailModal from '../../components/student/meetingDetailModal';
 import dayjs, { Dayjs } from 'dayjs';
 import { Segmented, Button, List, Tag, Spin } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { getMeetingDetail } from '../../api/student/StudentAPI';
 import { useQueryClient } from '@tanstack/react-query';
+import { useStudentApi } from '../../hooks/useStudentApi';
 
 export default function MeetingPage() {
   const queryClient = useQueryClient();
+  const { useMeetingDetail } = useStudentApi();
 
   const { data: calendarData, isLoading: calendarLoading, refetch: refetchCalendar } = useAdvisorActiveMeetings(1, 50);
   const calendarMeetings = calendarData?.items || [];
@@ -87,8 +88,9 @@ export default function MeetingPage() {
   const handleMeetingClick = async (meeting: any) => {
     setDetailLoading(true);
     setSelectedMeeting(meeting);
-    const res = await getMeetingDetail(meeting.id);
-    setDetail(res);
+    // Use the hook to get meeting detail
+    const { data: meetingDetail } = useMeetingDetail(meeting.id.toString());
+    setDetail(meetingDetail);
     setDetailLoading(false);
   };
 

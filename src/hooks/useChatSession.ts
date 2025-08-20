@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useAuths } from './useAuths';
+import { useAuths } from './useAuthState';
 import { initChatSession } from '../api/student/StudentAPI';
 import { ChatSessionResponse } from '../interfaces/IChat';
 

@@ -4,7 +4,7 @@ import { AccountProps, UpdateAccountProps, UpdateAvatarProps } from '../interfac
 import { GetCurrentStaffUser, UpdateCurrentStaffUser, UpdateUserAvatar } from '../api/Account/UserAPI';
 import { StaffDataUpdateRequest } from '../interfaces/IStaff';
 import { StudentDataUpdateRequest } from '../interfaces/IStudent';
-import { uploadAvatar, deleteAvatar, validateImageFile } from '../api/firebaseConfig';
+import { uploadAvatar, deleteAvatar, validateImageFile } from '../config/firebaseConfig';
 import { debugLog } from '../utils/performanceOptimization';
 
 

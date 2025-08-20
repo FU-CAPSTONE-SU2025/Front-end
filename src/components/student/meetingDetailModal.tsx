@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { useMeetingActions } from '../../hooks/useMeetingActions';
 import { useMeetingModals } from '../../hooks/useMeetingModals';
 import { useMeetingPermissions } from '../../hooks/useMeetingPermissions';
-import { useAuths } from '../../hooks/useAuths';
+import { useAuths } from '../../hooks/useAuthState';
 import CancelMeetingModal from './cancelMeetingModal';
 import CompleteMeetingModal from './completeMeetingModal';
 import FeedbackModal from './feedbackModal';

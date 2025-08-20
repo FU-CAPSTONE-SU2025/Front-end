@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Select, Affix, Collapse, Pagination, Spin, Empty, Tag } from 'antd';
 import { PlusOutlined, EditOutlined, SearchOutlined, UploadOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
-import { curriculums, combos, comboSubjects } from '../../data/schoolData';
+import { curriculums, combos, comboSubjects } from '../../datas/schoolData';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCRUDSubject, useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateSubject } from '../../interfaces/ISchoolProgram';

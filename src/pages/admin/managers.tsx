@@ -10,7 +10,7 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDManager from '../../hooks/useCRUDManager';
 import { ManagerBase } from '../../interfaces/IManager';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { BulkRegisterManager } from '../../api/Account/UserAPI';
+import { useAdminUsers } from '../../hooks/useAdminUsers';
 import { parseExcelDate } from '../../utils/dateUtils';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
@@ -32,6 +32,7 @@ const ManagerList: React.FC = () => {
   const { getAllManager, managerList, pagination, isLoading } = useCRUDManager();
   const nav = useNavigate();
   const { handleError, handleSuccess } = useApiErrorHandler();
+  const { bulkRegisterManagers } = useAdminUsers();
 
   // Load initial data
   useEffect(() => {
@@ -95,7 +96,7 @@ const ManagerList: React.FC = () => {
       // Call the bulk registration API
       let response;
       try {
-        response = await BulkRegisterManager(transformedData);
+        response = await bulkRegisterManagers(transformedData);
       } catch (err) {
 
         setUploadStatus('error');
