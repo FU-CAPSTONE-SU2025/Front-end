@@ -4,7 +4,7 @@ import { Form, Input, Select, DatePicker, ConfigProvider, message } from 'antd';
 import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 import styles from '../../css/admin/editAccount.module.css';
-import { GetCurrentStudentUser, GetCurrentStaffUser, UpdateCurrentStaffUser, UpdateCurrentStudentUser, RegisterUser } from '../../api/Account/UserAPI';
+import { useAdminUsers } from '../../hooks/useAdminUsers';
 import { AccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { FetchProgramList } from '../../api/SchoolAPI/programAPI';
@@ -60,6 +60,7 @@ const EditAccount: React.FC = () => {
   const [isLoadingUser, setIsLoadingUser] = useState(!!id); // Only loading if editing
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string>('');
   const { handleError, handleSuccess } = useApiErrorHandler();
+  const { getCurrentStudent, getCurrentStaff, updateCurrentStaff, updateCurrentStudent, registerUser } = useAdminUsers();
 
   // Program and Curriculum state for infinite scroll
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -161,9 +162,9 @@ const EditAccount: React.FC = () => {
         }
         let userData: AccountProps | null = null;
         if (isStudent) {
-          userData = await GetCurrentStudentUser(userId);
+          userData = await getCurrentStudent(userId);
         } else if (isStaff) {
-          userData = await GetCurrentStaffUser(userId);
+          userData = await getCurrentStaff(userId);
         }
         if (userData) {
           setCurrentUser(userData);
@@ -293,7 +294,7 @@ const EditAccount: React.FC = () => {
           } : null,
         };
         try {
-          await RegisterUser(createData);
+          await registerUser(createData);
           handleSuccess('Account created successfully!');
           nav(-1);
         } catch (err) {
@@ -340,9 +341,9 @@ const EditAccount: React.FC = () => {
       };
       let response:any
       if (isStudent) {
-        response = await UpdateCurrentStudentUser(userId, updateData as any);
+        response = await updateCurrentStudent({ userId, data: updateData as any });
       } else {
-        response = await UpdateCurrentStaffUser(userId, updateData);
+        response = await updateCurrentStaff({ userId, data: updateData });
       }
       if (response) {
         handleSuccess('Account updated successfully!');

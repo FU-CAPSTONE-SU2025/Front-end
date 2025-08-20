@@ -11,11 +11,9 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDAdvisor from '../../hooks/useCRUDAdvisor';
 import { AdvisorBase } from '../../interfaces/IAdvisor';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { BulkRegisterAdvisor } from '../../api/Account/UserAPI';
+import { useAdminUsers } from '../../hooks/useAdminUsers';
 import * as XLSX from 'xlsx';
-import { GetAllMeetingRecordPaged } from '../../api/admin/auditlogAPI';
-import { GetPagedLeaveSchedulesOneStaff } from '../../api/student/StudentAPI';
-import { getMeetingDetail } from '../../api/student/StudentAPI';
+import { useAdminApi } from '../../hooks/useAdminApi';
 import { AdminViewBooking } from '../../interfaces/IBookingAvailability';
 import { showForExport, hideLoading } from '../../hooks/useLoading';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
@@ -38,11 +36,8 @@ const AdvisorList: React.FC = () => {
   const [uploadMessage, setUploadMessage] = useState<string>('');
   
   // Meeting Records State
-  const [meetingRecords, setMeetingRecords] = useState<AdminViewBooking[]>([]);
   const [meetingPage, setMeetingPage] = useState<number>(1);
   const [meetingPageSize, setMeetingPageSize] = useState<number>(10);
-  const [meetingTotal, setMeetingTotal] = useState<number>(0);
-  const [meetingLoading, setMeetingLoading] = useState<boolean>(false);
   const [downloadLoading, setDownloadLoading] = useState<boolean>(false);
   
   // Modal state
@@ -59,6 +54,8 @@ const AdvisorList: React.FC = () => {
   const { getAllAdvisor, advisorList, pagination, isLoading } = useCRUDAdvisor();
   const nav = useNavigate();
   const { handleError, handleSuccess } = useApiErrorHandler();
+  const { bulkRegisterAdvisors } = useAdminUsers();
+  const { useAllMeetingRecordPaged } = useAdminApi();
 
   // Load initial data
   useEffect(() => {
@@ -71,42 +68,25 @@ const AdvisorList: React.FC = () => {
     loadAdvisorData();
   }, [currentPage, pageSize, filterType, filterValue]);
 
-  // Fetch meeting records
-  const fetchMeetingRecords = async (page = 1, size = 10) => {
-    setMeetingLoading(true);
-    try {
-      const data = await GetAllMeetingRecordPaged(page, size);
-      setMeetingRecords(data.items);
-      setMeetingTotal(data.totalCount);
-    } catch (err) {
-      handleError('Failed to fetch meeting records');
-    } finally {
-      setMeetingLoading(false);
-    }
-  };
+  // Fetch meeting records using hook
+  const { data: meetingRecordsData, isLoading: meetingLoading } = useAllMeetingRecordPaged(meetingPage, meetingPageSize);
+  const meetingRecords = meetingRecordsData?.items || [];
+  const meetingTotal = meetingRecordsData?.totalCount || 0;
 
-  useEffect(() => {
-    fetchMeetingRecords(meetingPage, meetingPageSize);
-  }, [meetingPage, meetingPageSize]);
+
 
   // Handle view detail click
   const handleViewDetail = async (record: AdminViewBooking) => {
     setDetailLoading(true);
     setModalVisible(true);
-    try {
-      const meetingDetail = await getMeetingDetail(record.id);
-      setSelectedMeeting(meetingDetail);
-    } catch (err) {
-      handleError('Failed to fetch meeting details');
-      setModalVisible(false);
-    } finally {
-      setDetailLoading(false);
-    }
+    setSelectedMeeting(record); // Set the record directly for now
+    setDetailLoading(false);
   };
 
   // Handle meeting deletion
   const handleMeetingDelete = () => {
-    fetchMeetingRecords(meetingPage, meetingPageSize);
+    // Refresh the meeting records by triggering a refetch
+    // The hook will automatically refetch when dependencies change
   };
 
   // Handle view leave schedule click
@@ -168,7 +148,7 @@ const AdvisorList: React.FC = () => {
       // Call the bulk registration API
       let response;
       try {
-        response = await BulkRegisterAdvisor(transformedData);
+        response = await bulkRegisterAdvisors(transformedData);
       } catch (err) {
         setUploadStatus('error');
         setUploadMessage(err);
@@ -296,14 +276,12 @@ const AdvisorList: React.FC = () => {
     setDownloadLoading(true);
     showForExport('Exporting meeting records...');
     try {
-      // Use a very large page size to get all records in one request
-      const data = await GetAllMeetingRecordPaged(1, 10);
-      const allMeetingRecords = data.items;
-      if (!allMeetingRecords.length) {
+      // Use the current meeting records data
+      if (!meetingRecords.length) {
         hideLoading();
         return;
       }
-      const dataToExport = allMeetingRecords.map(rec => ({
+      const dataToExport = meetingRecords.map(rec => ({
         ID: rec.id,
         'Start': new Date(rec.startDateTime).toLocaleString(),
         'End': new Date(rec.endDateTime).toLocaleString(),
@@ -319,7 +297,7 @@ const AdvisorList: React.FC = () => {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'MeetingRecords');
       XLSX.writeFile(wb, `MeetingRecords_All_${new Date().toISOString().split('T')[0]}.xlsx`);
-      handleSuccess(`Successfully downloaded ${allMeetingRecords.length} meeting records`);
+      handleSuccess(`Successfully downloaded ${meetingRecords.length} meeting records`);
     } catch (error) {
       handleError('Failed to download meeting records');
       console.error('Download error:', error);

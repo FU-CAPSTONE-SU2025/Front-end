@@ -10,7 +10,7 @@ import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDStaff from '../../hooks/useCRUDStaff';
 import { StaffProfileData } from '../../interfaces/IStaff';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
-import { BulkRegisterStaff, BulkRegisterManager, BulkRegisterAdvisor, BulkRegisterAdmin } from '../../api/Account/UserAPI';
+import { useAdminUsers } from '../../hooks/useAdminUsers';
 import { transformBulkImportData, validateBulkData, getApiFunctionName } from '../../utils/bulkImportTransformers';
 import { AccountProps } from '../../interfaces/IAccount';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
@@ -35,6 +35,7 @@ const StaffList: React.FC = () => {
   const { getAllStaff, staffList, pagination, isLoading } = useCRUDStaff();
   const nav = useNavigate();
   const { handleError, handleSuccess } = useApiErrorHandler();
+  const { bulkRegisterStaff } = useAdminUsers();
   const { showWarning } = useMessagePopupContext();
 
   // Load initial data
@@ -124,7 +125,7 @@ const StaffList: React.FC = () => {
       // Call the bulk registration API
       let response;
       try {
-        response = await BulkRegisterStaff(validData);
+        response = await bulkRegisterStaff(validData);
       } catch (err) {
 
         setUploadStatus('error');

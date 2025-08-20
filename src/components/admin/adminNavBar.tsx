@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router';
 import { User, Users, Briefcase, BookUser, UserCog, Activity, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../../css/admin/adminNavBar.module.css';
-import { getAuthState } from '../../hooks/useAuths';
+import { getAuthState } from '../../hooks/useAuthState';
 
 // Interface for navigation items
 interface NavItem {
@@ -125,7 +125,7 @@ const AdminNavBar: React.FC = () => {
           <div className={styles.header}>
             <div className={styles.logo}>
               <img
-                src="/img/Logo.svg"
+                src="/Logo.svg"
                 alt="AI-SEA Logo"
               />
             </div>
