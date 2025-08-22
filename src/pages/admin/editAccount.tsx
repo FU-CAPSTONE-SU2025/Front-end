@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Form, Input, Select, DatePicker, ConfigProvider, message, Modal } from 'antd';
+import { Form, Input, Select, DatePicker, ConfigProvider, Modal } from 'antd';
 import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 import styles from '../../css/admin/editAccount.module.css';
@@ -66,8 +66,6 @@ const EditAccount: React.FC = () => {
   // Program and Curriculum state for infinite scroll
   const [programs, setPrograms] = useState<Program[]>([]);
   const [curriculums, setCurriculums] = useState<Curriculum[]>([]);
-  const [programLoading, setProgramLoading] = useState(false);
-  const [curriculumLoading, setCurriculumLoading] = useState(false);
   const [programPage, setProgramPage] = useState(1);
   const [curriculumPage, setCurriculumPage] = useState(1);
   const [hasMorePrograms, setHasMorePrograms] = useState(true);
@@ -219,7 +217,7 @@ const EditAccount: React.FC = () => {
   const handleProgramScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const el = e.target as HTMLDivElement;
     const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 5;
-    if (nearBottom && hasMorePrograms && !programLoading) {
+    if (nearBottom && hasMorePrograms) {
       fetchPrograms(programPage + 1);
     }
   };
@@ -228,7 +226,7 @@ const EditAccount: React.FC = () => {
   const handleCurriculumScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const el = e.target as HTMLDivElement;
     const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 5;
-    if (nearBottom && hasMoreCurriculums && !curriculumLoading && selectedProgramId) {
+    if (nearBottom && hasMoreCurriculums && selectedProgramId) {
       fetchCurriculums(curriculumPage + 1, '', selectedProgramId);
     }
   };
@@ -623,7 +621,6 @@ const EditAccount: React.FC = () => {
                        >
                          <Select
                            placeholder="Select program"
-                           loading={programLoading}
                            onSearch={handleProgramSearch}
                            onPopupScroll={handleProgramScroll}
                            onChange={handleProgramChange}
@@ -642,7 +639,7 @@ const EditAccount: React.FC = () => {
                            filterOption={(input, option) =>
                              String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                            }
-                           notFoundContent={programLoading ? 'Loading programs...' : 'No programs found'}
+                           notFoundContent={'No programs found'}
                          >
                            {programs.map(program => (
                              <Option key={program.id} value={program.id} label={program.programName}>
@@ -660,7 +657,7 @@ const EditAccount: React.FC = () => {
                        >
                          <Select
                            placeholder="Select curriculum"
-                           loading={curriculumLoading}
+                      
                            onSearch={handleCurriculumSearch}
                            onPopupScroll={handleCurriculumScroll}
                            onClear={() => {
@@ -674,7 +671,7 @@ const EditAccount: React.FC = () => {
                            filterOption={(input, option) =>
                              String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                            }
-                           notFoundContent={curriculumLoading ? 'Loading curriculums...' : 'No curriculums found'}
+                           notFoundContent={'No curriculums found'}
                            disabled={!selectedProgramId}
                          >
                            {curriculums.map(curriculum => (

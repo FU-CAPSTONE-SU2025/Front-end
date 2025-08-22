@@ -8,7 +8,6 @@ import { useAuditLog } from '../../hooks/useAuditLog';
 import { AuditLog } from '../../interfaces/IAuditLog';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import useActiveUserData from '../../hooks/useActiveUserData';
-import { ChartDataPoint } from '../../hooks/useActiveUserData';
 
 const LogsPage: React.FC = () => {
   const [dateRange, setDateRange] = useState<[Date, Date] | null>(null);
@@ -30,15 +29,7 @@ const LogsPage: React.FC = () => {
     refetchUserData();
   }, [refetchUserData]);
 
-  // Custom date filter function
-  const isBetweenDates = (dateStr: string, start: Date, end: Date) => {
-    const date = new Date(dateStr);
-    // Set time to midnight for consistent day comparison
-    date.setHours(0, 0, 0, 0);
-    start.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-    return date >= start && date <= end;
-  };
+
 
   // Filter activity data by date range
   const filteredActivity = useMemo(() => {

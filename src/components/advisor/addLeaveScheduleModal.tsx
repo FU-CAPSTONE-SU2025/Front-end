@@ -379,7 +379,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
                 </Col>
               </Row>
               <Form.Item>
-                <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+                <Space style={{ width: '100%', justifyContent: 'space-between' }}>
                   <Button onClick={handleCancel}>Cancel</Button>
                   <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>
                     Create Leave{selectedDates.length > 1 ? `s (${selectedDates.length})` : ''}
@@ -570,7 +570,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
               Add Another Leave
             </Button>
             <Divider />
-            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+            <Space style={{ width: '100%', justifyContent: 'space-between' }}>
               <Button onClick={handleCancel}>Cancel</Button>
               <Button
                 type="primary"

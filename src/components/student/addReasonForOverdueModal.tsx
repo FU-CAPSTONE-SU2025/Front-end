@@ -47,18 +47,20 @@ const AddReasonForOverdueModal: React.FC<AddReasonForOverdueModalProps> = ({
       open={open}
       onCancel={handleCancel}
       footer={[
-        <Button key="cancel" onClick={handleCancel}>
-          Cancel
-        </Button>,
-        <Button 
-          key="submit" 
-          type="primary" 
-          loading={loading}
-          onClick={handleSubmit}
-          danger
-        >
-          Add Reason
-        </Button>
+        <div className='flex justify-between'>
+          <Button key="cancel" onClick={handleCancel}>
+            Cancel
+          </Button>,
+          <Button 
+            key="submit" 
+            type="primary" 
+            loading={loading}
+            onClick={handleSubmit}
+            danger
+          >
+            Add Reason
+          </Button>
+        </div>
       ]}
       width={500}
       centered
