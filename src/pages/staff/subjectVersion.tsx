@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Button, Tabs, Typography, Card, Tag, Space, Popconfirm, Tooltip } from 'antd';
+import { Button, Tabs, Typography, Card, Tag, Space, Popconfirm, Tooltip, Input } from 'antd';
 import { PlusOutlined, ArrowLeftOutlined, EditOutlined, SaveOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import AddVersionModal from '../../components/staff/AddVersionModal';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
@@ -88,6 +88,10 @@ const SubjectVersionPage: React.FC = () => {
   const [prereqModalOpen, setPrereqModalOpen] = useState(false);
   const [editingVersionId, setEditingVersionId] = useState<number | null>(null);
   
+  // State for editing version data
+  const [editingVersionData, setEditingVersionData] = useState<Record<number, any>>({});
+  const [savingVersion, setSavingVersion] = useState<Record<number, boolean>>({});
+  
   // Local state for prerequisites per version
   const [prereqMap, setPrereqMap] = useState<Record<number, any[]>>({});
   const [prereqLoading, setPrereqLoading] = useState<Record<number, boolean>>({});
@@ -106,6 +110,7 @@ const SubjectVersionPage: React.FC = () => {
   const { 
     getSubjectVersionsBySubjectId, 
     addSubjectVersionMutation, 
+    editSubjectVersionMutation,
     deleteSubjectVersionMutation,
     toggleActiveSubjectVersionMutation,
     setDefaultSubjectVersionMutation,
@@ -419,12 +424,12 @@ const SubjectVersionPage: React.FC = () => {
       await addSubjectVersionMutation.mutateAsync(values);
       handleSuccess('Version added successfully!');
       
-      // Refresh versions list
-      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
-      if (updatedVersions) {
-        setSubjectVersions(updatedVersions);
-        if (updatedVersions.length > 0) {
-          const newVersionId = updatedVersions[updatedVersions.length - 1].id;
+      // Force refresh versions list to get the latest data
+      const refreshedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+      if (refreshedVersions) {
+        setSubjectVersions(refreshedVersions);
+        if (refreshedVersions.length > 0) {
+          const newVersionId = refreshedVersions[refreshedVersions.length - 1].id;
           setActiveKey(String(newVersionId));
           // Fetch prerequisites for the new version
           await fetchPrerequisitesForVersion(newVersionId);
@@ -445,12 +450,12 @@ const SubjectVersionPage: React.FC = () => {
       await deleteSubjectVersionMutation.mutateAsync(versionId);
       handleSuccess('Version deleted successfully!');
       
-      // Refresh versions list
-      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
-      if (updatedVersions) {
-        setSubjectVersions(updatedVersions);
-        if (updatedVersions.length > 0 && activeKey === String(versionId)) {
-          setActiveKey(String(updatedVersions[0].id));
+      // Force refresh versions list to get the latest data
+      const refreshedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+      if (refreshedVersions) {
+        setSubjectVersions(refreshedVersions);
+        if (refreshedVersions.length > 0 && activeKey === String(versionId)) {
+          setActiveKey(String(refreshedVersions[0].id));
         }
       }
     } catch (err: any) {
@@ -464,10 +469,10 @@ const SubjectVersionPage: React.FC = () => {
       await toggleActiveSubjectVersionMutation.mutateAsync(versionId);
       handleSuccess('Version status updated successfully!');
       
-      // Refresh versions list
-      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
-      if (updatedVersions) {
-        setSubjectVersions(updatedVersions);
+      // Force refresh versions list to get the latest data
+      const refreshedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+      if (refreshedVersions) {
+        setSubjectVersions(refreshedVersions);
       }
     } catch (err: any) {
       handleError('Failed to update version status: ' + err.message);
@@ -480,15 +485,221 @@ const SubjectVersionPage: React.FC = () => {
       await setDefaultSubjectVersionMutation.mutateAsync(versionId);
       handleSuccess('Version set as default successfully!');
       
-      // Refresh versions list
-      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
-      if (updatedVersions) {
-        setSubjectVersions(updatedVersions);
+      // Force refresh versions list to get the latest data
+      const refreshedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+      if (refreshedVersions) {
+        setSubjectVersions(refreshedVersions);
       }
     } catch (err: any) {
       handleError('Failed to set version as default: ' + err.message);
     }
   }, [setDefaultSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, handleSuccess, handleError]);
+
+  // Handler to save version edits
+  const handleSaveVersion = useCallback(async (versionId: number) => {
+    console.log('handleSaveVersion called with versionId:', versionId);
+    console.log('Current editingVersionData:', editingVersionData);
+    
+    const versionData = editingVersionData[versionId];
+    console.log('Version data for this version:', versionData);
+    
+    if (!versionData) {
+      console.error('No version data found for versionId:', versionId);
+      return;
+    }
+
+    // Validate required fields
+    if (!versionData.versionCode?.trim() || !versionData.versionName?.trim() || !versionData.description?.trim()) {
+      console.error('Validation failed - missing required fields:', {
+        versionCode: versionData.versionCode,
+        versionName: versionData.versionName,
+        description: versionData.description
+      });
+      handleError('Version Code, Version Name, and Description are required fields');
+      return;
+    }
+
+    if (!versionData.effectiveFrom) {
+      console.error('Validation failed - missing effectiveFrom:', versionData.effectiveFrom);
+      handleError('Effective From date is required');
+      return;
+    }
+
+    setSavingVersion(prev => ({ ...prev, [versionId]: true }));
+    try {
+      // Convert to UpdateSubjectVersion format
+      const updateData = {
+        versionCode: versionData.versionCode.trim(),
+        versionName: versionData.versionName.trim(),
+        description: versionData.description.trim(),
+        isActive: versionData.isActive,
+        isDefault: versionData.isDefault,
+        effectiveFrom: versionData.effectiveFrom,
+        effectiveTo: versionData.effectiveTo || null,
+        createdAt: subjectVersions.find(v => v.id === versionId)?.createdAt || '',
+        updatedAt: new Date().toISOString()
+      };
+
+      console.log('Sending update data:', updateData);
+      console.log('Current subjectVersions before update:', subjectVersions);
+
+      const updatedVersion = await editSubjectVersionMutation.mutateAsync({ id: versionId, data: updateData });
+      console.log('API response:', updatedVersion);
+      
+      if (updatedVersion) {
+        handleSuccess('Version updated successfully!');
+        
+        // Force refresh the subject versions list to get the latest data
+        try {
+          console.log('Force refreshing subject versions list...');
+          const refreshedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+          if (refreshedVersions && Array.isArray(refreshedVersions)) {
+            setSubjectVersions(refreshedVersions);
+            console.log('Subject versions refreshed successfully:', refreshedVersions);
+            
+            // Ensure activeKey is still valid after refresh
+            if (activeKey && !refreshedVersions.some(v => String(v.id) === activeKey)) {
+              setActiveKey(String(refreshedVersions[0].id));
+            }
+          }
+        } catch (refreshError) {
+          console.error('Failed to refresh subject versions:', refreshError);
+          // Fallback to local state update if refresh fails
+          setSubjectVersions(prev => {
+            const newVersions = prev.map(v => {
+              if (v.id === versionId) {
+                return {
+                  ...v,
+                  ...updatedVersion,
+                  subject: v.subject
+                };
+              }
+              return v;
+            });
+            return newVersions;
+          });
+        }
+        
+        // Clear editing data for this version
+        setEditingVersionData(prev => {
+          const newData = { ...prev };
+          delete newData[versionId];
+          console.log('Cleared editing data for version:', versionId, 'New editing data:', newData);
+          return newData;
+        });
+      } else {
+        console.error('API returned null/undefined for updated version');
+        handleError('Failed to update version - no response from server');
+        
+        // Fallback: refresh the data from server
+        try {
+          console.log('Attempting to refresh data from server...');
+          const refreshedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+          if (refreshedVersions && Array.isArray(refreshedVersions)) {
+            setSubjectVersions(refreshedVersions);
+            console.log('Data refreshed successfully:', refreshedVersions);
+          }
+        } catch (refreshError) {
+          console.error('Failed to refresh data:', refreshError);
+        }
+      }
+    } catch (err: any) {
+      console.error('Error in handleSaveVersion:', err);
+      handleError('Failed to update version: ' + (err.message || 'Unknown error'));
+      
+      // Fallback: refresh the data from server on error
+      try {
+        console.log('Attempting to refresh data from server after error...');
+        const refreshedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+        if (refreshedVersions && Array.isArray(refreshedVersions)) {
+          setSubjectVersions(refreshedVersions);
+          console.log('Data refreshed successfully after error:', refreshedVersions);
+        }
+      } catch (refreshError) {
+        console.error('Failed to refresh data after error:', refreshError);
+      }
+    } finally {
+      setSavingVersion(prev => ({ ...prev, [versionId]: false }));
+    }
+  }, [editingVersionData, editSubjectVersionMutation, handleSuccess, handleError, subjectVersions, subjectId, getSubjectVersionsBySubjectId, activeKey]);
+
+  // Handler to initialize editing data when editing mode is turned on
+  const handleStartEditing = useCallback(() => {
+    console.log('handleStartEditing called');
+    console.log('Current subjectVersions:', subjectVersions);
+    
+    setIsEditing(true);
+    // Initialize editing data for all versions
+    const initialEditingData: Record<number, any> = {};
+    subjectVersions.forEach(version => {
+      initialEditingData[version.id] = {
+        subjectId: version.subjectId,
+        versionCode: version.versionCode,
+        versionName: version.versionName,
+        description: version.description,
+        isActive: version.isActive,
+        isDefault: version.isDefault,
+        effectiveFrom: version.effectiveFrom,
+        effectiveTo: version.effectiveTo
+      };
+    });
+    
+    console.log('Initial editing data:', initialEditingData);
+    setEditingVersionData(initialEditingData);
+  }, [subjectVersions]);
+
+  // Handler to cancel editing
+  const handleCancelEditing = useCallback(() => {
+    console.log('handleCancelEditing called');
+    setIsEditing(false);
+    setEditingVersionData({});
+  }, []);
+
+  // Debug useEffect for editing state
+  useEffect(() => {
+    console.log('Editing state changed:', { isEditing, editingVersionData });
+  }, [isEditing, editingVersionData]);
+
+  // Debug useEffect for subjectVersions
+  useEffect(() => {
+    console.log('SubjectVersions changed:', subjectVersions);
+  }, [subjectVersions]);
+
+  // Debug useEffect for activeKey
+  useEffect(() => {
+    console.log('ActiveKey changed:', activeKey);
+  }, [activeKey]);
+
+  // Safety check for activeKey - ensure it's still valid after state updates
+  useEffect(() => {
+    if (subjectVersions.length > 0 && activeKey) {
+      const activeVersionExists = subjectVersions.some(v => String(v.id) === activeKey);
+      if (!activeVersionExists) {
+        console.log('Active key is no longer valid, setting to first version');
+        setActiveKey(String(subjectVersions[0].id));
+      }
+    } else if (subjectVersions.length > 0 && !activeKey) {
+      console.log('No active key but versions exist, setting to first version');
+      setActiveKey(String(subjectVersions[0].id));
+    }
+  }, [subjectVersions, activeKey]);
+
+  // Handler to handle version field changes
+  const handleVersionFieldChange = useCallback((versionId: number, field: string, value: any) => {
+    console.log('handleVersionFieldChange called:', { versionId, field, value });
+    
+    setEditingVersionData(prev => {
+      const newData = {
+        ...prev,
+        [versionId]: {
+          ...prev[versionId],
+          [field]: value
+        }
+      };
+      console.log('New editingVersionData after change:', newData);
+      return newData;
+    });
+  }, []);
 
   // Handler to delete a prerequisite
   const handleDeletePrerequisite = async (versionId: number, prerequisite_subject_id: number) => {
@@ -994,6 +1205,7 @@ const SubjectVersionPage: React.FC = () => {
   }
 
   if (!Array.isArray(subjectVersions) || subjectVersions.length === 0) {
+    console.log('No versions found, rendering empty state');
     return (
       <div className={styles.syllabusContainer} style={{ width: '100%', maxWidth: 'none', minWidth: 0 }}>
         {/* Header */}
@@ -1054,6 +1266,9 @@ const SubjectVersionPage: React.FC = () => {
     );
   }
 
+  console.log('Rendering main component with versions:', subjectVersions.length);
+  console.log('Current state:', { isEditing, activeKey, editingVersionData });
+
   return (
     <>
       <style>
@@ -1093,10 +1308,17 @@ const SubjectVersionPage: React.FC = () => {
             <Button
               type="primary"
               icon={isEditing ? <SaveOutlined /> : <EditOutlined />}
-              onClick={() => setIsEditing(e => !e)}
+              onClick={() => {
+                console.log('Header button clicked, current isEditing:', isEditing);
+                if (isEditing) {
+                  handleCancelEditing();
+                } else {
+                  handleStartEditing();
+                }
+              }}
               className={isEditing ? styles.saveButton : styles.editButton}
             >
-              {isEditing ? 'Finish Editing' : 'Edit Versions'}
+              {isEditing ? 'Cancel Editing' : 'Edit Versions'}
             </Button>
             <Button 
               type="primary" 
@@ -1117,9 +1339,16 @@ const SubjectVersionPage: React.FC = () => {
             type="card"
             tabBarStyle={{ background: 'transparent', borderRadius: 12, boxShadow: 'none', display: 'flex', justifyContent: 'center' }}
             items={(Array.isArray(subjectVersions) ? subjectVersions : [])
-              .filter(version => version && typeof version.id !== 'undefined')
+              .filter(Boolean)
               .map((version, index) => {
               const isActive = activeKey === String(version.id);
+              
+              // Safety check for version data
+              if (!version || !version.id) {
+                console.error('Invalid version data:', version);
+                return null;
+              }
+              
               return {
                 key: String(version.id),
                 label: (
@@ -1135,7 +1364,7 @@ const SubjectVersionPage: React.FC = () => {
                         transition: 'background 0.2s, color 0.2s',
                       }}
                     >
-                      Version {index + 1}
+                      Version {version.versionCode}
                     </span>
                     <Space size={4}>
                       {version.isActive ? <Tag color="green">Active</Tag> : <Tag color="default">Inactive</Tag>}
@@ -1204,26 +1433,105 @@ const SubjectVersionPage: React.FC = () => {
                     <div style={{ marginBottom: 32 }}>
                       <h3 style={{ fontWeight: 800, fontSize: 22, color: '#1E40AF', marginBottom: 16, letterSpacing: '-0.5px' }}>
                         📄 Version Information
+                        {isEditing && (
+                          <span style={{ fontSize: 16, color: '#f97316', marginLeft: 12, fontWeight: 600 }}>
+                            (Editing Mode)
+                          </span>
+                        )}
                       </h3>
                       <Card>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
                           <div>
-                            <strong>Version Code:</strong> {version.versionCode}
+                            <strong>Version Code:</strong> 
+                            {isEditing ? (
+                              <Input
+                                value={editingVersionData[version.id]?.versionCode || version.versionCode || ''}
+                                onChange={(e) => {
+                                  console.log('Version Code changed:', e.target.value);
+                                  handleVersionFieldChange(version.id, 'versionCode', e.target.value);
+                                }}
+                                style={{ marginTop: 4 }}
+                                placeholder="Enter version code"
+                                status={editingVersionData[version.id]?.versionCode !== version.versionCode ? 'warning' : undefined}
+                              />
+                            ) : (
+                              <span style={{ marginLeft: 8 }}>{version.versionCode || 'N/A'}</span>
+                            )}
                           </div>
                           <div>
-                            <strong>Version Name:</strong> {version.versionName}
+                            <strong>Version Name:</strong> 
+                            {isEditing ? (
+                              <Input
+                                value={editingVersionData[version.id]?.versionName || version.versionName || ''}
+                                onChange={(e) => handleVersionFieldChange(version.id, 'versionName', e.target.value)}
+                                style={{ marginTop: 4 }}
+                                placeholder="Enter version name"
+                                status={editingVersionData[version.id]?.versionName !== version.versionName ? 'warning' : undefined}
+                              />
+                            ) : (
+                              <span style={{ marginLeft: 8 }}>{version.versionName || 'N/A'}</span>
+                            )}
+                          </div>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <strong>Description:</strong> 
+                            {isEditing ? (
+                              <Input.TextArea
+                                value={editingVersionData[version.id]?.description || version.description || ''}
+                                onChange={(e) => handleVersionFieldChange(version.id, 'description', e.target.value)}
+                                style={{ marginTop: 4 }}
+                                rows={3}
+                                placeholder="Enter version description"
+                                status={editingVersionData[version.id]?.description !== version.description ? 'warning' : undefined}
+                              />
+                            ) : (
+                              <span style={{ marginLeft: 8 }}>{version.description || 'N/A'}</span>
+                            )}
                           </div>
                           <div>
-                            <strong>Description:</strong> {version.description}
+                            <strong>Effective From:</strong> 
+                            {isEditing ? (
+                              <Input
+                                type="date"
+                                value={(() => {
+                                  const dateValue = editingVersionData[version.id]?.effectiveFrom || version.effectiveFrom;
+                                  if (typeof dateValue === 'string') {
+                                    return dateValue.includes('T') ? dateValue.split('T')[0] : dateValue;
+                                  }
+                                  return '';
+                                })()}
+                                onChange={(e) => handleVersionFieldChange(version.id, 'effectiveFrom', e.target.value)}
+                                style={{ marginTop: 4 }}
+                                status={editingVersionData[version.id]?.effectiveFrom !== version.effectiveFrom ? 'warning' : undefined}
+                              />
+                            ) : (
+                              <span style={{ marginLeft: 8 }}>
+                                {version.effectiveFrom ? new Date(version.effectiveFrom).toLocaleDateString() : 'N/A'}
+                              </span>
+                            )}
                           </div>
                           <div>
-                            <strong>Effective From:</strong> {new Date(version.effectiveFrom).toLocaleDateString()}
+                            <strong>Effective To:</strong> 
+                            {isEditing ? (
+                              <Input
+                                type="date"
+                                value={(() => {
+                                  const dateValue = editingVersionData[version.id]?.effectiveTo || version.effectiveTo;
+                                  if (typeof dateValue === 'string' && dateValue) {
+                                    return dateValue.includes('T') ? dateValue.split('T')[0] : dateValue;
+                                  }
+                                  return '';
+                                })()}
+                                onChange={(e) => handleVersionFieldChange(version.id, 'effectiveTo', e.target.value || null)}
+                                style={{ marginTop: 4 }}
+                                placeholder="Optional end date"
+                                status={editingVersionData[version.id]?.effectiveTo !== version.effectiveTo ? 'warning' : undefined}
+                              />
+                            ) : (
+                              <span style={{ marginLeft: 8 }}>
+                                {version.effectiveTo ? new Date(version.effectiveTo).toLocaleDateString() : 'No end date'}
+                              </span>
+                            )}
                           </div>
-                          {version.effectiveTo && (
-                            <div>
-                              <strong>Effective To:</strong> {new Date(version.effectiveTo).toLocaleDateString()}
-                            </div>
-                          )}
                           <div>
                             <strong>Status:</strong> 
                             <Space style={{ marginLeft: 8 }}>
@@ -1232,6 +1540,31 @@ const SubjectVersionPage: React.FC = () => {
                             </Space>
                           </div>
                         </div>
+                        
+                        {/* Save/Cancel buttons when editing */}
+                        {isEditing && (
+                          <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                            <Button onClick={() => handleCancelEditing()}>
+                              Cancel
+                            </Button>
+                            <Button 
+                              type="primary" 
+                              onClick={() => {
+                                console.log('Save button clicked for version:', version.id);
+                                handleSaveVersion(version.id);
+                              }}
+                              loading={savingVersion[version.id]}
+                              disabled={(() => {
+                                const hasEditingData = editingVersionData[version.id];
+                                const isEmpty = !hasEditingData || Object.keys(hasEditingData).length === 0;
+                                console.log('Save button disabled check:', { versionId: version.id, hasEditingData, isEmpty });
+                                return isEmpty;
+                              })()}
+                            >
+                              Save Changes
+                            </Button>
+                          </div>
+                        )}
                       </Card>
                     </div>
 
