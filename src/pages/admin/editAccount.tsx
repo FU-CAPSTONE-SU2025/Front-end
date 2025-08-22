@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Form, Input, Select, DatePicker, ConfigProvider, message } from 'antd';
+import { Form, Input, Select, DatePicker, ConfigProvider, Modal } from 'antd';
 import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 import styles from '../../css/admin/editAccount.module.css';
@@ -58,15 +58,14 @@ const EditAccount: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<AccountProps | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(!!id); // Only loading if editing
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string>('');
+  const [disableLoading, setDisableLoading] = useState(false);
   const { handleError, handleSuccess } = useApiErrorHandler();
-  const { getCurrentStudent, getCurrentStaff, updateCurrentStaff, updateCurrentStudent, registerUser } = useAdminUsers();
+  const { getCurrentStudent, getCurrentStaff, updateCurrentStaff, updateCurrentStudent, registerUser, disableUser } = useAdminUsers();
   const { usePagedProgramList, usePagedCurriculumList } = useSchoolApi();
 
   // Program and Curriculum state for infinite scroll
   const [programs, setPrograms] = useState<Program[]>([]);
   const [curriculums, setCurriculums] = useState<Curriculum[]>([]);
-  const [programLoading, setProgramLoading] = useState(false);
-  const [curriculumLoading, setCurriculumLoading] = useState(false);
   const [programPage, setProgramPage] = useState(1);
   const [curriculumPage, setCurriculumPage] = useState(1);
   const [hasMorePrograms, setHasMorePrograms] = useState(true);
@@ -218,7 +217,7 @@ const EditAccount: React.FC = () => {
   const handleProgramScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const el = e.target as HTMLDivElement;
     const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 5;
-    if (nearBottom && hasMorePrograms && !programLoading) {
+    if (nearBottom && hasMorePrograms) {
       fetchPrograms(programPage + 1);
     }
   };
@@ -227,7 +226,7 @@ const EditAccount: React.FC = () => {
   const handleCurriculumScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const el = e.target as HTMLDivElement;
     const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 5;
-    if (nearBottom && hasMoreCurriculums && !curriculumLoading && selectedProgramId) {
+    if (nearBottom && hasMoreCurriculums && selectedProgramId) {
       fetchCurriculums(curriculumPage + 1, '', selectedProgramId);
     }
   };
@@ -359,6 +358,41 @@ const EditAccount: React.FC = () => {
     nav(-1);
   };
 
+  const handleDisableAccount = () => {
+    if (!id || !currentUser) {
+      handleError('Unable to identify user');
+      return;
+    }
+
+    const userId = parseInt(id);
+    const userName = `${currentUser.firstName} ${currentUser.lastName}`;
+    const userRole = currentUser.roleName || 'User';
+
+    Modal.confirm({
+      title: 'Disable Account',
+      content: `Are you sure you want to disable ${userName}'s account? This action will prevent them from accessing the system.`,
+      okText: 'Disable Account',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        setDisableLoading(true);
+        try {
+          await disableUser(userId);
+          handleSuccess(`${userRole} account disabled successfully`);
+          nav(-1);
+        } catch (error) {
+          console.error('Disable account error:', error);
+          handleError('Failed to disable account');
+        } finally {
+          setDisableLoading(false);
+        }
+      },
+      maskStyle: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
+      centered: true,
+      zIndex: 10000,
+    });
+  };
+
   const handleAvatarUpdate = (newAvatarUrl: string) => {
     setCurrentAvatarUrl(newAvatarUrl);
   };
@@ -445,7 +479,7 @@ const EditAccount: React.FC = () => {
             <Form
               form={form}
               layout="vertical"
-              disabled={loading}
+              disabled={loading || disableLoading}
               onFinish={handleSubmit}
               className={styles.form}
             >
@@ -587,7 +621,6 @@ const EditAccount: React.FC = () => {
                        >
                          <Select
                            placeholder="Select program"
-                           loading={programLoading}
                            onSearch={handleProgramSearch}
                            onPopupScroll={handleProgramScroll}
                            onChange={handleProgramChange}
@@ -606,7 +639,7 @@ const EditAccount: React.FC = () => {
                            filterOption={(input, option) =>
                              String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                            }
-                           notFoundContent={programLoading ? 'Loading programs...' : 'No programs found'}
+                           notFoundContent={'No programs found'}
                          >
                            {programs.map(program => (
                              <Option key={program.id} value={program.id} label={program.programName}>
@@ -624,7 +657,7 @@ const EditAccount: React.FC = () => {
                        >
                          <Select
                            placeholder="Select curriculum"
-                           loading={curriculumLoading}
+                      
                            onSearch={handleCurriculumSearch}
                            onPopupScroll={handleCurriculumScroll}
                            onClear={() => {
@@ -638,7 +671,7 @@ const EditAccount: React.FC = () => {
                            filterOption={(input, option) =>
                              String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                            }
-                           notFoundContent={curriculumLoading ? 'Loading curriculums...' : 'No curriculums found'}
+                           notFoundContent={'No curriculums found'}
                            disabled={!selectedProgramId}
                          >
                            {curriculums.map(curriculum => (
@@ -732,7 +765,7 @@ const EditAccount: React.FC = () => {
                   variants={buttonVariants}
                   whileHover="hover"
                   onClick={handleSubmit}
-                  disabled={loading}
+                  disabled={loading || disableLoading}
                   type="button"
                 >
                   <div className={styles.buttonContent}>
@@ -744,11 +777,25 @@ const EditAccount: React.FC = () => {
                   variants={buttonVariants}
                   whileHover="hover"
                   onClick={handleCancel}
-                  disabled={loading}
+                  disabled={loading || disableLoading}
                   type="button"
                 >
                   <div className={styles.buttonContent}>Cancel</div>
                 </motion.button>
+                {id && (
+                  <motion.button
+                    className={styles.disableButton}
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    onClick={handleDisableAccount}
+                    disabled={loading || disableLoading}
+                    type="button"
+                  >
+                    <div className={styles.buttonContent}>
+                      {disableLoading ? 'Disabling...' : 'Disable Account'}
+                    </div>
+                  </motion.button>
+                )}
               </motion.div>
             </Form>
           </div>

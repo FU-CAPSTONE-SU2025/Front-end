@@ -238,7 +238,7 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
         </Row>
 
         <Form.Item>
-          <Space style={{ width: '100%', justifyContent: '' }}>
+          <Space style={{ width: '100%', justifyContent: 'space-between' }}>
             <Button onClick={handleCancel}>
               Cancel
             </Button>

@@ -313,7 +313,7 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
               </Row>
 
               <Form.Item>
-                <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+                <Space style={{ width: '100%', justifyContent: 'space-between' }}>
                   <Button onClick={handleCancel}>
                     Cancel
                   </Button>
@@ -448,7 +448,7 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
 
             <Divider />
 
-            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+            <Space style={{ width: '100%', justifyContent: 'space-between' }}>
               <Button onClick={handleCancel}>
                 Cancel
               </Button>

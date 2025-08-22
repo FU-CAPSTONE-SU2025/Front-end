@@ -115,35 +115,12 @@ const StaffNavBar: React.FC = () => {
               </motion.div>
             ))}
           </nav>
-          <Tag className={styles.roleTag} color="orange" style={{
-            fontSize: '12px',
-            fontWeight: '600',
-            padding: '4px 12px',
-            borderRadius: '16px',
-            border: '2px solid #fa8c16',
-            backgroundColor: 'rgba(250, 140, 22, 0.1)',
-            color: '#fa8c16',
-            marginLeft: '16px',
-            marginRight: '24px',
-            boxShadow: '0 2px 4px rgba(250, 140, 22, 0.2)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            alignSelf: 'center'
-          }}>
+          <Tag className={styles.roleTag}>
             Academic Staff
           </Tag>
-          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.97 }} style={{ marginRight: '20px' }}>
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.97 }} className={styles.profileContainer}>
               <span
-                style={{
-                  fontWeight: 600,
-                  fontSize: 16,
-                  color: 'black',
-                  padding: 0,
-                  margin: 0,
-                  letterSpacing: '0.5px',
-                  boxShadow: 'none',
-                  cursor:'pointer'
-                }}
+                className={styles.profileText}
                 onClick={() => navigate('/staff')}
               >
                 View Profile

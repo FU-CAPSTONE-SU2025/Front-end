@@ -216,7 +216,8 @@
 }
 
 .saveButton,
-.cancelButton {
+.cancelButton,
+.disableButton {
   padding: 0.75rem 2rem;
   border: none;
   border-radius: 12px;
@@ -249,6 +250,17 @@
   background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(107, 114, 128, 0.3);
+}
+
+.disableButton {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+}
+
+.disableButton:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
 }
 
 .buttonContent {

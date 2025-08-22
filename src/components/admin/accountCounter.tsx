@@ -19,6 +19,7 @@
  * If multiple labels are provided, it will show counters for each type.
  * If a single label is provided, it will show a single counter.
  */
+/// Yeah, try to follow the props correctly, ok?
 import React from 'react';
 import styles from '../../css/admin/accountCounter.module.css';
 
