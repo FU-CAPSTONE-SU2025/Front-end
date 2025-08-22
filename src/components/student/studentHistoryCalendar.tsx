@@ -34,11 +34,12 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const bookingsContainerRef = useRef<HTMLDivElement>(null);
   
-  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [viewMode, setViewMode] = useState<'day' | 'week'>('week');
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [selectedMeeting, setSelectedMeeting] = useState<AdvisorMeetingItem | null>(null);
-  const [detail, setDetail] = useState<any>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
+  const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
+
+  const { data: meetingDetail, isLoading: meetingDetailLoading } = useMeetingDetail(selectedMeetingId ?? '');
   
   const statusMap: Record<number, { color: string; text: string; icon: React.ReactNode }> = {
     1: { color: 'blue', text: 'Pending', icon: <InfoCircleTwoTone twoToneColor="#1890ff" /> },
@@ -79,12 +80,8 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({
   // Khi click slot, chỉ cho click slot đã book
   const handleSlotClick = async (slot: any, date: Dayjs) => {
     if (!slot.meeting) return;
-    setDetailLoading(true);
     setSelectedMeeting(slot.meeting);
-    // Use the hook to get meeting detail
-    const { data: meetingDetail } = useMeetingDetail(slot.id.toString());
-    setDetail(meetingDetail);
-    setDetailLoading(false);
+    setSelectedMeetingId(slot.id?.toString() ?? null);
   };
 
   // Week navigation
@@ -250,9 +247,9 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({
         {/* Modal detail meeting */}
         <MeetingDetailModal
           open={!!selectedMeeting}
-          onClose={() => { setSelectedMeeting(null); setDetail(null); }}
-          detail={detail}
-          loading={detailLoading || !detail}
+          onClose={() => { setSelectedMeeting(null); setSelectedMeetingId(null); }}
+          detail={meetingDetail || selectedMeeting}
+          loading={meetingDetailLoading || !meetingDetail}
           onActionComplete={onDataRefresh}
         />
       </div>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, TimePicker, Select, Button, message, Space, Tabs, Card, Typography, Divider, Row, Col, DatePicker, Alert } from 'antd';
+import { Modal, Form, TimePicker, Select, Button, Space, Tabs, Card, Typography, Divider, Row, Col, DatePicker } from 'antd';
 import { PlusOutlined, DeleteOutlined, CopyOutlined, ClockCircleOutlined, CalendarOutlined } from '@ant-design/icons';
 import { useCreateBookingAvailability, useCreateBulkBookingAvailability } from '../../hooks/useCRUDAdvisor';
 import { BookingAvailability } from '../../interfaces/IBookingAvailability';
 import dayjs, { Dayjs } from 'dayjs';
 import { dayOptions } from '../../interfaces/IDayOptions';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -30,6 +31,7 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
   onSuccess,
   selectedSlotInfo
 }) => {
+  const { showSuccess, showError, showInfo, showWarning } = useMessagePopupContext();
   const [singleForm] = Form.useForm();
   const [bulkForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState('single');
@@ -116,7 +118,7 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
     const end = dayjs(values.endTime);
     const duration = end.diff(start, 'minute');
     if (duration < 30) {
-      message.error('Work slot must be at least 30 minutes.');
+      showError('Work slot must be at least 30 minutes.');
       return;
     }
     if (duration > 60) {
@@ -124,7 +126,7 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
       const splitSlots = splitLargeSlot(start, end, values.dayInWeek);
       setScheduleItems(splitSlots);
       setActiveTab('bulk');
-      message.info('Time slot is longer than 1 hour. Switched to Multiple tab with split slots.');
+      showInfo('Time slot is longer than 1 hour. Switched to Multiple tab with split slots.');
       return;
     }
     try {
@@ -137,13 +139,13 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
         endTime,
         dayInWeek: values.dayInWeek
       });
-      message.success('Work schedule created successfully!');
+      showSuccess('Work schedule created successfully!');
       singleForm.resetFields();
       onSuccess();
       onCancel();
     } catch (error) {
       console.error('Error creating work schedule:', error);
-      message.error('An error occurred while creating the work schedule.');
+      showError('An error occurred while creating the work schedule.');
     }
   };
 
@@ -152,7 +154,7 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
       // Validate all items
       const invalidItems = scheduleItems.filter((_, index) => !validateBulkTimeRange(index));
       if (invalidItems.length > 0) {
-        message.error('Please check that all end times are after start times.');
+        showWarning('Please check that all end times are after start times.');
         return;
       }
 
@@ -166,13 +168,13 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
       await createBulkBookingAvailability.mutateAsync(bulkData);
 
       // If no error is thrown, consider it successful
-      message.success(`Successfully created ${scheduleItems.length} work schedules!`);
+      showSuccess(`Successfully created ${scheduleItems.length} work schedules!`);
       setScheduleItems([{ key: '1', dayInWeek: 1, startTime: dayjs('09:00', 'HH:mm'), endTime: dayjs('17:00', 'HH:mm') }]);
       onSuccess();
       onCancel();
     } catch (error) {
       console.error('Error creating bulk work schedules:', error);
-      message.error('An error occurred while creating the work schedules.');
+      showError('An error occurred while creating the work schedules.');
     }
   };
 
@@ -190,7 +192,7 @@ const AddWorkSchedule: React.FC<AddWorkScheduleProps> = ({
     if (scheduleItems.length > 1) {
       setScheduleItems(scheduleItems.filter(item => item.key !== key));
     } else {
-      message.warning('At least one schedule item is required.');
+      showWarning('At least one schedule item is required.');
     }
   };
 

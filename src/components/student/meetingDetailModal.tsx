@@ -196,7 +196,7 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
             <div className="bg-blue-50 rounded-xl p-4 flex gap-2 items-start mt-2">
               <MessageTwoTone twoToneColor="#1890ff" className="text-lg mt-1" />
               <div>
-                <div className="text-xs font-medium text-blue-700 mb-1">Feedback from Advisor</div>
+                <div className="text-xs font-medium text-blue-700 mb-1">Feedback from Student</div>
                 <div className="text-base">{detail.feedback}</div>
               </div>
             </div>
@@ -259,11 +259,11 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
               </Button>
             </div>
           )}
-          {canSendFeedback && (
+          {canSendFeedback && !detail?.feedback && (
             <div className="flex gap-4 justify-end mt-4">
               <Button 
                 type="primary" 
-               
+                
                 onClick={openFeedbackModal}
               >
                 Send Feedback

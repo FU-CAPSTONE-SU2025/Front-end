@@ -25,17 +25,25 @@ export default function MeetingPage() {
     refetchMeetings();
   }, [queryClient, refetchCalendar, refetchMeetings]);
   
-  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [viewMode, setViewMode] = useState<'day' | 'week'>('week');
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
-  const [detail, setDetail] = useState<any>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
+  const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
   const [displayedMeetingsCount, setDisplayedMeetingsCount] = useState(5);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
+  const { data: meetingDetail, isLoading: meetingDetailLoading } = useMeetingDetail(selectedMeetingId ?? '');
+
   const displayedMeetings = meetings.slice(0, displayedMeetingsCount);
   const hasMoreMeetings = meetings.length > displayedMeetingsCount;
+
+  // Map meetings so calendar shows student full name in the label
+  const meetingsLabeledByStudent = calendarMeetings.map(m => ({
+    ...m,
+    staffFirstName: m.studentFirstName,
+    staffLastName: m.studentLastName,
+  }));
 
   // Infinite scroll handler
   const handleScroll = useCallback(() => {
@@ -79,19 +87,13 @@ export default function MeetingPage() {
   
   const handleSlotClick = async (slot: any, date: Dayjs) => {
     if (!slot.meeting) return;
-    setDetailLoading(true);
     setSelectedMeeting(slot.meeting);
-    setDetail(slot.meeting);
-    setDetailLoading(false);
+    setSelectedMeetingId(slot.meeting.id?.toString() ?? null);
   };
 
   const handleMeetingClick = async (meeting: any) => {
-    setDetailLoading(true);
     setSelectedMeeting(meeting);
-    // Use the hook to get meeting detail
-    const { data: meetingDetail } = useMeetingDetail(meeting.id.toString());
-    setDetail(meetingDetail);
-    setDetailLoading(false);
+    setSelectedMeetingId(meeting.id?.toString() ?? null);
   };
 
   // Week navigation logic
@@ -104,6 +106,16 @@ export default function MeetingPage() {
   };
   const goToNextWeek = () => setSelectedDate(selectedDate.startOf('week').add(1, 'week'));
   const weekRange = `${selectedDate.startOf('week').format('DD MMM YYYY')} - ${selectedDate.endOf('week').format('DD MMM YYYY')}`;
+
+  // Day navigation logic
+  const canGoPrevDay = selectedDate.isAfter(today) || selectedDate.isSame(today);
+  const goToPrevDay = () => {
+    const prev = selectedDate.subtract(1, 'day');
+    if (prev.isBefore(today)) return;
+    setSelectedDate(prev);
+  };
+  const goToNextDay = () => setSelectedDate(selectedDate.add(1, 'day'));
+  const dayRange = selectedDate.format('DD MMM YYYY');
 
 
   const statusMap: Record<number, { color: string; text: string }> = {
@@ -173,19 +185,27 @@ export default function MeetingPage() {
             <Button icon={<RightOutlined />} shape="circle" onClick={goToNextWeek} />
           </div>
         )}
+        {/* Day navigation bar */}
+        {viewMode === 'day' && (
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <Button icon={<LeftOutlined />} shape="circle" onClick={goToPrevDay} disabled={!canGoPrevDay} />
+            <span className="font-semibold text-blue-700 text-base">{dayRange}</span>
+            <Button icon={<RightOutlined />} shape="circle" onClick={goToNextDay} />
+          </div>
+        )}
         <HistoryCalendarView
           viewMode={viewMode}
           selectedDate={selectedDate}
-          meetings={calendarMeetings}
+          meetings={meetingsLabeledByStudent}
           onDateChange={setSelectedDate}
           onSlotClick={handleSlotClick}
           onViewModeChange={mode => { if (mode === 'day' || mode === 'week') setViewMode(mode); }}
         />
         <MeetingDetailModal
           open={!!selectedMeeting}
-          onClose={() => { setSelectedMeeting(null); setDetail(null); }}
-          detail={detail}
-          loading={detailLoading || !detail}
+          onClose={() => { setSelectedMeeting(null); setSelectedMeetingId(null); }}
+          detail={meetingDetail || selectedMeeting}
+          loading={meetingDetailLoading || !meetingDetail}
           onActionComplete={handleDataRefresh}
         />
       </div>

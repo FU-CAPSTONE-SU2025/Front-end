@@ -1,6 +1,7 @@
 import { message } from 'antd';
 import { useApiErrorHandler } from './useApiErrorHandler';
 import { useCancelPendingMeeting, useCancelConfirmedMeeting, useSendMeetingFeedback, useMarkAdvisorMissed, useConfirmMeeting, useCancelPendingMeetingAdvisor, useCompleteMeeting, useAddReasonForOverdue } from './useStudentHistoryMeetings';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface UseMeetingActionsProps {
   onActionComplete?: () => void;
@@ -8,6 +9,7 @@ interface UseMeetingActionsProps {
 
 export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps = {}) => {
   const { handleError, handleSuccess } = useApiErrorHandler();
+  const queryClient = useQueryClient();
   // React Query mutations
   const cancelPendingMutation = useCancelPendingMeeting();
   const cancelConfirmedMutation = useCancelConfirmedMeeting();
@@ -18,13 +20,18 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
   const completeMeetingMutation = useCompleteMeeting();
   const addReasonForOverdueMutation = useAddReasonForOverdue();
 
+  const afterSuccess = () => {
+    // Invalidate meeting detail cache so next open is fresh
+    queryClient.invalidateQueries({ queryKey: ['meetingDetail'] });
+    onActionComplete?.();
+  };
+
   const handleConfirmMeeting = async (meetingId: number) => {
     if (!meetingId) return;
-    
     try {
       await confirmMeetingMutation.mutateAsync(meetingId);
       message.success('Meeting confirmed successfully!');
-      onActionComplete?.();
+      afterSuccess();
     } catch (err) {
       handleError(err, 'Confirm meeting failed');
     }
@@ -32,11 +39,10 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
 
   const handleCancelMeeting = async (meetingId: number, note?: string) => {
     if (!meetingId) return;
-    
     try {
       await cancelPendingAdvisorMutation.mutateAsync({ meetingId, note: note || '' });
       message.success('Meeting cancelled successfully!');
-      onActionComplete?.();
+      afterSuccess();
     } catch (err) {
       handleError(err, 'Cancel meeting failed');
     }
@@ -47,11 +53,10 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       message.error('Please enter the check-in code.');
       return;
     }
-    
     try {
       await completeMeetingMutation.mutateAsync({ meetingId, checkInCode: checkInCode.trim() });
       message.success('Meeting completed successfully!');
-      onActionComplete?.();
+      afterSuccess();
     } catch (err) {
       handleError(err, 'Complete meeting failed');
     }
@@ -62,7 +67,6 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
       message.error('Meeting ID is required.');
       return;
     }
-    
     try {
       await sendFeedbackMutation.mutateAsync({ 
         meetingId, 
@@ -70,7 +74,7 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
         suggestionFromAdvisor: suggestionFromAdvisor.trim() 
       });
       message.success('Feedback sent successfully!');
-      onActionComplete?.();
+      afterSuccess();
     } catch (err) {
       handleError(err, 'Send feedback failed');
     }
@@ -78,7 +82,6 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
 
   const handleStudentCancelMeeting = async (meetingId: number, note: string, status: number) => {
     if (!meetingId) return;
-    
     try {
       if (status === 2) { // Confirmed
         await cancelConfirmedMutation.mutateAsync({ meetingId, note });
@@ -88,7 +91,7 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
         throw new Error('Invalid meeting status for student cancellation');
       }
       message.success('Meeting cancelled successfully!');
-      onActionComplete?.();
+      afterSuccess();
     } catch (err) {
       handleError(err, 'Student cancel meeting failed');
     }
@@ -96,11 +99,10 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
 
   const handleMarkAdvisorMissed = async (meetingId: number, note: string) => {
     if (!meetingId) return;
-    
     try {
       await markMissedMutation.mutateAsync({ meetingId, note });
       message.success('Advisor marked as missed successfully!');
-      onActionComplete?.();
+      afterSuccess();
     } catch (err) {
       handleError(err, 'Mark advisor missed failed');
     }
@@ -108,11 +110,10 @@ export const useMeetingActions = ({ onActionComplete }: UseMeetingActionsProps =
 
   const handleAddReasonForOverdue = async (meetingId: number, note: string) => {
     if (!meetingId) return;
-    
     try {
       await addReasonForOverdueMutation.mutateAsync({ meetingId, note });
       message.success('Reason for overdue added successfully!');
-      onActionComplete?.();
+      afterSuccess();
     } catch (err) {
       handleError(err, 'Add reason for overdue failed');
     }

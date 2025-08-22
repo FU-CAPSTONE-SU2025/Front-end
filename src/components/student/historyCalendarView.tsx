@@ -113,13 +113,13 @@ const HistoryCalendarView = ({
                       id: meeting.id,
                       startTime: start.format('HH:mm'),
                       endTime: end.format('HH:mm'),
-                      dayInWeek: start.day() === 0 ? 1 : start.day() + 1, // Map 0=Sunday to 1, 1=Monday to 2, etc.
+                      dayInWeek: start.day() === 0 ? 1 : start.day() + 1,
                       type: 'booked',
                       meeting
                     }, selectedDate)}
                   >
                     <div className="flex flex-col items-center justify-center w-full h-full text-white font-bold">
-                      <span className="text-base">{meeting.titleStudentIssue || 'Booked'}</span>
+                      <span className="text-base">{`${meeting.staffFirstName} ${meeting.staffLastName}`}</span>
                       <span className="text-xs font-normal mt-1">{start.format('HH:mm')} - {end.format('HH:mm')}</span>
                     </div>
                   </motion.div>
@@ -191,7 +191,7 @@ const HistoryCalendarView = ({
                           }, day)}
                         >
                           <div className="flex flex-col items-center justify-center w-full h-full text-white font-bold">
-                            <span className="text-xs">{meeting.titleStudentIssue || 'Booked'}</span>
+                            <span className="text-xs">{`${meeting.staffFirstName} ${meeting.staffLastName}`}</span>
                             <span className="text-[10px] font-normal mt-0.5">{start.format('HH:mm')} - {end.format('HH:mm')}</span>
                           </div>
                         </motion.div>
