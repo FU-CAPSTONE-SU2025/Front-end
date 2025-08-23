@@ -3,7 +3,6 @@ import { Card, Typography, Row, Col, Button, Table, Tag, InputNumber } from 'ant
 import { CloseOutlined, SaveOutlined, EditOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/transcriptEditDialog.module.css';
 import  useCRUDStudent  from '../../hooks/useCRUDStudent';
-import { StudentBase } from '../../interfaces/IStudent';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title, Text } = Typography;

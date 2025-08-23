@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
+import styles from "../../css/bulkimportButton.module.css";
 
 interface ExcelImportButtonProps {
   children: React.ReactNode;
@@ -16,25 +17,20 @@ const ExcelImportButton: React.FC<ExcelImportButtonProps> = ({
   children,
   onClick,
   style,
-  className,
   disabled,
   loading,
   size = 'large',
 }) => (
   <Button
     type="default"
+   
     icon={<UploadOutlined />}
     onClick={onClick}
     size={size}
-    style={{
-      borderRadius: 999,
-      borderColor: '#10B981',
-      color: '#10B981',
-      ...style,
-    }}
-    className={className}
+    style={{ ...style }}
     disabled={disabled}
     loading={loading}
+    className={styles.button}
   >
     {children}
   </Button>

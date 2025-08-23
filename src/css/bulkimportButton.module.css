@@ -1,0 +1,13 @@
+.button{
+    border-radius: 999 !important;
+    border-color: #10B981 !important;
+    color: #10B981 !important;
+    height: 40px !important;
+    padding: 0 16px !important;
+}
+
+.button:hover{
+    background-color: #10B981 !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+}

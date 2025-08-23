@@ -253,8 +253,8 @@ const StaffTranscript: React.FC = () => {
               </Text>
             </div>
             <div>
-              <ExcelImportButton onClick={handleBulkImport}>
-                Bulk Import Subject Assignments
+              <ExcelImportButton onClick={handleBulkImport} size="middle">
+                Import many students to many subjects
               </ExcelImportButton>
             </div>
           </div>

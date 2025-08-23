@@ -16,7 +16,6 @@ button {
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
-
   font-family: inherit;
   cursor: pointer;
   transition: border-color 0.25s;
@@ -112,9 +111,6 @@ button:focus-visible {
 
 /* Fix button styling in modals */
 .ant-modal .ant-btn {
-  background: #ffffff !important;
-  border-color: #d9d9d9 !important;
-  color: #1890ff !important;
   font-weight: 500 !important;
   border-radius: 6px !important;
   height: 32px !important;
@@ -128,9 +124,6 @@ button:focus-visible {
 }
 
 .ant-modal .ant-btn:hover {
-  background: #1890ff !important;
-  border-color: #1890ff !important;
-  color: #ffffff !important;
   transform: translateY(-1px) !important;
   box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3) !important;
 }
