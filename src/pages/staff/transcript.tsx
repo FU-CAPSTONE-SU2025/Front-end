@@ -7,7 +7,6 @@ import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { StudentBase } from '../../interfaces/IStudent';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
-import { BulkCreateJoinedSubjectMultipleStudents } from '../../interfaces/ISchoolProgram';
 import { useActiveStudentApi } from '../../hooks/useActiveStudentApi';
 import { useSchoolApi } from '../../hooks/useSchoolApi';
 import BulkDataImport from '../../components/common/bulkDataImport';
@@ -17,12 +16,24 @@ import { transformMultiStudentBulkImportData } from '../../utils/bulkImportTrans
 const { Title, Text } = Typography;
 
 const StaffTranscript: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedProgram, setSelectedProgram] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const navigate = useNavigate();
   const { handleError, handleSuccess } = useApiErrorHandler();
+  
+  // Filter states - these are exclusive
+  const [selectedCombo, setSelectedCombo] = useState<string | null>(null);
+  const [selectedProgram, setSelectedProgram] = useState<number | null>(null);
+  const [selectedCurriculum, setSelectedCurriculum] = useState<string | null>(null);
+  
+  // Infinite scroll states for filter dropdowns
+  const [comboPage, setComboPage] = useState(1);
+  const [programPage, setProgramPage] = useState(1);
+  const [curriculumPage, setCurriculumPage] = useState(1);
+  const [comboSearch, setComboSearch] = useState('');
+  const [programSearch, setProgramSearch] = useState('');
+  const [curriculumSearch, setCurriculumSearch] = useState('');
   
   // Bulk import states
   const [isBulkImportVisible, setIsBulkImportVisible] = useState(false);
@@ -30,25 +41,78 @@ const StaffTranscript: React.FC = () => {
   const [uploadMessage, setUploadMessage] = useState('');
 
   // Hooks
-  const { usePagedActiveStudents } = useActiveStudentApi();
-  const { registerMultipleStudents } = useSchoolApi();
+  const { 
+    usePagedActiveStudents,
+    useActiveStudentsByCombo,
+    useActiveStudentsByProgram,
+    useActiveStudentsByCurriculum
+  } = useActiveStudentApi();
   
-  // Program API for filter
-  const {
-    getAllPrograms,
-    programList,
-    isLoading: isLoadingProgram
-  } = useCRUDProgram();
+  const { 
+    useInfiniteComboList,
+    useInfiniteProgramList,
+    useInfiniteCurriculumList
+  } = useSchoolApi();
+  
+  const { registerMultipleStudents } = useSchoolApi();
 
-  // Load programs for filter
-  useEffect(() => {
-    getAllPrograms({ pageNumber: 1, pageSize: 10});
-  }, []);
+  // Determine which API to use based on active filter
+  const getActiveFilter = () => {
+    if (selectedCombo) return 'combo';
+    if (selectedProgram) return 'program';
+    if (selectedCurriculum) return 'curriculum';
+    return 'none';
+  };
 
-  // Use the hook to get active students
-  const { data: studentsData, isLoading } = usePagedActiveStudents(currentPage, pageSize, searchQuery || undefined, selectedProgram || undefined);
+  // Use the appropriate hook based on active filter
+  const activeFilter = getActiveFilter();
+  
+  const { data: studentsDataByCombo, isLoading: isLoadingByCombo } = useActiveStudentsByCombo(
+    selectedCombo, currentPage, pageSize
+  );
+  
+  const { data: studentsDataByProgram, isLoading: isLoadingByProgram } = useActiveStudentsByProgram(
+    selectedProgram, currentPage, pageSize
+  );
+  
+  const { data: studentsDataByCurriculum, isLoading: isLoadingByCurriculum } = useActiveStudentsByCurriculum(
+    selectedCurriculum, currentPage, pageSize
+  );
+  
+  const { data: studentsDataGeneral, isLoading: isLoadingGeneral } = usePagedActiveStudents(
+    currentPage, pageSize, search, selectedProgram
+  );
+
+  // Get the appropriate data based on active filter
+  const getStudentsData = () => {
+    switch (activeFilter) {
+      case 'combo':
+        return studentsDataByCombo;
+      case 'program':
+        return studentsDataByProgram;
+      case 'curriculum':
+        return studentsDataByCurriculum;
+      default:
+        return studentsDataGeneral;
+    }
+  };
+
+  const getIsLoading = () => {
+    switch (activeFilter) {
+      case 'combo':
+        return isLoadingByCombo;
+      case 'program':
+        return isLoadingByProgram;
+      case 'curriculum':
+        return isLoadingByCurriculum;
+      default:
+        return isLoadingGeneral;
+    }
+  };
   
   // Extract data from the hook
+  const studentsData = getStudentsData();
+  const isLoading = getIsLoading();
   const studentList = studentsData?.items || [];
   const pagination = studentsData ? {
     current: studentsData.pageNumber,
@@ -56,6 +120,11 @@ const StaffTranscript: React.FC = () => {
     total: studentsData.totalCount,
     totalPages: Math.ceil(studentsData.totalCount / studentsData.pageSize)
   } : null;
+
+  // Infinite scroll data for filter dropdowns
+  const { data: comboData, isLoading: isLoadingCombos } = useInfiniteComboList(comboPage, 20, comboSearch);
+  const { data: programData, isLoading: isLoadingPrograms } = useInfiniteProgramList(programPage, 20, programSearch);
+  const { data: curriculumData, isLoading: isLoadingCurriculums } = useInfiniteCurriculumList(curriculumPage, 20, curriculumSearch);
 
   // Handle pagination change
   const handlePageChange = (page: number, size?: number) => {
@@ -65,16 +134,48 @@ const StaffTranscript: React.FC = () => {
     }
   };
 
-  // Handle program filter change
+  // Handle filter changes - these are exclusive
+  const handleComboFilterChange = (value: string | null) => {
+    setSelectedCombo(value);
+    setSelectedProgram(null);
+    setSelectedCurriculum(null);
+    setCurrentPage(1);
+  };
+
   const handleProgramFilterChange = (value: number | null) => {
     setSelectedProgram(value);
-    setCurrentPage(1); // Reset to first page when filter changes
+    setSelectedCombo(null);
+    setSelectedCurriculum(null);
+    setCurrentPage(1);
+  };
+
+  const handleCurriculumFilterChange = (value: string | null) => {
+    setSelectedCurriculum(value);
+    setSelectedCombo(null);
+    setSelectedProgram(null);
+    setCurrentPage(1);
   };
 
   // Handle search change
   const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    setCurrentPage(1); // Reset to first page when search changes
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
+  // Handle infinite scroll search changes
+  const handleComboSearchChange = (value: string) => {
+    setComboSearch(value);
+    setComboPage(1);
+  };
+
+  const handleProgramSearchChange = (value: string) => {
+    setProgramSearch(value);
+    setProgramPage(1);
+  };
+
+  const handleCurriculumSearchChange = (value: string) => {
+    setCurriculumSearch(value);
+    setCurriculumPage(1);
   };
 
   // Handle edit action
@@ -279,12 +380,42 @@ const StaffTranscript: React.FC = () => {
                   <Input
                     placeholder="Search by name, email or ID"
                     prefix={<SearchOutlined />}
-                    value={searchQuery}
+                    value={search}
                     onChange={e => handleSearchChange(e.target.value)}
                     style={{borderRadius: 12, width: '100%'}}
                     size="large"
                     className={glassStyles.appleGlassInput}
                   />
+                </Space>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text style={{color:"black"}} strong>Filter by Combo</Text>
+                  <Select
+                    allowClear
+                    placeholder="Select Combo"
+                    value={selectedCombo}
+                    onChange={handleComboFilterChange}
+                    loading={isLoadingCombos}
+                    style={{borderRadius: 12, width: '100%'}}
+                    size="large"
+                    className={glassStyles.appleGlassInput}
+                    showSearch
+                    filterOption={false}
+                    onSearch={handleComboSearchChange}
+                    onPopupScroll={(e) => {
+                      const target = e.target as HTMLElement;
+                      if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
+                        setComboPage(prev => prev + 1);
+                      }
+                    }}
+                  >
+                    {comboData?.items?.map((combo: any) => (
+                      <Select.Option key={combo.id} value={combo.comboName}>
+                        {combo.comboName}
+                      </Select.Option>
+                    ))}
+                  </Select>
                 </Space>
               </Col>
               <Col xs={24} sm={12}>
@@ -295,14 +426,53 @@ const StaffTranscript: React.FC = () => {
                     placeholder="Select Program"
                     value={selectedProgram}
                     onChange={handleProgramFilterChange}
-                    loading={isLoadingProgram}
+                    loading={isLoadingPrograms}
                     style={{borderRadius: 12, width: '100%'}}
                     size="large"
                     className={glassStyles.appleGlassInput}
+                    showSearch
+                    filterOption={false}
+                    onSearch={handleProgramSearchChange}
+                    onPopupScroll={(e) => {
+                      const target = e.target as HTMLElement;
+                      if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
+                        setProgramPage(prev => prev + 1);
+                      }
+                    }}
                   >
-                    {programList.map((program: any) => (
+                    {programData?.items?.map((program: any) => (
                       <Select.Option key={program.id} value={program.id}>
                         {program.programName}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Space>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text style={{color:"black"}} strong>Filter by Curriculum</Text>
+                  <Select
+                    allowClear
+                    placeholder="Select Curriculum"
+                    value={selectedCurriculum}
+                    onChange={handleCurriculumFilterChange}
+                    loading={isLoadingCurriculums}
+                    style={{borderRadius: 12, width: '100%'}}
+                    size="large"
+                    className={glassStyles.appleGlassInput}
+                    showSearch
+                    filterOption={false}
+                    onSearch={handleCurriculumSearchChange}
+                    onPopupScroll={(e) => {
+                      const target = e.target as HTMLElement;
+                      if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
+                        setCurriculumPage(prev => prev + 1);
+                      }
+                    }}
+                  >
+                    {curriculumData?.items?.map((curriculum: any) => (
+                      <Select.Option key={curriculum.id} value={curriculum.curriculumCode}>
+                        {curriculum.curriculumCode} - {curriculum.curriculumName}
                       </Select.Option>
                     ))}
                   </Select>

@@ -53,16 +53,9 @@ export default function TranscriptEdit({ transcriptId, subject, onClose }: Props
 
   // CRUD hook
   const {
-    getStudentById,
     updateStudentScoreMutation,
   } = useCRUDStudent();
 
-  // Fetch student data on mount
-  useEffect(() => {
-    if (transcriptId) {
-      getStudentById.mutate(transcriptId);
-    }
-  }, [transcriptId]);
 
   // Calculate weighted average
   const calculateFinalGrade = () => {

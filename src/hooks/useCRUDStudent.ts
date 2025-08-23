@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { GetAllStudent } from '../api/student/StudentAPI'
 import { useMutation } from '@tanstack/react-query';
 import { pagedStudentData, StudentBase } from '../interfaces/IStudent';
@@ -8,6 +8,7 @@ interface PaginationParams {
   pageSize: number;
   filterType?: string;
   filterValue?: string;
+  search?:string
 }
 
 export default function useCRUDStudent() {
@@ -16,7 +17,7 @@ export default function useCRUDStudent() {
       const data = await GetAllStudent(
         params.pageNumber, 
         params.pageSize, 
-        undefined, // searchQuery removed - will be handled client-side
+        params.search,
         params.filterType, 
         params.filterValue
       );
@@ -26,13 +27,7 @@ export default function useCRUDStudent() {
       console.error(error);
     },
   });
-  const getStudentById = useMutation<StudentBase|null, unknown, number>({
-    mutationFn: async () => {
-     // const data = await GetStudentById(id);
-     throw Error("Not yet working")
-      
-    },
-  });
+
 
   // The mutation signature was incorrect for useMutation. 
   // useMutation expects the third generic parameter to be the variables object passed to the mutation function.
@@ -62,7 +57,6 @@ export default function useCRUDStudent() {
     studentList,
     pagination,
     isLoading: getStudentMutation.isPending,
-    getStudentById,
     updateStudentScoreMutation
   }
 }
