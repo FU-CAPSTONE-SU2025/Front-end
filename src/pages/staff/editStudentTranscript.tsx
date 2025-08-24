@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Card, Row, Col, Avatar, Typography, Tag, Input, Button, Modal, Progress, List, Spin, Select } from 'antd';
-import { ArrowLeftOutlined, BookOutlined, UserOutlined, CalendarOutlined, MailOutlined, PlusOutlined, AccountBookOutlined, SmileOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, BookOutlined, UserOutlined, CalendarOutlined, MailOutlined, PlusOutlined, SmileOutlined, EditOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffEditTranscript.module.css';
 import TranscriptEdit from '../../components/staff/transcriptEdit';
@@ -11,9 +11,11 @@ import { CreateJoinedSubject, BulkCreateJoinedSubjects, JoinedSubject } from '..
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
-import { AccountProps } from '../../interfaces/IAccount';
+import { AccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
 import { useSchoolApi } from '../../hooks/useSchoolApi';
 import { useStudentApi } from '../../hooks/useStudentApi';
+import useUserProfile from '../../hooks/useUserProfile';
+import { StudentDataUpdateRequest } from '../../interfaces/IStudent';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -42,7 +44,8 @@ const EditStudentTranscript: React.FC = () => {
     usePagedSemesterList, 
     usePagedSemesterBlockType,
     registerStudentToSubject,
-    registerOneStudentToMultipleSubjects
+    registerOneStudentToMultipleSubjects,
+    useInfiniteComboList
   } = useSchoolApi();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
@@ -74,11 +77,20 @@ const EditStudentTranscript: React.FC = () => {
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadMessage, setUploadMessage] = useState('');
 
+  // Combo editing states
+  const [isComboEditModalVisible, setIsComboEditModalVisible] = useState(false);
+  const [selectedCombo, setSelectedCombo] = useState<any>(null);
+  const [comboSearch, setComboSearch] = useState('');
+  const [comboPage, setComboPage] = useState(1);
+
   // Joined subjects state
   const [joinedSubjects, setJoinedSubjects] = useState<JoinedSubject[]>([]);
 
   // Use the hook to get student data
-  const { data: accountData, isLoading: studentLoading } = useStudentById(studentId || '');
+  const { data: accountData} = useStudentById(studentId || '');
+  
+  // Initialize useUserProfile hook for updating student data
+  const { updateProfileAsync } = useUserProfile();
   
   // Update student account when data is loaded
   useEffect(() => {
@@ -148,6 +160,9 @@ const EditStudentTranscript: React.FC = () => {
   const { data: subjectVersionsData, isLoading: loadingSubjectVersions } = useSubjectVersionsToCurriculumByCode(
     studentAccount?.studentDataDetailResponse?.curriculumCode || ''
   );
+  
+  // Use the hook to get combo list for editing
+  const { data: comboData, isLoading: loadingCombos } = useInfiniteComboList(comboPage, 20, comboSearch);
   
   // Update subject versions when data is loaded
   useEffect(() => {
@@ -308,6 +323,75 @@ const EditStudentTranscript: React.FC = () => {
     }
   };
 
+  // Handle infinite scroll search changes
+  const handleComboSearchChange = (value: string) => {
+    setComboSearch(value);
+    setComboPage(1);
+  };
+
+  // Combo editing handlers
+  const handleComboEditClick = () => {
+    setIsComboEditModalVisible(true);
+  };
+
+  const handleComboEditModalClose = () => {
+    setIsComboEditModalVisible(false);
+    setSelectedCombo(null);
+    setComboSearch('');
+    setComboPage(1);
+  };
+
+  const handleComboSelect = (combo: any) => {
+    setSelectedCombo(combo);
+  };
+
+  const handleComboUpdate = async () => {
+    if (!selectedCombo || !studentAccount) {
+      showWarning('Please select a combo and ensure student data is loaded');
+      return;
+    }
+
+    try {
+      const updateData: UpdateAccountProps = {
+        username: studentAccount.username,
+        email: studentAccount.email,
+        firstName: studentAccount.firstName,
+        lastName: studentAccount.lastName,
+        dateOfBirth: studentAccount.dateOfBirth,
+        avatarUrl: studentAccount.avatarUrl || '',
+        roleId: 5, // Student role ID
+        status: studentAccount.status,
+        staffDataUpdateRequest: null,
+        studentDataUpdateRequest: {
+          enrolledAt: studentAccount.studentDataDetailResponse?.enrolledAt || '',
+          doGraduate: studentAccount.studentDataDetailResponse?.doGraduate || false,
+          careerGoal: studentAccount.studentDataDetailResponse?.careerGoal || '',
+          numberOfBan: studentAccount.studentDataDetailResponse?.numberOfBan || 0,
+          programId: studentAccount.studentDataDetailResponse?.programId || 0,
+          registeredComboCode: selectedCombo.comboName,
+          curriculumCode: studentAccount.studentDataDetailResponse?.curriculumCode || ''
+        }
+      };
+
+      const result = await updateProfileAsync({ 
+        userId: parseInt(studentId || '0'), 
+        data: updateData 
+      });
+
+      if (result) {
+        handleSuccess(`Successfully updated student's combo to ${selectedCombo.comboName}`);
+        // Refresh student data
+        window.location.reload(); // Simple refresh for now
+        handleComboEditModalClose();
+      } else {
+        handleError('Failed to update student combo');
+      }
+    } catch (error) {
+      console.error('Error updating student combo:', error);
+      handleError('Failed to update student combo');
+    }
+  };
+
   return (
     <div className={styles.container}>
       {/* Header */}
@@ -370,6 +454,13 @@ const EditStudentTranscript: React.FC = () => {
                 <div className={styles.detailItem}>
                   <BookOutlined className={styles.detailIcon} />
                   <Text>Combo: {studentAccount?.studentDataDetailResponse.registeredComboCode || 'Not Yet Selected A Combo'}</Text>
+                  <Button 
+                    type="link" 
+                    icon={<EditOutlined />} 
+                    onClick={handleComboEditClick}
+                    size="small"
+                    style={{ marginLeft: 8, padding: 0, height: 'auto' }}
+                  />
                 </div>
               </div>
 
@@ -773,6 +864,155 @@ const EditStudentTranscript: React.FC = () => {
           uploadMessage={uploadMessage}
         />
       )}
+
+      {/* Combo Edit Modal */}
+      <Modal
+        open={isComboEditModalVisible}
+        onCancel={handleComboEditModalClose}
+        title="Edit Student Combo"
+        width="80%"
+        style={{ top: 20 }}
+        footer={null}
+      >
+        <Row gutter={[24, 24]}>
+          {/* Left Side - Combo List */}
+          <Col span={16}>
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ fontSize: '16px', marginBottom: '8px', display: 'block' }}>
+                Select New Combo
+              </Text>
+              <Search
+                placeholder="Search combos..."
+                value={comboSearch}
+                onChange={(e) => handleComboSearchChange(e.target.value)}
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            {loadingCombos ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <Spin size="large" />
+                <div style={{ marginTop: 16 }}>Loading combos...</div>
+              </div>
+            ) : (
+              <div 
+                style={{ maxHeight: '400px', overflowY: 'auto' }}
+                onScroll={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.scrollTop + target.offsetHeight >= target.scrollHeight - 2 && !loadingCombos) {
+                    setComboPage(prev => prev + 1);
+                  }
+                }}
+              >
+                <List
+                  dataSource={comboData?.items || []}
+                  renderItem={(combo) => (
+                    <List.Item
+                      className={styles.subjectVersionItem}
+                      style={{
+                        cursor: 'pointer',
+                        backgroundColor: selectedCombo?.id === combo.id ? '#f0f9ff' : 'transparent',
+                        border: selectedCombo?.id === combo.id ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        marginBottom: '8px',
+                        padding: '16px'
+                      }}
+                      onClick={() => handleComboSelect(combo)}
+                    >
+                      <div style={{ width: '100%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                          <div>
+                            <Text strong style={{ fontSize: '16px' }}>
+                              {combo.comboName}
+                            </Text>
+                            <br />
+                            <Text type="secondary">
+                              {combo.comboDescription}
+                            </Text>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <Tag color="blue">{combo.subjectCount} subjects</Tag>
+                            <Tag color={combo.approvalStatus === 1 ? 'green' : 'orange'}>
+                              {combo.approvalStatus === 1 ? 'Approved' : 'Pending'}
+                            </Tag>
+                          </div>
+                        </div>
+                      </div>
+                    </List.Item>
+                  )}
+                  locale={{ emptyText: 'No combos found.' }}
+                />
+                {loadingCombos && (
+                  <div style={{ textAlign: 'center', padding: '16px' }}>
+                    <Spin size="small" />
+                    <div style={{ marginTop: 8, fontSize: '12px' }}>Loading more...</div>
+                  </div>
+                )}
+              </div>
+            )}
+          </Col>
+
+          {/* Right Side - Current Selection Info */}
+          <Col span={8}>
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ fontSize: '16px', marginBottom: '8px', display: 'block' }}>
+                Current Selection
+              </Text>
+            </div>
+
+            {selectedCombo ? (
+              <Card style={{ backgroundColor: '#f0f9ff', border: '2px solid #3b82f6' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <Text strong style={{ fontSize: '18px', color: '#1e40af' }}>
+                    {selectedCombo.comboName}
+                  </Text>
+                  <br />
+                  <Text type="secondary" style={{ fontSize: '14px' }}>
+                    {selectedCombo.comboDescription}
+                  </Text>
+                  <br />
+                  <Tag color="blue" style={{ marginTop: 8 }}>
+                    {selectedCombo.subjectCount} subjects
+                  </Tag>
+                </div>
+              </Card>
+            ) : (
+              <Card style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                <div style={{ textAlign: 'center', padding: '20px' }}>
+                  <Text type="secondary">No combo selected</Text>
+                </div>
+              </Card>
+            )}
+
+            <div style={{ marginTop: 24 }}>
+              <Text type="secondary" style={{ fontSize: '14px' }}>
+                Click on a combo from the list to select it. The selected combo will be assigned to the student.
+              </Text>
+            </div>
+          </Col>
+        </Row>
+
+        {/* Footer with buttons */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginTop: '24px',
+          paddingTop: '16px',
+          borderTop: '1px solid #e5e7eb'
+        }}>
+          <Button onClick={handleComboEditModalClose}>
+            Cancel
+          </Button>
+          <Button 
+            type="primary" 
+            onClick={handleComboUpdate}
+            disabled={!selectedCombo}
+          >
+            Update Combo
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 };
