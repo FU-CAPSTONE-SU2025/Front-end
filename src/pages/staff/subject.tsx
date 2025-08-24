@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Select, Affix, Collapse, Pagination, Spin, Empty, Tag } from 'antd';
+import { Table, Input, Button, Select, Affix, Collapse, Pagination, Spin, Empty, Tag, ConfigProvider } from 'antd';
 import { PlusOutlined, EditOutlined, SearchOutlined, UploadOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { curriculums, combos, comboSubjects } from '../../datas/schoolData';
@@ -10,7 +10,7 @@ import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { Subject } from '../../interfaces/ISchoolProgram';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
-
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 const { Option } = Select;
 
 const SubjectPage: React.FC = () => {
@@ -277,10 +277,27 @@ const SubjectPage: React.FC = () => {
   }, [comboPage, comboPageSize, comboSearch]);
 
   return (
+    <ConfigProvider
+    theme={{
+      components: {
+        Table: {
+          headerBg: '#1E40AF',
+          headerColor: '#fff',
+          borderColor: 'rgba(30, 64, 175, 0.08)',
+          colorText: '#1E293B',
+          colorBgContainer: 'rgba(255,255,255,0.95)',
+          colorBgElevated: 'rgba(255,255,255,0.95)',
+          rowHoverBg: 'rgba(249, 115, 22, 0.05)',
+          colorPrimary: '#f97316',
+          colorPrimaryHover: '#1E40AF',
+        },
+      },
+    }}
+  >
     <div className={styles.sttContainer}>
       {/* Sticky Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
-        <div style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
+        <div className={glassStyles.appleGlassCard} style={{ borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
           <Input
             placeholder="Search by Subject Name or ID"
             prefix={<SearchOutlined />}
@@ -412,6 +429,7 @@ const SubjectPage: React.FC = () => {
       )}
    
     </div>
+    </ConfigProvider>
   );
 };
 

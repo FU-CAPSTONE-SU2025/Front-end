@@ -309,15 +309,15 @@ const StaffTranscript: React.FC = () => {
             colorPrimaryHover: '#1E40AF',
           },
           Input: {
-            colorBgContainer: 'rgba(255,255,255,0.7)',
-            colorBorder: '#f97316',
+            colorBgBase:"rgba(255,255,255,0.8)",
             colorText: '#1E293B',
             colorPrimary: '#f97316',
             colorPrimaryHover: '#1E40AF',
+            colorBorder:"black"
           },
           Select: {
-            colorBgContainer: 'rgba(255,255,255,0.7)',
-            colorBorder: '#f97316',
+            colorBgContainer: 'rgba(255,255,255,0.8)',
+            colorBorder: 'none',
             colorText: '#1E293B',
             colorPrimary: '#f97316',
             colorPrimaryHover: '#1E40AF',
@@ -333,33 +333,6 @@ const StaffTranscript: React.FC = () => {
       }}
     >
       <div className={styles.sttContainer}>
-        {/* Title Card */}
-        <Card 
-          className={glassStyles.appleGlassCard}
-          style={{ 
-            marginBottom: 24,
-            padding: '2rem 3rem',
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            boxShadow: '0 20px 60px rgba(30, 64, 175, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06)'
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <Title level={2} style={{ margin: 0, color: '#1E293B', fontSize: '2.5rem', fontWeight: 800 }}>
-                Student Transcript Hub
-              </Title>
-              <Text type="secondary" style={{ fontSize: 16 }}>
-                Manage and view student transcripts
-              </Text>
-            </div>
-            <div>
-              <ExcelImportButton onClick={handleBulkImport} size="middle">
-                Import many students to many subjects
-              </ExcelImportButton>
-            </div>
-          </div>
-        </Card>
 
         {/* Toolbar */}
         <Affix offsetTop={80} style={{zIndex: 10}}>
@@ -373,8 +346,9 @@ const StaffTranscript: React.FC = () => {
               border: '1px solid rgba(255, 255, 255, 0.2)'
             }}
           >
-            <Row gutter={[16, 16]} align="middle">
-              <Col xs={24} sm={12}>
+            {/* First Row: Search and Import */}
+            <Row gutter={[10, 10]} align="middle" style={{ marginBottom: 12 }}>
+              <Col xs={24} sm={18}>
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <Text style={{color:"black"}} strong>Search Students</Text>
                   <Input
@@ -382,100 +356,116 @@ const StaffTranscript: React.FC = () => {
                     prefix={<SearchOutlined />}
                     value={search}
                     onChange={e => handleSearchChange(e.target.value)}
-                    style={{borderRadius: 12, width: '100%'}}
+                    style={{borderRadius: 12, width: '90%',backgroundColor:"rgba(255,255,255,0.8)"}}
                     size="large"
                     className={glassStyles.appleGlassInput}
                   />
                 </Space>
               </Col>
-              <Col xs={24} sm={12}>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Text style={{color:"black"}} strong>Filter by Combo</Text>
-                  <Select
-                    allowClear
-                    placeholder="Select Combo"
-                    value={selectedCombo}
-                    onChange={handleComboFilterChange}
-                    loading={isLoadingCombos}
-                    style={{borderRadius: 12, width: '100%'}}
-                    size="large"
-                    className={glassStyles.appleGlassInput}
-                    showSearch
-                    filterOption={false}
-                    onSearch={handleComboSearchChange}
-                    onPopupScroll={(e) => {
-                      const target = e.target as HTMLElement;
-                      if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
-                        setComboPage(prev => prev + 1);
-                      }
-                    }}
-                  >
-                    {comboData?.items?.map((combo: any) => (
-                      <Select.Option key={combo.id} value={combo.comboName}>
-                        {combo.comboName}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Space>
+              <Col xs={24} sm={6} style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', minHeight: 66 }}>
+                <ExcelImportButton
+                  style={{borderRadius: 10}}
+                  onClick={handleBulkImport} size="middle">
+                  Import many students to many subjects
+                </ExcelImportButton>
               </Col>
-              <Col xs={24} sm={12}>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Text style={{color:"black"}} strong>Filter by Program</Text>
-                  <Select
-                    allowClear
-                    placeholder="Select Program"
-                    value={selectedProgram}
-                    onChange={handleProgramFilterChange}
-                    loading={isLoadingPrograms}
-                    style={{borderRadius: 12, width: '100%'}}
-                    size="large"
-                    className={glassStyles.appleGlassInput}
-                    showSearch
-                    filterOption={false}
-                    onSearch={handleProgramSearchChange}
-                    onPopupScroll={(e) => {
-                      const target = e.target as HTMLElement;
-                      if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
-                        setProgramPage(prev => prev + 1);
-                      }
-                    }}
-                  >
-                    {programData?.items?.map((program: any) => (
-                      <Select.Option key={program.id} value={program.id}>
-                        {program.programName}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Space>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Text style={{color:"black"}} strong>Filter by Curriculum</Text>
-                  <Select
-                    allowClear
-                    placeholder="Select Curriculum"
-                    value={selectedCurriculum}
-                    onChange={handleCurriculumFilterChange}
-                    loading={isLoadingCurriculums}
-                    style={{borderRadius: 12, width: '100%'}}
-                    size="large"
-                    className={glassStyles.appleGlassInput}
-                    showSearch
-                    filterOption={false}
-                    onSearch={handleCurriculumSearchChange}
-                    onPopupScroll={(e) => {
-                      const target = e.target as HTMLElement;
-                      if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
-                        setCurriculumPage(prev => prev + 1);
-                      }
-                    }}
-                  >
-                    {curriculumData?.items?.map((curriculum: any) => (
-                      <Select.Option key={curriculum.id} value={curriculum.curriculumCode}>
-                        {curriculum.curriculumCode} - {curriculum.curriculumName}
-                      </Select.Option>
-                    ))}
-                  </Select>
+            </Row>
+            {/* Filters: Now stacked vertically for better alignment */}
+            <Row gutter={[10, 10]} align="middle" style={{ marginBottom: 0 }}>
+              <Col xs={24} sm={24}>
+                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                  <Row gutter={[10, 10]}>
+                    <Col xs={24} sm={8}>
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        <Text style={{color:"black"}} strong>Filter by Combo</Text>
+                        <Select
+                          allowClear
+                          placeholder="Select Combo"
+                          value={selectedCombo}
+                          onChange={handleComboFilterChange}
+                          loading={isLoadingCombos}
+                          style={{borderRadius: 12, width: '100%'}}
+                          size="large"
+                          className={glassStyles.appleGlassInput}
+                          showSearch
+                          filterOption={false}
+                          onSearch={handleComboSearchChange}
+                          onPopupScroll={(e) => {
+                            const target = e.target as HTMLElement;
+                            if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
+                              setComboPage(prev => prev + 1);
+                            }
+                          }}
+                        >
+                          {comboData?.items?.map((combo: any) => (
+                            <Select.Option key={combo.id} value={combo.comboName}>
+                              {combo.comboName}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      </Space>
+                    </Col>
+                    <Col xs={24} sm={8}>
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        <Text style={{color:"black"}} strong>Filter by Program</Text>
+                        <Select
+                          allowClear
+                          placeholder="Select Program"
+                          value={selectedProgram}
+                          onChange={handleProgramFilterChange}
+                          loading={isLoadingPrograms}
+                          style={{borderRadius: 12, width: '100%'}}
+                          size="large"
+                          className={glassStyles.appleGlassInput}
+                          showSearch
+                          filterOption={false}
+                          onSearch={handleProgramSearchChange}
+                          onPopupScroll={(e) => {
+                            const target = e.target as HTMLElement;
+                            if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
+                              setProgramPage(prev => prev + 1);
+                            }
+                          }}
+                        >
+                          {programData?.items?.map((program: any) => (
+                            <Select.Option key={program.id} value={program.id}>
+                              {program.programName}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      </Space>
+                    </Col>
+                    <Col xs={24} sm={8}>
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        <Text style={{color:"black"}} strong>Filter by Curriculum</Text>
+                        <Select
+                          allowClear
+                          placeholder="Select Curriculum"
+                          value={selectedCurriculum}
+                          onChange={handleCurriculumFilterChange}
+                          loading={isLoadingCurriculums}
+                          style={{borderRadius: 12, width: '100%'}}
+                          size="large"
+                          className={glassStyles.appleGlassInput}
+                          showSearch
+                          filterOption={false}
+                          onSearch={handleCurriculumSearchChange}
+                          onPopupScroll={(e) => {
+                            const target = e.target as HTMLElement;
+                            if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
+                              setCurriculumPage(prev => prev + 1);
+                            }
+                          }}
+                        >
+                          {curriculumData?.items?.map((curriculum: any) => (
+                            <Select.Option key={curriculum.id} value={curriculum.curriculumCode}>
+                              {curriculum.curriculumCode} - {curriculum.curriculumName}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      </Space>
+                    </Col>
+                  </Row>
                 </Space>
               </Col>
             </Row>

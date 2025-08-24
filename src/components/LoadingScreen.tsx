@@ -19,11 +19,9 @@ export default function LoadingScreen({ isLoading, message = "Loading..." }: Loa
     >
       <div className="loading-content">
         {/* Main Spinner */}
-        <div className="spinner-container">
           <div className="spinner-main"></div>
           <div className="spinner-secondary"></div>
           <div className="spinner-tertiary"></div>
-        </div>
 
         {/* Pulsing Dots */}
         <div className="dots-container">

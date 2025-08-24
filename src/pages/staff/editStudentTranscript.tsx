@@ -15,7 +15,7 @@ import { AccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
 import { useSchoolApi } from '../../hooks/useSchoolApi';
 import { useStudentApi } from '../../hooks/useStudentApi';
 import useUserProfile from '../../hooks/useUserProfile';
-import { StudentDataUpdateRequest } from '../../interfaces/IStudent';
+
 
 const { Title, Text } = Typography;
 const { Search } = Input;

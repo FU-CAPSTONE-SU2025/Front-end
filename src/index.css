@@ -152,7 +152,7 @@ button:focus-visible {
 }
 
 .ant-modal .ant-table-thead > tr > th {
-  background: #fafafa !important;
+  background: #1E40AF !important;
   color: #1f2937 !important;
   border-bottom: 1px solid #f0f0f0 !important;
 }
@@ -180,13 +180,12 @@ button:focus-visible {
 .ant-modal .ant-input:hover,
 .ant-modal .ant-select-selector:hover,
 .ant-modal .ant-picker:hover {
-  border-color: #1890ff !important;
+  border-color: none !important;
 }
 
 .ant-modal .ant-input:focus,
 .ant-modal .ant-select-selector:focus,
 .ant-modal .ant-picker:focus {
-  border-color: #1890ff !important;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
 }
 

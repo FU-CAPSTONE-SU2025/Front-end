@@ -37,6 +37,11 @@
   background: linear-gradient(90deg, #1E40AF 0%, #f97316 100%);
   z-index: 1;
 }
+.ant-modal .ant-table-thead {
+  background: #1E40AF !important;
+  color: #1f2937 !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+}
 
 @keyframes fadeInDown {
   0% { opacity: 0; transform: translateY(-40px); }

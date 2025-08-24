@@ -11,6 +11,7 @@ import dayjs from 'dayjs';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useSchoolApi } from '../../hooks/useSchoolApi';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -222,7 +223,7 @@ const CurriculumPage: React.FC = () => {
     <div className={styles.sttContainer}>
       {/* Sticky Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
-        <div style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', border: '1.5px solid rgba(255,255,255,0.18)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
+        <div className={glassStyles.appleGlassCard} style={{ borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', border: '1.5px solid rgba(255,255,255,0.18)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
           <Input
             placeholder="Search by Curriculum ID or Name"
             prefix={<SearchOutlined />}
