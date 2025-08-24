@@ -446,7 +446,7 @@ const ComboDetail: React.FC = () => {
               ))}
             </Select>
           </Form.Item>
-          <div className="flex justify-end gap-2 mt-4">
+          <div className="flex justify-between gap-2 mt-4">
             <Button onClick={() => setModalOpen(false)}>
               Cancel
             </Button>

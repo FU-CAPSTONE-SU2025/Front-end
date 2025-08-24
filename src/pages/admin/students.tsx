@@ -31,7 +31,6 @@ const StudentList: React.FC = () => {
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadMessage, setUploadMessage] = useState<string>('');
   const [resetBanStudentId, setResetBanStudentId] = useState<number | null>(null);
-  
   const { categorizedData, refetch } = useActiveUserData();
   const { studentList, getAllStudent, pagination, isLoading } = useCRUDStudent();
   const nav = useNavigate();
@@ -48,12 +47,13 @@ const StudentList: React.FC = () => {
   // Load data when pagination or filters change (search is now client-side)
   useEffect(() => {
     loadStudentData();
-  }, [currentPage, pageSize, filterType, filterValue]);
+  }, [currentPage, pageSize, filterType, filterValue,searchQuery]);
 
   const loadStudentData = () => {
     getAllStudent({
       pageNumber: currentPage,
       pageSize: pageSize,
+      search: searchQuery,
       filterType: filterType || undefined,
       filterValue: filterValue || undefined
     });
@@ -255,8 +255,8 @@ const StudentList: React.FC = () => {
       // Close the popconfirm by clearing the student ID
       setResetBanStudentId(null);
     } catch (err) {
-      const errorMessage = handleError(err, 'Failed to reset ban number');
       console.error('Reset ban number error:', err);
+      handleError(err, 'Failed to reset ban number');
     }
   };
 

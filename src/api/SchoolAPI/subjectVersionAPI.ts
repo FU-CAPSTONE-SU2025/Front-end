@@ -18,6 +18,7 @@ export const AddSubjectVersion = async (data: CreateSubjectVersion): Promise<Sub
     throwApiError(result);
   }
 };
+
   
 export const DeleteSubjectVersion = async (id:number): Promise<any | null> => {
   const props = {

@@ -127,9 +127,10 @@
 
 /* Score Editing */
 .scoreContainer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex ;
+  align-items:  center;
+  justify-content: space-between;
+  justify-items: first baseline;
 }
 
 .scoreInput {
@@ -139,20 +140,43 @@
 .scoreText {
   font-weight: bold !important;
 }
+.editButton, .saveButton, .cancelButton {
+  position: relative;
+  border-radius: 999 !important;
+}
 
 .editButton {
   color: #FF914D !important;
   padding: 0 !important;
+  border: #FF914D;
+}
+
+.editButton:hover {
+  background-color: #FF914D !important;
+  color: white !important;
+  border: white !important;
 }
 
 .saveButton {
   color: #22c55e !important;
   padding: 0 !important;
+  border: #22c55e;
+}
+.saveButton:hover {
+  background-color: #22c55e !important;
+  color: white !important;
+  border: white !important;
 }
 
 .cancelButton {
   color: #ef4444 !important;
   padding: 0 !important;
+  border: #ef4444;
+}
+.cancelButton:hover {
+  background-color: #ef4444 !important;
+  color: white !important;
+  border: white !important;
 }
 
 /* Final Grade Calculation */

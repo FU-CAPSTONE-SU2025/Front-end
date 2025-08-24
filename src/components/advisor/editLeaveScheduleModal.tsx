@@ -4,6 +4,7 @@ import { useUpdateLeaveSchedule, useLeaveScheduleDetail } from '../../hooks/useC
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 // Extend dayjs with timezone support
 dayjs.extend(utc);
@@ -17,6 +18,7 @@ interface EditLeaveScheduleModalProps {
 }
 
 const EditLeaveScheduleModal: React.FC<EditLeaveScheduleModalProps> = ({ visible, onCancel, onSuccess, leaveId }) => {
+  const { showSuccess, showError } = useMessagePopupContext();
   const [form] = Form.useForm();
   const { data, isLoading } = useLeaveScheduleDetail(leaveId || undefined);
   const updateLeave = useUpdateLeaveSchedule();
@@ -25,10 +27,9 @@ const EditLeaveScheduleModal: React.FC<EditLeaveScheduleModalProps> = ({ visible
     if (data && visible) {
       const startDate = dayjs(data.startDateTime);
       const endDate = dayjs(data.endDateTime);
-      
+    
       form.setFieldsValue({
         range: [startDate, endDate],
-        reason: data.reason
       });
     } else if (!visible) {
       form.resetFields();
@@ -47,13 +48,13 @@ const EditLeaveScheduleModal: React.FC<EditLeaveScheduleModalProps> = ({ visible
         data: {
           startDateTime: startDateTime.utc().format('YYYY-MM-DDTHH:mm:ss') + 'Z',
           endDateTime: endDateTime.utc().format('YYYY-MM-DDTHH:mm:ss') + 'Z',
-          reason: values.reason
         },
       });
+      showSuccess('Leave schedule updated successfully!');
       form.resetFields();
       onSuccess();
     } catch (err) {
-      // validation or API error
+      showError('An error occurred while updating the leave schedule.');
     }
   };
 

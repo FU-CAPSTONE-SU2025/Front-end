@@ -26,7 +26,7 @@ const DeleteSessionModal: React.FC<DeleteSessionModalProps> = ({ open, onClose, 
       <p className="text-sm text-gray-500 mb-6">
         This action cannot be undone. All messages in this session will be permanently deleted.
       </p>
-      <div className="flex gap-3 justify-center">
+      <div className="flex gap-3 justify-between">
         <Button 
           onClick={onClose}
           className="px-6 py-2 h-auto"

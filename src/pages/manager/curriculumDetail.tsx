@@ -132,7 +132,7 @@ const CurriculumManagerPage: React.FC = () => {
               boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)'
             }}
           >
-            View Subject Versions
+            View Subject (By Version)
           </Button>
         </Space>
       ),

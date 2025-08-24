@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, TimePicker, Select, Button, message, Space, Typography, Card, Alert, Row, Col } from 'antd';
+import { Modal, Form, TimePicker, Select, Button, Space, Typography, Card, Row, Col } from 'antd';
 import { EditOutlined, ClockCircleOutlined, CalendarOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useGetBookingAvailabilityById, useUpdateBookingAvailability } from '../../hooks/useCRUDAdvisor';
 import { BookingAvailability, UpdateBookingAvailabilityRequest } from '../../interfaces/IBookingAvailability';
 import dayjs, { Dayjs } from 'dayjs';
 import { dayOptions } from '../../interfaces/IDayOptions';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 const { Option } = Select;
 
@@ -21,6 +22,7 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
   onSuccess,
   scheduleId
 }) => {
+  const { showSuccess, showError, showInfo } = useMessagePopupContext();
   const [form] = Form.useForm();
   const updateBookingAvailability = useUpdateBookingAvailability();
   const { data: schedule, isLoading: isLoadingSchedule } = useGetBookingAvailabilityById(scheduleId);
@@ -41,11 +43,7 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
 
   // Show loading message when fetching schedule details
   useEffect(() => {
-    if (visible && scheduleId && isLoadingSchedule) {
-      message.loading('Loading schedule details...', 0);
-    } else {
-      message.destroy();
-    }
+    // Note: Loading state is handled by the form's loading state
   }, [visible, scheduleId, isLoadingSchedule]);
 
   // Reset form when modal closes
@@ -73,7 +71,7 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
 
   const handleSubmit = async (values: any) => {
     if (!schedule || !scheduleId) {
-      message.error('Schedule details not loaded. Please try again.');
+      showError('Schedule details not loaded. Please try again.');
       return;
     }
 
@@ -91,13 +89,13 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
       });
 
       // If no error is thrown, consider it successful
-      message.success('Work schedule updated successfully!');
+      showSuccess('Work schedule updated successfully!');
       form.resetFields();
       onSuccess();
       onCancel();
     } catch (error) {
       console.error('Error updating work schedule:', error);
-      message.error('An error occurred while updating the work schedule.');
+      showError('An error occurred while updating the work schedule.');
     }
   };
 
@@ -108,7 +106,7 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
   const isLoading = updateBookingAvailability.isPending || isLoadingSchedule;
   useEffect(() => {
     if (visible && scheduleId && !isLoadingSchedule && !schedule) {
-      message.error('Failed to load schedule details. Please try again.');
+      showError('Failed to load schedule details. Please try again.');
     }
   }, [visible, scheduleId, isLoadingSchedule, schedule]);
 
@@ -240,7 +238,7 @@ const EditWorkSchedule: React.FC<EditWorkScheduleProps> = ({
         </Row>
 
         <Form.Item>
-          <Space style={{ width: '100%', justifyContent: '' }}>
+          <Space style={{ width: '100%', justifyContent: 'space-between' }}>
             <Button onClick={handleCancel}>
               Cancel
             </Button>

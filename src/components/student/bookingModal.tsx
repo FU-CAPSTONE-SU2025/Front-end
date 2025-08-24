@@ -127,7 +127,7 @@ const BookingModal = ({
                     className="rounded-xl border-2 border-purple-200 focus:border-purple-400 focus:shadow-md transition"
                   />
                 </Form.Item>
-                <div className="flex justify-end gap-4 mt-8">
+                <div className="flex justify-between gap-4 mt-8">
                   <Button
                     size="large"
                     className="bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 hover:border-gray-400 rounded-xl px-8 py-3 text-base font-semibold"

@@ -1,4 +1,6 @@
 import * as signalR from '@microsoft/signalr';
+import { getAuthState } from '../hooks/useAuthState';
+import { RefreshToken } from '../api/Account/AuthAPI';
 
 let ADVISORY_CHAT_HUB_URL:string
 let NOTIFICATION_HUB_URL:string
@@ -40,7 +42,6 @@ export const SIGNALR_CONFIG = {
     
     GET_NOTIFICATIONS: 'GetNotifications',
     MARK_AS_READ: 'MarkAsRead',
-    MARK_ALL_AS_READ: 'MarkAllAsRead',
     NOTIFICATION_RECEIVED: 'NotificationReceivedMethod',
     NOTIFICATION_CREATED: 'NotificationCreatedMethod',
     NOTIFICATION_READ: 'NotificationReadMethod',
@@ -205,7 +206,8 @@ class SignalRConnectionManager {
   }
 
   async getConnection(hubUrl: string, accessToken: string): Promise<signalR.HubConnection> {
-    const connectionKey = `${hubUrl}_${accessToken}`;
+    const tokenForKey = getAuthState().accessToken || accessToken;
+    const connectionKey = `${hubUrl}_${tokenForKey}`;
     
     // Return existing connection if available and connected
     const existingConnection = this.connections.get(connectionKey);
@@ -236,14 +238,25 @@ class SignalRConnectionManager {
     console.log('Creating new connection:', connectionKey);
 
     try {
-      const connection = new signalR.HubConnectionBuilder()
-        .withUrl(hubUrl, { 
-          accessTokenFactory: () => accessToken,
-          transport: signalR.HttpTransportType.WebSockets
-        })
-        .withAutomaticReconnect(SIGNALR_CONFIG.CONNECTION.RETRY_INTERVALS)
-        .configureLogging(signalR.LogLevel.Warning) // Reduce logging in production
-        .build();
+      const createConnection = (): signalR.HubConnection => {
+        return new signalR.HubConnectionBuilder()
+          .withUrl(hubUrl, {
+            accessTokenFactory: () => getAuthState().accessToken || accessToken,
+            transport: signalR.HttpTransportType.WebSockets,
+          })
+          .withAutomaticReconnect(SIGNALR_CONFIG.CONNECTION.RETRY_INTERVALS)
+          .configureLogging(signalR.LogLevel.Warning)
+          .build();
+      };
+
+      let connection = createConnection();
+
+      const startConnection = async () => {
+        await connection.start();
+        console.log('Connection started successfully:', connectionKey);
+        this.connections.set(connectionKey, connection);
+        this.notifyListeners(connectionKey, 'connected');
+      };
 
       // Setup connection event handlers
       connection.onreconnecting(() => {
@@ -264,19 +277,51 @@ class SignalRConnectionManager {
         this.notifyListeners(connectionKey, 'closed');
       });
 
-      // Create connection promise
-      const connectionPromise = connection.start().then(() => {
-        console.log('Connection started successfully:', connectionKey);
-        this.connections.set(connectionKey, connection);
-        this.notifyListeners(connectionKey, 'connected');
-      }).catch((error) => {
+      const connectionPromise = (async () => {
+        try {
+          await startConnection();
+        } catch (error) {
+          console.warn('Initial connection failed, attempting token refresh:', connectionKey, error);
+          try {
+            const refreshed = await RefreshToken();
+            if (refreshed) {
+              // Rebuild connection to ensure fresh token factory is applied and retry
+              connection = createConnection();
+              // Re-attach handlers to the new connection
+              connection.onreconnecting(() => {
+                console.log('Connection reconnecting:', connectionKey);
+                this.notifyListeners(connectionKey, 'reconnecting');
+              });
+              connection.onreconnected(() => {
+                console.log('Connection reconnected:', connectionKey);
+                this.notifyListeners(connectionKey, 'reconnected');
+              });
+              connection.onclose((err) => {
+                console.log('Connection closed:', connectionKey, err);
+                this.connections.delete(connectionKey);
+                this.connectionPromises.delete(connectionKey);
+                this.isConnecting.set(connectionKey, false);
+                this.notifyListeners(connectionKey, 'closed');
+              });
+              await startConnection();
+            } else {
+              throw error;
+            }
+          } catch (refreshErr) {
+            console.error('Connection failed after token refresh:', connectionKey, refreshErr);
+            throw refreshErr;
+          }
+        }
+      })()
+      .catch((error) => {
         console.error('Connection failed:', connectionKey, error);
         this.connections.delete(connectionKey);
         this.connectionPromises.delete(connectionKey);
         this.isConnecting.set(connectionKey, false);
         this.notifyListeners(connectionKey, 'failed');
         throw error;
-      }).finally(() => {
+      })
+      .finally(() => {
         this.connectionPromises.delete(connectionKey);
         this.isConnecting.set(connectionKey, false);
       });

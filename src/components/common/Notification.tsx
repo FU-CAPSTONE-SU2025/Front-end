@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { BellOutlined, CheckOutlined } from '@ant-design/icons';
-import { Avatar, Button, Modal, Badge, Tooltip } from 'antd';
+import { BellOutlined } from '@ant-design/icons';
+import { Avatar, Button, Modal, Badge } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotificationHub } from '../../hooks/useNotificationHub';
 import { NotificationItem } from '../../interfaces/INotification';
@@ -32,52 +32,52 @@ interface NotificationProps {
 const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { notifications, loading, markAllAsRead, unreadCount, refreshNotifications } = useNotificationHub();
+  const { notifications, loading, markAsRead, refreshNotifications } = useNotificationHub();
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [localRead, setLocalRead] = useState<{ [id: number]: boolean }>({});
-  const [markingAll, setMarkingAll] = useState(false);
 
   // Calculate actual unread count considering localRead state
   const actualUnreadCount = notifications.filter(n => !n.isRead && !localRead[n.id]).length;
   const badgeCount = actualUnreadCount > 10 ? '10+' : actualUnreadCount;
 
-  // ALL FUNCTIONS DEFINED WITH useCallback TO AVOID HOISTING ISSUES
-  const handleNotificationClick = useCallback((n: NotificationItem, e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
+  // Helper to optimistically mark all as read locally
+  const optimisticallyMarkAllLocal = useCallback(() => {
+    const mapping: { [id: number]: boolean } = {};
+    for (const n of notifications) {
+      if (!n.isRead) mapping[n.id] = true;
     }
-    
-    setSelectedNotification(n);
-  }, []);
+    setLocalRead(mapping);
+  }, [notifications]);
 
-  const handleMarkAllAsRead = useCallback(async (e?: React.MouseEvent) => {
+  // Helper to mark all unread on server using per-item MarkAsRead in small batches
+  const backgroundMarkAllPerItem = useCallback(async () => {
+    const unread = notifications.filter(n => !n.isRead);
+    if (unread.length === 0) return;
+
+    const batchSize = 5;
+    for (let i = 0; i < unread.length; i += batchSize) {
+      const batch = unread.slice(i, i + batchSize);
+      await Promise.all(batch.map(n => markAsRead(n.id).catch(() => {})));
+      if (i + batchSize < unread.length) {
+        await new Promise(res => setTimeout(res, 100));
+      }
+    }
+  }, [notifications, markAsRead]);
+
+  // ALL FUNCTIONS DEFINED WITH useCallback TO AVOID HOISTING ISSUES
+  const handleNotificationClick = useCallback(async (n: NotificationItem, e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
-      e.stopPropagation();
     }
-    
-    if (actualUnreadCount === 0) return;
-    
-    setMarkingAll(true);
-    
-    try {
-      const unreadNotifications = notifications.filter(n => !n.isRead && !localRead[n.id]);
-      
-      console.log(`🔄 Marking ${unreadNotifications.length} notifications as read...`);
-      
-      await markAllAsRead();
-      
-      // Clear localRead state after successful mark all as read
-      setLocalRead({});
-      
-      console.log(`✅ Successfully marked all ${unreadNotifications.length} notifications as read`);
-      
-    } catch (error) {
-      console.error('❌ Failed to mark all notifications as read:', error);
-    } finally {
-      setMarkingAll(false);
-    }
-  }, [actualUnreadCount, localRead, notifications, markAllAsRead]);
+    // Optimistically mark all as read locally for immediate UI change
+    optimisticallyMarkAllLocal();
+    // Background per-item mark-as-read calls then refresh from server
+    void (async () => {
+      await backgroundMarkAllPerItem();
+      await refreshNotifications();
+    })();
+    setSelectedNotification(n);
+  }, [optimisticallyMarkAllLocal, backgroundMarkAllPerItem, refreshNotifications]);
 
   const handleModalClose = useCallback(() => {
     setSelectedNotification(null);
@@ -86,16 +86,21 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
   const handleBellClick = useCallback(async () => {
     const newOpen = !open;
     setOpen(newOpen);
-    
     if (newOpen) {
       try {
         await refreshNotifications();
-        console.log('🔄 Refreshed notifications on dropdown open');
-      } catch (error) {
-        console.error('❌ Failed to refresh notifications:', error);
+        // Optimistically mark UI as read immediately
+        optimisticallyMarkAllLocal();
+        // Background mark-as-read per item after ensuring latest list, then refresh again
+        void (async () => {
+          await backgroundMarkAllPerItem();
+          await refreshNotifications();
+        })();
+      } catch {
+        // silent
       }
     }
-  }, [open, refreshNotifications]);
+  }, [open, refreshNotifications, optimisticallyMarkAllLocal, backgroundMarkAllPerItem]);
 
   const getUnreadStyle = useCallback(() => {
     switch (variant) {
@@ -130,12 +135,9 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
     if (open) {
       if (event.key === 'Escape') {
         setOpen(false);
-      } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-        event.preventDefault();
-        handleMarkAllAsRead();
       }
     }
-  }, [open, handleMarkAllAsRead]);
+  }, [open]);
 
   // CLICK OUTSIDE HANDLER  
   const handleClickOutside = useCallback((event: MouseEvent) => {
@@ -184,24 +186,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                 <span>Notifications</span>
               </div>
               <div className="flex items-center gap-2">
-                {actualUnreadCount > 0 && (
-                  <Tooltip title={`Mark all ${actualUnreadCount} notifications as read`}>
-                    <Button
-                      type="text"
-                      size="small"
-                      icon={<CheckOutlined />}
-                      onClick={handleMarkAllAsRead}
-                      loading={markingAll}
-                      className="text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
-                      disabled={markingAll}
-                    >
-                      {markingAll ? 'Marking...' : 'Mark all'}
-                    </Button>
-                  </Tooltip>
-                )}
-                {actualUnreadCount === 0 && (
-                  <span className="text-xs text-gray-400">All caught up! 🎉</span>
-                )}
+                
               </div>
             </div>
             <div className="max-h-80 overflow-y-auto">
@@ -225,7 +210,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                         <Avatar  src="/Logo.svg" size={40} className="mt-1" />
                         <div 
                           className="flex-1 cursor-pointer"
-                          onClick={() => handleNotificationClick(n)}
+                          onClick={(e) => handleNotificationClick(n, e)}
                         >
                           <div className="flex justify-between items-center">
                             <span className={`font-semibold ${!isRead ? 'text-gray-800' : 'text-gray-600'}`}>
@@ -252,11 +237,6 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                           {!isRead && (
                             <span className={`w-3 h-3 ${getUnreadDotColor()} rounded-full animate-pulse`} />
                           )}
-                          {isRead && (
-                            <Tooltip title="Read">
-                              <CheckOutlined className="text-green-500 text-sm" />
-                            </Tooltip>
-                          )}
                         </div>
                       </motion.div>
                     );
@@ -268,9 +248,6 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
               <div className="px-4 py-2 border-t border-gray-100 bg-gray-50">
                 <div className="text-xs text-gray-500 flex items-center justify-between">
                   <span>💡 Press Esc to close</span>
-                  {actualUnreadCount > 0 && (
-                    <span>Ctrl+Enter to mark all read</span>
-                  )}
                 </div>
               </div>
             )}

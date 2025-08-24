@@ -816,6 +816,17 @@ export function useCRUDSubjectVersion() {
     },
   });
 
+  // Edit subject version
+  const editSubjectVersionMutation = useMutation<SubjectVersion | null, unknown, { id: number; data: UpdateSubjectVersion }>({
+    mutationFn: async ({ id, data }) => {
+      const result = await UpdateSubjectVersionById(id, data);
+      return result;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
   // Delete subject version
   const deleteSubjectVersionMutation = useMutation<any | null, unknown, number>({
     mutationFn: async (id: number) => {
@@ -940,6 +951,7 @@ export function useCRUDSubjectVersion() {
   return {
     addSubjectVersionMutation,
     updateSubjectVersionMutation,
+    editSubjectVersionMutation,
     deleteSubjectVersionMutation,
     toggleActiveSubjectVersionMutation,
     setDefaultSubjectVersionMutation,

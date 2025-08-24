@@ -25,6 +25,7 @@ interface AdvisorCalendarProps {
   onDelete?: (event: AdvisorCalendarEvent) => void;
   workingHours?: { start: number; end: number }; // e.g. { start: 8, end: 18 }
   isWorkSchedule?: boolean; // New prop to distinguish work vs leave calendar
+  showNavigation?: boolean; // New prop to control navigation buttons visibility
 }
 
 const defaultWorkingHours = { start: 8, end: 18 };
@@ -41,6 +42,7 @@ const AdvisorCalendar: React.FC<AdvisorCalendarProps> = ({
   onDelete,
   workingHours = defaultWorkingHours,
   isWorkSchedule = false, // Default to leave schedule behavior
+  showNavigation = true, // Default to show navigation
 }) => {
   // Generate working hours labels
   const generateWorkingHours = () => {
@@ -119,34 +121,58 @@ const AdvisorCalendar: React.FC<AdvisorCalendarProps> = ({
   const hours = generateWorkingHours();
   const data = viewMode === 'week' ? getWeekData(selectedDate) : [getDayData(selectedDate)];
 
+  const handlePrevious = () => {
+    const newDate = viewMode === 'day' 
+      ? selectedDate.subtract(1, 'day')
+      : selectedDate.subtract(1, 'week');
+    onDateChange && onDateChange(newDate);
+  };
+
+  const handleNext = () => {
+    const newDate = viewMode === 'day' 
+      ? selectedDate.add(1, 'day')
+      : selectedDate.add(1, 'week');
+    onDateChange && onDateChange(newDate);
+  };
+
   return (
     <Card>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Segmented
-          options={['day', 'week']}
-          value={viewMode}
-          onChange={val => onViewModeChange && onViewModeChange(val as 'day' | 'week')}
-        />
-        <div>
-          {/* Different navigation logic for work vs leave schedule */}
-          <Button 
-            onClick={() => onDateChange && onDateChange(selectedDate.subtract(1, viewMode))} 
-            icon={<LeftOutlined />}
-            disabled={isWorkSchedule && viewMode === 'week'} // Disable only for work schedule week view
+        {onViewModeChange && (
+          <Segmented
+            options={['day', 'week']}
+            value={viewMode}
+            onChange={val => onViewModeChange(val as 'day' | 'week')}
           />
-          <span style={{ margin: '0 8px', fontWeight: 500 }}>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {showNavigation && (
+            <Button 
+              icon={<LeftOutlined />} 
+              onClick={handlePrevious}
+              size="small"
+            />
+          )}
+          <span style={{ 
+            margin: '0 8px', 
+            fontWeight: 500, 
+            minWidth: showNavigation ? '200px' : 'auto', 
+            textAlign: 'center' 
+          }}>
             {viewMode === 'day' 
               ? selectedDate.format('DD/MM/YYYY') 
               : isWorkSchedule 
-                ? 'Current Week' // Show "Current Week" for work schedule
+                ? 'Week' // Show "Week" for work schedule
                 : `${selectedDate.startOf('week').format('DD/MM/YYYY')} - ${selectedDate.endOf('week').format('DD/MM/YYYY')}` // Show date range for leave schedule
             }
           </span>
-          <Button 
-            onClick={() => onDateChange && onDateChange(selectedDate.add(1, viewMode))} 
-            icon={<RightOutlined />}
-            disabled={isWorkSchedule && viewMode === 'week'} // Disable only for work schedule week view
-          />
+          {showNavigation && (
+            <Button 
+              icon={<RightOutlined />} 
+              onClick={handleNext}
+              size="small"
+            />
+          )}
         </div>
       </div>
       
@@ -165,7 +191,6 @@ const AdvisorCalendar: React.FC<AdvisorCalendarProps> = ({
                   fontSize: '14px'
                 }}>
                   <div>{day.format('dddd')}</div>
-                  {/* Không render ngày tháng năm */}
                 </th>
               ))}
             </tr>
@@ -186,9 +211,7 @@ const AdvisorCalendar: React.FC<AdvisorCalendarProps> = ({
                 {data.map(({ day, timeSlots, leaveEvents }) => {
                   const timeSlot = timeSlots[idx];
                   const currentHour = Number(hour.split(':')[0]);
-                  // Find leave event that starts at this hour
                   const leaveEvent = leaveEvents.find(e => currentHour === e.startHour);
-                  // Find leave event that covers this hour (for skipping cells)
                   const coveringLeave = leaveEvents.find(e => currentHour > e.startHour && currentHour < e.endHour);
                   if (leaveEvent) {
                     const duration = leaveEvent.endHour - leaveEvent.startHour;
@@ -310,10 +333,8 @@ const AdvisorCalendar: React.FC<AdvisorCalendarProps> = ({
                     );
                   }
                   if (coveringLeave) {
-                    // Skip cell if it's covered by a rowSpan above
                     return null;
                   }
-                  // ... render work event or empty cell as before ...
                   if (timeSlot.event) {
                     return (
                       <td

@@ -14,6 +14,7 @@ import {
   FetchPagedSemesterBlockType,
 } from '../api/SchoolAPI/joinedSubjectAPI';
 import { AddSubjectVersionToCurriculum, FetchCurriculumList, FetchSubjectVersionsToCurriculum, FetchSubjectVersionsToCurriculumByCode, RemoveSubjectVersionFromCurriculum } from '../api/SchoolAPI/curriculumAPI';
+import { FetchComboList } from '../api/SchoolAPI/comboAPI';
 
 export const useSchoolApi = () => {
   // Program queries
@@ -28,6 +29,13 @@ export const useSchoolApi = () => {
     queryFn: () => FetchProgramList(page, pageSize, search),
   });
 
+  // Infinite scroll program queries for Transcript page
+  const useInfiniteProgramList = (page: number = 1, pageSize: number = 10, search?: string) => useQuery({
+    queryKey: ['infiniteProgramList', page, pageSize, search],
+    queryFn: () => FetchProgramList(page, pageSize, search),
+    enabled: true, // Always enabled for dropdown
+  });
+
   // Curriculum queries
   const useCurriculumList = () => useQuery({
     queryKey: ['curriculumList'],
@@ -38,6 +46,32 @@ export const useSchoolApi = () => {
   const usePagedCurriculumList = (page: number = 1, pageSize: number = 10, search?: string, programId?: number) => useQuery({
     queryKey: ['pagedCurriculumList', page, pageSize, search, programId],
     queryFn: () => FetchCurriculumList(page, pageSize, search, programId),
+  });
+
+  // Infinite scroll curriculum queries for Transcript page
+  const useInfiniteCurriculumList = (page: number = 1, pageSize: number = 10, search?: string, programId?: number) => useQuery({
+    queryKey: ['infiniteCurriculumList', page, pageSize, search, programId],
+    queryFn: () => FetchCurriculumList(page, pageSize, search, programId),
+    enabled: true, // Always enabled for dropdown
+  });
+
+  // Combo queries
+  const useComboList = () => useQuery({
+    queryKey: ['comboList'],
+    queryFn: () => FetchComboList(),
+  });
+
+  // Paginated combo queries for edit account page
+  const usePagedComboList = (page: number = 1, pageSize: number = 10, search?: string) => useQuery({
+    queryKey: ['pagedComboList', page, pageSize, search],
+    queryFn: () => FetchComboList(page, pageSize, search),
+  });
+
+  // Infinite scroll combo queries for Transcript page
+  const useInfiniteComboList = (page: number = 1, pageSize: number = 10, search?: string) => useQuery({
+    queryKey: ['infiniteComboList', page, pageSize, search],
+    queryFn: () => FetchComboList(page, pageSize, search),
+    enabled: true, // Always enabled for dropdown
   });
 
   const useSubjectVersionsToCurriculum = (curriculumId: string) => useQuery({
@@ -99,8 +133,13 @@ export const useSchoolApi = () => {
     // Queries
     useProgramList,
     usePagedProgramList,
+    useInfiniteProgramList,
     useCurriculumList,
     usePagedCurriculumList,
+    useInfiniteCurriculumList,
+    useComboList,
+    usePagedComboList,
+    useInfiniteComboList,
     useSubjectVersionsToCurriculum,
     useSubjectVersionsToCurriculumByCode,
     useJoinedSubjectList,

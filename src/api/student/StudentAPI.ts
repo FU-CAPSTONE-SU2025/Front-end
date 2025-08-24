@@ -9,9 +9,7 @@ import {
     AdvisorMeetingPaged, 
     IStudentBookingResponse, 
     IStudentBookingCalendarResponse,
-    AdvisorData,
     PagedAdvisorData,
-    LeaveScheduleData,
     PagedLeaveScheduleData,
     BookingAvailabilityData,
     JoinedSubject
@@ -21,22 +19,17 @@ import { ChatSessionRequest, ChatSessionResponse } from "../../interfaces/IChat"
 
 const userURL = baseUrl+"/User/student"
 
-export const GetAllStudent = async (pageNumber: number = 1, pageSize: number = 10, searchQuery?: string, filterType?: string, filterValue?: string):Promise<pagedStudentData> => {
+export const GetAllStudent = async (pageNumber: number = 1, pageSize: number = 10, search?: string, filterType?: string, filterValue?: string):Promise<pagedStudentData> => {
     // Build query parameters
     const params = new URLSearchParams({
         pageNumber: pageNumber.toString(),
-        pageSize: pageSize.toString()
+        pageSize: pageSize.toString(),
+        search:search
     });
-    
-      if (searchQuery) {
-    params.append('search', searchQuery);
-  }
-    
     if (filterType && filterValue) {
         params.append('filterType', filterType);
         params.append('filterValue', filterValue);
     }
-    
     const props = {
         data: null,
         url: userURL+`/paged?` + params.toString(),
@@ -426,3 +419,141 @@ export const getJoinedSubjects = async (): Promise<JoinedSubject[]> => {
     return null as never;
   }
 };
+
+// Get all students by combo code (paged)
+export const GetStudentsByCombo = async (comboCode: string, pageNumber: number = 1, pageSize: number = 10): Promise<pagedStudentData> => {
+  const params = new URLSearchParams({
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString()
+  });
+  
+  const props = {
+    data: null,
+    url: userURL + `/${comboCode}/paged?` + params.toString(),
+    headers: GetHeader()
+  }
+  
+  const result = await axiosRead(props)
+  if (result.success) {
+    return result.data
+  }
+  else {
+    throwApiError(result);
+    return null as never;
+  }
+}
+
+// Get all students by program ID (paged)
+export const GetStudentsByProgram = async (programId: number, pageNumber: number = 1, pageSize: number = 10): Promise<pagedStudentData> => {
+  const params = new URLSearchParams({
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString()
+  });
+  
+  const props = {
+    data: null,
+    url: userURL + `/${programId}/paged?` + params.toString(),
+    headers: GetHeader()
+  }
+  
+  const result = await axiosRead(props)
+  if (result.success) {
+    return result.data
+  }
+  else {
+    throwApiError(result);
+    return null as never;
+  }
+}
+
+// Get all students by curriculum code (paged)
+export const GetStudentsByCurriculum = async (curriculumCode: string, pageNumber: number = 1, pageSize: number = 10): Promise<pagedStudentData> => {
+  const params = new URLSearchParams({
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString()
+  });
+  
+  const props = {
+    data: null,
+    url: userURL + `/${curriculumCode}/paged?` + params.toString(),
+    headers: GetHeader()
+  }
+  
+  const result = await axiosRead(props)
+  if (result.success) {
+    return result.data
+  }
+  else {
+    throwApiError(result);
+    return null as never;
+  }
+}
+
+// Get all active students by combo code (paged)
+export const GetActiveStudentsByCombo = async (comboCode: string, pageNumber: number = 1, pageSize: number = 10): Promise<pagedStudentData> => {
+  const params = new URLSearchParams({
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString()
+  });
+  
+  const props = {
+    data: null,
+    url: userURL + `/active/${comboCode}/paged?` + params.toString(),
+    headers: GetHeader()
+  }
+  
+  const result = await axiosRead(props)
+  if (result.success) {
+    return result.data
+  }
+  else {
+    throwApiError(result);
+    return null as never;
+  }
+}
+
+// Get all active students by program ID (paged)
+export const GetActiveStudentsByProgram = async (programId: number, pageNumber: number = 1, pageSize: number = 10): Promise<pagedStudentData> => {
+  const params = new URLSearchParams({
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString()
+  });
+  
+  const props = {
+    data: null,
+    url: userURL + `/active/${programId}/paged?` + params.toString(),
+    headers: GetHeader()
+  }
+  
+  const result = await axiosRead(props)
+  if (result.success) {
+    return result.data
+  }
+  else {
+    throwApiError(result);
+    return null as never;
+  }
+}
+
+// Get all active students by curriculum code (paged)
+export const GetActiveStudentsByCurriculum = async (curriculumCode: string, pageNumber: number = 1, pageSize: number = 10): Promise<pagedStudentData> => {
+  const params = new URLSearchParams({
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString()
+  });
+  
+  const props = {
+    data: null,
+    url: userURL + `/active/${curriculumCode}/paged?` + params.toString(),
+    headers: GetHeader()
+  }
+  
+  const result = await axiosRead(props)
+  if (result.success) {
+    return result.data
+  }
+  else {
+    throwApiError(result);
+    return null as never;
+  }
+}

@@ -7,6 +7,7 @@ import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDProgram, useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateProgram } from '../../interfaces/ISchoolProgram';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import ExcelImportButton from '../../components/common/ExcelImportButton';
 
 
 const ProgramPage: React.FC = () => {
@@ -133,16 +134,14 @@ const ProgramPage: React.FC = () => {
           >
             Add Program
           </Button>
-          <Button 
-            type="default" 
-            icon={<UploadOutlined />} 
+          <ExcelImportButton 
             size="large" 
-            style={{borderRadius: 999, borderColor: '#10B981', color: '#10B981'}} 
             onClick={() => setIsImportOpen(true)}
             loading={addMultipleProgramsMutation.isPending}
+            style={{ borderRadius: 999 }}
           >
             Import Programs
-          </Button>
+          </ExcelImportButton>
         </div>
       </Affix>
 

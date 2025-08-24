@@ -326,7 +326,8 @@ const ManagerSubjectVersionPage: React.FC = () => {
     };
 
     fetchData();
-  }, [subjectId, getSubjectById, getSubjectVersionsBySubjectId, addSubjectVersionMutation, createDefaultVersion, showInfo, fetchPrerequisitesForVersion, fetchAllPrerequisites, fetchOrCreateSyllabus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjectId]);
 
   // Handler for tab change
   const handleTabChange = useCallback(async (key: string) => {

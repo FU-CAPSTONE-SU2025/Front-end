@@ -117,9 +117,10 @@ const WorkSchedule: React.FC = () => {
         events={calendarEvents}
         viewMode={'week'}
         selectedDate={selectedDate}
-        onViewModeChange={() => {}}
+        onViewModeChange={undefined}
         onDateChange={() => {}} 
         isWorkSchedule={true} 
+        showNavigation={false}
         onSlotClick={(slot, date) => {
           setSelectedSlotInfo({ date, start: slot.start, end: slot.end });
           setIsAddModalVisible(true);

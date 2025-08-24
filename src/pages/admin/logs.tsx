@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ConfigProvider, DatePicker, Table, Button } from 'antd';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import * as XLSX from 'xlsx';
 import styles from '../../css/admin/logs.module.css';
-import { mockUserActivity } from '../../../data/mockData';
 import { useAuditLog } from '../../hooks/useAuditLog';
 import { AuditLog } from '../../interfaces/IAuditLog';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import useActiveUserData from '../../hooks/useActiveUserData';
 
 const LogsPage: React.FC = () => {
   const [dateRange, setDateRange] = useState<[Date, Date] | null>(null);
@@ -22,25 +22,21 @@ const LogsPage: React.FC = () => {
     fetchAuditLogs, 
     downloadAllAuditLogs 
   } = useAuditLog();
+  const { chartData, isPending: userDataLoading, refetch: refetchUserData } = useActiveUserData();
+
+  // Fetch user data on component mount
+  useEffect(() => {
+    refetchUserData();
+  }, [refetchUserData]);
 
 
-
-  // Custom date filter function
-  const isBetweenDates = (dateStr: string, start: Date, end: Date) => {
-    const date = new Date(dateStr);
-    // Set time to midnight for consistent day comparison
-    date.setHours(0, 0, 0, 0);
-    start.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-    return date >= start && date <= end;
-  };
 
   // Filter activity data by date range
   const filteredActivity = useMemo(() => {
-    if (!dateRange) return mockUserActivity;
-    const [start, end] = dateRange;
-    return mockUserActivity.filter(item => isBetweenDates(item.date, start, end));
-  }, [dateRange]);
+    // Since we only have current data, we'll show it regardless of date range
+    // In a real implementation, you might want to fetch historical data based on date range
+    return chartData;
+  }, [chartData]);
 
 
 
@@ -119,7 +115,10 @@ const LogsPage: React.FC = () => {
           <h1>System Log & Monitoring</h1>
           <div className={styles.chartSection}>
             <div className={styles.chartHeader}>
-              <h2>User Activeness</h2>
+              <h2>Active Users by Role</h2>
+              <div style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '0.5rem' }}>
+                Current active user counts categorized by their roles in the system
+              </div>
               <DatePicker.RangePicker
                 onChange={(dates) => {
                   if (dates && dates[0] && dates[1]) {
@@ -129,22 +128,34 @@ const LogsPage: React.FC = () => {
                   }
                 }}
                 className={styles.datePicker}
+                disabled={true}
+                placeholder={['Historical data not available', 'Historical data not available']}
               />
             </div>
             <div className={styles.chartContainer}>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={filteredActivity}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="date" stroke="#64748b" tick={{fontSize: 13}} />
-                  <YAxis stroke="#64748b" tick={{fontSize: 13}} label={{ value: 'Active Users', angle: -90, position: 'insideLeft', fill: '#64748b', fontSize: 13 }} axisLine={{stroke:'#e5e7eb'}} tickLine={{stroke:'#e5e7eb'}} />
-                  <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.98)', border: '1px solid #e5e7eb', color: '#1E293B' }} labelStyle={{ color: '#1E293B' }} />
-                  <Legend />
-                  <Line type="monotone" dataKey="student" stroke="#f59e42" name="Students" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="advisor" stroke="#2563eb" name="Advisors" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="manager" stroke="#22c55e" name="Managers" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="staff" stroke="#a21caf" name="Staff" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+              {userDataLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
+                  <div>Loading user data...</div>
+                </div>
+              ) : filteredActivity.length === 0 ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
+                  <div>No active user data available</div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={filteredActivity}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="role" stroke="#64748b" tick={{fontSize: 13}} />
+                    <YAxis stroke="#64748b" tick={{fontSize: 13}} label={{ value: 'Active Users', angle: -90, position: 'insideLeft', fill: '#64748b', fontSize: 13 }} axisLine={{stroke:'#e5e7eb'}} tickLine={{stroke:'#e5e7eb'}} />
+                    <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.98)', border: '1px solid #e5e7eb', color: '#1E293B' }} labelStyle={{ color: '#1E293B' }} />
+                    <Bar dataKey="count" fill="#1E40AF">
+                      {filteredActivity.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
           <div className={styles.tableSection}>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, TimePicker, Select, Button, message, Space, Tabs, Card, Typography, Divider, Row, Col, DatePicker, Alert, Tag } from 'antd';
+import { Modal, Form, TimePicker, Select, Button, Space, Tabs, Card, Typography, Divider, Row, Col, DatePicker, Tag } from 'antd';
 import { PlusOutlined, ClockCircleOutlined, CalendarOutlined, DeleteOutlined, CopyOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useCreateLeaveSchedule, useCreateBulkLeaveSchedule } from '../../hooks/useCRUDLeaveSchedule';
 import dayjs, { Dayjs } from 'dayjs';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -23,13 +24,13 @@ interface LeaveSlot {
 }
 
 const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCancel, onSuccess, selectedSlotInfo }) => {
+  const { showSuccess, showError, showInfo, showWarning } = useMessagePopupContext();
   const [singleForm] = Form.useForm();
   const [bulkForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState('single');
   const [leaveSlots, setLeaveSlots] = useState<LeaveSlot[]>([
     { key: '1', date: dayjs(), startTime: dayjs('09:00', 'HH:mm'), endTime: dayjs('17:00', 'HH:mm') }
   ]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedDates, setSelectedDates] = useState<Dayjs[]>([dayjs()]);
 
   const createLeave = useCreateLeaveSchedule();
@@ -126,7 +127,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
     const end = dayjs(values.endTime);
     const duration = end.diff(start, 'minute');
     if (duration < 30) {
-      message.error('Leave slot must be at least 30 minutes.');
+      showError('Leave slot must be at least 30 minutes.');
       return;
     }
 
@@ -135,7 +136,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
       const splitSlots = createSlotsFromDates(selectedDates, start, end);
       setLeaveSlots(splitSlots);
       setActiveTab('bulk');
-      message.info(`Multiple dates detected (${selectedDates.length} days). Switched to Multiple tab with daily breakdown.`);
+      showInfo(`Multiple dates detected (${selectedDates.length} days). Switched to Multiple tab with daily breakdown.`);
       return;
     }
 
@@ -159,12 +160,13 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
         startDateTime: startDateTime,
         endDateTime: endDateTime,
       });
+      showSuccess('Leave schedule created successfully!');
       singleForm.resetFields();
       setSelectedDates([dayjs()]);
       onSuccess();
       onCancel();
     } catch (error) {
-      setErrorMessage('An error occurred while creating the leave schedule.');
+      showError('An error occurred while creating the leave schedule.');
     }
   };
 
@@ -173,7 +175,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
     try {
       const invalidItems = leaveSlots.filter((_, index) => !validateBulkTimeRange(index));
       if (invalidItems.length > 0) {
-        message.error('Please check that all end times are after start times.');
+        showError('Please check that all end times are after start times.');
         return;
       }
 
@@ -200,11 +202,12 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
       });
       
       await createBulkLeave.mutateAsync(bulkData);
+      showSuccess(`Successfully created ${leaveSlots.length} leave schedules!`);
       setLeaveSlots([{ key: '1', date: dayjs(), startTime: dayjs('09:00', 'HH:mm'), endTime: dayjs('17:00', 'HH:mm') }]);
       onSuccess();
       onCancel();
     } catch (error) {
-      setErrorMessage('An error occurred while creating the leave schedules.');
+      showError('An error occurred while creating the leave schedules.');
     }
   };
 
@@ -215,7 +218,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
   };
   const removeLeaveSlot = (key: string) => {
     if (leaveSlots.length > 1) setLeaveSlots(leaveSlots.filter(item => item.key !== key));
-    else message.warning('At least one leave slot is required.');
+    else showWarning('At least one leave slot is required.');
   };
   const updateLeaveSlot = (key: string, field: keyof LeaveSlot, value: any) => {
     setLeaveSlots(leaveSlots.map(item => item.key === key ? { ...item, [field]: value } : item));
@@ -234,7 +237,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
       const splitSlots = splitDateRange(startDate, endDate, startTime, endTime);
       setLeaveSlots(splitSlots);
       setActiveTab('bulk');
-      message.info(`Created ${splitSlots.length} daily leave slots from ${dayjs(startDate).format('YYYY-MM-DD')} to ${dayjs(endDate).format('YYYY-MM-DD')}`);
+      showInfo(`Created ${splitSlots.length} daily leave slots from ${dayjs(startDate).format('YYYY-MM-DD')} to ${dayjs(endDate).format('YYYY-MM-DD')}`);
     }
   };
 
@@ -244,7 +247,6 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
     setLeaveSlots([{ key: '1', date: dayjs(), startTime: dayjs('09:00', 'HH:mm'), endTime: dayjs('17:00', 'HH:mm') }]);
     setSelectedDates([dayjs()]);
     onCancel();
-    setErrorMessage(null);
   };
 
   return (
@@ -262,9 +264,6 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
         width={800}
         destroyOnHidden
       >
-        {errorMessage && (
-          <Alert type="error" message={errorMessage} closable onClose={() => setErrorMessage(null)} style={{ marginBottom: 16 }} />
-        )}
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           <TabPane tab="Single Leave" key="single">
             <Form
@@ -379,7 +378,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
                 </Col>
               </Row>
               <Form.Item>
-                <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+                <Space style={{ width: '100%', justifyContent: 'space-between' }}>
                   <Button onClick={handleCancel}>Cancel</Button>
                   <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>
                     Create Leave{selectedDates.length > 1 ? `s (${selectedDates.length})` : ''}
@@ -570,7 +569,7 @@ const AddLeaveScheduleModal: React.FC<AddLeaveScheduleProps> = ({ visible, onCan
               Add Another Leave
             </Button>
             <Divider />
-            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+            <Space style={{ width: '100%', justifyContent: 'space-between' }}>
               <Button onClick={handleCancel}>Cancel</Button>
               <Button
                 type="primary"

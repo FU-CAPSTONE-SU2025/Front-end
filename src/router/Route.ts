@@ -108,7 +108,7 @@ export const routes = createBrowserRouter([
         Component: ResourceExplorer,
       },
       {
-        path: "historyMeeting",
+        path: "myMeetings",
         Component: HistoryMeeting,
       },
       {

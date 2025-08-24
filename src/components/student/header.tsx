@@ -59,9 +59,9 @@ const Header: React.FC = () => {
   // Dropdown menu for avatar (updated to English and optimized navigation)
   const avatarMenuItems = [
     {
-      key: 'history-meeting',
-      label: 'History Meeting',
-      onClick: () => handleDropdownClick('/student/historyMeeting'),
+      key: 'my-meeting',
+      label: 'My Meetings',
+      onClick: () => handleDropdownClick('/student/myMeetings'),
     },
     {
       key: 'change-password',

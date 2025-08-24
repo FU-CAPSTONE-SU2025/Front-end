@@ -50,20 +50,76 @@
   padding: 0.5rem 1rem;
   border-radius: 4px;
   transition: all 0.3s ease;
+  position: relative;
+}
+
+/* Animated underline like Student/Advisor */
+.navItem::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 0;
+  background: #fa8c16; /* underline color */
+  transition: width 0.3s ease;
+}
+
+.navItem:hover::after {
+  width: 100%;
+}
+
+.navItem.active::after {
+  width: 100%;
+  background: #fa8c16 !important; /* visible on dark background */
 }
 
 .navItem:hover {
-  background:  rgba(255, 145, 77, 0.85);
+  background:  rgba(255, 145, 77, 0.15);
   transform: scale(1.05);
-  color: #E6F0FA;
+  color: #0f172a;
 }
 
 .navItem.active {
-  background: rgba(255, 145, 77, 0.85); /* Orange accent from AdminNavBar */
-  color: #ffffff !important;
+  color: #fa8c16 !important;
   font-weight: 700;
   transform: scale(1.05);
 }
+
+/* Role tag (replaces inline style on Tag) */
+.roleTag {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 16px;
+  border: 2px solid #1e40af;
+  background-color: rgba(250, 140, 22, 0.1);
+  color: #1e40af;
+  margin-left: 16px;
+  margin-right: 24px;
+  box-shadow: 0 2px 4px rgba(250, 140, 22, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  align-self: center;
+}
+
+/* Profile link container spacing */
+.profileContainer { margin-right: 20px; }
+
+/* Profile link text (replaces inline styles) */
+.profileText {
+  font-weight: 600;
+  font-size: 16px;
+  color: black;
+  padding: 0;
+  margin: 0;
+  letter-spacing: 0.5px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+/* Notification container wrapper if needed */
+.notificationContainer { display: flex; align-items: center; }
 
 .toggleButton {
   display: none; /* Hidden on desktop */

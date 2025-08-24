@@ -3,7 +3,6 @@ import { Card, Typography, Row, Col, Button, Table, Tag, InputNumber } from 'ant
 import { CloseOutlined, SaveOutlined, EditOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/transcriptEditDialog.module.css';
 import  useCRUDStudent  from '../../hooks/useCRUDStudent';
-import { StudentBase } from '../../interfaces/IStudent';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 const { Title, Text } = Typography;
@@ -54,16 +53,9 @@ export default function TranscriptEdit({ transcriptId, subject, onClose }: Props
 
   // CRUD hook
   const {
-    getStudentById,
     updateStudentScoreMutation,
   } = useCRUDStudent();
 
-  // Fetch student data on mount
-  useEffect(() => {
-    if (transcriptId) {
-      getStudentById.mutate(transcriptId);
-    }
-  }, [transcriptId]);
 
   // Calculate weighted average
   const calculateFinalGrade = () => {
