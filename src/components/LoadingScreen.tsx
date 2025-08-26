@@ -32,10 +32,10 @@ export default function LoadingScreen({ isLoading, message = "Loading..." }: Loa
 
         {/* Loading Text */}
         <motion.div
-          className="loading-text"
+          className="loading-text-container"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
         >
           <h2>{message}</h2>
           <div className="loading-bar">

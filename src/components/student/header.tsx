@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Badge, Avatar, Dropdown, Menu } from 'antd';
+import { Avatar, Dropdown} from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router';
 import Messenger from './messenger';

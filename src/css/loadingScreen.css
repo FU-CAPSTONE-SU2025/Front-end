@@ -21,17 +21,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(255,255,255,0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.08) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(255,255,255,0.05) 0%, transparent 50%);
-  animation: backgroundShift 8s ease-in-out infinite;
+ 
 }
 
-@keyframes backgroundShift {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.1) rotate(180deg); }
-}
 
 .loading-content {
   display: flex;
@@ -40,7 +32,6 @@
   position: relative;
   z-index: 2;
 }
-
 /* Liquid Glass Spinner */
 .spinner-container {
   position: relative;
@@ -52,8 +43,8 @@
 
 .spinner-main {
   position: absolute;
-  width: 120px;
-  height: 120px;
+  width: 260px;
+  height: 220px;
   background: rgba(255,255,255,0.18);
   border: 1px solid rgba(255,255,255,0.25);
   border-radius: 50%;
@@ -82,7 +73,6 @@
   width: 90px;
   height: 90px;
   top: 15px;
-  left: 15px;
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.18);
   border-radius: 50%;
@@ -111,7 +101,6 @@
   width: 60px;
   height: 60px;
   top: 30px;
-  left: 30px;
   background: rgba(255,255,255,0.15);
   border: 1px solid rgba(255,255,255,0.20);
   border-radius: 50%;
@@ -228,7 +217,11 @@
 }
 
 /* Glass Loading Text and Bar */
-.loading-text {
+.loading-text-container {
+  position: relative;
+  width: 40vw;
+  height: 30vh;
+  margin: auto 0;
   text-align: center;
   color: #fff;
   background: rgba(255,255,255,0.18);
@@ -242,12 +235,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center; /* ensure vertical centering */
+  align-self: center;
+  align-content: center;
 }
-
-.loading-text h2 {
-  font-size: 1.5rem;
+.loading-text-container h2 {
+  font-size: 2.5rem;
   font-weight: 600;
-  margin: 0 0 20px 0;
+  margin: 0 0 16px 0; /* tighter spacing with bar */
   animation: textGlow 2s ease-in-out infinite alternate;
   text-shadow: 0 0 10px rgba(255,255,255,0.5);
 }
@@ -262,15 +257,15 @@
 }
 
 .loading-bar {
-  width: 200px;
-  height: 6px;
+  width: 400px;
+  height: 10px;
   background: rgba(255,255,255,0.18);
   border-radius: 10px;
   overflow: hidden;
   position: relative;
   border: 1px solid rgba(255,255,255,0.22);
   backdrop-filter: blur(5px);
-  margin: 0 auto;
+  margin: 0 auto; /* center horizontally */
 }
 
 .loading-bar-fill {
@@ -435,7 +430,7 @@
     left: 20px;
   }
   
-  .loading-text h2 {
+  .loading-text-container h2 { /* fix selector to match container */
     font-size: 1.2rem;
   }
   
