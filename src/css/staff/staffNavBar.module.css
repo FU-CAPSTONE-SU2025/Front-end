@@ -71,7 +71,7 @@
   text-decoration: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
   position: relative;
 }
 
@@ -97,9 +97,8 @@
 }
 
 .navItem:hover {
-  background:  rgba(255, 145, 77, 0.15);
   transform: scale(1.05);
-  color: #ffffff;
+  color: #fa8c16;
 }
 
 .navItem.active {

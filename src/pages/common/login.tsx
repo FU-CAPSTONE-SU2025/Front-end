@@ -32,7 +32,7 @@ const Login: React.FC = () => {
         setTimeout(() => {
           nav('/admin');
           hideLoading();
-        }, 5000);
+        }, 2000);
       }
       else if(roleId === 5){
         showForNavigation('Welcome to AISEA...');
