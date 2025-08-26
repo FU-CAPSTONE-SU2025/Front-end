@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router';
 
 interface SubjectCardProps {
+  id: number;
   code: string;
   name: string;
   progress: number;
@@ -30,14 +31,14 @@ function getStatusText(isPassed: boolean, isCompleted: boolean) {
   return 'In Progress';
 }
 
-const SubjectCard: React.FC<SubjectCardProps> = ({ code, name, progress, credits, isPassed, isCompleted }) => (
-  <Link to={`/student/course-tracking/${code}`}>
+const SubjectCard: React.FC<SubjectCardProps> = ({ id, code, name, progress, credits, isPassed, isCompleted }) => (
+  <Link to={`/student/subject-details/${id}`}>
     <motion.div
       variants={cardVariants}
       initial="hidden"
       animate="visible"
       whileHover="hover"
-      className="bg-white/18 backdrop-blur-16 border border-white/30 rounded-2xl p-5 lg:p-6 flex flex-col gap-4 relative shadow-lg transition-all duration-300 h-full"
+      className="bg-white/18 backdrop-blur-16 border border-white/30 rounded-2xl p-5 lg:p-6 flex flex-col gap-4 relative shadow-lg transition-all duration-300 h-full cursor-pointer"
       style={{ minHeight: '160px' }}
     >
       {/* Header with code and status badge */}

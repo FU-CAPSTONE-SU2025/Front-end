@@ -1,4 +1,4 @@
-import { useQuery, keepPreviousData, useQueryClient } from '@tanstack/react-query';
+import { useQuery, keepPreviousData, useQueryClient, useMutation } from '@tanstack/react-query';
 import { fetchSyllabusPaged } from '../api/syllabus/syllabusAPI';
 import { PagedData, Syllabus } from '../interfaces/ISchoolProgram';
 import { 
@@ -9,9 +9,19 @@ import {
     GetPagedLeaveSchedulesOneStaff,
     getMaxNumberOfBan,
     getCurrentNumberOfBan,
-    getJoinedSubjects
+    getJoinedSubjects,
+    getJoinedSubjectById,
+    getSubjectCheckpoints,
+    getCheckpointDetail,
+    updateCheckpoint,
+    deleteCheckpoint,
+    completeCheckpoint,
+    generateCheckpoints,
+    bulkSaveCheckpoints,
+    createCheckpoint,
+    getUpcomingCheckpoints
 } from '../api/student/StudentAPI';
-import { AdvisorMeetingPaged, BookingAvailabilityData, PagedAdvisorData, PagedLeaveScheduleData, MaxBanData, CurrentBanData, JoinedSubject } from '../interfaces/IStudent';
+import { AdvisorMeetingPaged, BookingAvailabilityData, PagedAdvisorData, PagedLeaveScheduleData, MaxBanData, CurrentBanData, JoinedSubject, SubjectCheckpoint, SubjectCheckpointDetail } from '../interfaces/IStudent';
 
 interface UseStudentFeatureParams {
   search: string;
@@ -194,5 +204,215 @@ export const useJoinedSubjects = () => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
+  });
+};
+
+// Hook for fetching a single joined subject by ID
+export const useJoinedSubjectById = (id: number | null) => {
+  return useQuery<JoinedSubject | null, Error>({
+    queryKey: ['joinedSubject', id],
+    queryFn: () => id ? getJoinedSubjectById(id) : null,
+    enabled: !!id,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
+};
+
+// Hook for fetching subject checkpoints/todo list
+export const useSubjectCheckpoints = (joinedSubjectId: number | null) => {
+  return useQuery<SubjectCheckpoint[], Error>({
+    queryKey: ['subjectCheckpoints', joinedSubjectId],
+    queryFn: async () => {
+      if (!joinedSubjectId) return [];
+      const data = await getSubjectCheckpoints(joinedSubjectId);
+      return data;
+    },
+    enabled: !!joinedSubjectId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 1, // Only retry once on failure
+    retryDelay: 1000, // Wait 1 second before retry
+  });
+};
+
+// Hook for fetching checkpoint details
+export const useCheckpointDetail = (checkpointId: number | null) => {
+  return useQuery<SubjectCheckpointDetail | null, Error>({
+    queryKey: ['checkpointDetail', checkpointId],
+    queryFn: async () => {
+      if (!checkpointId) return null;
+      const data = await getCheckpointDetail(checkpointId);
+      return data;
+    },
+    enabled: !!checkpointId,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 1,
+    retryDelay: 1000,
+  });
+};
+
+// Hook for updating checkpoint
+export const useUpdateCheckpoint = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<SubjectCheckpointDetail, Error, { checkpointId: number; data: {
+    title: string;
+    content: string;
+    note: string;
+    link1: string;
+    link2: string;
+    link3: string;
+    link4: string;
+    link5: string;
+    deadline: string;
+  } }>({
+    mutationFn: ({ checkpointId, data }) => updateCheckpoint(checkpointId, data),
+    onSuccess: (updatedCheckpoint, variables) => {
+      // Invalidate and refetch checkpoint detail
+      queryClient.invalidateQueries({ queryKey: ['checkpointDetail', variables.checkpointId] });
+      
+      // Invalidate checkpoints list to refresh the main list
+      queryClient.invalidateQueries({ queryKey: ['subjectCheckpoints'] });
+      
+      console.log('Checkpoint updated successfully:', updatedCheckpoint);
+    },
+    onError: (error) => {
+      console.error('Failed to update checkpoint:', error);
+    },
+  });
+};
+
+// Hook for deleting checkpoint
+export const useDeleteCheckpoint = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<boolean, Error, number>({
+    mutationFn: (checkpointId: number) => deleteCheckpoint(checkpointId),
+    onSuccess: (success, checkpointId) => {
+      if (success) {
+        // Invalidate checkpoints list to refresh the main list
+        queryClient.invalidateQueries({ queryKey: ['subjectCheckpoints'] });
+        
+        // Remove checkpoint detail from cache if it exists
+        queryClient.removeQueries({ queryKey: ['checkpointDetail', checkpointId] });
+        
+        console.log('Checkpoint deleted successfully');
+      }
+    },
+    onError: (error) => {
+      console.error('Failed to delete checkpoint:', error);
+    },
+  });
+};
+
+// Hook for completing checkpoint
+export const useCompleteCheckpoint = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<boolean, Error, number>({
+    mutationFn: (checkpointId: number) => completeCheckpoint(checkpointId),
+    onSuccess: (success, checkpointId) => {
+      if (success) {
+        // Invalidate checkpoints list to refresh the main list
+        queryClient.invalidateQueries({ queryKey: ['subjectCheckpoints'] });
+        
+        // Invalidate checkpoint detail if it exists
+        queryClient.invalidateQueries({ queryKey: ['checkpointDetail', checkpointId] });
+        
+        console.log('Checkpoint completed successfully');
+      }
+    },
+    onError: (error) => {
+      console.error('Failed to complete checkpoint:', error);
+    },
+  });
+};
+
+// Hook for AI generating checkpoints
+export const useGenerateCheckpoints = () => {
+  return useMutation<any[], Error, { joinedSubjectId: number; studentMessage: string }>({
+    mutationFn: ({ joinedSubjectId, studentMessage }) => generateCheckpoints(joinedSubjectId, studentMessage),
+    onSuccess: (data) => {
+      console.log('Checkpoints generated successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Failed to generate checkpoints:', error);
+    },
+  });
+};
+
+// Hook for bulk saving checkpoints
+export const useBulkSaveCheckpoints = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<boolean, Error, { joinedSubjectId: number; checkpoints: any[]; doReplaceAll: boolean }>({
+    mutationFn: ({ joinedSubjectId, checkpoints, doReplaceAll }) => bulkSaveCheckpoints(joinedSubjectId, checkpoints, doReplaceAll),
+    onSuccess: (success, variables) => {
+      if (success) {
+        // Invalidate checkpoints list to refresh the main list
+        queryClient.invalidateQueries({ queryKey: ['subjectCheckpoints'] });
+        
+        console.log('Checkpoints saved successfully');
+      }
+    },
+    onError: (error) => {
+      console.error('Failed to save checkpoints:', error);
+    },
+  });
+};
+
+// Hook for creating single checkpoint
+export const useCreateCheckpoint = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<SubjectCheckpointDetail, Error, { joinedSubjectId: number; data: {
+    title: string;
+    content: string;
+    note: string;
+    link1: string;
+    link2: string;
+    link3: string;
+    link4: string;
+    link5: string;
+    deadline: string;
+  } }>({
+    mutationFn: ({ joinedSubjectId, data }) => createCheckpoint(joinedSubjectId, data),
+    onSuccess: (newCheckpoint, variables) => {
+      // Invalidate checkpoints list to refresh the main list
+      queryClient.invalidateQueries({ queryKey: ['subjectCheckpoints'] });
+      
+      console.log('Checkpoint created successfully:', newCheckpoint);
+    },
+    onError: (error) => {
+      console.error('Failed to create checkpoint:', error);
+    },
+  });
+};
+
+// Hook for fetching upcoming checkpoints/todos
+export const useUpcomingCheckpoints = () => {
+  return useQuery<SubjectCheckpoint[], Error>({
+    queryKey: ['upcomingCheckpoints'],
+    queryFn: async () => {
+      const data = await getUpcomingCheckpoints();
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 1, // Only retry once on failure
+    retryDelay: 1000, // Wait 1 second before retry
   });
 };
