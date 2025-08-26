@@ -27,7 +27,7 @@ This repository contains the **client-side application**—developed with modern
 - **Testing:** Jest
 - **CI/CD:** GitHub Actions (for automated testing and deployments)
 - **Containerization/Deployment:** Docker deployment with DigitalOcean Server Hosting
-- **AI Integration:** Gemini AI, Google Agent Dev Kit (as part of the backend)
+- **AI Integration:** GPT o4 AI model (as part of the backend).
 
 ---
 
@@ -81,7 +81,7 @@ npm start
 yarn start
 ```
 
-The app will be available at [http://localhost:3000](http://localhost:3000).
+The app will be available at [http://localhost:5173](http://localhost:5173).
 
 ---
 
