@@ -3,11 +3,33 @@
   top: 0;
   left: 0;
   width: 100%;
-  background: rgba(255, 255, 255, 0.7); /* Less transparent glass */
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background: rgba(30, 64, 175, 0.75); /* blue tint with transparency */
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   z-index: 1000;
+  overflow: visible; /* allow dropdowns to escape */
+  isolation: isolate; /* keep backdrop/filter layering scoped */
+}
+
+/* Liquid glass layers */
+.navBar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  box-shadow: inset 2px 2px 0px -2px rgba(255, 255, 255, 0.7), inset 0 0 3px 1px rgba(255, 255, 255, 0.6);
+  background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%);
+}
+
+.navBar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  backdrop-filter: blur(10px) saturate(180%);
 }
 
 .header {
@@ -42,7 +64,7 @@
 }
 
 .navItem {
-  color: rgb(0, 0, 0);
+  color: #ffffff;
   font-family: 'Inter', sans-serif;
   font-size: 1rem;
   font-weight: 600;
@@ -77,7 +99,7 @@
 .navItem:hover {
   background:  rgba(255, 145, 77, 0.15);
   transform: scale(1.05);
-  color: #0f172a;
+  color: #ffffff;
 }
 
 .navItem.active {
@@ -92,9 +114,9 @@
   font-weight: 600;
   padding: 4px 12px;
   border-radius: 16px;
-  border: 2px solid #1e40af;
+  border: 2px solid #fa8c16;
   background-color: rgba(250, 140, 22, 0.1);
-  color: #1e40af;
+  color: #fa8c16;
   margin-left: 16px;
   margin-right: 24px;
   box-shadow: 0 2px 4px rgba(250, 140, 22, 0.2);
@@ -110,7 +132,7 @@
 .profileText {
   font-weight: 600;
   font-size: 16px;
-  color: black;
+  color: #ffffff;
   padding: 0;
   margin: 0;
   letter-spacing: 0.5px;
@@ -119,7 +141,7 @@
 }
 
 /* Notification container wrapper if needed */
-.notificationContainer { display: flex; align-items: center; }
+.notificationContainer { display: flex; align-items: center; position: relative; z-index: 1; }
 
 .toggleButton {
   display: none; /* Hidden on desktop */

@@ -231,7 +231,7 @@ const SubjectPage: React.FC = () => {
     },
     { title: 'Credits', dataIndex: 'credits', key: 'credits', align: 'center' as 'center', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
     {
-      title: <span style={{ display: 'block', textAlign: 'center' }}>APPROVAL STATUS</span>,
+      title: <span style={{ display: 'block', textAlign: 'center' }}>Approval Status</span>,
       key: 'approvalStatus',
       align: 'center' as 'center',
       render: (_: any, record: any) => (
@@ -239,7 +239,7 @@ const SubjectPage: React.FC = () => {
       ),
     },
     {
-      title: <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: 0.5, color: '#1E40AF', display: 'block', textAlign: 'center' }}>APPROVAL DETAILS</span>,
+      title: <span style={{letterSpacing: 0.5, color: 'white', display: 'block', textAlign: 'center' }}>Approval Detals</span>,
       key: 'approvalDetails',
       align: 'center' as 'center',
       render: (_: any, record: any) => renderApprovalDetails(record),
