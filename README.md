@@ -1,125 +1,109 @@
-# AISEA Front-End: AI-Based Academic Advisor for SE Students at FPT University
+# AISEA Front-End
 
-Welcome to the **AISEA Front-End** repository—a modern, responsive web application built for the [AISEA project](https://github.com/FU-CAPSTONE-SU2025), supporting Software Engineering (SE) students at FPT University with AI-powered academic advising.
-
----
-
-## 🚀 Project Overview
-
-**AISEA** (AI-based Academic Advisor for SE students at FPT University) is a smart, interactive platform that helps SE students:
-- Personalize their learning paths
-- Optimize course selections and combos
-- Track progress and GPA
-- Receive tailored advice using AI
-
-This repository contains the **client-side application**—developed with modern web technologies—to deliver a seamless, intuitive user experience.
+Welcome to the Front-End repository of the AISEA project—an AI-based Academic Advisor for Software Engineering (SE) students at FPT University. Also known as AI-SEA.
 
 ---
 
-## 🛠️ Tech Stack
+## 📁 Project Structure
 
-- **Framework:** React (with TypeScript) <!-- or Angular, update as needed -->
-- **Languages:** TypeScript, JavaScript, HTML5, CSS3
-- **State Management:** Zustand 
-- **Styling:** CSS Modules, SCSS, or Antd and Tailwind
-- **API Integration:** Axios (RESTful API communication)
-- **Authentication:** JWT-based (with support for role-based access)
-- **Testing:** Jest
-- **CI/CD:** GitHub Actions (for automated testing and deployments)
-- **Containerization/Deployment:** Docker deployment with DigitalOcean Server Hosting
-- **AI Integration:** GPT o4 AI model (as part of the backend).
+The main folders and files are organized as follows:
+
+```
+├── .github/            # GitHub workflows and issue templates
+├── data/               # Mockup Data for development testing or and configuration files for import and structure
+├── public/             # Static assets (images, favicon, etc.)
+├── src/                # Source code for the application
+│   ├── api/            # API integration logic
+│   ├── assets/         # Local images, icons, etc.
+│   ├── components/     # React components (UI & features)
+│   ├── config/         # App configuration files
+│   ├── contexts/       # React context providers
+│   ├── css/            # Custom CSS styles
+│   ├── datas/          # Data structures, mock data, etc.
+│   ├── hooks/          # Custom React hooks
+│   ├── interfaces/     # TypeScript interfaces and types
+│   ├── pages/          # Page-level React components
+│   ├── router/         # Routing configuration
+│   ├── utils/          # Utility functions
+│   ├── App.css         # Global App CSS
+│   ├── App.tsx         # Main App component
+│   ├── index.css       # Global styles
+│   ├── main.tsx        # Entry point
+│   ├── vite-env.d.ts   # Vite environment definitions
+├── .dockerignore
+├── .gitignore
+├── Dockerfile          # Docker file to build the project into a Docker image
+├── eslint.config.js
+├── index.html
+├── nginx.conf          # Nginx configuration to run inside Docker, serving SPA web
+├── package-lock.json
+├── package.json
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+├── vercel.json
+├── vite.config.ts
+└── README.md
+```
 
 ---
 
-## ✨ Key Features
+## 🚀 Installation Guide
 
-- **Interactive Dashboard:** See your academic progress, goals, and deadlines at a glance.
-- **AI-Powered Combo Selection:** Get personalized suggestions for specialization combos (e.g., AI, Web, IoT) based on your interests and transcript.
-- **Smart Semester Planning:** Receive balanced course recommendations tailored to graduation and GPA targets.
-- **Course-Specific Study Tips:** Access AI-generated learning strategies for each subject using integrated syllabus data.
-- **GPA Calculator & Tracker:** Visualize your academic standings and simulate outcomes.
-- **Data Integration:** Securely import data from FPTU Academic Portal and Learning Material System.
-- **Role-Based Access:** Distinct interfaces for Students, Advisors, Academic Staff, Managers, and Admins.
-- **Responsive Design:** Optimized for desktop and mobile devices.
-
----
-
-## 👥 User Roles
-
-| Role           | Description                                                      |
-|----------------|------------------------------------------------------------------|
-| **Student**    | Personalized support, planning, and actionable advice.           |
-| **Advisor**    | Academic guidance with AI-driven suggestions.                    |
-| **Academic Staff** | Data management and support.                                 |
-| **Manager**    | Programs oversight and analytics.                                 |
-| **Admin**      | Account management and system configuration.                     |
-
----
-
-## 📦 Getting Started
-
-### 1. Clone the Repository
+### Local Installation (Development)
 
 ```bash
 git clone https://github.com/FU-CAPSTONE-SU2025/Front-end.git
 cd Front-end
-```
-
-### 2. Install Dependencies
-
-```bash
 npm install
-# or
-yarn install
-```
-
-### 3. Run the Application
-
-```bash
 npm start
-# or
-yarn start
 ```
-
-The app will be available at [http://localhost:5173](http://localhost:5173).
+Open your browser and go to [http://localhost:5173](http://localhost:5173)
 
 ---
 
-## 🔗 Environment Configuration
+### Docker Installation (Production or Testing)
 
-- Set up environment variables in `.env` for API endpoints, authentication, and third-party integrations.
-- Ensure connection to the AISEA backend API for full functionality.
-
----
-
-## 🧩 Project Structure
-
-```
-/src
-  /components
-  /pages
-  /services
-  /store
-  /assets
-  /utils
-  App.tsx
-  index.tsx
-```
+1. Clone this repository:
+    ```bash
+    git clone https://github.com/FU-CAPSTONE-SU2025/Front-end.git
+    cd Front-end
+    ```
+2. Ensure Docker CLI is installed. Open a terminal in the project folder.
+3. Build the Docker image:
+    ```bash
+    docker build -t aisea -f ./Dockerfile .
+    ```
+4. Run the container:
+    ```bash
+    docker run -p 5173:80 -td aisea
+    ```
+5. Visit [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## 📄 Documentation & Deliverables
+## ✨ Features
 
-- User Requirements, SRS, System Design, and API docs are available in the `/docs` directory or [project wiki](https://drive.google.com/drive/u/1/folders/1Z9PZd7Un842QkpQYVt6cMeUGcW2ZJDjd).
-- For backend/API details, see [AISEA-Back-End](https://github.com/FU-CAPSTONE-SU2025/Back-end).
+- Modern React UI with TypeScript
+- Modular code structure for maintainability
+- Role-based access: Students, Advisors, Academic Staff, Managers, Admins
+- Data import and configuration support
+- Ready for CI/CD and cloud deployment (DigitalOcean, Vercel, Docker)
+- Production-ready Nginx setup via `nginx.conf`
 
+---
+
+## 📝 Documentation
+
+- Full documentation, requirements, and design details are available in the `/docs` folder or the project wiki.
+- For backend/API details, see [AISEA Back-End](https://github.com/FU-CAPSTONE-SU2025/Back-end).
 
 ---
 
 ## 📧 Contact
 
-For questions or support, open an issue or contact the development team at [blazehendrix007@gmail.com].
+For questions, support, or contributions, please open an issue or contact the project maintainers.
 
 ---
 
-**AISEA Front-End** — Empowering SE students at FPT University with smart academic guidance.
+**Empowering SE students at FPT University with smart academic guidance.**
