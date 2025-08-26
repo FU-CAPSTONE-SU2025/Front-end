@@ -28,13 +28,13 @@ const Header: React.FC = () => {
   };
 
   const handleDropdownClick = (path: string) => {
-    // Navigate immediately and reload the page
-    window.location.href = path;
+    // Use navigate instead of window.location.href for better SPA navigation
+    navigate(path);
   };
 
   const handleLogout = async () => {
     await logout();
-    window.location.href = '/';
+    navigate('/');
   };
 
   const isActiveRoute = (path: string) => {
@@ -46,17 +46,17 @@ const Header: React.FC = () => {
     visible: (i: number) => ({
       opacity: 1,
       x: 0,
-      transition: { delay: i * 0.15, duration: 0.3, ease: 'easeOut' },
+      transition: { delay: i * 0.15, duration: 0.3, ease: "easeOut" as const },
     }),
   };
 
   const mobileMenuVariants = {
     hidden: { opacity: 0, x: -100 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
     exit: { opacity: 0, x: -100, transition: { duration: 0.3 } },
   };
 
-  // Dropdown menu for avatar (updated to English and optimized navigation)
+  // Dropdown menu for avatar (updated to use navigate instead of window.location.href)
   const avatarMenuItems = [
     {
       key: 'my-meeting',

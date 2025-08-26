@@ -12,13 +12,14 @@ const CourseList: React.FC<CourseListProps> = ({ subjects }) => (
     {subjects.map((subject, index) => (
       <motion.div
         key={subject.id}
-        className="transform transition-all duration-300 hover:scale-105"
+        className="transform transition-all duration-300"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.1, duration: 0.3 }}
         whileHover={{ scale: 1.02 }}
       >
         <SubjectCard
+          id={subject.id}
           code={subject.subjectCode}
           name={subject.name}
           progress={subject.isCompleted ? 100 : subject.isPassed ? 80 : 30}

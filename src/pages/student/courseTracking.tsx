@@ -4,6 +4,7 @@ import SubjectCard from '../../components/student/subjectCard';
 import CommitChart from '../../components/student/commitChart';
 import ImportantExams from '../../components/student/importantExams';
 import SemesterSelect from '../../components/student/selectSemester';
+import UpcomingTodosTimeline from '../../components/student/upcomingTodosTimeline';
 import { useJoinedSubjects } from '../../hooks/useStudentFeature';
 import { JoinedSubject, SemesterSubjects } from '../../interfaces/IStudent';
 import { groupSubjectsBySemester, getSemesterOptions } from '../../utils/subjectUtils';
@@ -199,21 +200,7 @@ const CourseTracking = () => {
           </motion.div>
 
           {/* Important Exams Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mb-16"
-          >
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-white mb-2">Important Exams</h2>
-              <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-blue-400 mx-auto rounded-full"></div>
-            </div>
-            
-            <div className="max-w-6xl mx-auto">
-              <ImportantExams exams={importantExams} />
-            </div>
-          </motion.div>
+  
         </div>
       </div>
     );
@@ -274,6 +261,7 @@ const CourseTracking = () => {
                   className="w-full"
                 >
                   <SubjectCard
+                    id={subject.id}
                     code={subject.subjectCode}
                     name={subject.name}
                     progress={subject.isCompleted ? 100 : subject.isPassed ? 80 : 30}
@@ -311,22 +299,18 @@ const CourseTracking = () => {
           </div>
         </motion.div>
 
-        {/* Important Exams Section */}
+        {/* Upcoming Todos Timeline Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
           className="mb-16"
         >
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2">Important Exams</h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-blue-400 mx-auto rounded-full"></div>
-          </div>
-          
-          <div className="max-w-6xl mx-auto">
-            <ImportantExams exams={importantExams} />
+          <div className="max-w-4xl mx-auto">
+            <UpcomingTodosTimeline />
           </div>
         </motion.div>
+
       </div>
     </div>
   );

@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Progress, Button, InputNumber, Tag } from 'antd';
-import { CalculatorOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { CalculatorOutlined, InfoCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { useParams, useNavigate } from 'react-router';
 import CourseTimeline from '../../components/student/courseTimeline';
 import GradeCalculator from '../../components/student/gradeCalculator';
+import TodoList from '../../components/student/todoList';
+import { useJoinedSubjectById, useSubjectCheckpoints } from '../../hooks/useStudentFeature';
+import { JoinedSubject } from '../../interfaces/IStudent';
 
 interface Grade {
   name: string;
@@ -13,60 +17,84 @@ interface Grade {
   isSuggested?: boolean;
 }
 
-// Mock data - In a real app, you'd fetch this based on subjectCode
-const subjectData = {
-  PRN212: {
-    code: 'PRN212',
-    name: 'Basic Cross-Platform Application Programming With .NET',
-    timeline: [
-        { date: 'June 9, 2024', type: 'Assignment 1', description: 'Create a Winform login and logout' },
-        { date: 'June 9, 2024', type: 'Assignment 2', description: 'Work with database and LINQ' },
-        { date: 'June 9, 2024', type: 'Lab 1', description: 'Build a simple calculator' },
-        { date: 'June 9, 2024', type: 'Lab 2', description: 'Implement data validation' },
-        { date: 'June 9, 2024', type: 'Assignment 3', description: 'Develop a small management app' },
-        { date: 'June 9, 2024', type: 'Practical Exam', description: 'Practical examination of all concepts' },
-        { date: 'June 9, 2024', type: 'Final Exam', description: 'Final written and practical exam' },
-      ],
-      grades: [
-        { name: 'Assignment 1', score: 10, weight: 10 },
-        { name: 'Assignment 2', score: 9, weight: 10 },
-        { name: 'Assignment 3', score: null, weight: 10, isEditable: true },
-        { name: 'Assignment 4', score: null, weight: 10, isEditable: true },
-        { name: 'Lab 1', score: 10, weight: 5 },
-        { name: 'Lab 2', score: 9, weight: 5 },
-        { name: 'Lab 3', score: null, weight: 5, isEditable: true },
-        { name: 'Practical Exam', score: null, weight: 20, isEditable: true },
-        { name: 'Final Exam', score: null, weight: 30, isEditable: true },
-      ],
-      progress: {
-        completed: 20,
-        total: 24,
-        absentPercentage: 10,
-        absentCount: 2,
-        totalSessions: 20,
-      }
-  },
-  // Add other subjects here
-};
+// Mock data for grades - In a real app, you'd fetch this based on subjectId
+const getMockGradeData = (subjectCode: string) => ({
+  grades: [
+    { name: 'Assignment 1', score: 10, weight: 10 },
+    { name: 'Assignment 2', score: 9, weight: 10 },
+    { name: 'Assignment 3', score: null, weight: 10, isEditable: true },
+    { name: 'Assignment 4', score: null, weight: 10, isEditable: true },
+    { name: 'Lab 1', score: 10, weight: 5 },
+    { name: 'Lab 2', score: 9, weight: 5 },
+    { name: 'Lab 3', score: null, weight: 5, isEditable: true },
+    { name: 'Practical Exam', score: null, weight: 20, isEditable: true },
+    { name: 'Final Exam', score: null, weight: 30, isEditable: true },
+  ],
+  progress: {
+    completed: 20,
+    total: 24,
+    absentPercentage: 10,
+    absentCount: 2,
+    totalSessions: 20,
+  }
+});
 
 const SubjectDetails = () => {
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const [grades, setGrades] = useState<Grade[]>([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
 
-    // const { subjectCode } = useParams<{ subjectCode: string }>();
-    // const details = subjectData[subjectCode as keyof typeof subjectData];
+    // Parse ID once and memoize it
+    const parsedId = useMemo(() => id ? parseInt(id) : null, [id]);
 
-    // Using mock data directly for now
-    const details = subjectData.PRN212;
+    // Fetch subject data by ID
+    const { data: subject, isLoading: subjectLoading, error: subjectError } = useJoinedSubjectById(parsedId);
+
+    // Use joinedSubjectId (which is the subject.id) for fetching checkpoints
+    const joinedSubjectId = useMemo(() => subject?.id || null, [subject?.id]);
+
+    // Fetch subject checkpoints/todo list
+    const { data: checkpoints, isLoading: checkpointsLoading, error: checkpointsError } = useSubjectCheckpoints(joinedSubjectId);
+
+    // Memoize mock data to prevent recreation on every render
+    const mockData = useMemo(() => 
+        subject ? getMockGradeData(subject.subjectCode) : null, 
+        [subject?.subjectCode]
+    );
 
     useEffect(() => {
-        if (details) {
-            setGrades(details.grades);
+        if (mockData) {
+            setGrades(mockData.grades);
         }
-    }, [details]);
+    }, [mockData]);
 
-    if (!details) {
-        return <div className="text-white text-center pt-40">Subject not found.</div>;
+    const handleGoBack = () => {
+        navigate(-1);
+    };
+
+    if (subjectLoading) {
+        return (
+            <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden flex items-center justify-center">
+                <div className="text-white text-xl">Loading subject details...</div>
+            </div>
+        );
+    }
+
+    if (subjectError) {
+        return (
+            <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden flex items-center justify-center">
+                <div className="text-red-400 text-xl">Error loading subject: {subjectError.message}</div>
+            </div>
+        );
+    }
+
+    if (!subject) {
+        return (
+            <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden flex items-center justify-center">
+                <div className="text-white text-xl">Subject not found.</div>
+            </div>
+        );
     }
 
     const calculateCurrentScore = (gradeList: Grade[]) => {
@@ -91,31 +119,74 @@ const SubjectDetails = () => {
     };
 
     const currentScore = calculateCurrentScore(grades);
-    const attendancePercentage = (details.progress.completed / details.progress.total) * 100;
+    const attendancePercentage = mockData ? (mockData.progress.completed / mockData.progress.total) * 100 : 0;
+
+    // Calculate progress based on subject status
+    const getProgressPercentage = () => {
+        if (subject.isCompleted) return 100;
+        if (subject.isPassed) return 80;
+        return 30;
+    };
 
     return (
         <div className="pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-white">
-            {/* Header */}
+            {/* Header with Back Button */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
                 className="mb-8"
             >
-                <h1 className="text-4xl md:text-5xl font-bold">{details.code}</h1>
-                <p className="text-lg text-gray-300">{details.name}</p>
+                {/* Back Button */}
+                <div className="mb-6">
+                    <Button
+                        type="text"
+                        icon={<ArrowLeftOutlined />}
+                        onClick={handleGoBack}
+                        className="!text-white !border-white/30 !bg-white/10 hover:!bg-white/20 !h-10 !px-4 !flex !items-center !gap-2 !backdrop-blur-md"
+                        size="large"
+                    >
+                        Back
+                    </Button>
+                </div>
+
+                <h1 className="text-4xl md:text-5xl font-bold">{subject.subjectCode}</h1>
+                <p className="text-lg text-gray-300">{subject.name}</p>
+                
+                {/* Subject Status and Info */}
+                <div className="mt-4 flex flex-wrap gap-4">
+                    <Tag color={subject.isCompleted ? "green" : subject.isPassed ? "blue" : "orange"} className="text-base">
+                        {subject.isCompleted ? "Completed" : subject.isPassed ? "Passed" : "In Progress"}
+                    </Tag>
+                    <Tag color="cyan" className="text-base">{subject.credits} Credits</Tag>
+                    <Tag color="purple" className="text-base">Version {subject.subjectVersionCode}</Tag>
+                    {subject.semesterName && (
+                        <Tag color="geekblue" className="text-base">{subject.semesterName}</Tag>
+                    )}
+                    {subject.githubRepositoryURL && (
+                        <Tag color="green" className="text-base">
+                            <a href={subject.githubRepositoryURL} target="_blank" rel="noopener noreferrer" className="text-white">
+                                GitHub Repository
+                            </a>
+                        </Tag>
+                    )}
+                </div>
             </motion.div>
 
             {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Timeline */}
+                {/* Left Column: Todo List */}
                 <motion.div 
                     className="lg:col-span-2"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
                 >
-                    <CourseTimeline initialTimeline={details.timeline} />
+                    <TodoList 
+                        checkpoints={checkpoints || []} 
+                        isLoading={checkpointsLoading}
+                        joinedSubjectId={joinedSubjectId}
+                    />
                 </motion.div>
 
                 {/* Right Column: Grades & Progress */}
@@ -154,15 +225,15 @@ const SubjectDetails = () => {
                         <div className="flex justify-center items-center gap-6 mb-6">
                             <Progress 
                                 type="dashboard" 
-                                percent={attendancePercentage} 
-                                format={() => <span className="text-white text-3xl font-bold">{`${details.progress.completed}/${details.progress.total}`}</span>}
+                                percent={getProgressPercentage()} 
+                                format={() => <span className="text-white text-3xl font-bold">{getProgressPercentage()}%</span>}
                                 strokeColor={{ '0%': '#108ee9', '100%': '#87d068' }}
                                 trailColor="rgba(255,255,255,0.1)"
                                 width={140}
                             />
                         </div>
                         <p className="text-center text-gray-300 mb-6">
-                            {details.progress.absentPercentage}% absent so far ({details.progress.absentCount} absent on {details.progress.totalSessions} total)
+                            {mockData ? `${mockData.progress.absentPercentage}% absent so far (${mockData.progress.absentCount} absent on ${mockData.progress.totalSessions} total)` : 'No attendance data available'}
                         </p>
                         
                         <h3 className="font-semibold mb-4">Grade Details</h3>

@@ -254,3 +254,22 @@ export interface JoinedSubject {
 export interface SemesterSubjects {
   [semesterId: number]: JoinedSubject[];
 }
+
+// Interface for subject checkpoint/todo list
+export interface SubjectCheckpoint {
+  id: number;
+  title: string;
+  isCompleted: boolean;
+  deadline: string;
+}
+
+// Interface for detailed subject checkpoint
+export interface SubjectCheckpointDetail extends SubjectCheckpoint {
+  content: string;
+  note: string;
+  link1: string | null;
+  link2: string | null;
+  link3: string | null;
+  link4: string | null;
+  link5: string | null;
+}

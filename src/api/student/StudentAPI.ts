@@ -12,7 +12,9 @@ import {
     PagedAdvisorData,
     PagedLeaveScheduleData,
     BookingAvailabilityData,
-    JoinedSubject
+    JoinedSubject,
+    SubjectCheckpoint,
+    SubjectCheckpointDetail
 } from "../../interfaces/IStudent";
 import { ChatSessionRequest, ChatSessionResponse } from "../../interfaces/IChat";
 
@@ -417,6 +419,218 @@ export const getJoinedSubjects = async (): Promise<JoinedSubject[]> => {
   } else {
     throwApiError(result);
     return null as never;
+  }
+};
+
+// Get joined subject by ID
+export const getJoinedSubjectById = async (id: number): Promise<JoinedSubject> => {
+  const props = {
+    data: null,
+    url: baseUrl + `/JoinedSubject/${id}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    console.log("Joined subject data:", result.data);
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+// Get subject checkpoints/todo list for joined subject
+export const getSubjectCheckpoints = async (joinedSubjectId: number): Promise<SubjectCheckpoint[]> => {
+  const props = {
+    data: null,
+    url: baseUrl + `/JoinedSubjectCheckPoint/joinedSubject/${joinedSubjectId}`,
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosRead(props);
+  
+  if (result.success) {
+    console.log("Subject checkpoints data:", result.data);
+    // Ensure we always return an array
+    return Array.isArray(result.data) ? result.data : [];
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+// Get detailed checkpoint information by ID
+export const getCheckpointDetail = async (checkpointId: number): Promise<SubjectCheckpointDetail> => {
+  const props = {
+    data: null,
+    url: baseUrl + `/JoinedSubjectCheckPoint/${checkpointId}`,
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosRead(props);
+  
+  if (result.success) {
+    console.log("Checkpoint detail data:", result.data);
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+// Update checkpoint
+export const updateCheckpoint = async (checkpointId: number, data: {
+  title: string;
+  content: string;
+  note: string;
+  link1: string;
+  link2: string;
+  link3: string;
+  link4: string;
+  link5: string;
+  deadline: string;
+}): Promise<SubjectCheckpointDetail> => {
+  const props = {
+    data: data,
+    url: baseUrl + `/JoinedSubjectCheckPoint/${checkpointId}`,
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosUpdate(props);
+  
+  if (result.success) {
+    console.log("Checkpoint updated:", result.data);
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+// Delete checkpoint
+export const deleteCheckpoint = async (checkpointId: number): Promise<boolean> => {
+  const props = {
+    data: null,
+    url: baseUrl + `/JoinedSubjectCheckPoint/${checkpointId}`,
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosDelete(props);
+  
+  if (result.success) {
+    console.log("Checkpoint deleted successfully");
+    return true;
+  } else {
+    throwApiError(result);
+    return false;
+  }
+};
+
+// Complete checkpoint
+export const completeCheckpoint = async (checkpointId: number): Promise<boolean> => {
+  const props = {
+    data: null,
+    url: baseUrl + `/JoinedSubjectCheckPoint/complete/${checkpointId}`,
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosUpdate(props);
+  
+  if (result.success) {
+    console.log("Checkpoint completed successfully");
+    return true;
+  } else {
+    throwApiError(result);
+    return false;
+  }
+};
+
+// AI Generate checkpoints
+export const generateCheckpoints = async (joinedSubjectId: number, studentMessage: string): Promise<any[]> => {
+  const props = {
+    data: { studentMessage },
+    url: baseUrl + `/JoinedSubjectCheckPoint/gen/${joinedSubjectId}`,
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosRead(props);
+  
+  if (result.success) {
+    console.log("Generated checkpoints:", result.data);
+    return result.data;
+  } else {
+    throwApiError(result);
+    return [];
+  }
+};
+
+// Create single checkpoint
+export const createCheckpoint = async (joinedSubjectId: number, data: {
+  title: string;
+  content: string;
+  note: string;
+  link1: string;
+  link2: string;
+  link3: string;
+  link4: string;
+  link5: string;
+  deadline: string;
+}): Promise<SubjectCheckpointDetail> => {
+  const props = {
+    data: data,
+    url: baseUrl + `/JoinedSubjectCheckPoint/${joinedSubjectId}`,
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosCreate(props);
+  
+  if (result.success) {
+    console.log("Checkpoint created successfully:", result.data);
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+// Bulk save checkpoints
+export const bulkSaveCheckpoints = async (joinedSubjectId: number, checkpoints: any[], doReplaceAll: boolean = false): Promise<boolean> => {
+  const params = new URLSearchParams({
+    doReplaceAll: doReplaceAll.toString()
+  });
+  
+  const props = {
+    data: checkpoints,
+    url: baseUrl + `/JoinedSubjectCheckPoint/bulk/${joinedSubjectId}?` + params.toString(),
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosCreate(props);
+  
+  if (result.success) {
+    console.log("Checkpoints saved successfully");
+    return true;
+  } else {
+    throwApiError(result);
+    return false;
+  }
+};
+
+// Get upcoming checkpoints/todos
+export const getUpcomingCheckpoints = async (): Promise<SubjectCheckpoint[]> => {
+  const props = {
+    data: null,
+    url: baseUrl + `/JoinedSubjectCheckPoint/upcoming`,
+    headers: GetHeader()
+  }
+  
+  const result = await axiosRead(props)
+  if (result.success) {
+    console.log("Upcoming checkpoints data:", result.data);
+    return result.data;
+  } else {
+    throwApiError(result);
+    return [] as never;
   }
 };
 

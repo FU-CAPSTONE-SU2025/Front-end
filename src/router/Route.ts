@@ -116,7 +116,7 @@ export const routes = createBrowserRouter([
         Component: CourseTracking,
       },
       {
-        path: 'course-tracking/:subjectCode',
+        path: 'subject-details/:id',
         Component: SubjectDetails,
       },
       {
