@@ -27,20 +27,36 @@ const GlobalChatBox: React.FC = () => {
   const isUnmountedRef = useRef(false);
   const isSendingRef = useRef(false);
   const lastSentMessageRef = useRef<string>('');
+  const sessionsRef = useRef<StudentSession[]>([]);
 
   const {
     connectionState,
     currentSession,
     messages,
     error,
-    advisorId,
     joinSession,
     sendMessage,
     loadInitialMessages,
     loadMoreMessages,
     setMessages,
     setError,
+    unassignedSessions,
+    sessions,
+    allAssignedSessions,
+    setCurrentSession,
   } = useAdvisorChatWithStudent();
+
+  const sendMessageRef = useRef<typeof sendMessage>(sendMessage);
+
+  // Update sendMessage ref when sendMessage changes
+  useEffect(() => {
+    sendMessageRef.current = sendMessage;
+  }, [sendMessage]);
+
+  // Update sessions ref when sessions change
+  useEffect(() => {
+    sessionsRef.current = [...unassignedSessions, ...sessions, ...allAssignedSessions];
+  }, [unassignedSessions, sessions, allAssignedSessions]);
 
   // Component lifecycle tracking
   useEffect(() => {
@@ -61,12 +77,21 @@ const GlobalChatBox: React.FC = () => {
     setSelectedStudent(student);
     setChatBoxOpen(true);
     
-    // Always join the session when opening chat box
-    if (student.id) {
+    // Find the current session to get session data using ref
+    const session = sessionsRef.current.find(s => s.id === sessionId);
+    if (session) {
+      setCurrentSession(session);
+    }
+    
+    // Only join if it's a different session
+    if (student.id && sessionId !== currentSessionId) {
       setCurrentSessionId(sessionId);
       joinSession(sessionId);
+    } else if (student.id && sessionId === currentSessionId && !currentSession) {
+      // Make sure session is joined
+      joinSession(sessionId);
     }
-  }, [joinSession]);
+  }, [joinSession, currentSessionId, currentSession, setCurrentSession]);
 
   // Setup event listener only once
   useEffect(() => {
@@ -142,27 +167,38 @@ const GlobalChatBox: React.FC = () => {
 
   const handleSendMessage = useCallback(async (msg?: string) => {
     const messageToSend = msg || messageInput.trim();
-    console.log('handleSendMessage called with messageToSend:', messageToSend);
-    console.log('currentSessionId:', currentSessionId);
-    console.log('currentSession:', currentSession);
     
     if (!messageToSend || isSendingRef.current) return;
+    if (!currentSessionId) {
+      message.warning('No session selected');
+      return;
+    }
     
     isSendingRef.current = true;
     setSendingMessage(true);
     
     try {
-      console.log('Attempting to send message via sendMessage function');
-      await sendMessage(messageToSend);
+      await sendMessageRef.current(messageToSend);
       setMessageInput('');
-    } catch (error) {
-      console.log('Send message failed with error:', error);
-      message.error('Failed to send message');
+    } catch (error: any) {
+      const errorMsg = typeof error?.message === 'string' ? error.message : '';
+      // If session not ready yet, attempt quick join then retry once
+      if (errorMsg.includes('No active session') || errorMsg.includes('Connection not available')) {
+        try {
+          await joinSession(currentSessionId);
+          await sendMessageRef.current(messageToSend);
+          setMessageInput('');
+        } catch (retryErr) {
+          message.error('Failed to send message');
+        }
+      } else {
+        message.error('Failed to send message');
+      }
     } finally {
       setSendingMessage(false);
       isSendingRef.current = false;
     }
-  }, [messageInput, sendMessage]);
+  }, [messageInput, currentSessionId, joinSession]);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
