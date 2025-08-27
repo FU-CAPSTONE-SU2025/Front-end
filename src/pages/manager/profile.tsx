@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Descriptions, Avatar, Button, ConfigProvider } from 'antd';
+import { Descriptions, Avatar, Button, ConfigProvider, Tooltip } from 'antd';
 import { LogOut, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffProfile.module.css';
@@ -135,7 +135,7 @@ const ManagerProfile: React.FC = () => {
   };
 
   return (
-    <ConfigProvider
+   <ConfigProvider
       theme={{
         components: {
           Descriptions: {
@@ -152,10 +152,10 @@ const ManagerProfile: React.FC = () => {
         animate="visible"
       >
         <div className={styles.cardWrapper}>
-          {/* Left Card: Personal Information */}
+          {/* Left Card: AccountProps */}
           <motion.div
             className={styles.card}
-            variants={leftCardVariants as any}
+            variants={leftCardVariants}
             initial="hidden"
             animate="visible"
          
@@ -170,20 +170,19 @@ const ManagerProfile: React.FC = () => {
               <Descriptions.Item label="First Name">{getDisplayValue(currentUserData?.firstName, "Not specified")}</Descriptions.Item>
               <Descriptions.Item label="Last Name">{getDisplayValue(currentUserData?.lastName, "Not specified")}</Descriptions.Item>
               <Descriptions.Item label="Date of Birth">{formatDate(currentUserData?.dateOfBirth)}</Descriptions.Item>
-              <Descriptions.Item label="Role">{getDisplayValue(currentUserData?.roleName, "Manager")}</Descriptions.Item>
+              <Descriptions.Item label="Role">{getDisplayValue(currentUserData?.roleName, "Academic Staff")}</Descriptions.Item>
             </Descriptions>
           </motion.div>
 
-          {/* Right Card: Management Details + Action Card */}
+          {/* Right Card: StaffBase + Action Card */}
           <div className={styles.rightColumn}>
             <motion.div
               className={styles.card}
-              variants={rightCardVariants as any}
+              variants={rightCardVariants}
               initial="hidden"
               animate="visible"
-          
             >
-              <h2 className={styles.title}>Management Details</h2>
+              <h2 className={styles.title}>Staff's Details</h2>
               <Descriptions column={1} bordered className={styles.description}>
                 <Descriptions.Item label="Department">{getDisplayValue(currentUserData?.staffDataDetailResponse?.department, "Not specified")}</Descriptions.Item>
                 <Descriptions.Item label="Position">{getDisplayValue(currentUserData?.staffDataDetailResponse?.position, "Not specified")}</Descriptions.Item>
@@ -196,16 +195,18 @@ const ManagerProfile: React.FC = () => {
             {/* Action Card */}
             <motion.div
               className={styles.actionCard}
-              variants={actionCardVariants as any}
+              variants={actionCardVariants}
               initial="hidden"
               animate="visible"
             >
-              <h2 className={styles.title}>Actions</h2>
               <div className={styles.actionButtons}>
-                <motion.div variants={buttonVariants} whileHover="hover">
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
                   <Button
                     type="primary"
-                    className={styles.actionButton}
+                    className={styles.logoutButton}
                     onClick={handleLogout}
                     icon={<LogOut size={16} />}
                     block
@@ -213,7 +214,11 @@ const ManagerProfile: React.FC = () => {
                     Logout
                   </Button>
                 </motion.div>
-                <motion.div variants={buttonVariants} whileHover="hover">
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Tooltip title="Contact support via email">
                   <Button
                     type="default"
                     className={styles.actionButton}
@@ -223,6 +228,7 @@ const ManagerProfile: React.FC = () => {
                   >
                     Contact Support
                   </Button>
+                  </Tooltip>
                 </motion.div>
               </div>
             </motion.div>

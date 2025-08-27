@@ -1,7 +1,6 @@
 .container {
-  width: calc(100%); /* Account for sidebar */
-  min-height: calc(100vh); /* Account for NavBar height */
-  display: flex;
+  width: calc(100%); 
+  min-height: calc(100vh-250px);
   flex-direction: column;
   align-items: center;
   z-index: 2; /* Below NavBar (z-index: 1000) */
@@ -19,10 +18,10 @@
   max-width: 1200px;
   margin: 0 auto;
   margin-top: 5%;
+  height: calc(100vh - 120px);
 }
 
 .card, .actionCard {
-  flex: 1;
   padding: 2.2rem 2.5rem 1.5rem 2.5rem;
   background: rgba(255, 255, 255, 0.90);
   border-radius: 24px;
@@ -42,7 +41,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 2rem;
 }
 
 .title {
@@ -115,6 +114,28 @@
 .actionButton:hover {
   background: linear-gradient(90deg, #f97316 0%, #1E40AF 100%);
   color: #fff;
+  box-shadow: 0 4px 18px rgba(30, 64, 175, 0.13);
+  border: 1.5px solid rgba(255,255,255,0.35);
+}
+
+.logoutButton{
+  background: rgba(255, 255, 255, 0.90);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  color: red !important;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 1rem 0;
+  box-shadow: 0 2px 10px rgba(30, 64, 175, 0.10);
+  transition: background 0.3s cubic-bezier(.4,1.4,.6,1), color 0.3s cubic-bezier(.4,1.4,.6,1), box-shadow 0.3s cubic-bezier(.4,1.4,.6,1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+}
+.logoutButton:hover {
+  background: red !important;
+  color: #ffffff !important;
   box-shadow: 0 4px 18px rgba(30, 64, 175, 0.13);
   border: 1.5px solid rgba(255,255,255,0.35);
 }
