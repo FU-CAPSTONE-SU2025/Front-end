@@ -33,7 +33,6 @@ const GlobalChatBox: React.FC = () => {
     currentSession,
     messages,
     error,
-    advisorId,
     joinSession,
     sendMessage,
     loadInitialMessages,
