@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Affix, Tag, message, Pagination, Spin, Empty, Modal, Space, Card, Typography, Row, Col } from 'antd';
+import { Table, Input, Button, Affix, Tag, message, Pagination, Spin, Empty, Modal, Space, Card, Typography, Row, Col, ConfigProvider } from 'antd';
 import { PlusOutlined,CheckOutlined, SearchOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
@@ -223,6 +223,23 @@ const ComboManagerPage: React.FC = () => {
   ];
 
   return (
+      <ConfigProvider
+    theme={{
+      components: {
+        Table: {
+          headerBg: '#1E40AF',
+          headerColor: '#fff',
+          borderColor: 'rgba(30, 64, 175, 0.08)',
+          colorText: '#1E293B',
+          colorBgContainer: 'rgba(255,255,255,0.95)',
+          colorBgElevated: 'rgba(255,255,255,0.95)',
+          rowHoverBg: 'rgba(249, 115, 22, 0.05)',
+          colorPrimary: '#f97316',
+          colorPrimaryHover: '#1E40AF',
+        },
+      },
+    }}
+  >
     <div className={styles.sttContainer}>
       {/* Title Card */}
       <Card 
@@ -253,7 +270,7 @@ const ComboManagerPage: React.FC = () => {
           className={glassStyles.appleGlassCard}
           style={{ 
             marginBottom: 24,
-            padding: '1.5rem 2rem',
+             padding: '0rem 2rem',
             background: 'rgba(255, 255, 255, 0.25)',
             backdropFilter: 'blur(30px) saturate(180%)',
             border: '1px solid rgba(255, 255, 255, 0.2)'
@@ -298,10 +315,6 @@ const ComboManagerPage: React.FC = () => {
           </Row>
         </Card>
       </Affix>
-
-      {/* Combo Table Container */}
-      <Card 
-      >
         <Spin spinning={getComboMutation.isPending} tip="Loading combos...">
           <Table
             columns={columns}
@@ -333,9 +346,6 @@ const ComboManagerPage: React.FC = () => {
             </div>
           )}
         </Spin>
-      </Card>
-      
-      {/* Import removed */}
 
       {/* Subject Management Modal */}
       <Modal
@@ -423,6 +433,7 @@ const ComboManagerPage: React.FC = () => {
         loading={isApproving}
       />
     </div>
+    </ConfigProvider>
   );
 };
 

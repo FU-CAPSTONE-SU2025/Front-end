@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Button, Modal, Form, Input, message, Affix, Table, Pagination, Tag, Spin, Card, Space, Row, Col, Typography, Empty, Select } from 'antd';
+import { Button, Modal, Form, Input, message, Affix, Table, Pagination, Tag, Spin, Card, Space, Row, Col, Typography, Empty, Select, ConfigProvider } from 'antd';
 import {SearchOutlined, BookOutlined, EyeOutlined, CheckOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
@@ -334,6 +334,23 @@ const CurriculumPageManager: React.FC = () => {
   const pagedData = curriculumList;
 
   return (
+     <ConfigProvider
+    theme={{
+      components: {
+        Table: {
+          headerBg: '#1E40AF',
+          headerColor: '#fff',
+          borderColor: 'rgba(30, 64, 175, 0.08)',
+          colorText: '#1E293B',
+          colorBgContainer: 'rgba(255,255,255,0.95)',
+          colorBgElevated: 'rgba(255,255,255,0.95)',
+          rowHoverBg: 'rgba(249, 115, 22, 0.05)',
+          colorPrimary: '#f97316',
+          colorPrimaryHover: '#1E40AF',
+        },
+      },
+    }}
+  >
     <div className={styles.sttContainer}>
       {/* Title Card */}
       <Card 
@@ -364,7 +381,7 @@ const CurriculumPageManager: React.FC = () => {
           className={glassStyles.appleGlassCard}
           style={{ 
             marginBottom: 24,
-            padding: '1.5rem 2rem',
+            padding: '0rem 2rem',
             background: 'rgba(255, 255, 255, 0.25)',
             backdropFilter: 'blur(30px) saturate(180%)',
             border: '1px solid rgba(255, 255, 255, 0.2)'
@@ -413,10 +430,6 @@ const CurriculumPageManager: React.FC = () => {
           </Row>
         </Card>
       </Affix>
-
-      {/* Curriculum Table Container */}
-      <Card 
-      >
         <Table
           columns={columns}
           dataSource={pagedData}
@@ -447,8 +460,7 @@ const CurriculumPageManager: React.FC = () => {
           />
         </div>
       )}
-      </Card>
-      {/* Subjects Management Modal */}
+      {/* Curri Management Modal */}
       <Modal
         open={subjectsModalOpen}
         title={
@@ -586,6 +598,7 @@ const CurriculumPageManager: React.FC = () => {
         loading={isApproving}
       />
     </div>
+    </ConfigProvider>
   );
 };
 

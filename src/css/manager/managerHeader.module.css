@@ -1,12 +1,15 @@
 /* Manager Header (scoped) */
 .headerRoot {
   position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  z-index: 50;
-  background-color: rgba(30, 64, 175, 0.75); /* blue tint with transparency */
-  color: #ffffff;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  overflow: hidden; /* clip pseudo-elements */
+  background: rgba(30, 64, 175, 0.75); /* blue tint with transparency */
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 1000;
+  overflow: visible; /* allow dropdowns to escape */
   isolation: isolate; /* keep backdrop/filter layering scoped */
 }
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Descriptions, Avatar, Button, ConfigProvider } from 'antd';
+import { Descriptions, Avatar, Button, ConfigProvider, Tooltip } from 'antd';
 import { LogOut, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffProfile.module.css';
@@ -202,7 +202,6 @@ const StaffProfile: React.FC = () => {
               initial="hidden"
               animate="visible"
             >
-              <h2 className={styles.title}>Actions</h2>
               <div className={styles.actionButtons}>
                 <motion.div 
                   whileHover={{ scale: 1.05 }}
@@ -210,7 +209,7 @@ const StaffProfile: React.FC = () => {
                 >
                   <Button
                     type="primary"
-                    className={styles.actionButton}
+                    className={styles.logoutButton}
                     onClick={handleLogout}
                     icon={<LogOut size={16} />}
                     block
@@ -222,6 +221,7 @@ const StaffProfile: React.FC = () => {
                   whileHover={{ scale: 1.05 }}
                   transition={{ duration: 0.2 }}
                 >
+                  <Tooltip title="Contact support via email">
                   <Button
                     type="default"
                     className={styles.actionButton}
@@ -231,6 +231,7 @@ const StaffProfile: React.FC = () => {
                   >
                     Contact Support
                   </Button>
+                  </Tooltip>
                 </motion.div>
               </div>
             </motion.div>
