@@ -7,7 +7,7 @@ interface LoadingScreenProps {
 }
 
 export default function LoadingScreen({ isLoading, message = "Loading..." }: LoadingScreenProps) {
-  if (!isLoading) return null;
+  //if (!isLoading) return null;
 
   return (
     <motion.div

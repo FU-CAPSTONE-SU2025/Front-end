@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Affix, Pagination, Spin, Modal, Form, Tag, Space, Tooltip, Card, Typography, Row, Col, ConfigProvider } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { NumberOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
@@ -120,6 +120,24 @@ const ManagerProgramPage: React.FC = () => {
                   allowClear
                   className={glassStyles.appleGlassInput}
                 />
+              </Space>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Text strong>Stats</Text>
+                <Button
+                  type="primary"
+                  style={{
+                    borderRadius: 12,
+                    background: '',
+                    border: 'none',
+                    fontWeight: 600,
+                    boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)'
+                  }}
+                  className={glassStyles.appleGlassButton}
+                >
+                  Currently Active Programs: <NumberOutlined />{paginationProgram?.total || 0}
+                </Button>
               </Space>
             </Col>
           </Row>
