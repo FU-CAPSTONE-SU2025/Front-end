@@ -97,16 +97,6 @@ const GlobalChatBox: React.FC = () => {
     }
   }, []);
 
-  // Load more messages when scrolling to top
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop } = e.currentTarget;
-    if (scrollTop === 0 && currentSession && !isUnmountedRef.current) {
-      // Load more messages when scrolled to top
-      const currentPage = Math.floor(messages.length / 20) + 1;
-      loadMoreMessages(currentSession.id, currentPage);
-    }
-  }, [currentSession, messages.length, loadMoreMessages]);
-
   // Scroll to bottom only when new messages arrive
   useEffect(() => {
     if (messages.length > 0) {
@@ -123,6 +113,10 @@ const GlobalChatBox: React.FC = () => {
   const handleSendMessage = useCallback(async (msg?: string) => {
     const messageToSend = msg || messageInput.trim();
     if (!messageToSend || isSendingRef.current) return;
+    if (!currentSessionId) {
+      message.warning('No session selected');
+      return;
+    }
     
     isSendingRef.current = true;
     setSendingMessage(true);
@@ -130,13 +124,25 @@ const GlobalChatBox: React.FC = () => {
     try {
       await sendMessageRef.current(messageToSend);
       setMessageInput('');
-    } catch (error) {
-      message.error('Failed to send message');
+    } catch (error: any) {
+      const errorMsg = typeof error?.message === 'string' ? error.message : '';
+      // If session not ready yet, attempt quick join then retry once
+      if (errorMsg.includes('No active session') || errorMsg.includes('Connection not available')) {
+        try {
+          await joinSession(currentSessionId);
+          await sendMessageRef.current(messageToSend);
+          setMessageInput('');
+        } catch (retryErr) {
+          message.error('Failed to send message');
+        }
+      } else {
+        message.error('Failed to send message');
+      }
     } finally {
       setSendingMessage(false);
       isSendingRef.current = false;
     }
-  }, [messageInput, sendMessageRef]);
+  }, [messageInput, joinSession, currentSessionId]);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -213,7 +219,6 @@ const GlobalChatBox: React.FC = () => {
           {/* Messages */}
           <div 
             className="h-64 overflow-y-auto p-4 space-y-3 bg-gray-50"
-            onScroll={handleScroll}
           >
             {messages.length === 0 ? (
               <div className="flex items-center justify-center h-full">

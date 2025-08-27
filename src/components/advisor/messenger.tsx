@@ -1,79 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Avatar, Button, Drawer, Tabs, Input, Badge, message } from 'antd';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Button, Drawer, Tabs } from 'antd';
 import { MessageOutlined, SearchOutlined, UserOutlined, ExclamationCircleOutlined, UserAddOutlined } from '@ant-design/icons';
-import ReactDOM from 'react-dom';
-import AdvisorChatBox from './advisorChatBox';
 import StudentChatTab from './studentChatTab';
 import OpenChatTab from './openChatTab';
 import { useAdvisorChatWithStudent } from '../../hooks/useAdvisorChatWithStudent';
-import { SIGNALR_CONFIG, ConnectionState, getConnectionStatusColor } from '../../config/signalRConfig';
-import { StudentSession, ChatMessage } from '../../interfaces/IChat';
+import { SIGNALR_CONFIG, ConnectionState} from '../../config/signalRConfig';
 
-interface Student {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  avatarUrl?: string;
-  isOnline: boolean;
-  lastSeen?: string;
-  unreadCount?: number;
-}
 
 const Messenger: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [studentChatBoxOpen, setStudentChatBoxOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('open-chat');
-
-  // Get connection state and sessions from the hook
   const { 
     connectionState, 
     error: connectionError, 
-    sessions,
-    unassignedSessions,
-    allAssignedSessions,
     loading,
     dataFetched,
     refreshAllData
   } = useAdvisorChatWithStudent();
 
-  // Pre-load data when component mounts
+  // Facebook-like UX - load data once when drawer opens
   useEffect(() => {
-    // Load data immediately when component mounts
-    refreshAllData();
-  }, [refreshAllData]);
-
-  // Re-fetch data when connection becomes available
-  useEffect(() => {
-    if (connectionState === ConnectionState.Connected && !dataFetched) {
-      // Only fetch if data hasn't been fetched yet
+    if (open && connectionState === ConnectionState.Connected) {
       refreshAllData();
     }
-  }, [connectionState, refreshAllData, dataFetched]);
+  }, [open, connectionState, refreshAllData]);
 
-
-
-
-
-  const handleStudentClick = (student: Student) => {
-    setSelectedStudent(student);
-    setStudentChatBoxOpen(true);
-    setOpen(false);
+  // Handle tab change - Facebook style (no refetch)
+  const handleTabChange = (key: string) => {
+    setActiveTab(key);
+    // No data fetching - data persists between tabs like Facebook
   };
-
-  // Filter sessions for different tabs
-  const { advisorId } = useAdvisorChatWithStudent();
-  
-  // Open Chat: Show all sessions with staffId = 4 (unassigned)
-  const openChatSessions = [...sessions, ...unassignedSessions].filter(session => 
-    session.staffId === 4 // EmptyStaffProfileId from backend
-  );
-  
-  // My Chat: Show all assigned sessions (including current advisor's sessions and all other assigned sessions)
-  const myChatSessions = allAssignedSessions; // All assigned sessions from backend
 
   const items = [
     {
@@ -82,7 +38,6 @@ const Messenger: React.FC = () => {
         <div className="flex items-center gap-2">
           <UserAddOutlined />
           <span>Open Chat</span>
-          <Badge count={openChatSessions.length} size="small" />
         </div>
       ),
       children: (
@@ -98,7 +53,6 @@ const Messenger: React.FC = () => {
         <div className="flex items-center gap-2">
           <UserOutlined />
           <span>My Chat</span>
-          <Badge count={myChatSessions.length} size="small" />
         </div>
       ),
       children: (
@@ -114,13 +68,12 @@ const Messenger: React.FC = () => {
     <>
             <div className="relative">
         <Button
-          icon={loading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div> : <MessageOutlined className="text-lg" />}
+          icon={<MessageOutlined className="text-lg" />}
           shape="circle"
           onClick={() => {
             setOpen(true);
           }}
           className="relative transition-all duration-200 hover:scale-105"
-          loading={loading}
         />
       </div>
       
@@ -148,21 +101,15 @@ const Messenger: React.FC = () => {
           </div>
         )}
         
-        {loading && (
-          <div className="bg-blue-50 border-b border-blue-200 p-3">
-            <div className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-              <span className="text-blue-700 text-sm">Loading sessions...</span>
-            </div>
-          </div>
-        )}
+
         
         <Tabs
           activeKey={activeTab}
-          onChange={setActiveTab}
+          onChange={handleTabChange}
           items={items}
           className="h-full"
           tabBarStyle={{ margin: 0, padding: '0 16px' }}
+          destroyOnHidden={false}
         />
       </Drawer>
     </>

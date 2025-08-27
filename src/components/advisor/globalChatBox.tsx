@@ -27,20 +27,36 @@ const GlobalChatBox: React.FC = () => {
   const isUnmountedRef = useRef(false);
   const isSendingRef = useRef(false);
   const lastSentMessageRef = useRef<string>('');
+  const sessionsRef = useRef<StudentSession[]>([]);
 
   const {
     connectionState,
     currentSession,
     messages,
     error,
-    advisorId,
     joinSession,
     sendMessage,
     loadInitialMessages,
     loadMoreMessages,
     setMessages,
     setError,
+    unassignedSessions,
+    sessions,
+    allAssignedSessions,
+    setCurrentSession,
   } = useAdvisorChatWithStudent();
+
+  const sendMessageRef = useRef<typeof sendMessage>(sendMessage);
+
+  // Update sendMessage ref when sendMessage changes
+  useEffect(() => {
+    sendMessageRef.current = sendMessage;
+  }, [sendMessage]);
+
+  // Update sessions ref when sessions change
+  useEffect(() => {
+    sessionsRef.current = [...unassignedSessions, ...sessions, ...allAssignedSessions];
+  }, [unassignedSessions, sessions, allAssignedSessions]);
 
   // Component lifecycle tracking
   useEffect(() => {
@@ -61,17 +77,21 @@ const GlobalChatBox: React.FC = () => {
     setSelectedStudent(student);
     setChatBoxOpen(true);
     
+    // Find the current session to get session data using ref
+    const session = sessionsRef.current.find(s => s.id === sessionId);
+    if (session) {
+      setCurrentSession(session);
+    }
+    
     // Only join if it's a different session
     if (student.id && sessionId !== currentSessionId) {
       setCurrentSessionId(sessionId);
       joinSession(sessionId);
-    } else if (student.id && sessionId === currentSessionId) {
-      // Make sure currentSession is set
-      if (!currentSession) {
-        joinSession(sessionId);
-      }
+    } else if (student.id && sessionId === currentSessionId && !currentSession) {
+      // Make sure session is joined
+      joinSession(sessionId);
     }
-  }, [joinSession, currentSessionId, currentSession]);
+  }, [joinSession, currentSessionId, currentSession, setCurrentSession]);
 
   // Setup event listener only once
   useEffect(() => {
@@ -147,21 +167,38 @@ const GlobalChatBox: React.FC = () => {
 
   const handleSendMessage = useCallback(async (msg?: string) => {
     const messageToSend = msg || messageInput.trim();
+    
     if (!messageToSend || isSendingRef.current) return;
+    if (!currentSessionId) {
+      message.warning('No session selected');
+      return;
+    }
     
     isSendingRef.current = true;
     setSendingMessage(true);
     
     try {
-      await sendMessage(messageToSend);
+      await sendMessageRef.current(messageToSend);
       setMessageInput('');
-    } catch (error) {
-      message.error('Failed to send message');
+    } catch (error: any) {
+      const errorMsg = typeof error?.message === 'string' ? error.message : '';
+      // If session not ready yet, attempt quick join then retry once
+      if (errorMsg.includes('No active session') || errorMsg.includes('Connection not available')) {
+        try {
+          await joinSession(currentSessionId);
+          await sendMessageRef.current(messageToSend);
+          setMessageInput('');
+        } catch (retryErr) {
+          message.error('Failed to send message');
+        }
+      } else {
+        message.error('Failed to send message');
+      }
     } finally {
       setSendingMessage(false);
       isSendingRef.current = false;
     }
-  }, [messageInput, sendMessage]);
+  }, [messageInput, currentSessionId, joinSession]);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -204,7 +241,7 @@ const GlobalChatBox: React.FC = () => {
               </div>
               <div>
                 <div className="font-semibold text-gray-800 text-sm">
-                  {selectedStudent.name}
+                  Student
                 </div>
                 
               </div>
@@ -270,26 +307,26 @@ const GlobalChatBox: React.FC = () => {
                 {messages
                   .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
                   .map((msg, index) => {
-                    // Check if this is a student message (senderId = 13)
-                    const isStudentMessage = msg.senderId === 13; // Student message (senderId = 13)
+                    // Check if this is an advisor message (senderId = 18)
+                    const isAdvisorMessage = msg.senderId === 18;
                     return (
                       <motion.div
                         key={`${msg.id}-${index}`}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
-                        className={`flex ${isStudentMessage ? 'justify-start' : 'justify-end'}`}
+                        className={`flex ${isAdvisorMessage ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
                           className={`max-w-[85%] rounded-2xl px-3 py-2 text-xs transition-all duration-200 hover:shadow-md ${
-                            isStudentMessage
-                              ? 'bg-white text-gray-800 border border-gray-200 shadow-sm'
-                              : 'bg-green-600 text-white shadow-md'
+                            isAdvisorMessage
+                              ? 'bg-green-600 text-white shadow-md'
+                              : 'bg-white text-gray-800 border border-gray-200 shadow-sm'
                           }`}
                         >
                           <div className="leading-relaxed">{msg.content}</div>
                           <div className={`text-xs mt-1 ${
-                            isStudentMessage ? 'text-gray-500' : 'text-green-200'
+                            isAdvisorMessage ? 'text-green-200' : 'text-gray-500'
                           }`}>
                             {formatTime(msg.createdAt)}
                           </div>

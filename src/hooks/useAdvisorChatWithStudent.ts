@@ -5,59 +5,67 @@ import { SIGNALR_CONFIG, ConnectionState, signalRManager } from '../config/signa
 import { StudentSession, ChatMessage, PagedResult } from '../interfaces/IChat';
 import { addMessageWithDeduplication, mapBackendMessage } from '../utils/messageUtils';
 
-// Global sessions state to share across all instances
-let globalSessions: StudentSession[] = [];
-let globalUnassignedSessions: StudentSession[] = [];
-let globalAllAssignedSessions: StudentSession[] = [];
-let globalSessionsListeners: Set<(sessions: StudentSession[], unassigned: StudentSession[], allAssigned: StudentSession[]) => void> = new Set();
-let updateTimeout: NodeJS.Timeout | null = null;
-let pendingUpdate: {
-  sessions: StudentSession[];
-  unassigned: StudentSession[];
-  allAssigned: StudentSession[];
-} | null = null;
+// Completely separate global state for each tab to prevent conflicts
+let globalOpenChatData: StudentSession[] = [];
+let globalMyChatData: StudentSession[] = [];
 
-// Function to update global sessions with debouncing
-const updateGlobalSessions = (sessions: StudentSession[], unassigned: StudentSession[], allAssigned: StudentSession[]) => {
-  // Store pending update
-  pendingUpdate = { sessions, unassigned, allAssigned };
+// Separate listeners for each tab
+let openChatListeners: Set<(sessions: StudentSession[]) => void> = new Set();
+let myChatListeners: Set<(sessions: StudentSession[]) => void> = new Set();
+
+// Separate update timeouts
+let openChatTimeout: NodeJS.Timeout | null = null;
+let myChatTimeout: NodeJS.Timeout | null = null;
+
+// Update function for Open Chat only
+const updateOpenChatData = (sessions: StudentSession[]) => {
+  globalOpenChatData = sessions;
   
-  // Clear existing timeout
-  if (updateTimeout) {
-    clearTimeout(updateTimeout);
+  if (openChatTimeout) {
+    clearTimeout(openChatTimeout);
   }
-  
-  // Debounce updates to prevent UI flickering
-  updateTimeout = setTimeout(() => {
-    if (pendingUpdate) {
-      globalSessions = pendingUpdate.sessions;
-      globalUnassignedSessions = pendingUpdate.unassigned;
-      globalAllAssignedSessions = pendingUpdate.allAssigned;
-      
-      // Batch update all listeners
-      globalSessionsListeners.forEach(listener => {
-        try {
-          listener(pendingUpdate.sessions, pendingUpdate.unassigned, pendingUpdate.allAssigned);
-        } catch (error) {
-          console.error('Error in session listener:', error);
-        }
-      });
-      
-      pendingUpdate = null;
-    }
-  }, 100); // 100ms debounce
+
+  openChatTimeout = setTimeout(() => {
+    openChatListeners.forEach(listener => {
+      try {
+        listener(globalOpenChatData);
+      } catch (error) {
+        console.error('Error in open chat listener:', error);
+      }
+    });
+  }, 50);
 };
 
-// Function to subscribe to global sessions
-const subscribeToGlobalSessions = (listener: (sessions: StudentSession[], unassigned: StudentSession[], allAssigned: StudentSession[]) => void) => {
-  globalSessionsListeners.add(listener);
-  // Immediately call with current sessions
-  listener(globalSessions, globalUnassignedSessions, globalAllAssignedSessions);
+// Update function for My Chat only
+const updateMyChatData = (sessions: StudentSession[]) => {
+  globalMyChatData = sessions;
   
-  // Return unsubscribe function
-  return () => {
-    globalSessionsListeners.delete(listener);
-  };
+  if (myChatTimeout) {
+    clearTimeout(myChatTimeout);
+  }
+
+  myChatTimeout = setTimeout(() => {
+    myChatListeners.forEach(listener => {
+      try {
+        listener(globalMyChatData);
+      } catch (error) {
+        console.error('Error in my chat listener:', error);
+      }
+    });
+  }, 50);
+};
+
+// Subscribe functions for each tab
+const subscribeToOpenChat = (listener: (sessions: StudentSession[]) => void) => {
+  openChatListeners.add(listener);
+  listener(globalOpenChatData);
+  return () => openChatListeners.delete(listener);
+};
+
+const subscribeToMyChat = (listener: (sessions: StudentSession[]) => void) => {
+  myChatListeners.add(listener);
+  listener(globalMyChatData);
+  return () => myChatListeners.delete(listener);
 };
 
 export function useAdvisorChatWithStudent() {
@@ -85,39 +93,45 @@ export function useAdvisorChatWithStudent() {
   const isConnectingRef = useRef(false);
   const isFetchingSessionsRef = useRef(false);
   
+  // Added: separate guard and cooldown refs for smoother UX
+  const isFetchingStaffRef = useRef(false);
+  const lastOpenFetchAtRef = useRef(0);
+  const lastStaffFetchAtRef = useRef(0);
+  
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const retryCountRef = useRef(0);
   const isUnmountedRef = useRef(false);
   
   const accessToken = useAuths((state) => state.accessToken);
 
-  // Subscribe to global sessions with deep comparison
+  // Subscribe to Open Chat data - Facebook-like persistent data
   useEffect(() => {
-    const unsubscribe = subscribeToGlobalSessions((globalSessions, globalUnassigned, globalAllAssigned) => {
-      if (!isUnmountedRef.current) {
-        // Deep comparison to prevent unnecessary updates
-        const sessionsChanged = JSON.stringify(globalSessions) !== JSON.stringify(sessionsRef.current);
-        const unassignedChanged = JSON.stringify(globalUnassigned) !== JSON.stringify(unassignedSessionsRef.current);
-        const allAssignedChanged = JSON.stringify(globalAllAssigned) !== JSON.stringify(allAssignedSessionsRef.current);
-        
-        if (sessionsChanged) {
-          setSessions(globalSessions);
-          sessionsRef.current = globalSessions;
-        }
-        
-        if (unassignedChanged) {
-          setUnassignedSessions(globalUnassigned);
-          unassignedSessionsRef.current = globalUnassigned;
-        }
-        
-        if (allAssignedChanged) {
-          setAllAssignedSessions(globalAllAssigned);
-          allAssignedSessionsRef.current = globalAllAssigned;
-        }
+    const unsubscribe = subscribeToOpenChat((openChatSessions) => {
+      if (!isUnmountedRef.current && openChatSessions.length > 0) {
+        setUnassignedSessions(openChatSessions);
+        unassignedSessionsRef.current = openChatSessions;
       }
     });
     
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  // Subscribe to My Chat data - Facebook-like persistent data
+  useEffect(() => {
+    const unsubscribe = subscribeToMyChat((myChatSessions) => {
+      if (!isUnmountedRef.current && myChatSessions.length > 0) {
+        setSessions(myChatSessions);
+        setAllAssignedSessions(myChatSessions);
+        sessionsRef.current = myChatSessions;
+        allAssignedSessionsRef.current = myChatSessions;
+      }
+    });
+    
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   // Memoized session data to prevent unnecessary re-renders
@@ -155,77 +169,99 @@ export function useAdvisorChatWithStudent() {
     }
   }, [accessToken, advisorId, getProfileIdFromToken]);
 
-  // Monitor sessions state changes
-  useEffect(() => {
-    // Sessions state changed
-  }, [sessions, unassignedSessions, allAssignedSessions]);
-
-  // Add retry mechanism for session fetching
+  // Add retry mechanism for session fetching (Open Chat)
   const fetchSessionsWithRetry = useCallback(async (retryCount = 0) => {
+    const now = Date.now();
+    if (now - lastOpenFetchAtRef.current < 800) {
+      return;
+    }
+    lastOpenFetchAtRef.current = now;
+
     if (!connectionRef.current || isFetchingSessionsRef.current) {
-      if (retryCount < 3) {
+      if (retryCount < 5) {
         setTimeout(() => fetchSessionsWithRetry(retryCount + 1), 1000);
       }
       return;
     }
     
     if (connectionRef.current.state !== signalR.HubConnectionState.Connected) {
-      if (retryCount < 3) {
+      if (retryCount < 5) {
         setTimeout(() => fetchSessionsWithRetry(retryCount + 1), 1000);
       }
-          return;
+      return;
     }
     
     isFetchingSessionsRef.current = true;
     
     try {
-      setLoading(true);
-      
-      // Call both methods together to get all sessions at once
-      await Promise.all([
-        connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_OPENED_SESSIONS, { pageNumber: 1, pageSize: 20 }),
-        connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_SESSIONS_BY_STAFF, { pageNumber: 1, pageSize: 20 })
-      ]);
-      
-        } catch (err) {
-      console.error('Failed to call both methods:', err);
-      // Try alternative methods
-      try {
-        await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_SESSIONS_BY_STAFF, { pageNumber: 1, pageSize: 20 });
-      } catch (altErr) {
-        // Try direct method
-        try {
-          await connectionRef.current.invoke('GetSessions', { pageNumber: 1, pageSize: 20 });
-        } catch (directErr) {
-          // Retry if we haven't exceeded retry count
-          if (retryCount < 3) {
-            setTimeout(() => fetchSessionsWithRetry(retryCount + 1), 2000);
-          } else {
-            setError(`Failed to fetch sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
-          }
-        }
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_OPENED_SESSIONS, { pageNumber: 1, pageSize: 20 });
+    } catch (err) {
+      console.error('Failed to fetch open sessions:', err);
+      if (retryCount < 5) {
+        setTimeout(() => fetchSessionsWithRetry(retryCount + 1), 2000);
+      } else {
+        setError(`Failed to fetch sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
       }
     } finally {
-      setLoading(false);
       isFetchingSessionsRef.current = false;
     }
   }, []);
 
-  // Fetch sessions from server
+  // Fetch sessions from server (Open Chat sessions)
   const fetchSessions = useCallback(async () => {
     await fetchSessionsWithRetry();
   }, [fetchSessionsWithRetry]);
 
-  // Fetch assigned sessions for My Chat
+  // Fetch staff sessions for StudentChatTab (LIST_SESSIONS_BY_STAFF)
   const fetchAssignedSessions = useCallback(async () => {
-    await fetchSessions();
-  }, [fetchSessions]);
+    const now = Date.now();
+    if (now - lastStaffFetchAtRef.current < 800) {
+      return;
+    }
+    lastStaffFetchAtRef.current = now;
+
+    if (!connectionRef.current || isFetchingStaffRef.current) {
+      return;
+    }
+
+    try {
+      isFetchingStaffRef.current = true;
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_SESSIONS_BY_STAFF, { pageNumber: 1, pageSize: 20 });
+    } catch (err) {
+      console.error('Failed to fetch advisor/staff sessions:', err);
+      setError(`Failed to fetch staff sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      isFetchingStaffRef.current = false;
+    }
+  }, []);
+
+  // Fetch open sessions for OpenChatTab (LIST_OPENED_SESSIONS)
+  const fetchOpenSessions = useCallback(async () => {
+    const now = Date.now();
+    if (now - lastOpenFetchAtRef.current < 800) {
+      return;
+    }
+    lastOpenFetchAtRef.current = now;
+
+    if (!connectionRef.current || isFetchingSessionsRef.current) {
+      return;
+    }
+
+    try {
+      isFetchingSessionsRef.current = true;
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_OPENED_SESSIONS, { pageNumber: 1, pageSize: 20 });
+    } catch (err) {
+      console.error('Failed to fetch open sessions:', err);
+      setError(`Failed to fetch open sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      isFetchingSessionsRef.current = false;
+    }
+  }, []);
 
   // Setup event listeners on existing connection
   const setupEventListeners = useCallback((connection: signalR.HubConnection) => {
     if (!connection) return;
 
-    // Connection state handlers
     connection.onreconnecting(() => {
       if (!isUnmountedRef.current) {
         setConnectionState(ConnectionState.Reconnecting);
@@ -249,72 +285,54 @@ export function useAdvisorChatWithStudent() {
       }
     });
 
-    // Event listeners - using exact backend method names
+    // Event listeners - keep only those defined in config/back-end
     connection.on(SIGNALR_CONFIG.HUB_METHODS.GET_SESSIONS_METHOD, (data: PagedResult<StudentSession>) => {
       if (!isUnmountedRef.current && data && data.items && Array.isArray(data.items)) {
-        // GET_SESSIONS_METHOD returns all sessions, no filtering needed
-        const currentAdvisorId = getProfileIdFromToken();
-        const assignedSessions = data.items;
-        const unassignedSessions = data.items;
-        const allAssignedSessions = data.items;
+        // Separate data for each tab
+        const allAssigned = data.items;
+        const unassigned = data.items.filter(session => session && session.staffId === 4);
         
-        updateGlobalSessions(assignedSessions, unassignedSessions, allAssignedSessions);
+        // Update each tab separately
+        updateMyChatData(allAssigned);
+        updateOpenChatData(unassigned);
         setDataFetched(true);
       }
     });
 
-    // SINGLE CONSOLIDATED EVENT LISTENER for session data
     const handleSessionEvent = (eventName: string, data: PagedResult<StudentSession>) => {
       if (!isUnmountedRef.current && data && data.items && Array.isArray(data.items)) {
         const currentAdvisorId = getProfileIdFromToken();
         
-        // Process based on event type
-        let assignedSessions: StudentSession[] = [];
-        let unassignedSessions: StudentSession[] = [];
-        let allAssignedSessions: StudentSession[] = [];
-        
         switch (eventName) {
-          case 'ListAllSessionByStaff':
-            // LIST_SESSIONS_BY_STAFF returns assigned sessions
-            assignedSessions = data.items.filter(session => 
-              session && session.staffId && session.staffId === currentAdvisorId
-            );
-            unassignedSessions = [];
-            allAssignedSessions = data.items;
+          case 'ListAllSessionByStaff': {
+            // This is for My Chat tab only
+            updateMyChatData(data.items);
             break;
-            
-          case 'ListOpenedSession':
-          case 'ListOpenedSessions':
-          case 'GetOpenedSessions':
-            // LIST_OPENED_SESSIONS returns unassigned sessions
-            unassignedSessions = data.items;
-            assignedSessions = [];
-            allAssignedSessions = [];
+          }
+          case 'ListOpenedSession': {
+            // This is for Open Chat tab only
+            updateOpenChatData(data.items);
             break;
-            
-          case 'ListAllAssignedSessions':
-            // LIST_ALL_ASSIGNED_SESSIONS returns assigned sessions
-            assignedSessions = data.items.filter(session => 
-              session && session.staffId && session.staffId === currentAdvisorId
-            );
-            unassignedSessions = [];
-            allAssignedSessions = data.items;
+          }
+          case 'ListAllSessionByStudent': {
+            // This is for My Chat tab only
+            updateMyChatData(data.items);
             break;
-            
-          default:
-            // Default: treat as all sessions
-            assignedSessions = data.items;
-            unassignedSessions = data.items;
-            allAssignedSessions = data.items;
+          }
+          case 'ListAllAssignedSessions': {
+            // This is for My Chat tab only
+            updateMyChatData(data.items);
             break;
+          }
+          default: {
+            break;
+          }
         }
-        
-        updateGlobalSessions(assignedSessions, unassignedSessions, allAssignedSessions);
         setDataFetched(true);
       }
     };
 
-    // PRIMARY EVENT LISTENERS - using exact backend method names
+    // Primary listeners only
     connection.on('GetSessionsHUBMethod', (data: PagedResult<StudentSession>) => {
       handleSessionEvent('GetSessionsHUBMethod', data);
     });
@@ -331,30 +349,14 @@ export function useAdvisorChatWithStudent() {
       handleSessionEvent('ListAllAssignedSessions', data);
     });
 
-    // FALLBACK EVENT LISTENERS - only for compatibility
-    connection.on('ListOpenedSessions', (data: PagedResult<StudentSession>) => {
-      handleSessionEvent('ListOpenedSessions', data);
+    connection.on('ListAllSessionByStudent', (data: PagedResult<StudentSession>) => {
+      handleSessionEvent('ListAllSessionByStudent', data);
     });
 
-    connection.on('GetOpenedSessions', (data: PagedResult<StudentSession>) => {
-      handleSessionEvent('GetOpenedSessions', data);
-    });
-
-    connection.on('GetSessions', (data: PagedResult<StudentSession>) => {
-      handleSessionEvent('GetSessions', data);
-    });
-
-    connection.on('GetAllSessions', (data: PagedResult<StudentSession>) => {
-      handleSessionEvent('GetAllSessions', data);
-    });
-
-    // Main message listener for real-time messages - USING UTILITY FUNCTION
+    // Message and session lifecycle listeners
     connection.on(SIGNALR_CONFIG.HUB_METHODS.SEND_ADVSS_METHOD, (message: any) => {
-      
       if (message && message.content) {
         const mappedMessage = mapBackendMessage(message);
-        
-        // Add message to current session if it matches
         const currentSessionId = currentSessionRef.current?.id;
         if (currentSessionId && message.advisorySession1to1Id === currentSessionId) {
           setMessages(prev => addMessageWithDeduplication(mappedMessage, prev));
@@ -362,9 +364,7 @@ export function useAdvisorChatWithStudent() {
       }
     });
 
-    // Join session method - loads message history - SIMPLIFIED like demo
     connection.on(SIGNALR_CONFIG.HUB_METHODS.JOIN_SS_METHOD, (sessionMessages: PagedResult<any>) => {
-      
       if (sessionMessages && sessionMessages.items && Array.isArray(sessionMessages.items)) {
         const mappedMessages: ChatMessage[] = sessionMessages.items.map((message: any) => ({
           id: message.messageId || message.id || Date.now(),
@@ -374,16 +374,13 @@ export function useAdvisorChatWithStudent() {
           createdAt: message.createdAt || new Date().toISOString(),
           senderName: message.senderName || 'Unknown'
         }));
-        
-            setMessages(mappedMessages);
+        setMessages(mappedMessages);
       }
     });
 
-    // Load more messages for infinite scroll
     connection.on(SIGNALR_CONFIG.HUB_METHODS.LOAD_MORE_MESSAGES_METHOD, (data: PagedResult<any>) => {
       if (!isUnmountedRef.current && data && data.items && Array.isArray(data.items)) {
         if (currentSessionRef.current) {
-          // Map backend message structure to ChatMessage interface
           const mappedMessages: ChatMessage[] = data.items.map((message: any) => ({
             id: message.messageId || message.id,
             content: message.content,
@@ -392,69 +389,64 @@ export function useAdvisorChatWithStudent() {
             createdAt: message.createdAt,
             senderName: message.senderName
           }));
-          
           setMessages(prev => {
             const existingIds = new Set(prev.map(m => m.id));
             const newMessages = mappedMessages.filter(m => !existingIds.has(m.id));
-            return [...newMessages, ...prev]; // Prepend older messages
+            return [...newMessages, ...prev];
           });
         }
       }
     });
 
-    // Handle session assignment events
     connection.on(SIGNALR_CONFIG.HUB_METHODS.ADD_SESSION_AS_ASSIGNED, (session: StudentSession) => {
       if (!isUnmountedRef.current) {
-        // Update global sessions
         const currentAdvisorId = getProfileIdFromToken();
-        const assignedSessions = [...sessionsRef.current];
-        const unassignedSessions = [...unassignedSessionsRef.current];
-        const allAssignedSessions = [...allAssignedSessionsRef.current];
-        
         if (session.staffId === currentAdvisorId) {
-          assignedSessions.push(session);
+          // Add to My Chat and remove from Open Chat (avoid duplicate)
+          const newMyChatData = [...globalMyChatData, session];
+          const newOpenChatData = globalOpenChatData.filter(s => s.id !== session.id);
+          updateMyChatData(newMyChatData);
+          updateOpenChatData(newOpenChatData);
         }
-        allAssignedSessions.push(session);
-        
-        updateGlobalSessions(assignedSessions, unassignedSessions, allAssignedSessions);
       }
     });
 
     connection.on(SIGNALR_CONFIG.HUB_METHODS.REMOVE_SESSION_FROM_UNASSIGNED, (session: StudentSession) => {
       if (!isUnmountedRef.current) {
-        // Update global sessions
-        const unassignedSessions = unassignedSessionsRef.current.filter(s => s.id !== session.id);
-        updateGlobalSessions(sessionsRef.current, unassignedSessions, allAssignedSessionsRef.current);
+        // Remove from Open Chat
+        const newOpenChatData = globalOpenChatData.filter(s => s.id !== session.id);
+        updateOpenChatData(newOpenChatData);
       }
     });
 
     connection.on(SIGNALR_CONFIG.HUB_METHODS.SESSION_CREATED, (session: StudentSession) => {
       if (!isUnmountedRef.current) {
-        // Update global sessions
         const currentAdvisorId = getProfileIdFromToken();
-        const assignedSessions = [...sessionsRef.current];
-        const unassignedSessions = [...unassignedSessionsRef.current];
-        const allAssignedSessions = [...allAssignedSessionsRef.current];
-        
         if (session.staffId === 4) {
-          unassignedSessions.push(session);
+          // Add to Open Chat (unassigned) - avoid duplicate
+          const exists = globalOpenChatData.some(s => s.id === session.id);
+          if (!exists) {
+            const newOpenChatData = [...globalOpenChatData, session];
+            updateOpenChatData(newOpenChatData);
+          }
         } else if (session.staffId === currentAdvisorId) {
-          assignedSessions.push(session);
+          // Add to My Chat (assigned) - avoid duplicate
+          const exists = globalMyChatData.some(s => s.id === session.id);
+          if (!exists) {
+            const newMyChatData = [...globalMyChatData, session];
+            updateMyChatData(newMyChatData);
+          }
         }
-        allAssignedSessions.push(session);
-        
-        updateGlobalSessions(assignedSessions, unassignedSessions, allAssignedSessions);
       }
     });
 
     connection.on(SIGNALR_CONFIG.HUB_METHODS.SESSION_DELETED, (sessionId: number) => {
       if (!isUnmountedRef.current) {
-        // Update global sessions
-        const assignedSessions = sessionsRef.current.filter(s => s.id !== sessionId);
-        const unassignedSessions = unassignedSessionsRef.current.filter(s => s.id !== sessionId);
-        const allAssignedSessions = allAssignedSessionsRef.current.filter(s => s.id !== sessionId);
-        
-        updateGlobalSessions(assignedSessions, unassignedSessions, allAssignedSessions);
+        // Remove from both tabs
+        const newOpenChatData = globalOpenChatData.filter(s => s.id !== sessionId);
+        const newMyChatData = globalMyChatData.filter(s => s.id !== sessionId);
+        updateOpenChatData(newOpenChatData);
+        updateMyChatData(newMyChatData);
       }
     });
   }, [getProfileIdFromToken]);
@@ -462,7 +454,6 @@ export function useAdvisorChatWithStudent() {
   // Load more messages for infinite scroll
   const loadMoreMessages = useCallback(async (sessionId: number, pageNumber: number = 1) => {
     if (!connectionRef.current || !currentSessionRef.current) return;
-    
     try {
       await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LOAD_MORE_MESSAGES, sessionId, { 
         pageNumber, 
@@ -478,7 +469,6 @@ export function useAdvisorChatWithStudent() {
     if (!connectionRef.current) {
       return;
     }
-    
     try {
       await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LOAD_MORE_MESSAGES, sessionId, { 
         pageNumber: 1, 
@@ -491,195 +481,43 @@ export function useAdvisorChatWithStudent() {
 
   // Join session
   const joinSession = useCallback(async (sessionId: number) => {
-    
-    // Ensure connection is available
     if (!connectionRef.current) {
-      try {
-        const connection = await signalRManager.getConnection(SIGNALR_CONFIG.ADVISORY_CHAT_HUB_URL, accessToken);
-        connectionRef.current = connection;
-        setConnectionState(ConnectionState.Connected);
-        
-        // Setup event listeners if not already done
-        setupEventListeners(connection);
-      } catch (error) {
-        console.error('Failed to get connection:', error);
-        throw new Error('Connection not available');
-      }
+      throw new Error('Connection not available');
     }
-    
-    // Wait for connection to be ready
-      let retryCount = 0;
-    const maxRetries = 10;
-      
-      while (retryCount < maxRetries) {
-      if (!connectionRef.current) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        retryCount++;
-        continue;
-      }
-      
-          if (connectionRef.current.state !== signalR.HubConnectionState.Connected) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-            retryCount++;
-            continue;
-          }
-          
-      // Connection is ready, proceed
-      break;
-    }
-    
-    if (!connectionRef.current || connectionRef.current.state !== signalR.HubConnectionState.Connected) {
-      throw new Error('Connection not available after retries');
-    }
-    
+
     try {
-      
-          await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.JOIN_SESSION, sessionId);
-      
-      // Find and set current session using ref
-      const session = [...sessionsRef.current, ...unassignedSessionsRef.current].find(s => s.id === sessionId);
+      // Find and set current session first
+      const session = [...globalMyChatData, ...globalOpenChatData].find(s => s.id === sessionId);
       if (session) {
         setCurrentSession(session);
       }
-          
-          // Load initial messages after joining
-          await loadInitialMessages(sessionId);
-        } catch (err) {
-      console.error('Join session error:', err);
+
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.JOIN_SESSION, sessionId);
+      
+      // Load initial messages after joining
+      await loadInitialMessages(sessionId);
+    } catch (err) {
       throw new Error(`Failed to join session: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
-  }, [loadInitialMessages, connectionState, accessToken, setupEventListeners]);
+  }, [loadInitialMessages]);
 
-  // Send message
+  // Send message - improved like student
   const sendMessage = useCallback(async (content: string) => {
-    
-    // Ensure connection is available
-    if (!connectionRef.current) {
-      try {
-        const connection = await signalRManager.getConnection(SIGNALR_CONFIG.ADVISORY_CHAT_HUB_URL, accessToken);
-        connectionRef.current = connection;
-        setConnectionState(ConnectionState.Connected);
-        
-        // Setup event listeners if not already done
-        setupEventListeners(connection);
-      } catch (error) {
-        console.error('Failed to get connection:', error);
-        throw new Error('Connection not available');
-      }
-    }
-    
-    // Wait for connection to be ready
-    let retryCount = 0;
-    const maxRetries = 5;
-    
-    while (retryCount < maxRetries) {
-      if (!connectionRef.current) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        retryCount++;
-        continue;
-      }
-      
-      if (connectionRef.current.state !== signalR.HubConnectionState.Connected) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        retryCount++;
-        continue;
-      }
-      
-      if (!currentSessionRef.current) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        retryCount++;
-        continue;
-      }
-      
-      // Connection and session are ready, proceed
-      break;
-    }
-    
-    if (!connectionRef.current || connectionRef.current.state !== signalR.HubConnectionState.Connected) {
-      throw new Error('Connection not available after retries');
-    }
-    
-    if (!currentSessionRef.current) {
+    if (!connectionRef.current || !currentSessionRef.current) {
       throw new Error('No active session');
     }
-    
+
     try {
-      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.SEND_MESSAGE, currentSessionRef.current.id, content);
+      // Validate message before sending
+      if (!content || content.trim().length === 0) {
+        throw new Error('Message cannot be empty');
+      }
+
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.SEND_MESSAGE, currentSessionRef.current.id, content.trim());
     } catch (err) {
-      console.error('Send message error:', err);
       throw new Error(`Failed to send message: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
-  }, [advisorId, connectionState, accessToken, setupEventListeners]);
-
-  // Load more sessions
-  const loadMoreSessions = useCallback(async (pageNumber: number = 1, pageSize: number = SIGNALR_CONFIG.MESSAGES.DEFAULT_PAGE_SIZE) => {
-    if (!connectionRef.current) return;
-    
-    if (connectionRef.current.state !== signalR.HubConnectionState.Connected) {
-      return;
-    }
-    
-    let retryCount = 0;
-    const maxRetries = 3;
-    
-    while (retryCount < maxRetries) {
-      try {
-        if (connectionRef.current.state !== signalR.HubConnectionState.Connected) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          retryCount++;
-          continue;
-        }
-        
-        await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LOAD_MORE_SESSIONS, { pageNumber, pageSize });
-        return;
-    } catch (err) {
-        retryCount++;
-        
-        if (retryCount >= maxRetries) {
-          setError(`Failed to load more sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
-          return;
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-      }
-    }
   }, []);
-
-  // Load more assigned sessions
-  const loadMoreAssignedSessions = useCallback(async () => {
-    if (!hasMoreAssigned || loading) return;
-    
-    if (!connectionRef.current) return;
-    
-    try {
-      setLoading(true);
-      const nextPageNumber = assignedPageNumber + 1;
-   
-      
-      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LOAD_MORE_SESSIONS, { 
-        pageNumber: nextPageNumber, 
-        pageSize: 10 
-      });
-      
-      setAssignedPageNumber(nextPageNumber);
-    } catch (err) {
-      setError(`Failed to load more assigned sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [hasMoreAssigned, loading, assignedPageNumber]);
-
-  // Assign advisor to session
-  const assignAdvisorToSession = useCallback(async (sessionId: number) => {
-    if (!connectionRef.current) return;
-    
-    try {
-      await joinSession(sessionId);
-    } catch (err) {
-      setError('Failed to assign advisor to session');
-      throw err;
-    }
-  }, [joinSession]);
 
   // Main effect for connection management - SINGLE CONNECTION ONLY
   useEffect(() => {
@@ -700,16 +538,11 @@ export function useAdvisorChatWithStudent() {
       isConnectingRef.current = true;
 
       try {
-        // Use global SignalR manager to get connection
         const connection = await signalRManager.getConnection(SIGNALR_CONFIG.ADVISORY_CHAT_HUB_URL, accessToken);
-      connectionRef.current = connection;
+        connectionRef.current = connection;
         setConnectionState(ConnectionState.Connected);
         setError(null);
-        
-        // Setup event listeners on the existing connection
         setupEventListeners(connection);
-        
-        // Fetch sessions after successful connection
         if (!dataFetched) {
           await fetchSessions();
         }
@@ -730,13 +563,23 @@ export function useAdvisorChatWithStudent() {
     };
   }, [accessToken, fetchSessions, dataFetched, setupEventListeners]);
 
-  // Force refresh all data
+  // Force refresh all data - production ready
   const refreshAllData = useCallback(() => {
-    setDataFetched(false);
-    // Only fetch what's needed based on current tab
-    fetchSessions(); // Changed from fetchUnassignedSessions
-    // fetchAllAssignedSessions(); // For My Chat - This was removed from the new_code, so it's removed here.
-  }, [fetchSessions]);
+    // Fetch both types of data immediately
+    fetchOpenSessions(); // Open Chat - LIST_OPENED_SESSIONS
+    fetchAssignedSessions(); // My Chat - LIST_SESSIONS_BY_STAFF
+  }, [fetchOpenSessions, fetchAssignedSessions]);
+
+  // Facebook-like data loading - load once and persist
+  useEffect(() => {
+    if (connectionState === ConnectionState.Connected && !dataFetched) {
+      // Load both types of data once
+      fetchOpenSessions();
+      setTimeout(() => {
+        fetchAssignedSessions();
+      }, 200);
+    }
+  }, [connectionState, dataFetched, fetchOpenSessions, fetchAssignedSessions]);
 
   return {
     connectionState,
@@ -753,13 +596,12 @@ export function useAdvisorChatWithStudent() {
     sendMessage,
     loadMoreMessages,
     loadInitialMessages,
-    loadMoreSessions,
-    assignAdvisorToSession,
     setCurrentSession,
     setError,
     setMessages,
     fetchSessions,
     fetchAssignedSessions,
+    fetchOpenSessions,
     refreshAllData,
     hasMoreAssigned,
   };
