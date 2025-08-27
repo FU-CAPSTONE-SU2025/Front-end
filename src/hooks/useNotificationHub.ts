@@ -153,8 +153,13 @@ export function useNotificationHub() {
       console.log(`✅ Successfully called MarkAsRead for notification ${numId}`);
       setError(null);
       
-      // The server will broadcast NotificationReadMethod to update all clients
-      // We rely on that broadcast rather than immediately refetching
+      // Clear from pending set
+      pendingMarkAsReadRef.current.delete(numId);
+      
+      // Fetch fresh notifications to ensure UI reflects actual server state
+      // This is more reliable than waiting for server broadcasts
+      console.log(`🔄 Fetching fresh notifications after marking ${numId} as read...`);
+      await fetchNotifications();
       
     } catch (err) {
       console.error(`❌ Failed to mark notification ${numId} as read:`, err);
@@ -167,7 +172,7 @@ export function useNotificationHub() {
       setError(errorMessage);
       throw err;
     }
-  }, [notifications, invokeWithAuthRetry]);
+  }, [notifications, invokeWithAuthRetry, fetchNotifications]);
 
   const markAllAsRead = useCallback(async () => {
     const connection = connectionRef.current;
@@ -211,11 +216,19 @@ export function useNotificationHub() {
 
       console.log(`✅ Successfully marked all ${unreadNotifications.length} notifications as read`);
       setError(null);
-      // Server broadcasts will update the UI via NotificationReadMethod events
+      
+      // Clear pending set after successful operation
+      unreadNotifications.forEach(n => pendingMarkAsReadRef.current.delete(Number(n.id)));
+      
+      // Fetch fresh notifications from server to ensure UI reflects actual DB state
+      // This is more reliable than waiting for server broadcasts
+      console.log('🔄 Fetching fresh notifications from server...');
+      await fetchNotifications();
+      
     } catch (err) {
       console.error('❌ Failed to mark all notifications as read:', err);
       setNotifications(originalNotifications);
-      unreadNotifications.forEach(n => pendingMarkAsReadRef.current.delete(n.id));
+      unreadNotifications.forEach(n => pendingMarkAsReadRef.current.delete(Number(n.id)));
       const errorMessage = err instanceof Error ? err.message : 'Failed to mark all as read';
       setError(errorMessage);
       throw err;

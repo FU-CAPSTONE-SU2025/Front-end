@@ -61,17 +61,12 @@ const GlobalChatBox: React.FC = () => {
     setSelectedStudent(student);
     setChatBoxOpen(true);
     
-    // Only join if it's a different session
-    if (student.id && sessionId !== currentSessionId) {
+    // Always join the session when opening chat box
+    if (student.id) {
       setCurrentSessionId(sessionId);
       joinSession(sessionId);
-    } else if (student.id && sessionId === currentSessionId) {
-      // Make sure currentSession is set
-      if (!currentSession) {
-        joinSession(sessionId);
-      }
     }
-  }, [joinSession, currentSessionId, currentSession]);
+  }, [joinSession]);
 
   // Setup event listener only once
   useEffect(() => {
@@ -147,15 +142,21 @@ const GlobalChatBox: React.FC = () => {
 
   const handleSendMessage = useCallback(async (msg?: string) => {
     const messageToSend = msg || messageInput.trim();
+    console.log('handleSendMessage called with messageToSend:', messageToSend);
+    console.log('currentSessionId:', currentSessionId);
+    console.log('currentSession:', currentSession);
+    
     if (!messageToSend || isSendingRef.current) return;
     
     isSendingRef.current = true;
     setSendingMessage(true);
     
     try {
+      console.log('Attempting to send message via sendMessage function');
       await sendMessage(messageToSend);
       setMessageInput('');
     } catch (error) {
+      console.log('Send message failed with error:', error);
       message.error('Failed to send message');
     } finally {
       setSendingMessage(false);
@@ -204,7 +205,7 @@ const GlobalChatBox: React.FC = () => {
               </div>
               <div>
                 <div className="font-semibold text-gray-800 text-sm">
-                  {selectedStudent.name}
+                  Student
                 </div>
                 
               </div>
@@ -270,26 +271,26 @@ const GlobalChatBox: React.FC = () => {
                 {messages
                   .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
                   .map((msg, index) => {
-                    // Check if this is a student message (senderId = 13)
-                    const isStudentMessage = msg.senderId === 13; // Student message (senderId = 13)
+                    // Check if this is an advisor message (senderId = 18)
+                    const isAdvisorMessage = msg.senderId === 18;
                     return (
                       <motion.div
                         key={`${msg.id}-${index}`}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
-                        className={`flex ${isStudentMessage ? 'justify-start' : 'justify-end'}`}
+                        className={`flex ${isAdvisorMessage ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
                           className={`max-w-[85%] rounded-2xl px-3 py-2 text-xs transition-all duration-200 hover:shadow-md ${
-                            isStudentMessage
-                              ? 'bg-white text-gray-800 border border-gray-200 shadow-sm'
-                              : 'bg-green-600 text-white shadow-md'
+                            isAdvisorMessage
+                              ? 'bg-green-600 text-white shadow-md'
+                              : 'bg-white text-gray-800 border border-gray-200 shadow-sm'
                           }`}
                         >
                           <div className="leading-relaxed">{msg.content}</div>
                           <div className={`text-xs mt-1 ${
-                            isStudentMessage ? 'text-gray-500' : 'text-green-200'
+                            isAdvisorMessage ? 'text-green-200' : 'text-gray-500'
                           }`}>
                             {formatTime(msg.createdAt)}
                           </div>
