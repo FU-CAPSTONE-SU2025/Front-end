@@ -4,7 +4,7 @@ import { SendOutlined, PlusOutlined, MessageOutlined } from '@ant-design/icons';
 import { useAdvisorChat, AdvisorSession } from '../../hooks/useAdvisorChat';
 import { motion } from 'framer-motion';
 import StaffNameDisplay from './staffNameDisplay';
-import LastMessageDisplay from './lastMessageDisplay';
+
 
 interface AdvisorChatTabProps {
   onChatBoxOpen?: (session: AdvisorSession) => void;
@@ -119,15 +119,21 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
     setSendingMessage(true);
     try {
       const result = await initChatSession(newChatMessage);
-      if (result && (result.success || result.message)) {
-        message.success(result.message || 'Chat session created successfully');
-        setShowNewChatModal(false);
-        setNewChatMessage('');
-        // The session will be added to the list via SignalR
-      } else {
+      if (result) {
         message.success('Chat session created successfully');
         setShowNewChatModal(false);
         setNewChatMessage('');
+        
+        // Automatically refresh sessions to show the new chat session
+        console.log('🔄 Refreshing sessions after creating new chat...');
+        await fetchSessions();
+        
+        // Force UI update to ensure new session is displayed
+        setTimeout(() => {
+          setForceUpdate(prev => prev + 1);
+        }, 500);
+        
+        // The session will also be added to the list via SignalR
       }
     } catch (err) {
       // Only show error if it's a real network/connection error
@@ -139,31 +145,7 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
     }
   };
 
-  // Format timestamp
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-    
-    if (diffInHours < 1) {
-      return `${Math.floor(diffInHours * 60)}m ago`;
-    } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h ago`;
-    } else {
-      return date.toLocaleDateString();
-    }
-  };
 
-  // Get last message for a session
-  const getLastMessage = (session: AdvisorSession) => {
-    if (session.lastMessage) {
-      return {
-        content: session.lastMessage,
-        time: session.lastMessageTime || session.updatedAt,
-      };
-    }
-    return null;
-  };
 
   // Render individual chat item
   const renderChatItem = (session: AdvisorSession) => {
@@ -182,7 +164,7 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
         <div className="flex items-center gap-4 p-4">
           <div className="relative">
             <Avatar 
-              src={isUnassigned ? 'https://i.pravatar.cc/150?img=2' : (session.staffAvatar || 'https://i.pravatar.cc/150?img=1')} 
+              src={isUnassigned ? 'https://i.pinimg.com/736x/2f/82/48/2f824875daa60e09c6cbd2edbca0a377.jpg' : (session.staffAvatar || 'https://i.pinimg.com/736x/2f/82/48/2f824875daa60e09c6cbd2edbca0a377.jpg')} 
               size={48} 
               className={`ring-3 shadow-md ${
                 isUnassigned ? 'ring-orange-100' : 'ring-gray-100'
@@ -211,12 +193,7 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
                 />
               )}
             </div>
-            <LastMessageDisplay 
-              lastMessage={session.lastMessage}
-              lastMessageTime={session.lastMessageTime}
-              className="text-sm text-gray-500"
-              senderId={session.lastMessageSenderId}
-            />
+         
             {isUnassigned && (
               <div className="text-xs text-orange-600 mt-1">
                 Waiting for assignment
