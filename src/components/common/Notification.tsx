@@ -179,7 +179,8 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden"
+            className="absolute right-0 mt-2 w-96 rounded-xl shadow-xl border z-50 overflow-hidden bg-white/90 border-white backdrop-blur-md"
+            style={{ WebkitBackdropFilter: 'blur(12px) saturate(180%)', backdropFilter: 'blur(12px) saturate(180%)' }}
           >
             <div className="p-4 border-b border-gray-100 font-bold text-gray-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -205,7 +206,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 30 }}
                         transition={{ duration: 0.2 }}
-                        className={`flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-all duration-200 group ${!isRead ? getUnreadStyle() : 'border-l-4 border-transparent'}`}
+                        className={`flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-white/90 transition-all duration-200 group ${!isRead ? getUnreadStyle() : 'border-l-4 border-transparent'}`}
                       >
                         <Avatar  src="/Logo.svg" size={40} className="mt-1" />
                         <div 
@@ -245,7 +246,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
               </AnimatePresence>
             </div>
             {notifications.length > 0 && (
-              <div className="px-4 py-2 border-t border-gray-100 bg-gray-50">
+              <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/70">
                 <div className="text-xs text-gray-500 flex items-center justify-between">
                   <span>💡 Press Esc to close</span>
                 </div>

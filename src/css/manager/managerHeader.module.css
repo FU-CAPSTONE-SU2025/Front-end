@@ -1,11 +1,38 @@
 /* Manager Header (scoped) */
 .headerRoot {
   position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  z-index: 50;
-  background-color: #1e40af; /* bg-blue-800 */
-  color: #ffffff;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  background: rgba(30, 64, 175, 0.75); /* blue tint with transparency */
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 1000;
+  overflow: visible; /* allow dropdowns to escape */
+  isolation: isolate; /* keep backdrop/filter layering scoped */
+}
+
+/* Liquid glass layers */
+.headerRoot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* subtle inner highlights to sell the glass feel */
+  box-shadow: inset 2px 2px 0px -2px rgba(255, 255, 255, 0.7), inset 0 0 3px 1px rgba(255, 255, 255, 0.6);
+  background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%);
+}
+
+.headerRoot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  /* frosted blur of content behind navbar */
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  backdrop-filter: blur(10px) saturate(180%);
 }
 
 .container {
@@ -55,10 +82,6 @@
   text-decoration: none;
   margin: 0 0.75rem; /* match staff spacing */
 }
-
-/* Hover background (subtle) */
-.linkItem:hover { background: rgba(249, 115, 22, 0.12); }
-
 /* Animated underline */
 .linkItem::after {
   content: '';
@@ -71,7 +94,10 @@
   transition: width 0.3s ease;
 }
 
-.linkItem:hover::after { width: 100%; }
+.linkItem:hover::after {
+   width: 100%; 
+  background: rgba(249, 115, 22, 1);
+  }
 
 /* Active (only color + underline) */
 .linkActive {
