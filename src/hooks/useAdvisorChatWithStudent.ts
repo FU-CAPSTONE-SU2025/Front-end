@@ -402,9 +402,11 @@ export function useAdvisorChatWithStudent() {
       if (!isUnmountedRef.current) {
         const currentAdvisorId = getProfileIdFromToken();
         if (session.staffId === currentAdvisorId) {
-          // Add to My Chat
+          // Add to My Chat and remove from Open Chat (avoid duplicate)
           const newMyChatData = [...globalMyChatData, session];
+          const newOpenChatData = globalOpenChatData.filter(s => s.id !== session.id);
           updateMyChatData(newMyChatData);
+          updateOpenChatData(newOpenChatData);
         }
       }
     });
@@ -421,13 +423,19 @@ export function useAdvisorChatWithStudent() {
       if (!isUnmountedRef.current) {
         const currentAdvisorId = getProfileIdFromToken();
         if (session.staffId === 4) {
-          // Add to Open Chat
-          const newOpenChatData = [...globalOpenChatData, session];
-          updateOpenChatData(newOpenChatData);
+          // Add to Open Chat (unassigned) - avoid duplicate
+          const exists = globalOpenChatData.some(s => s.id === session.id);
+          if (!exists) {
+            const newOpenChatData = [...globalOpenChatData, session];
+            updateOpenChatData(newOpenChatData);
+          }
         } else if (session.staffId === currentAdvisorId) {
-          // Add to My Chat
-          const newMyChatData = [...globalMyChatData, session];
-          updateMyChatData(newMyChatData);
+          // Add to My Chat (assigned) - avoid duplicate
+          const exists = globalMyChatData.some(s => s.id === session.id);
+          if (!exists) {
+            const newMyChatData = [...globalMyChatData, session];
+            updateMyChatData(newMyChatData);
+          }
         }
       }
     });
@@ -493,14 +501,19 @@ export function useAdvisorChatWithStudent() {
     }
   }, [loadInitialMessages]);
 
-  // Send message
+  // Send message - improved like student
   const sendMessage = useCallback(async (content: string) => {
     if (!connectionRef.current || !currentSessionRef.current) {
       throw new Error('No active session');
     }
 
     try {
-      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.SEND_MESSAGE, currentSessionRef.current.id, content);
+      // Validate message before sending
+      if (!content || content.trim().length === 0) {
+        throw new Error('Message cannot be empty');
+      }
+
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.SEND_MESSAGE, currentSessionRef.current.id, content.trim());
     } catch (err) {
       throw new Error(`Failed to send message: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
