@@ -3,10 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { Input, Button, Collapse, Typography, Affix, Pagination, Spin, Empty, Table, Tag, Select } from 'antd';
 import { PlusOutlined, SearchOutlined, EditOutlined, BookOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
-import { useSearchParams, useNavigate, useParams } from 'react-router';
+import { useSearchParams, useNavigate } from 'react-router';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useCRUDCurriculum } from '../../hooks/useCRUDSchoolMaterial';
-import { Curriculum, SubjectVersionWithCurriculumInfo, CreateCurriculum, Program } from '../../interfaces/ISchoolProgram';
+import { Curriculum, SubjectVersionWithCurriculumInfo, CreateCurriculum } from '../../interfaces/ISchoolProgram';
 import dayjs from 'dayjs';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
@@ -52,7 +52,7 @@ const CurriculumPage: React.FC = () => {
   const [programId] = useSearchParams();
   useEffect(() => {
     if(programId!==null && programId!==undefined){
-      setSelectedProgramId(parseInt(programId.get('programId') || '0'));
+      setSelectedProgramId(parseInt(programId.get('programId')||"0"));
     }
     //console.log("programId",programId)
   }, [programId]);
@@ -63,19 +63,9 @@ const CurriculumPage: React.FC = () => {
     getAllCurriculums({ pageNumber: page, pageSize, search: search || undefined, programId: selectedProgramId || undefined });
   }, [page, pageSize, search, selectedProgramId]);
   useEffect(() => {
-    const title = searchParams.get('title');
-    if (title) setSearch(title);
+    const programId = searchParams.get('title');
+    if (programId) setSearch(programId);
   }, [searchParams]);
-
-
-
-  const handleProgramsPopupScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    // Programs are loaded all at once, no pagination needed
-    // This function is kept for compatibility but doesn't need to do anything
-  };
-
-  // Remove the automatic success handling effect to prevent false positives
-  // Success handling is now only done in the mutation's onSuccess callback
 
   // Fetch subject versions when a curriculum is expanded
   const handlePanelChange = async (key: string | string[]) => {
@@ -235,8 +225,8 @@ const CurriculumPage: React.FC = () => {
           <Select
             allowClear
             placeholder="Filter by Program"
-            value={selectedProgramId}
-            onChange={(v) => { setSelectedProgramId(v); setPage(1); }}
+            value={selectedProgramId!==0?selectedProgramId:undefined}
+            onChange={(id) => { setSelectedProgramId(id); setPage(1); }}
             style={{ minWidth: 220, borderRadius: 8 }}
             size="large"
           >

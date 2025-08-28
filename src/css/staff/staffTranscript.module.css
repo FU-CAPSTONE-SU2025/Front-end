@@ -1,5 +1,6 @@
 .sttContainer {
   width: 100vw;
+  height: 200vh; /* 200vh for the dynamic combo list */
   min-height: calc(100vh);
   flex-direction: column;
   align-items: center;

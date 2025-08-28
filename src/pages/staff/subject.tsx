@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Select, Affix, Collapse, Pagination, Spin, Empty, Tag, ConfigProvider } from 'antd';
-import { PlusOutlined, EditOutlined, SearchOutlined, UploadOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, SearchOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
-import { curriculums, combos, comboSubjects } from '../../datas/schoolData';
+// import { curriculums, combos } from '../../datas/schoolData';
+import { useSchoolApi } from '../../hooks/useSchoolApi';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCRUDSubject, useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
 import { CreateSubject } from '../../interfaces/ISchoolProgram';
@@ -11,12 +12,47 @@ import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { Subject } from '../../interfaces/ISchoolProgram';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
-const { Option } = Select;
 
 const SubjectPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [curriculumFilter, setCurriculumFilter] = useState<number | undefined>();
   const [comboFilter, setComboFilter] = useState<number | undefined>();
+  const [programForCurriculum] = useState<number | undefined>(undefined);
+  // API-backed lists for filters
+  const { useInfiniteComboList, useInfiniteCurriculumList } = useSchoolApi();
+  const [comboListPage, setComboListPage] = useState(1);
+  const [comboListSearch, setComboListSearch] = useState('');
+  const [comboOptions, setComboOptions] = useState<any[]>([]);
+  const { data: comboPaged, isLoading: comboFetching } = useInfiniteComboList(comboListPage, 10, comboListSearch);
+
+  const [curriculumListPage, setCurriculumListPage] = useState(1);
+  const [curriculumListSearch, setCurriculumListSearch] = useState('');
+  const [curriculumOptions, setCurriculumOptions] = useState<any[]>([]);
+  const { data: curriculumPaged, isLoading: curriculumFetching } = useInfiniteCurriculumList(curriculumListPage, 10, curriculumListSearch, programForCurriculum);
+
+  // Accumulate options for infinite scroll
+  useEffect(() => {
+    const items = comboPaged?.items || [];
+    if (comboListPage === 1) setComboOptions(items);
+    else if (items.length) setComboOptions(prev => {
+      const exist = new Set(prev.map((i: any) => i.id));
+      const unique = items.filter((i: any) => !exist.has(i.id));
+      return [...prev, ...unique];
+    });
+  }, [comboPaged, comboListPage]);
+  useEffect(() => {
+    const items = curriculumPaged?.items || [];
+    if (curriculumListPage === 1) setCurriculumOptions(items);
+    else if (items.length) setCurriculumOptions(prev => {
+      const exist = new Set(prev.map((i: any) => i.id));
+      const unique = items.filter((i: any) => !exist.has(i.id));
+      return [...prev, ...unique];
+    });
+  }, [curriculumPaged, curriculumListPage]);
+
+  // Reset pages on search change
+  useEffect(() => { setComboListPage(1); }, [comboListSearch]);
+  useEffect(() => { setCurriculumListPage(1); }, [curriculumListSearch, programForCurriculum]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
@@ -36,17 +72,21 @@ const SubjectPage: React.FC = () => {
   // CRUD hook for combos
   const {
     comboList,
-    paginationCombo,
     getAllCombos,
     comboPage,
     setComboPage,
     comboPageSize,
-    setComboPageSize,
     comboSearch,
     setComboSearch,
-    isComboLoading,
     fetchComboSubjectsMutation
   } = useCRUDCombo();
+
+  //  combo search, set the search only execute after 500ms, that is like... 3 letters before running, should run better than calling API everytime it is change
+  const [debouncedComboSearch, setDebouncedComboSearch] = useState(comboSearch);
+  useEffect(() => {
+    const handle = setTimeout(() => setDebouncedComboSearch(comboSearch), 500);
+    return () => clearTimeout(handle);
+  }, [comboSearch]);
 
   // State to store subjects for each combo
   const [expandedCombo, setExpandedCombo] = useState<number | null>(null);
@@ -77,9 +117,9 @@ const SubjectPage: React.FC = () => {
   };
 
   useEffect(() => {
-    // Backend search: pass search as filterValue
+    // In future, pass filters to API when supported; for now reuse search
     getAllSubjects({ pageNumber: page, pageSize, search: search });
-  }, [page, pageSize, search]);
+  }, [page, pageSize, search, comboFilter, curriculumFilter]);
 
   useEffect(() => {
     const title = searchParams.get('title');
@@ -273,8 +313,8 @@ const SubjectPage: React.FC = () => {
   ];
 
   useEffect(() => {
-    getAllCombos({ pageNumber: comboPage, pageSize: comboPageSize, search: comboSearch });
-  }, [comboPage, comboPageSize, comboSearch]);
+    getAllCombos({ pageNumber: comboPage, pageSize: comboPageSize, search: debouncedComboSearch });
+  }, [comboPage, comboPageSize, debouncedComboSearch]);
 
   return (
     <ConfigProvider
@@ -309,27 +349,41 @@ const SubjectPage: React.FC = () => {
           <Select
             allowClear
             placeholder="Filter by Curriculum"
-            style={{minWidth: 180, borderRadius: 999}}
+            style={{minWidth: 240, borderRadius: 999}}
             size="large"
             value={curriculumFilter}
-            onChange={setCurriculumFilter}
-          >
-            {curriculums.map(c => (
-              <Option key={c.id} value={c.id}>{c.curriculumName}</Option>
-            ))}
-          </Select>
+            showSearch
+            onSearch={(v) => setCurriculumListSearch(v)}
+            filterOption={false}
+            onPopupScroll={(e) => {
+              const el = e.target as HTMLDivElement;
+              if (el.scrollTop + el.clientHeight >= el.scrollHeight - 4 && !curriculumFetching) {
+                const total = curriculumPaged?.totalCount || 0;
+                if (curriculumOptions.length < total) setCurriculumListPage(p => p + 1);
+              }
+            }}
+            onChange={(val) => setCurriculumFilter(val)}
+            options={curriculumOptions.map((c: any) => ({ value: c.id, label: `${c.curriculumName} (${c.curriculumCode})` }))}
+          />
           <Select
             allowClear
             placeholder="Filter by Combo"
-            style={{minWidth: 180, borderRadius: 999}}
+            style={{minWidth: 240, borderRadius: 999}}
             size="large"
             value={comboFilter}
-            onChange={setComboFilter}
-          >
-            {combos.map(cb => (
-              <Option key={cb.id} value={cb.id}>{cb.comboName}</Option>
-            ))}
-          </Select>
+            showSearch
+            onSearch={(v) => setComboListSearch(v)}
+            filterOption={false}
+            onPopupScroll={(e) => {
+              const el = e.target as HTMLDivElement;
+              if (el.scrollTop + el.clientHeight >= el.scrollHeight - 4 && !comboFetching) {
+                const total = comboPaged?.totalCount || 0;
+                if (comboOptions.length < total) setComboListPage(p => p + 1);
+              }
+            }}
+            onChange={(val) => setComboFilter(val)}
+            options={comboOptions.map((cb: any) => ({ value: cb.id, label: cb.comboName }))}
+          />
           <Button 
             type="primary" 
             icon={<PlusOutlined />} 
@@ -383,8 +437,34 @@ const SubjectPage: React.FC = () => {
           </div>
         )}
       </Spin>
-      {/* Combo List Below Table */}
+      {/* Combo List Toolbar + Table */}
       <div style={{ marginTop: 48 }}>
+        {/* Combo Toolbar */}
+        <div style={{
+          display: 'flex',
+          gap: 12,
+          alignItems: 'center',
+          marginBottom: 12,
+          borderRadius: 16,
+          padding: 12,
+          boxShadow: '0 6px 20px rgba(30,64,175,0.10)'
+        }}
+        className={glassStyles.appleGlassCard}
+        >
+          <Input
+            placeholder="Search combos..."
+            value={comboSearch}
+            onChange={(e) => {
+              const val = e.target.value;
+              setComboSearch(val);
+              setComboPage(1);
+            }}
+            prefix={<SearchOutlined />}
+            style={{ maxWidth: 320, borderRadius: 999 }}
+            allowClear
+            size="large"
+          />
+        </div>
         <Collapse 
           accordion 
           bordered={false} 

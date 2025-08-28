@@ -5,15 +5,15 @@ import { useNavigate } from 'react-router';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { StudentBase } from '../../interfaces/IStudent';
-import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useActiveStudentApi } from '../../hooks/useActiveStudentApi';
 import { useSchoolApi } from '../../hooks/useSchoolApi';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { transformMultiStudentBulkImportData } from '../../utils/bulkImportTransformers';
+import { Combo, Curriculum, Program } from '../../interfaces/ISchoolProgram';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const StaffTranscript: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -332,7 +332,9 @@ const StaffTranscript: React.FC = () => {
         },
       }}
     >
-      <div className={styles.sttContainer}>
+      <div className={styles.sttContainer}
+      style={{height:"auto"}}
+      >
 
         {/* Toolbar */}
         <Affix offsetTop={80} style={{zIndex: 10}}>
@@ -397,7 +399,7 @@ const StaffTranscript: React.FC = () => {
                             }
                           }}
                         >
-                          {comboData?.items?.map((combo: any) => (
+                          {comboData?.items?.map((combo: Combo) => (
                             <Select.Option key={combo.id} value={combo.comboName}>
                               {combo.comboName}
                             </Select.Option>
@@ -427,7 +429,7 @@ const StaffTranscript: React.FC = () => {
                             }
                           }}
                         >
-                          {programData?.items?.map((program: any) => (
+                          {programData?.items?.map((program: Program) => (
                             <Select.Option key={program.id} value={program.id}>
                               {program.programName}
                             </Select.Option>
@@ -457,7 +459,7 @@ const StaffTranscript: React.FC = () => {
                             }
                           }}
                         >
-                          {curriculumData?.items?.map((curriculum: any) => (
+                          {curriculumData?.items?.map((curriculum: Curriculum) => (
                             <Select.Option key={curriculum.id} value={curriculum.curriculumCode}>
                               {curriculum.curriculumCode} - {curriculum.curriculumName}
                             </Select.Option>

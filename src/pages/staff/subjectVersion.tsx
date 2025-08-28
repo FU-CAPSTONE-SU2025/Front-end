@@ -16,6 +16,7 @@ import AddPrerequisiteSubjectVersionModal from '../../components/staff/AddPrereq
 import BulkDataImport from '../../components/common/bulkDataImport';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
+import LoadingScreen from '../../components/LoadingScreen';
 
 // Function to create default version for a subject (moved outside component)
 const createDefaultVersion = async (
@@ -144,9 +145,14 @@ const SubjectVersionPage: React.FC = () => {
   const [syllabusMap, setSyllabusMap] = useState<Record<number, Syllabus | null>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [initLoading, setInitLoading] = useState<string | null>(null);
 
   // Function to fetch prerequisites for a specific version
   const fetchPrerequisitesForVersion = useCallback(async (versionId: number) => {
+    if (!versionId || Number.isNaN(versionId) || versionId <= 0) {
+      console.warn('Skip fetch due to invalid versionId:', versionId);
+      return;
+    }
     setPrereqLoading(prev => ({ ...prev, [versionId]: true }));
     try {
       // Add timeout protection
@@ -158,10 +164,13 @@ const SubjectVersionPage: React.FC = () => {
       const prerequisites = await Promise.race([prerequisitesPromise, timeoutPromise]);
       
       if (prerequisites && Array.isArray(prerequisites)) {
+        console.log('Loaded for version', versionId, 'count:', prerequisites.length);
         setPrereqMap(prev => ({
           ...prev,
           [versionId]: prerequisites
         }));
+      } else {
+        console.log('Empty or invalid list for version', versionId, prerequisites);
       }
     } catch (error) {
       console.error('Failed to fetch prerequisites for version:', versionId, error);
@@ -206,6 +215,10 @@ const SubjectVersionPage: React.FC = () => {
 
   // Handler to fetch or create syllabus for a specific version
   const fetchOrCreateSyllabus = useCallback(async (versionId: number, subjectData: any) => {
+    if (!versionId || Number.isNaN(versionId) || versionId <= 0) {
+      console.warn('Syllabus: Skip due to invalid versionId:', versionId);
+      return;
+    }
     if (!subjectData) {
       return;
     }
@@ -215,6 +228,7 @@ const SubjectVersionPage: React.FC = () => {
       let syllabusData: Syllabus | null = null;
       try {
         syllabusData = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+        console.log('Syllabus: Fetch for version', versionId, 'result:', !!syllabusData);
       } catch (err) {
         console.error('Error fetching syllabus for version:', versionId, err);
         syllabusData = null;
@@ -237,6 +251,7 @@ const SubjectVersionPage: React.FC = () => {
         );
         
         if (newSyllabus) {
+          console.log('[Syllabus] Created for version', versionId, 'id:', newSyllabus.id);
           setSyllabusMap(prev => ({
             ...prev,
             [versionId]: newSyllabus
@@ -259,6 +274,8 @@ const SubjectVersionPage: React.FC = () => {
             ...prev,
             [versionId]: newSyllabus.sessions || []
           }));
+        } else {
+          console.warn('[Syllabus] Create returned null for version', versionId);
         }
       } else {
         // Syllabus exists, use it
@@ -272,6 +289,7 @@ const SubjectVersionPage: React.FC = () => {
           ...prev,
           [versionId]: syllabusData
         }));
+        console.log('[Syllabus] Using existing for version', versionId, 'assessments:', assessments.length, 'materials:', materials.length, 'outcomes:', outcomes.length, 'sessions:', sessions.length);
         
         // Update the maps with existing syllabus data
         setAssessmentMap(prev => ({
@@ -335,6 +353,7 @@ const SubjectVersionPage: React.FC = () => {
             console.log('API returned unexpected data type:', typeof response, response);
             versionsData = [];
           }
+          console.log('[Versions] Fetched count:', Array.isArray(versionsData) ? versionsData.length : 'N/A', versionsData);
         } catch (err: any) {
           // Handle specific error cases
           if (err?.response?.status === 400 && err?.response?.data?.message?.includes('not approved')) {
@@ -348,39 +367,61 @@ const SubjectVersionPage: React.FC = () => {
         }
         
         if (!Array.isArray(versionsData) || versionsData.length === 0) {
-          // No versions exist, automatically create default version
+          // No versions exist, automatically create default version and then refetch to get its real ID
           showInfo('No versions found. Automatically creating default version and syllabus...');
+          setInitLoading('Creating default version...');
           
           try {
             const defaultVersions = await createDefaultVersion(subjectData, addSubjectVersionMutation, handleSuccess, handleError);
-            // Ensure defaultVersions is an array
-            const versionsToSet = Array.isArray(defaultVersions) ? defaultVersions : [];
+            console.log('[Versions] Default create returned:', defaultVersions);
             
-            if (versionsToSet.length > 0) {
-              setSubjectVersions(versionsToSet);
-              setActiveKey(String(versionsToSet[0].id));
-              
-              // Wait a moment before creating syllabus to ensure version is fully created
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              
-              // Automatically create syllabus for the first version
-              await fetchOrCreateSyllabus(versionsToSet[0].id, subjectData);
-              
-              // Wait before fetching prerequisites
-              await new Promise(resolve => setTimeout(resolve, 500));
-              
-              // Fetch prerequisites for the first version
-              try {
-                await fetchPrerequisitesForVersion(versionsToSet[0].id);
-              } catch (error) {
-                console.error('Failed to fetch prerequisites for default version:', error);
+            // After creation, always refetch to ensure we have a valid ID instead of a message payload
+            setInitLoading('Fetching newly created version...');
+            let refreshedAfterCreate: SubjectVersion[] = [];
+            try {
+              const resp = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+              if (Array.isArray(resp)) refreshedAfterCreate = resp;
+              else if (resp && typeof resp === 'object' && 'data' in (resp as any)) {
+                refreshedAfterCreate = Array.isArray((resp as any).data) ? (resp as any).data : [];
               }
+            } catch (refErr) {
+              console.error('[Versions] Refetch after create failed:', refErr);
+            }
+            
+            const validVersions = (refreshedAfterCreate || [])
+              .filter(v => v && typeof v.id === 'number' && v.id > 0);
+            const newestVersion = validVersions
+              .slice()
+              .sort((a, b) => (b.id || 0) - (a.id || 0))[0];
+            
+            if (newestVersion && newestVersion.id > 0) {
+              console.log('[Versions] Using newly created version id:', newestVersion.id, newestVersion);
+              setSubjectVersions(validVersions);
+              setActiveKey(String(newestVersion.id));
+              
+              // Ensure backend has finalized creation
+              setInitLoading('Preparing syllabus...');
+              await new Promise(resolve => setTimeout(resolve, 800));
+              
+              // Create syllabus for the new version
+              await fetchOrCreateSyllabus(newestVersion.id, subjectData);
+              
+              // Fetch prerequisites for the new version
+              setInitLoading('Fetching prerequisites...');
+              await new Promise(resolve => setTimeout(resolve, 300));
+              await fetchPrerequisitesForVersion(newestVersion.id);
+              setInitLoading(null);
             } else {
-              handleError('Failed to create default version');
+              console.warn('[Versions] No valid version found after creation refetch', refreshedAfterCreate);
+              handleError('Failed to load created version');
+              setInitLoading(null);
+              setLoading(false);
+              return;
             }
           } catch (error) {
             console.error('Error creating default version:', error);
             handleError('Failed to create default version. Please try again.');
+            setInitLoading(null);
           }
         } else {
           // Versions exist, use them
@@ -388,12 +429,20 @@ const SubjectVersionPage: React.FC = () => {
           setSubjectVersions(finalVersionsData);
           if (finalVersionsData.length > 0) {
             setActiveKey(String(finalVersionsData[0].id));
+            setTimeout(() => {
+              console.log('[Versions] Using existing, post-set snapshot', {
+                activeKeyAfterSet: String(finalVersionsData[0].id),
+                versionIds: finalVersionsData.map(v => v?.id)
+              });
+            }, 0);
             
+            setInitLoading('Loading syllabus...');
             // Fetch syllabus for the first version
             await fetchOrCreateSyllabus(finalVersionsData[0].id, subjectData);
             
             // Fetch prerequisites for all versions - with error handling
             try {
+              setInitLoading('Loading prerequisites...');
               await fetchAllPrerequisites();
             } catch (error) {
               console.error('Failed to fetch all prerequisites:', error);
@@ -404,6 +453,7 @@ const SubjectVersionPage: React.FC = () => {
             } catch (prereqError) {
               console.error('Failed to fetch prerequisites for first version:', prereqError);
             }
+            setInitLoading(null);
           }
         }
         
@@ -667,8 +717,8 @@ const SubjectVersionPage: React.FC = () => {
 
   // Debug useEffect for activeKey
   useEffect(() => {
-    console.log('ActiveKey changed:', activeKey);
-  }, [activeKey]);
+    console.log('[Render Sanity] activeKey:', activeKey, 'versionIds:', subjectVersions.map(v => v.id));
+  }, [subjectVersions, activeKey]);
 
   // Safety check for activeKey - ensure it's still valid after state updates
   useEffect(() => {
@@ -1114,35 +1164,6 @@ const SubjectVersionPage: React.FC = () => {
     }
   };
 
-  const handleRemoveOutcomeFromSession = async (versionId: number, sessionId: number, outcomeId: number): Promise<void> => {
-    try {
-      await removeOutcomeFromSessionMutation.mutateAsync({
-        sessionId,
-        outcomeId
-      });
-      
-      // Refetch syllabus to update UI
-      const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
-      if (updatedSyllabus) {
-        setSyllabusMap(prev => ({
-          ...prev,
-          [versionId]: updatedSyllabus
-        }));
-        
-        // Update session map with new data
-        setSessionMap(prev => ({
-          ...prev,
-          [versionId]: updatedSyllabus.sessions || []
-        }));
-      }
-      
-      handleSuccess('Outcome removed from session successfully!');
-    } catch (error) {
-      console.error('Error removing outcome from session:', error);
-      handleError('Failed to remove outcome from session');
-    }
-  };
-
   const handleBulkDataImported = (type: string, versionId: number, importedData: any[]) => {
     if (type === 'ASSESSMENT') setAssessmentMap(prev => ({ ...prev, [versionId]: importedData }));
     if (type === 'MATERIAL') setMaterialMap(prev => ({ ...prev, [versionId]: importedData }));
@@ -1158,6 +1179,14 @@ const SubjectVersionPage: React.FC = () => {
   const handleTabChange = useCallback(async (key: string) => {
     setActiveKey(key);
     const versionId = Number(key);
+    if (!versionId || Number.isNaN(versionId) || versionId <= 0) {
+      console.warn('[Tabs] Ignoring invalid versionId on change:', key, versionId);
+      return;
+    }
+    console.log('[Tabs] Change to key:', key, 'parsed versionId:', versionId, {
+      hasSyllabus: !!syllabusMap[versionId],
+      hasPrereqs: !!prereqMap[versionId]
+    });
     
     // Fetch syllabus for this version if not already loaded
     if (!syllabusMap[versionId]) {
@@ -1188,18 +1217,30 @@ const SubjectVersionPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading || !!initLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <Typography.Text>Loading...</Typography.Text>
-      </div>
+      <>
+        <LoadingScreen isLoading={true} message={initLoading || 'Loading...'} />
+      </>
     );
   }
 
   if (error) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <Typography.Text type="danger">{error}</Typography.Text>
+      <div style={{ position: 'fixed', inset: 0, backdropFilter: 'blur(4px)', background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+        <div style={{ background: '#ffffff', borderRadius: 12, padding: 24, width: 'min(560px, 92vw)', boxShadow: '0 10px 30px rgba(0,0,0,0.25)', border: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+            <span style={{ display: 'inline-flex', width: 36, height: 36, borderRadius: 999, background: '#fee2e2', alignItems: 'center', justifyContent: 'center', color: '#dc2626', fontWeight: 800 }}>!</span>
+            <Typography.Title level={4} style={{ margin: 0, color: '#1f2937' }}>Something went wrong</Typography.Title>
+          </div>
+          <Typography.Paragraph style={{ color: '#6b7280', marginBottom: 16 }}>
+            {error}
+          </Typography.Paragraph>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button onClick={() => window.history.back()}>Back</Button>
+            <Button type="primary" onClick={() => window.location.reload()}>Retry</Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1221,9 +1262,6 @@ const SubjectVersionPage: React.FC = () => {
               <h3 className={styles.syllabusSubtitle}>
                 {subject?.description}
               </h3>
-              <p className={styles.syllabusSubtitle}>
-                Subject Versions & Learning Management
-              </p>
             </div>
           </div>
           <div className={styles.syllabusHeaderRight}>
@@ -1285,6 +1323,7 @@ const SubjectVersionPage: React.FC = () => {
           }
         `}
       </style>
+      <LoadingScreen isLoading={!!initLoading || loading} message={initLoading || 'Loading...'} />
       <div className={styles.syllabusContainer} style={{ width: '100%', maxWidth: 'none', minWidth: 0 }}>
         {/* Header */}
         <div className={styles.syllabusHeader}>
@@ -1297,11 +1336,8 @@ const SubjectVersionPage: React.FC = () => {
                 {subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Subject'}
               </h2>
               <h3 className={styles.syllabusSubtitle}>
-                {subject?.description}
+                <span style={{ whiteSpace: 'pre-line' }}>{subject?.description}</span>
               </h3>
-              <p className={styles.syllabusSubtitle}>
-                Subject Versions & Learning Management
-              </p>
             </div>
           </div>
           <div className={styles.syllabusHeaderRight}>
@@ -1339,12 +1375,12 @@ const SubjectVersionPage: React.FC = () => {
             type="card"
             tabBarStyle={{ background: 'transparent', borderRadius: 12, boxShadow: 'none', display: 'flex', justifyContent: 'center' }}
             items={(Array.isArray(subjectVersions) ? subjectVersions : [])
-              .filter(Boolean)
-              .map((version, index) => {
+              .filter(v => v && typeof v.id === 'number' && v.id > 0)
+              .map((version, _index) => {
               const isActive = activeKey === String(version.id);
               
               // Safety check for version data
-              if (!version || !version.id) {
+              if (!version || !version.id || version.id <= 0) {
                 console.error('Invalid version data:', version);
                 return null;
               }
@@ -1484,7 +1520,7 @@ const SubjectVersionPage: React.FC = () => {
                                 status={editingVersionData[version.id]?.description !== version.description ? 'warning' : undefined}
                               />
                             ) : (
-                              <span style={{ marginLeft: 8 }}>{version.description || 'N/A'}</span>
+                              <span style={{ marginLeft: 8, whiteSpace: 'pre-line' }}>{version.description || 'N/A'}</span>
                             )}
                           </div>
                           <div>
@@ -1729,7 +1765,7 @@ const SubjectVersionPage: React.FC = () => {
                   </div>
                 ),
               };
-            })}
+            }).filter(Boolean)}
           />
         </div>
 

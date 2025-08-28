@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Card, Row, Col, Avatar, Typography, Tag, Input, Button, Modal, Progress, List, Spin, Select } from 'antd';
+import { Card, Row, Col, Avatar, Typography, Tag, Input, Button, Modal, Progress, List, Spin } from 'antd';
 import { ArrowLeftOutlined, BookOutlined, UserOutlined, CalendarOutlined, MailOutlined, PlusOutlined, SmileOutlined, EditOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffEditTranscript.module.css';
@@ -11,10 +11,9 @@ import { CreateJoinedSubject, BulkCreateJoinedSubjects, JoinedSubject } from '..
 import BulkDataImport from '../../components/common/bulkDataImport';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
-import { AccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
+import { AccountProps } from '../../interfaces/IAccount';
 import { useSchoolApi } from '../../hooks/useSchoolApi';
 import { useStudentApi } from '../../hooks/useStudentApi';
-import useUserProfile from '../../hooks/useUserProfile';
 import useCRUDStudent from '../../hooks/useCRUDStudent';
 
 
@@ -206,7 +205,6 @@ const EditStudentTranscript: React.FC = () => {
   // Reset combo pagination on search or modal open
   useEffect(() => {
     setComboPage(1);
-    setComboItems([]);
   }, [comboSearch]);
 
   // Accumulate curriculum items across pages
@@ -231,7 +229,6 @@ const EditStudentTranscript: React.FC = () => {
   // Reset curriculum pagination on search or modal open
   useEffect(() => {
     setCurriculumPage(1);
-    setCurriculumItems([]);
   }, [curriculumSearch, studentProgramId]);
   
   // Update subject versions when data is loaded
@@ -401,7 +398,10 @@ const EditStudentTranscript: React.FC = () => {
 
   // Combo editing handlers
   const handleComboEditClick = () => {
+    // Reset paging and ensure fresh data on open
     setIsComboEditModalVisible(true);
+    setComboSearch('');
+    setComboPage(1);
   };
 
   const handleComboEditModalClose = () => {
@@ -409,6 +409,19 @@ const EditStudentTranscript: React.FC = () => {
     setSelectedCombo(null);
     setComboSearch('');
     setComboPage(1);
+  };
+    // Curriculum editing handlers
+  const handleCurriculumEditClick = () => {
+    setIsCurriculumEditModalVisible(true);
+    setCurriculumSearch('');
+    setCurriculumPage(1);
+  };
+
+  const handleCurriculumEditModalClose = () => {
+    setIsCurriculumEditModalVisible(false);
+    setSelectedCurriculum(null);
+    setCurriculumSearch('');
+    setCurriculumPage(1);
   };
 
   const handleComboSelect = (combo: any) => {
@@ -440,6 +453,8 @@ const EditStudentTranscript: React.FC = () => {
       handleError('Failed to update student combo');
     }
   };
+
+
 
   return (
     <div className={styles.container}>
@@ -502,7 +517,7 @@ const EditStudentTranscript: React.FC = () => {
                   <Button 
                     type="link" 
                     icon={<EditOutlined />} 
-                    onClick={() => setIsCurriculumEditModalVisible(true)}
+                    onClick={handleCurriculumEditClick}
                     size="small"
                     style={{ marginLeft: 8, padding: 0, height: 'auto' }}
                   />
@@ -539,7 +554,14 @@ const EditStudentTranscript: React.FC = () => {
                   </div>
                   <div className={styles.academicItem}>
                     <Text strong>Number of Bans</Text>
-                    <Text>{studentAccount?.studentDataDetailResponse.numberOfBan ?? 0}</Text>
+                    <Text
+                      style={{
+                        color: 
+                        studentAccount?.studentDataDetailResponse.numberOfBan>0?"orange":
+                        studentAccount?.studentDataDetailResponse.numberOfBan>1?"red":
+                       studentAccount?.studentDataDetailResponse.numberOfBan>2?"darkgrey":"green"
+                      }}
+                    >{studentAccount?.studentDataDetailResponse.numberOfBan ?? 0}</Text>
                   </div>
                 </div>
               </div>
@@ -1068,13 +1090,7 @@ const EditStudentTranscript: React.FC = () => {
       {/* Curriculum Edit Modal */}
       <Modal
         open={isCurriculumEditModalVisible}
-        onCancel={() => {
-          setIsCurriculumEditModalVisible(false);
-          setSelectedCurriculum(null);
-          setCurriculumSearch('');
-          setCurriculumPage(1);
-          setCurriculumItems([]);
-        }}
+        onCancel={handleCurriculumEditModalClose}
         title="Edit Student Curriculum"
         width="80%"
         style={{ top: 20 }}
@@ -1191,12 +1207,7 @@ const EditStudentTranscript: React.FC = () => {
           paddingTop: '16px',
           borderTop: '1px solid #e5e7eb'
         }}>
-          <Button onClick={() => {
-            setIsCurriculumEditModalVisible(false);
-            setSelectedCurriculum(null);
-            setCurriculumSearch('');
-            setCurriculumPage(1);
-          }}>
+          <Button onClick={handleCurriculumEditModalClose}>
             Cancel
           </Button>
           <Button 
