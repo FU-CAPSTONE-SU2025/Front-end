@@ -241,29 +241,6 @@ const ComboManagerPage: React.FC = () => {
     }}
   >
     <div className={styles.sttContainer}>
-      {/* Title Card */}
-      <Card 
-        className={glassStyles.appleGlassCard}
-        style={{ 
-          marginBottom: 24,
-          padding: '2rem 3rem',
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: '0 20px 60px rgba(30, 64, 175, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06)'
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <Title level={2} style={{ margin: 0, color: '#1E293B', fontSize: '2.5rem', fontWeight: 800 }}>
-              Combo Management
-            </Title>
-            <Text type="secondary" style={{ fontSize: 16 }}>
-              Manage and approve combo submissions
-            </Text>
-          </div>
-        </div>
-      </Card>
-
       {/* Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
         <Card 

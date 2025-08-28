@@ -4,7 +4,6 @@ import { DatePicker } from 'antd';
 import dayjs from 'dayjs';
 import { jwtDecode } from 'jwt-decode';
 import styles from '../../css/admin/account.module.css';
-import BulkDataImport from '../../components/common/bulkDataImport';
 import AccountCounter from '../../components/admin/accountCounter';
 import AvatarUpload from '../../components/common/AvatarUpload';
 import { getAuthState } from '../../hooks/useAuthState';
@@ -193,14 +192,6 @@ const Profile: React.FC = () => {
         console.error("Failed to update profile:", error);
       }
     }
-  };
-  const handleDataImported = (importedData: { [type: string]: { [key: string]: string }[] }) => {
-    // Extract admin profile data from the imported data
-    const adminProfileData = importedData['ADMIN_PROFILE'] || [];
-    handleSuccess(`Successfully imported ${adminProfileData.length} admin profiles`);
-    setIsImportOpen(false);
-    // Refresh the account list
-    refetch();
   };
 
   const hasErrors = Object.values(errors).some((error) => error !== null);

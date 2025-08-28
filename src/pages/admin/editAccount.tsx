@@ -172,7 +172,7 @@ const EditAccount: React.FC = () => {
             dateOfBirth: userData.dateOfBirth ? dayjs(userData.dateOfBirth) : null,
             enrolledAt: userData.studentDataDetailResponse?.enrolledAt ? dayjs(userData.studentDataDetailResponse.enrolledAt) : null,
             careerGoal: userData.studentDataDetailResponse?.careerGoal || '',
-            programId: userData.studentDataListResponse?.programId || 1,
+            programId: userData.studentDataListResponse?.programId || null,
             curriculumCode: userData.studentDataListResponse?.curriculumCode || '',
             campus: userData.staffDataDetailResponse?.campus || '',
             department: userData.staffDataDetailResponse?.department || '',
@@ -640,6 +640,7 @@ const EditAccount: React.FC = () => {
                              String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                            }
                            notFoundContent={'No programs found'}
+                           disabled={!!id}
                          >
                            {programs.map(program => (
                              <Option key={program.id} value={program.id} label={program.programName}>
@@ -672,7 +673,7 @@ const EditAccount: React.FC = () => {
                              String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                            }
                            notFoundContent={'No curriculums found'}
-                           disabled={!selectedProgramId}
+                           disabled={!!id || !selectedProgramId}
                          >
                            {curriculums.map(curriculum => (
                              <Option key={curriculum.id} value={curriculum.curriculumCode} label={curriculum.curriculumName}>

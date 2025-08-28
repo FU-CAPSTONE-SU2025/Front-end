@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Affix, Pagination, Spin, Modal, Form, Tag, Space, Tooltip, Card, Typography, Row, Col, ConfigProvider } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { NumberOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useNavigate } from 'react-router';
@@ -91,28 +91,7 @@ const ManagerProgramPage: React.FC = () => {
     }}
   >
     <div className={styles.sttContainer}>
-      {/* Title Card */}
-      <Card 
-        className={glassStyles.appleGlassCard}
-        style={{ 
-          marginBottom: 24,
-          padding: '2rem 3rem',
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: '0 20px 60px rgba(30, 64, 175, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06)'
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <Title level={2} style={{ margin: 0, color: '#1E293B', fontSize: '2.5rem', fontWeight: 800 }}>
-              Program Management
-            </Title>
-            <Text type="secondary" style={{ fontSize: 16 }}>
-              Manage and view program information
-            </Text>
-          </div>
-        </div>
-      </Card>
+
 
       {/* Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
@@ -141,6 +120,24 @@ const ManagerProgramPage: React.FC = () => {
                   allowClear
                   className={glassStyles.appleGlassInput}
                 />
+              </Space>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Text strong>Stats</Text>
+                <Button
+                  type="primary"
+                  style={{
+                    borderRadius: 12,
+                    background: '',
+                    border: 'none',
+                    fontWeight: 600,
+                    boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)'
+                  }}
+                  className={glassStyles.appleGlassButton}
+                >
+                  Currently Active Programs: <NumberOutlined />{paginationProgram?.total || 0}
+                </Button>
               </Space>
             </Col>
           </Row>

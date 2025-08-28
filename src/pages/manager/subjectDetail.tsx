@@ -94,7 +94,7 @@ const SubjectDetail: React.FC = () => {
       key: 'description',
       width: 300,
       render: (text: string) => (
-        <div className="max-w-xs truncate" title={text}>
+        <div className="max-w-xs" style={{ whiteSpace: 'pre-line' }} title={text}>
           {text}
         </div>
       ),
@@ -131,7 +131,7 @@ const SubjectDetail: React.FC = () => {
       key: 'description',
       width: 400,
       render: (text: string) => (
-        <div className="max-w-xs truncate" title={text}>
+        <div className="max-w-xs" style={{ whiteSpace: 'pre-line' }} title={text}>
           {text}
         </div>
       ),
@@ -221,7 +221,7 @@ const SubjectDetail: React.FC = () => {
       key: 'completionCriteria',
       width: 200,
       render: (text: string) => (
-        <div className="max-w-xs truncate" title={text}>
+        <div className="max-w-xs" style={{ whiteSpace: 'pre-line' }} title={text}>
           {text}
         </div>
       ),
@@ -335,7 +335,7 @@ const SubjectDetail: React.FC = () => {
           <Divider />
           <div>
             <h3 className="font-semibold text-gray-700 mb-2">Description</h3>
-            <p className="text-gray-600">{subject.description}</p>
+            <p className="text-gray-600" style={{ whiteSpace: 'pre-line' }}>{subject.description}</p>
           </div>
         </Card>
 

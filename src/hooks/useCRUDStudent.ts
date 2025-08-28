@@ -1,7 +1,7 @@
 
-import { GetAllStudent } from '../api/student/StudentAPI'
+import { GetAllStudent, UpdateStudentMajor } from '../api/student/StudentAPI'
 import { useMutation } from '@tanstack/react-query';
-import { pagedStudentData, StudentBase } from '../interfaces/IStudent';
+import { IUpdateStudentMajor, pagedStudentData, StudentBase } from '../interfaces/IStudent';
 
 interface PaginationParams {
   pageNumber: number;
@@ -34,6 +34,7 @@ export default function useCRUDStudent() {
   // To fix, wrap the parameters in a single object and type accordingly.
 
   type UpdateStudentScoreParams = { studentId: number; subjectId: number; score: number };
+  type UpdateStudentMajorParams = { studentProfileId: number; programId?: number; registeredComboCode?: string; curriculumCode: string };
 
   const updateStudentScoreMutation = useMutation<StudentBase | number, unknown, UpdateStudentScoreParams>({
     mutationFn: async ({ studentId, subjectId, score }) => {
@@ -42,6 +43,23 @@ export default function useCRUDStudent() {
     },
   });
   
+  const updateStudentMajorMutation = useMutation<IUpdateStudentMajor | number, unknown, UpdateStudentMajorParams>({
+    mutationFn: async ({ studentProfileId, programId, registeredComboCode,curriculumCode }) => {
+      // const data = await UpdateStudentMajor(studentId, programId, registeredComboCode);
+      const requestData:IUpdateStudentMajor = {
+        programId: programId,
+        curriculumCode: curriculumCode,
+        registeredComboCode: registeredComboCode,
+
+      }
+      const responseData = await UpdateStudentMajor(studentProfileId,requestData);
+      return responseData;
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
   const metaData = getStudentMutation.data || null;
   const studentList = metaData?.items || [];
   const pagination = metaData ? {
@@ -57,7 +75,8 @@ export default function useCRUDStudent() {
     studentList,
     pagination,
     isLoading: getStudentMutation.isPending,
-    updateStudentScoreMutation
+    updateStudentScoreMutation,
+    updateStudentMajorMutation
   }
 }
 

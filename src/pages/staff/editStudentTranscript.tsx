@@ -15,6 +15,7 @@ import { AccountProps, UpdateAccountProps } from '../../interfaces/IAccount';
 import { useSchoolApi } from '../../hooks/useSchoolApi';
 import { useStudentApi } from '../../hooks/useStudentApi';
 import useUserProfile from '../../hooks/useUserProfile';
+import useCRUDStudent from '../../hooks/useCRUDStudent';
 
 
 const { Title, Text } = Typography;
@@ -37,7 +38,7 @@ const EditStudentTranscript: React.FC = () => {
   const navigate = useNavigate();
   const { handleError, handleSuccess } = useApiErrorHandler();
   const { showInfo, showWarning } = useMessagePopupContext();
-  const { useStudentById } = useStudentApi();
+  const { useFetchStudentById } = useStudentApi();
   const { 
     useSubjectVersionsToCurriculumByCode,
     useJoinedSubjectList, 
@@ -45,7 +46,8 @@ const EditStudentTranscript: React.FC = () => {
     usePagedSemesterBlockType,
     registerStudentToSubject,
     registerOneStudentToMultipleSubjects,
-    useInfiniteComboList
+    useInfiniteComboList,
+    usePagedCurriculumList
   } = useSchoolApi();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
@@ -82,15 +84,24 @@ const EditStudentTranscript: React.FC = () => {
   const [selectedCombo, setSelectedCombo] = useState<any>(null);
   const [comboSearch, setComboSearch] = useState('');
   const [comboPage, setComboPage] = useState(1);
+  const [comboItems, setComboItems] = useState<any[]>([]);
+  const [comboTotal, setComboTotal] = useState<number>(0);
+
+  // Curriculum editing states
+  const [isCurriculumEditModalVisible, setIsCurriculumEditModalVisible] = useState(false);
+  const [curriculumSearch, setCurriculumSearch] = useState('');
+  const [curriculumPage, setCurriculumPage] = useState(1);
+  const [selectedCurriculum, setSelectedCurriculum] = useState<any>(null);
+  const [curriculumItems, setCurriculumItems] = useState<any[]>([]);
+  const [curriculumTotal, setCurriculumTotal] = useState<number>(0);
 
   // Joined subjects state
   const [joinedSubjects, setJoinedSubjects] = useState<JoinedSubject[]>([]);
 
   // Use the hook to get student data
-  const { data: accountData} = useStudentById(studentId || '');
+  const { data: accountData, refetch: refetchStudent } = useFetchStudentById(studentId || '');
   
-  // Initialize useUserProfile hook for updating student data
-  const { updateProfileAsync } = useUserProfile();
+  const { updateStudentMajorMutation } = useCRUDStudent();
   
   // Update student account when data is loaded
   useEffect(() => {
@@ -163,6 +174,65 @@ const EditStudentTranscript: React.FC = () => {
   
   // Use the hook to get combo list for editing
   const { data: comboData, isLoading: loadingCombos } = useInfiniteComboList(comboPage, 20, comboSearch);
+
+  // Paged curriculums for editing (filtered by student's programId)
+  const studentProgramId = studentAccount?.studentDataDetailResponse?.programId || undefined;
+  const { data: pagedCurriculums, isLoading: loadingCurriculums } = usePagedCurriculumList(
+    curriculumPage,
+    20,
+    curriculumSearch,
+    studentProgramId
+  );
+
+  // Accumulate combo items across pages
+  useEffect(() => {
+    const items = comboData?.items || [];
+    const total = comboData?.totalCount || items.length;
+    setComboTotal(total);
+    if (comboPage === 1) {
+      setComboItems(items);
+    } else if (items.length) {
+      setComboItems(prev => {
+        const existing = new Set(prev.map((i: any) => i.id ?? `${i.comboName}`));
+        const uniqueNew = items.filter((i: any) => {
+          const key = i.id ?? `${i.comboName}`;
+          return !existing.has(key);
+        });
+        return [...prev, ...uniqueNew];
+      });
+    }
+  }, [comboData, comboPage]);
+
+  // Reset combo pagination on search or modal open
+  useEffect(() => {
+    setComboPage(1);
+    setComboItems([]);
+  }, [comboSearch]);
+
+  // Accumulate curriculum items across pages
+  useEffect(() => {
+    const items = pagedCurriculums?.items || [];
+    const total = pagedCurriculums?.totalCount || items.length;
+    setCurriculumTotal(total);
+    if (curriculumPage === 1) {
+      setCurriculumItems(items);
+    } else if (items.length) {
+      setCurriculumItems(prev => {
+        const existing = new Set(prev.map((i: any) => i.id ?? `${i.curriculumCode}`));
+        const uniqueNew = items.filter((i: any) => {
+          const key = i.id ?? `${i.curriculumCode}`;
+          return !existing.has(key);
+        });
+        return [...prev, ...uniqueNew];
+      });
+    }
+  }, [pagedCurriculums, curriculumPage]);
+
+  // Reset curriculum pagination on search or modal open
+  useEffect(() => {
+    setCurriculumPage(1);
+    setCurriculumItems([]);
+  }, [curriculumSearch, studentProgramId]);
   
   // Update subject versions when data is loaded
   useEffect(() => {
@@ -352,36 +422,15 @@ const EditStudentTranscript: React.FC = () => {
     }
 
     try {
-      const updateData: UpdateAccountProps = {
-        username: studentAccount.username,
-        email: studentAccount.email,
-        firstName: studentAccount.firstName,
-        lastName: studentAccount.lastName,
-        dateOfBirth: studentAccount.dateOfBirth,
-        avatarUrl: studentAccount.avatarUrl || '',
-        roleId: 5, // Student role ID
-        status: studentAccount.status,
-        staffDataUpdateRequest: null,
-        studentDataUpdateRequest: {
-          enrolledAt: studentAccount.studentDataDetailResponse?.enrolledAt || '',
-          doGraduate: studentAccount.studentDataDetailResponse?.doGraduate || false,
-          careerGoal: studentAccount.studentDataDetailResponse?.careerGoal || '',
-          numberOfBan: studentAccount.studentDataDetailResponse?.numberOfBan || 0,
-          programId: studentAccount.studentDataDetailResponse?.programId || 0,
-          registeredComboCode: selectedCombo.comboName,
-          curriculumCode: studentAccount.studentDataDetailResponse?.curriculumCode || ''
-        }
-      };
-
-      const result = await updateProfileAsync({ 
-        userId: parseInt(studentId || '0'), 
-        data: updateData 
+      const result = await updateStudentMajorMutation.mutateAsync({
+        studentProfileId: studentAccount.studentDataDetailResponse?.id || 0,
+        registeredComboCode: selectedCombo.comboName,
+        curriculumCode: studentAccount.studentDataDetailResponse?.curriculumCode || ''
       });
 
       if (result) {
         handleSuccess(`Successfully updated student's combo to ${selectedCombo.comboName}`);
-        // Refresh student data
-        window.location.reload(); // Simple refresh for now
+        await refetchStudent();
         handleComboEditModalClose();
       } else {
         handleError('Failed to update student combo');
@@ -450,6 +499,13 @@ const EditStudentTranscript: React.FC = () => {
                 <div className={styles.detailItem}>
                   <BookOutlined className={styles.detailIcon} />
                   <Text>Curriculum: {studentAccount?.studentDataDetailResponse.curriculumCode || 'N/A'}</Text>
+                  <Button 
+                    type="link" 
+                    icon={<EditOutlined />} 
+                    onClick={() => setIsCurriculumEditModalVisible(true)}
+                    size="small"
+                    style={{ marginLeft: 8, padding: 0, height: 'auto' }}
+                  />
                 </div>
                 <div className={styles.detailItem}>
                   <BookOutlined className={styles.detailIcon} />
@@ -475,14 +531,8 @@ const EditStudentTranscript: React.FC = () => {
                     <Text strong>GPA</Text>
                     <Text className={styles.gpa}>{studentAccount?.studentDataDetailResponse.gpa !== undefined ? studentAccount?.studentDataDetailResponse.gpa.toFixed(2) : '-'}</Text>
                   </div> */}
-                  <div className={styles.academicItem}>
-                    <Text strong>Curriculum Code</Text>
-                    <Text>{studentAccount?.studentDataDetailResponse.curriculumCode || '-'}</Text>
-                  </div>
-                  <div className={styles.academicItem}>
-                    <Text strong>Registered Combo</Text>
-                    <Text>{studentAccount?.studentDataDetailResponse.registeredComboCode || 'Not Yet Selected A Combo'}</Text>
-                  </div>
+                  
+   
                   <div className={styles.academicItem}>
                     <Text strong>Career Goal</Text>
                     <Text>{studentAccount?.studentDataDetailResponse.careerGoal || '-'}</Text>
@@ -541,7 +591,7 @@ const EditStudentTranscript: React.FC = () => {
                           <Text strong className={styles.subjectTitle}>{subject.title}</Text>
                           <Text className={styles.subjectCode}>{subject.code}</Text>
                         </div>
-                        <Text className={styles.subjectDescription}>{subject.description}</Text>
+                        <Text className={styles.subjectDescription} style={{ whiteSpace: 'pre-line' }}>{subject.description}</Text>
                         <div className={styles.progressSection}>
                           <Text>Progress</Text>
                           <Progress 
@@ -705,7 +755,7 @@ const EditStudentTranscript: React.FC = () => {
                           </div>
                         </div>
                         {subjectVersion.description && (
-                          <Text type="secondary" style={{ fontSize: '14px' }}>
+                          <Text type="secondary" style={{ fontSize: '14px', whiteSpace: 'pre-line' }}>
                             {subjectVersion.description}
                           </Text>
                         )}
@@ -899,13 +949,14 @@ const EditStudentTranscript: React.FC = () => {
                 style={{ maxHeight: '400px', overflowY: 'auto' }}
                 onScroll={(e) => {
                   const target = e.target as HTMLElement;
-                  if (target.scrollTop + target.offsetHeight >= target.scrollHeight - 2 && !loadingCombos) {
+                  const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 2;
+                  if (nearBottom && !loadingCombos && comboItems.length < comboTotal) {
                     setComboPage(prev => prev + 1);
                   }
                 }}
               >
                 <List
-                  dataSource={comboData?.items || []}
+                  dataSource={comboItems}
                   renderItem={(combo) => (
                     <List.Item
                       className={styles.subjectVersionItem}
@@ -926,7 +977,7 @@ const EditStudentTranscript: React.FC = () => {
                               {combo.comboName}
                             </Text>
                             <br />
-                            <Text type="secondary">
+                            <Text type="secondary" style={{ whiteSpace: 'pre-line' }}>
                               {combo.comboDescription}
                             </Text>
                           </div>
@@ -967,7 +1018,7 @@ const EditStudentTranscript: React.FC = () => {
                     {selectedCombo.comboName}
                   </Text>
                   <br />
-                  <Text type="secondary" style={{ fontSize: '14px' }}>
+                  <Text type="secondary" style={{ fontSize: '14px', whiteSpace: 'pre-line' }}>
                     {selectedCombo.comboDescription}
                   </Text>
                   <br />
@@ -1010,6 +1061,171 @@ const EditStudentTranscript: React.FC = () => {
             disabled={!selectedCombo}
           >
             Update Combo
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Curriculum Edit Modal */}
+      <Modal
+        open={isCurriculumEditModalVisible}
+        onCancel={() => {
+          setIsCurriculumEditModalVisible(false);
+          setSelectedCurriculum(null);
+          setCurriculumSearch('');
+          setCurriculumPage(1);
+          setCurriculumItems([]);
+        }}
+        title="Edit Student Curriculum"
+        width="80%"
+        style={{ top: 20 }}
+        footer={null}
+      >
+        <Row gutter={[24, 24]}>
+          {/* Left Side - Curriculum List */}
+          <Col span={16}>
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ fontSize: '16px', marginBottom: '8px', display: 'block' }}>
+                Select New Curriculum
+              </Text>
+              <Search
+                placeholder="Search curriculums..."
+                value={curriculumSearch}
+                onChange={(e) => {
+                  setCurriculumSearch(e.target.value);
+                  setCurriculumPage(1);
+                }}
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            {loadingCurriculums ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <Spin size="large" />
+                <div style={{ marginTop: 16 }}>Loading curriculums...</div>
+              </div>
+            ) : (
+              <div 
+                style={{ maxHeight: '400px', overflowY: 'auto' }}
+                onScroll={(e) => {
+                  const target = e.target as HTMLElement;
+                  const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 2;
+                  if (nearBottom && !loadingCurriculums && curriculumItems.length < curriculumTotal) {
+                    setCurriculumPage(prev => prev + 1);
+                  }
+                }}
+              >
+                <List
+                  dataSource={curriculumItems}
+                  renderItem={(curr) => (
+                    <List.Item
+                      className={styles.subjectVersionItem}
+                      style={{
+                        cursor: 'pointer',
+                        backgroundColor: selectedCurriculum?.id === curr.id ? '#f0f9ff' : 'transparent',
+                        border: selectedCurriculum?.id === curr.id ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        marginBottom: '8px',
+                        padding: '16px'
+                      }}
+                      onClick={() => setSelectedCurriculum(curr)}
+                    >
+                      <div style={{ width: '100%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                          <div>
+                            <Text strong style={{ fontSize: '16px' }}>
+                              {curr.curriculumName} ({curr.curriculumCode})
+                            </Text>
+                          </div>
+                        </div>
+                      </div>
+                    </List.Item>
+                  )}
+                  locale={{ emptyText: 'No curriculums found.' }}
+                />
+                {loadingCurriculums && (
+                  <div style={{ textAlign: 'center', padding: '16px' }}>
+                    <Spin size="small" />
+                    <div style={{ marginTop: 8, fontSize: '12px' }}>Loading more...</div>
+                  </div>
+                )}
+              </div>
+            )}
+          </Col>
+
+          {/* Right Side - Current Selection Info */}
+          <Col span={8}>
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ fontSize: '16px', marginBottom: '8px', display: 'block' }}>
+                Current Selection
+              </Text>
+            </div>
+
+            {selectedCurriculum ? (
+              <Card style={{ backgroundColor: '#f0f9ff', border: '2px solid #3b82f6' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <Text strong style={{ fontSize: '18px', color: '#1e40af' }}>
+                    {selectedCurriculum.curriculumName}
+                  </Text>
+                  <br />
+                  <Tag color="blue" style={{ marginTop: 8 }}>
+                    {selectedCurriculum.curriculumCode}
+                  </Tag>
+                </div>
+              </Card>
+            ) : (
+              <Card style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                <div style={{ textAlign: 'center', padding: '20px' }}>
+                  <Text type="secondary">No curriculum selected</Text>
+                </div>
+              </Card>
+            )}
+          </Col>
+        </Row>
+
+        {/* Footer with buttons */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginTop: '24px',
+          paddingTop: '16px',
+          borderTop: '1px solid #e5e7eb'
+        }}>
+          <Button onClick={() => {
+            setIsCurriculumEditModalVisible(false);
+            setSelectedCurriculum(null);
+            setCurriculumSearch('');
+            setCurriculumPage(1);
+          }}>
+            Cancel
+          </Button>
+          <Button 
+            type="primary" 
+            onClick={async () => {
+              if (!selectedCurriculum || !studentAccount) {
+                showWarning('Please select a curriculum and ensure student data is loaded');
+                return;
+              }
+              try {
+                const result = await updateStudentMajorMutation.mutateAsync({
+                  studentProfileId: studentAccount.studentDataDetailResponse?.id || 0,
+                  curriculumCode: selectedCurriculum.curriculumCode
+                });
+                if (result) {
+                  handleSuccess(`Successfully updated student's curriculum to ${selectedCurriculum.curriculumCode}`);
+                  await refetchStudent();
+                  setIsCurriculumEditModalVisible(false);
+                } else {
+                  handleError('Failed to update student curriculum');
+                }
+              } catch (err) {
+                console.error('Error updating student curriculum:', err);
+                handleError('Failed to update student curriculum');
+              }
+            }}
+            disabled={!selectedCurriculum}
+          >
+            Update Curriculum
           </Button>
         </div>
       </Modal>

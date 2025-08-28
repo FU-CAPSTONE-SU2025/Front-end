@@ -10,7 +10,7 @@
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  backdrop-filter: blur(20px);
+
   overflow: hidden;
 }
 
@@ -44,7 +44,7 @@
 .spinner-main {
   position: absolute;
   width: 260px;
-  height: 220px;
+  height: 260px;
   background: rgba(255,255,255,0.18);
   border: 1px solid rgba(255,255,255,0.25);
   border-radius: 50%;
@@ -60,8 +60,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 80%;
-  height: 80%;
+  width: 50%;
+  height: 50%;
   background: linear-gradient(45deg, rgba(255,255,255,0.3), rgba(255,255,255,0.15));
   border-radius: 50%;
   transform: translate(-50%, -50%);
@@ -70,8 +70,8 @@
 
 .spinner-secondary {
   position: absolute;
-  width: 90px;
-  height: 90px;
+  width: 120px;
+  height: 120px;
   top: 15px;
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.18);
@@ -88,11 +88,10 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 70%;
-  height: 70%;
+  width: 50%;
+  height: 50%;
   background: linear-gradient(-45deg, rgba(255,255,255,0.22), rgba(255,255,255,0.12));
   border-radius: 50%;
-  transform: translate(-50%, -50%);
   animation: liquidMorph 3s ease-in-out infinite reverse;
 }
 
@@ -116,8 +115,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 60%;
-  height: 60%;
+  width: 50%;
+  height: 50%;
   background: linear-gradient(90deg, rgba(255,255,255,0.25), rgba(255,255,255,0.10));
   border-radius: 50%;
   transform: translate(-50%, -50%);
@@ -150,15 +149,15 @@
   }
   25% { 
     border-radius: 60% 40% 30% 70%;
-    transform: translate(-50%, -50%) scale(1.1);
+    transform: translate(-50%, -50%) scale(1.5);
   }
   50% { 
     border-radius: 30% 60% 70% 40%;
-    transform: translate(-50%, -50%) scale(0.9);
+    transform: translate(-50%, -50%) scale(0.5);
   }
   75% { 
     border-radius: 40% 30% 60% 70%;
-    transform: translate(-50%, -50%) scale(1.05);
+    transform: translate(-50%, -50%) scale(1.1);
   }
 }
 
@@ -219,19 +218,12 @@
 /* Glass Loading Text and Bar */
 .loading-text-container {
   position: relative;
-  width: 40vw;
+  width: auto;
   height: 30vh;
   margin: auto 0;
   text-align: center;
-  color: #fff;
-  background: rgba(255,255,255,0.18);
   padding: 20px 30px;
   border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.22);
-  backdrop-filter: blur(10px);
-  box-shadow: 
-    inset 0 0 20px rgba(255,255,255,0.18),
-    0 8px 32px rgba(255,255,255,0.12);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -240,40 +232,36 @@
   align-content: center;
 }
 .loading-text-container h2 {
+  color: rgba(255,255,255,0.80);
   font-size: 2.5rem;
   font-weight: 600;
   margin: 0 0 16px 0; /* tighter spacing with bar */
-  animation: textGlow 2s ease-in-out infinite alternate;
-  text-shadow: 0 0 10px rgba(255,255,255,0.5);
+  text-shadow: 0 0 5px rgba(255,255,255,0.5);
+  backdrop-filter: blur(5px);
+  text-transform: uppercase;
 }
-
-@keyframes textGlow {
-  from {
-    text-shadow: 0 0 10px rgba(255,255,255,0.5);
-  }
-  to {
-    text-shadow: 0 0 20px #fff7ed, 0 0 30px #fff;
-  }
-}
-
 .loading-bar {
-  width: 400px;
+  width: 100%;
   height: 10px;
-  background: rgba(255,255,255,0.18);
+  background: rgba(0, 0, 0, 0.12);
   border-radius: 10px;
   overflow: hidden;
   position: relative;
   border: 1px solid rgba(255,255,255,0.22);
-  backdrop-filter: blur(5px);
   margin: 0 auto; /* center horizontally */
+  box-shadow: 
+    inset 0 0 10px rgba(255,255,255,0.5),
+    0 0 10px rgba(255,255,255,0.10);
+  backdrop-filter: blur(5px);
 }
 
 .loading-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(255,255,255,0.5), rgba(255,255,255,0.8));
+  background: linear-gradient(90deg, rgba(255,255,255,1), rgba(255,255,255,0.5), rgba(255,255,255,1));
   border-radius: 10px;
   animation: liquidProgress 3s ease-in-out infinite;
   box-shadow: 0 0 10px #fff7ed;
+  backdrop-filter: blur(15px);
 }
 
 @keyframes liquidProgress {

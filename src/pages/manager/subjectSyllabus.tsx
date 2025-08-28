@@ -291,9 +291,11 @@ const ManagerSubjectSyllabus: React.FC = () => {
             <h2 className={styles.syllabusTitle}>
               {subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Syllabus'}
             </h2>
-            <p className={styles.syllabusSubtitle}>
-              Course Syllabus & Learning Management
-            </p>
+            {subject?.description && (
+              <p className={styles.syllabusSubtitle} style={{ whiteSpace: 'pre-line' }}>
+                {subject.description}
+              </p>
+            )}
           </div>
           <div className={styles.syllabusHeaderRight}>
             <Button 

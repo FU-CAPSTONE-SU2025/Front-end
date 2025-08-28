@@ -21,7 +21,7 @@ export const useStudentApi = () => {
     enabled: !!meetingId,
   });
 
-  const useStudentById = (studentId: string) => useQuery<any>({
+  const useFetchStudentById = (studentId: string) => useQuery<any>({
     queryKey: ['studentById', studentId],
     queryFn: () => FetchStudentById(parseInt(studentId)),
     enabled: !!studentId,
@@ -49,7 +49,7 @@ export const useStudentApi = () => {
 
   return {
     useMeetingDetail,
-    useStudentById,
+    useFetchStudentById,
     useLeaveSchedulesOneStaff,
     useStudentCheckpoints,
   };

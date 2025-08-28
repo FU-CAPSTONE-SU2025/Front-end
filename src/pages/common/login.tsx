@@ -28,7 +28,7 @@ const Login: React.FC = () => {
   // 1: Admin, 0: Student, others: Guest -> TOBEADDED
   function RoleNavigation (roleId:number){
      if(roleId === 1){
-        showForNavigation('Navigating to Admin Dashboard...');
+        showForNavigation('Admin Dashboard...');
         setTimeout(() => {
           nav('/admin');
           hideLoading();
@@ -42,21 +42,21 @@ const Login: React.FC = () => {
         }, 1500);
       }
       else if(roleId === 2){
-        showForNavigation('Navigating to Staff Page...');
+        showForNavigation('AISEA Academic Staff...');
         setTimeout(() => {
           nav('/staff');
           hideLoading();
         }, 1500);
       }
       else if(roleId === 3){
-        showForNavigation('Navigating to Advisor Page...');
+        showForNavigation('AISEA Advisor...');
         setTimeout(() => {
           nav('/advisor');
           hideLoading();
         }, 1500);
       }
       else if (roleId === 4){
-        showForNavigation('Navigating to Manager Page...');
+        showForNavigation('AISEA Manager...');
         setTimeout(() => {
           nav('/manager');
           hideLoading();

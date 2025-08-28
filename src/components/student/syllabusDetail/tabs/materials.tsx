@@ -26,7 +26,7 @@ const Materials: React.FC<MaterialsProps> = ({ materials }) => {
   }
   
   return (
-    <motion.div variants={itemVariants}>
+    <motion.div variants={itemVariants as any}>
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
           <Title level={5} className="text-gray-900 mb-0 flex items-center gap-2">
@@ -64,7 +64,7 @@ const Materials: React.FC<MaterialsProps> = ({ materials }) => {
                 dataIndex: 'description', 
                 key: 'description',
                 render: (text: string) => (
-                  <Text className="text-gray-600 text-xs">{text}</Text>
+                  <Text className="text-gray-600 text-xs" style={{ whiteSpace: 'pre-line' }}>{text}</Text>
                 )
               },
               { 

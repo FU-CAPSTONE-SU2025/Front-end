@@ -283,7 +283,7 @@ Please use the correct file format for ${expectedType} import or go to the appro
       dataIndex: field,
       key: field,
       width: 200,
-      render: (value: string, record: any, index: number) => (
+      render: (value: string, _record: any, index: number) => (
         <Input
           size="small"
           value={value || ''}
@@ -298,7 +298,7 @@ Please use the correct file format for ${expectedType} import or go to the appro
       key: 'actions',
       width: 80,
       fixed: 'right' as const,
-      render: (_: any, index: number) => (
+      render: (_: any, _record: any, index: number) => (
         <Button
           type="text"
           danger

@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { pagedAdvisorData } from '../interfaces/IAdvisor';
 import { 
   BookingAvailability, 
-  PagedBookingAvailabilityData, 
   CreateBookingAvailabilityRequest, 
   CreateBulkBookingAvailabilityRequest,
   UpdateBookingAvailabilityRequest
