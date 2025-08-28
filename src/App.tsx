@@ -12,10 +12,12 @@ function App() {
   const router = routes
   const googleClientId = import.meta.env.VITE_API_GOOGLE_CLIENT_ID
   const isProd = import.meta.env.PROD
+  
   if(isProd){
     ConsoleWarning()
   }
   const { isLoading, message } = useLoading()
+
   
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
