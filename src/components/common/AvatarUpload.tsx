@@ -3,6 +3,7 @@ import { Avatar, Progress } from 'antd';
 import { UserOutlined, EditOutlined, DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import useUserProfile from '../../hooks/useUserProfile';
+import OptimizedImage from './OptimizedImage';
 
 interface AvatarUploadProps {
   userId: number;
@@ -69,6 +70,8 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     return `https://ui-avatars.com/api/?name=${userRole}&background=1E40AF&color=ffffff&size=${typeof size === 'number' ? size : 120}`;
   };
 
+  const avatarSize = typeof size === 'number' ? size : 120;
+
   return (
     <div className={`relative inline-block ${className}`}>
       <motion.div
@@ -77,13 +80,30 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         className="relative"
         style={{ padding: '1rem' }}
       >
-        <Avatar
-          src={localAvatarUrl || getPlaceholderAvatar()}
-          size={size}
-          icon={<UserOutlined />}
-          className={`border-4 border-white/30 shadow-2xl ${disabled ? 'opacity-60' : 'cursor-pointer'}`}
-          onClick={handleEditAvatar}
-        />
+        {localAvatarUrl ? (
+          <OptimizedImage
+            src={localAvatarUrl}
+            alt={`${userRole} avatar`}
+            width={avatarSize}
+            height={avatarSize}
+            className={`border-4 border-white/30 shadow-2xl rounded-full ${disabled ? 'opacity-60' : 'cursor-pointer'}`}
+            style={{
+              borderRadius: '50%',
+              objectFit: 'cover',
+            }}
+            lazy={false}
+            priority={true}
+            onClick={handleEditAvatar}
+          />
+        ) : (
+          <Avatar
+            src={getPlaceholderAvatar()}
+            size={size}
+            icon={<UserOutlined />}
+            className={`border-4 border-white/30 shadow-2xl ${disabled ? 'opacity-60' : 'cursor-pointer'}`}
+            onClick={handleEditAvatar}
+          />
+        )}
         
         {/* Upload Progress Overlay */}
         {isAvatarUploading && (
@@ -91,11 +111,16 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full"
+            style={{
+              width: avatarSize,
+              height: avatarSize,
+              borderRadius: '50%',
+            }}
           >
             <Progress 
               type="circle" 
               percent={100} 
-              size={typeof size === 'number' ? size * 0.4 : 60}
+              size={avatarSize * 0.4}
               strokeColor="#10B981"
               format={() => 'Uploading...'}
             />
@@ -108,6 +133,11 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full"
+            style={{
+              width: avatarSize,
+              height: avatarSize,
+              borderRadius: '50%',
+            }}
           >
             <LoadingOutlined style={{ fontSize: 24, color: '#10B981' }} spin />
           </motion.div>
@@ -117,55 +147,40 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         {!disabled && (
           <motion.button
             type="button"
-            className="absolute bottom-2 right-2 w-8 h-8 flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white border-2 border-white rounded-full shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-300"
-            style={{ zIndex: 2 }}
             onClick={handleEditAvatar}
-            disabled={isAvatarUploading}
+            className="absolute -bottom-2 -right-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 shadow-lg transition-colors duration-200"
             whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            aria-label="Edit avatar"
+            whileTap={{ scale: 0.95 }}
+            disabled={isAvatarUploading}
           >
-            <EditOutlined style={{ fontSize: 14, margin: 0, padding: 0, color: '#fff' }} />
+            <EditOutlined style={{ fontSize: 16 }} />
           </motion.button>
         )}
         
         {/* Delete Button */}
-        {showDeleteButton && localAvatarUrl && !disabled && (
+        {showDeleteButton && !disabled && localAvatarUrl && (
           <motion.button
             type="button"
-            className="absolute bottom-2 left-2 w-8 h-8 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white border-2 border-white rounded-full shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-300"
-            style={{ zIndex: 2 }}
             onClick={handleDeleteAvatar}
-            disabled={isAvatarUploading}
+            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-colors duration-200"
             whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            aria-label="Delete avatar"
+            whileTap={{ scale: 0.95 }}
+            disabled={isAvatarUploading}
           >
-            <DeleteOutlined style={{ fontSize: 14, margin: 0, padding: 0, color: '#fff' }} />
+            <DeleteOutlined style={{ fontSize: 12 }} />
           </motion.button>
         )}
       </motion.div>
       
-      {/* Hidden File Input */}
+      {/* Hidden file input */}
       <input
+        ref={fileInputRef}
         type="file"
         accept="image/*"
-        ref={fileInputRef}
-        style={{ display: 'none' }}
         onChange={handleAvatarChange}
-        disabled={isAvatarUploading || disabled}
+        style={{ display: 'none' }}
+        disabled={disabled || isAvatarUploading}
       />
-      
-      {/* Upload Status Message */}
-      {isAvatarUploading && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs text-gray-600 bg-white px-2 py-1 rounded shadow"
-        >
-          Uploading...
-        </motion.div>
-      )}
     </div>
   );
 };

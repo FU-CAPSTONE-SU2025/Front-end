@@ -1,12 +1,54 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import ViteImageOptimizer from 'vite-plugin-imagemin'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(), 
-    tailwindcss()
+    tailwindcss(),
+    ViteImageOptimizer({
+      // WebP optimization
+      webp: {
+        quality: 80,
+      },
+      // JPEG optimization
+      mozjpeg: {
+        quality: 80,
+        progressive: true,
+      },
+      // PNG optimization
+      pngquant: {
+        quality: [0.65, 0.8],
+        speed: 4,
+      },
+      // GIF optimization
+      gifsicle: {
+        optimizationLevel: 3,
+        interlaced: false,
+      },
+      // SVG optimization
+      svgo: {
+        plugins: [
+          {
+            name: 'preset-default',
+            params: {
+              overrides: {
+                removeViewBox: false,
+                addAttributesToSVGElement: {
+                  params: {
+                    attributes: [
+                      { xmlns: 'http://www.w3.org/2000/svg' }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    })
   ],
   build: {
     minify: 'terser',
@@ -62,14 +104,14 @@ export default defineConfig({
           
           const ext = info[info.length - 1].toLowerCase();
           
-          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico|webp/i.test(ext)) {
             return 'images/[name]-[hash][extname]';
           }
           if (/css/i.test(ext)) {
             return 'css/[name]-[hash][extname]';
           }
           return 'assets/[name]-[hash][extname]';
-        },
+        }
       },
     },
     chunkSizeWarningLimit: 1000, // Increase warning limit to 1MB

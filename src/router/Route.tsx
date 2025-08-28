@@ -84,7 +84,7 @@ export const routes = createBrowserRouter([
         ),
       },
       {
-        path: "staff",
+        path: "staffs",
         element: (
           <Suspense fallback={<PageLoader />}>
             <StaffPage />
@@ -92,7 +92,7 @@ export const routes = createBrowserRouter([
         ),
       },
       {
-        path: "manager",
+        path: "managers",
         element: (
           <Suspense fallback={<PageLoader />}>
             <ManagersPage />

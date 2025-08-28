@@ -23,7 +23,7 @@ const AdminNavBar: React.FC = () => {
   const navItems: NavItem[] = [
     { label: 'My account', icon: User, route: '' },
     { label: 'Manage Student', icon: Users, route: 'students' },
-    { label: 'Manage Staff', icon: Briefcase, route: 'staff' },
+    { label: 'Manage Staff', icon: Briefcase, route: 'staffs' },
     { label: 'Manage Advisor', icon: BookUser, route: 'advisors' },
     { label: 'Manage Manager', icon: UserCog, route: 'managers' },
     { label: 'View system log and monitoring', icon: Activity, route: 'logs' },
@@ -120,7 +120,7 @@ const AdminNavBar: React.FC = () => {
           className={styles.sidebar}
           initial="closed"
           animate={isOpen ? 'open' : 'closed'}
-          variants={sidebarVariants}
+          variants={sidebarVariants as any}
         >
           <div className={styles.header}>
             <div className={styles.logo}>
