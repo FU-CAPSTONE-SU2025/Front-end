@@ -51,6 +51,7 @@ import StudentInCoursePage from "../pages/manager/studentInCoursePage";
 import HistoryMeeting from "../pages/student/historyMeeting";
 import MeetingPage from "../pages/advisor/meetingPage";
 import BackgroundWrapper from "../components/common/backgroundWrapper";
+import StudentOverview from "../pages/advisor/studentOverview";
 
 
 export const routes = createBrowserRouter([
@@ -74,10 +75,6 @@ export const routes = createBrowserRouter([
       {
         path: "advisors",
         Component: AdvisorsPage,
-      },
-      {
-        path: "managers",
-        Component: ManagersPage,
       },
       {
         path:"edit/:role/:id?",
@@ -207,6 +204,10 @@ export const routes = createBrowserRouter([
       {
         path: "meeting",
         Component: MeetingPage,
+      },
+      {
+        path: "studentOverview",
+        Component: StudentOverview,
       },
     ]
   },

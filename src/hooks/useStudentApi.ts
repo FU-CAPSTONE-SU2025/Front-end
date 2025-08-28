@@ -3,6 +3,7 @@ import {
   getMeetingDetail,
   FetchStudentById,
   GetPagedLeaveSchedulesOneStaff,
+  getStudentCheckpoints,
 } from '../api/student/StudentAPI';
 import { AdminViewBooking } from '../interfaces/IBookingAvailability';
 
@@ -10,6 +11,9 @@ import { AdminViewBooking } from '../interfaces/IBookingAvailability';
  * Student-related API hooks
  * Wraps student APIs behind React Query so UI components don't call APIs directly.
  */
+type StudentCheckpointItem = { id: number; title: string; isCompleted: boolean; deadline: string };
+type StudentCheckpointsPaged = { items: StudentCheckpointItem[]; totalCount: number; pageNumber: number; pageSize: number };
+
 export const useStudentApi = () => {
   const useMeetingDetail = (meetingId: string) => useQuery<AdminViewBooking>({
     queryKey: ['meetingDetail', meetingId],
@@ -29,9 +33,24 @@ export const useStudentApi = () => {
     enabled: !!staffId,
   });
 
+  const useStudentCheckpoints = (
+    studentProfileId: number | null,
+    pageNumber: number = 1,
+    pageSize: number = 10,
+    enabled: boolean = true,
+    opts?: { isInCompletedOnly?: boolean; isNoneFilterStatus?: boolean; isOrderedByNearToFarDeadlin?: boolean },
+  ) =>
+    useQuery<StudentCheckpointsPaged>({
+      queryKey: ['studentCheckpoints', studentProfileId, pageNumber, pageSize, opts?.isInCompletedOnly, opts?.isNoneFilterStatus, opts?.isOrderedByNearToFarDeadlin],
+      queryFn: () => getStudentCheckpoints(studentProfileId as number, pageNumber, pageSize, opts),
+      enabled: !!studentProfileId && enabled,
+      keepPreviousData: true,
+    });
+
   return {
     useMeetingDetail,
     useStudentById,
     useLeaveSchedulesOneStaff,
+    useStudentCheckpoints,
   };
 };

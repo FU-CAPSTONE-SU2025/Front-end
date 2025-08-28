@@ -634,6 +634,38 @@ export const getUpcomingCheckpoints = async (): Promise<SubjectCheckpoint[]> => 
   }
 };
 
+// Get student-wide checkpoints/todos (paged) by student profile id
+export const getStudentCheckpoints = async (
+  studentProfileId: number,
+  pageNumber: number = 1,
+  pageSize: number = 10,
+  opts?: {
+    isInCompletedOnly?: boolean;
+    isNoneFilterStatus?: boolean;
+    isOrderedByNearToFarDeadlin?: boolean;
+  }
+): Promise<{ items: Array<{ id: number; title: string; isCompleted: boolean; deadline: string }>; totalCount: number; pageNumber: number; pageSize: number; }> => {
+  const params = new URLSearchParams({
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString(),
+  });
+  if (typeof opts?.isInCompletedOnly === 'boolean') params.append('isInCompletedOnly', String(opts.isInCompletedOnly));
+  if (typeof opts?.isNoneFilterStatus === 'boolean') params.append('isNoneFilterStatus', String(opts.isNoneFilterStatus));
+  if (typeof opts?.isOrderedByNearToFarDeadlin === 'boolean') params.append('isOrderedByNearToFarDeadlin', String(opts.isOrderedByNearToFarDeadlin));
+  const props = {
+    data: null,
+    url: baseUrl + `/JoinedSubjectCheckPoint/student/${studentProfileId}?` + params.toString(),
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return { items: [], totalCount: 0, pageNumber, pageSize } as never;
+  }
+};
+
 // Get all students by combo code (paged)
 export const GetStudentsByCombo = async (comboCode: string, pageNumber: number = 1, pageSize: number = 10): Promise<pagedStudentData> => {
   const params = new URLSearchParams({
