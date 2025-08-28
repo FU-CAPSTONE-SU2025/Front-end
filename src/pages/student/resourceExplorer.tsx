@@ -3,36 +3,8 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from '../../components/student/searchBar';
 import ResourceTable from '../../components/student/resourceTable';
-import { useStudentFeature } from '../../hooks/useStudentFeature';
-
-// Mock data for current semester subjects
-const currentSemesterSubjects = [
-  {
-    code: 'PRN212',
-    name: 'Basic Cross-Platform Application Programming With .NET',
-    progress: 85,
-  },
-  {
-    code: 'PRN221',
-    name: 'Advanced Cross-Platform Application Programming With .NET',
-    progress: 65,
-  },
-  {
-    code: 'PRN231',
-    name: 'Web Application Development With ASP.NET Core',
-    progress: 45,
-  },
-  {
-    code: 'PRN241',
-    name: 'Mobile Application Development With Xamarin',
-    progress: 90,
-  },
-  {
-    code: 'PRN251',
-    name: 'Cloud Application Development With Azure',
-    progress: 75,
-  },
-];
+import { useStudentFeature, useJoinedSubjects } from '../../hooks/useStudentFeature';
+import { groupSubjectsBySemester, getSemesterOptions } from '../../utils/subjectUtils';
 
 const ResourceExplorer: React.FC = () => {
   const navigate = useNavigate();
@@ -40,8 +12,32 @@ const ResourceExplorer: React.FC = () => {
   const [activeSearch, setActiveSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [showResults, setShowResults] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
+
+  // Fetch joined subjects for current semester display
+  const { data: joinedSubjects, isLoading: subjectsLoading } = useJoinedSubjects();
+
+  // Group subjects by semester
+  const semesterSubjects = React.useMemo(() => {
+    if (!joinedSubjects) return {};
+    return groupSubjectsBySemester(joinedSubjects);
+  }, [joinedSubjects]);
+
+  // Get available semesters for dropdown
+  const semesterOptions = React.useMemo(() => {
+    return getSemesterOptions(semesterSubjects);
+  }, [semesterSubjects]);
+
+  // Set default selected semester to the most recent one
+  React.useEffect(() => {
+    if (semesterOptions.length > 0 && !selectedSemester) {
+      setSelectedSemester(Number(semesterOptions[0].value));
+    }
+  }, [semesterOptions, selectedSemester]);
+
+  // Get current semester subjects
+  const currentSemesterSubjects = selectedSemester ? semesterSubjects[selectedSemester] || [] : [];
 
   useEffect(() => {
     setPage(1);
@@ -60,24 +56,9 @@ const ResourceExplorer: React.FC = () => {
 
   const handleSearchEnter = () => {
     const trimmedSearch = searchInput.trim();
-    console.log('=== handleSearchEnter called ===');
-    console.log('Search input:', searchInput);
-    console.log('Trimmed search:', trimmedSearch);
     
     setHasSearched(true);
-    console.log('setHasSearched(true) called');
-    
-    // Nếu search trống, hiển thị tất cả data
-    if (trimmedSearch === '') {
-      setActiveSearch('');
-      setShowResults(true);
-      console.log('Show all data');
-    } else {
-      // Nếu có search term, chỉ hiển thị kết quả search
-      setActiveSearch(trimmedSearch);
-      setShowResults(true);
-      console.log('Search for:', trimmedSearch);
-    }
+    setActiveSearch(trimmedSearch);
   };
 
   return (
@@ -93,41 +74,52 @@ const ResourceExplorer: React.FC = () => {
           <h2 className="text-lg font-bold text-white mb-3">
             Current Semester Subjects
           </h2>
-          <div className="space-y-2">
-            {currentSemesterSubjects.map((subject, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.05, duration: 0.2 }}
-                className="flex items-center justify-between p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200"
-              >
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <span className="text-yellow-300 font-bold text-sm whitespace-nowrap">
-                    {subject.code}
-                  </span>
-                  <h3 className="text-white font-medium text-sm truncate">
-                    {subject.name}
-                  </h3>
-                </div>
-                <div className="flex items-center gap-2 ml-2">
-                  <span className="text-white font-bold text-sm">
-                    {subject.progress}%
-                  </span>
-                  <div className="w-12 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-300"
-                      style={{ width: `${subject.progress}%` }}
-                    />
+          {subjectsLoading ? (
+            <div className="text-center py-4">
+              <p className="text-gray-200 opacity-80">Loading subjects...</p>
+            </div>
+          ) : currentSemesterSubjects.length > 0 ? (
+            <div className="space-y-2">
+              {currentSemesterSubjects.map((subject, idx) => (
+                <motion.div
+                  key={subject.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05, duration: 0.2 }}
+                  className="flex items-center justify-between p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200 cursor-pointer"
+                  onClick={() => handleSubjectSelect(subject)}
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className="text-yellow-300 font-bold text-sm whitespace-nowrap">
+                      {subject.subjectCode}
+                    </span>
+                    <h3 className="text-white font-medium text-sm truncate">
+                      {subject.name}
+                    </h3>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                  <div className="flex items-center gap-2 ml-2">
+                    <span className="text-white font-bold text-sm">
+                      {subject.isCompleted ? 100 : subject.isPassed ? 80 : 30}%
+                    </span>
+                    <div className="w-12 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-300"
+                        style={{ width: `${subject.isCompleted ? 100 : subject.isPassed ? 80 : 30}%` }}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-gray-200 opacity-60">No subjects found for this semester</p>
+            </div>
+          )}
         </div>
       </motion.div>
 
-      {/* Search Bar */}
+      {/* Search Bar - Always show */}
       <div className="mb-6 w-full max-w-7xl mx-auto">
         <SearchBar
           value={searchInput}
@@ -138,25 +130,21 @@ const ResourceExplorer: React.FC = () => {
         />
       </div>
 
-      {/* Table - Hiện khi có kết quả search */}
-             {(() => {
-         console.log('showResults:', showResults, 'data:', data, 'isLoading:', isLoading, 'hasSearched:', hasSearched, 'activeSearch:', activeSearch);
-         return null;
-       })()}
-       {showResults && (
-         <ResourceTable
-           data={data?.items || []}
-           isLoading={isLoading}
-           page={page}
-           pageSize={pageSize}
-           total={data?.totalCount || 0}
-           onPageChange={setPage}
-           onPageSizeChange={setPageSize}
-           searchTerm={activeSearch}
-           hasSearched={hasSearched}
-           onSubjectSelect={handleSubjectSelect}
-         />
-       )}
+      {/* Table - Only show after user has searched */}
+      {hasSearched && (
+        <ResourceTable
+          data={data?.items || []}
+          isLoading={isLoading}
+          page={page}
+          pageSize={pageSize}
+          total={data?.totalCount || 0}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          searchTerm={activeSearch}
+          hasSearched={hasSearched}
+          onSubjectSelect={handleSubjectSelect}
+        />
+      )}
     </div>
   );
 };
