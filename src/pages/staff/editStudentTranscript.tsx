@@ -38,7 +38,7 @@ const EditStudentTranscript: React.FC = () => {
   const navigate = useNavigate();
   const { handleError, handleSuccess } = useApiErrorHandler();
   const { showInfo, showWarning } = useMessagePopupContext();
-  const { useStudentById } = useStudentApi();
+  const { useFetchStudentById } = useStudentApi();
   const { 
     useSubjectVersionsToCurriculumByCode,
     useJoinedSubjectList, 
@@ -99,10 +99,8 @@ const EditStudentTranscript: React.FC = () => {
   const [joinedSubjects, setJoinedSubjects] = useState<JoinedSubject[]>([]);
 
   // Use the hook to get student data
-  const { data: accountData, refetch: refetchStudent } = useStudentById(studentId || '');
+  const { data: accountData, refetch: refetchStudent } = useFetchStudentById(studentId || '');
   
-  // Initialize useUserProfile hook for updating student data
-  const { updateProfileAsync } = useUserProfile();
   const { updateStudentMajorMutation } = useCRUDStudent();
   
   // Update student account when data is loaded
@@ -593,7 +591,7 @@ const EditStudentTranscript: React.FC = () => {
                           <Text strong className={styles.subjectTitle}>{subject.title}</Text>
                           <Text className={styles.subjectCode}>{subject.code}</Text>
                         </div>
-                        <Text className={styles.subjectDescription}>{subject.description}</Text>
+                        <Text className={styles.subjectDescription} style={{ whiteSpace: 'pre-line' }}>{subject.description}</Text>
                         <div className={styles.progressSection}>
                           <Text>Progress</Text>
                           <Progress 
@@ -757,7 +755,7 @@ const EditStudentTranscript: React.FC = () => {
                           </div>
                         </div>
                         {subjectVersion.description && (
-                          <Text type="secondary" style={{ fontSize: '14px' }}>
+                          <Text type="secondary" style={{ fontSize: '14px', whiteSpace: 'pre-line' }}>
                             {subjectVersion.description}
                           </Text>
                         )}
@@ -979,7 +977,7 @@ const EditStudentTranscript: React.FC = () => {
                               {combo.comboName}
                             </Text>
                             <br />
-                            <Text type="secondary">
+                            <Text type="secondary" style={{ whiteSpace: 'pre-line' }}>
                               {combo.comboDescription}
                             </Text>
                           </div>
@@ -1020,7 +1018,7 @@ const EditStudentTranscript: React.FC = () => {
                     {selectedCombo.comboName}
                   </Text>
                   <br />
-                  <Text type="secondary" style={{ fontSize: '14px' }}>
+                  <Text type="secondary" style={{ fontSize: '14px', whiteSpace: 'pre-line' }}>
                     {selectedCombo.comboDescription}
                   </Text>
                   <br />
