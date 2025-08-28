@@ -26,7 +26,7 @@ const SubjectOverview: React.FC<{ subj: any }> = ({ subj }) => (
       <div className="space-y-4">
         <div>
           <Text strong className="text-gray-700 block mb-2">Description</Text>
-          <Text className="text-gray-600">{subj.description}</Text>
+          <Text className="text-gray-600" style={{ whiteSpace: 'pre-line' }}>{subj.description}</Text>
         </div>
         <div>
           <Text strong className="text-gray-700 block mb-2">Prerequisites</Text>
@@ -93,7 +93,7 @@ const VersionInfo: React.FC<{ version: any }> = ({ version }) => (
         
         <div>
           <Text strong className="text-gray-700 block mb-1">Description</Text>
-          <Text className="text-gray-600">{version.description}</Text>
+          <Text className="text-gray-600" style={{ whiteSpace: 'pre-line' }}>{version.description}</Text>
         </div>
         
         <div className="bg-gray-50 p-3 rounded-lg">
