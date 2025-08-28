@@ -14,19 +14,19 @@ export const useActiveStudentApi = () => {
 
   const useActiveStudentsByCombo = (comboCode: string | null, page: number, pageSize: number) => useQuery({
     queryKey: ['activeStudentsByCombo', comboCode, page, pageSize],
-    queryFn: () => GetActiveStudentsByCombo(comboCode!, page, pageSize),
+    queryFn: () => GetActiveStudentsByCombo(comboCode, page, pageSize),
     enabled: !!comboCode,
   });
 
   const useActiveStudentsByProgram = (programId: number | null, page: number, pageSize: number) => useQuery({
     queryKey: ['activeStudentsByProgram', programId, page, pageSize],
-    queryFn: () => GetActiveStudentsByProgram(programId!, page, pageSize),
+    queryFn: () => GetActiveStudentsByProgram(programId, page, pageSize),
     enabled: !!programId,
   });
 
   const useActiveStudentsByCurriculum = (curriculumCode: string | null, page: number, pageSize: number) => useQuery({
     queryKey: ['activeStudentsByCurriculum', curriculumCode, page, pageSize],
-    queryFn: () => GetActiveStudentsByCurriculum(curriculumCode!, page, pageSize),
+    queryFn: () => GetActiveStudentsByCurriculum(curriculumCode, page, pageSize),
     enabled: !!curriculumCode,
   });
 

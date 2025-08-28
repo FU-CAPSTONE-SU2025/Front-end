@@ -15,6 +15,12 @@ import {
 } from '../api/SchoolAPI/joinedSubjectAPI';
 import { AddSubjectVersionToCurriculum, FetchCurriculumList, FetchSubjectVersionsToCurriculum, FetchSubjectVersionsToCurriculumByCode, RemoveSubjectVersionFromCurriculum } from '../api/SchoolAPI/curriculumAPI';
 import { FetchComboList } from '../api/SchoolAPI/comboAPI';
+import { CreateSubjectToCurriculum } from '../interfaces/ISchoolProgram';
+
+type AddSubjectVersionToCurriculumMutation = {
+  curriculumId: number,
+  createSubjectToCurriculum: CreateSubjectToCurriculum
+}
 
 export const useSchoolApi = () => {
   // Program queries
@@ -106,7 +112,7 @@ export const useSchoolApi = () => {
 
   // Mutations
   const addSubjectVersionToCurriculumMutation = useMutation({
-    mutationFn: (data: any) => AddSubjectVersionToCurriculum(data.curriculumId, data.subjectVersionId),
+    mutationFn: (data: AddSubjectVersionToCurriculumMutation) => AddSubjectVersionToCurriculum(data.curriculumId, data.createSubjectToCurriculum),
   });
 
   const removeSubjectVersionFromCurriculumMutation = useMutation({
