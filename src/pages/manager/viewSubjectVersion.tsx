@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Button, Tabs, Typography, message, Card, Tag, Space, Tooltip} from 'antd';
+import { Button, Tabs, Typography, Card, Tag, Space, Tooltip} from 'antd';
 import {  ArrowLeftOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 
 import AddVersionModal from '../../components/staff/AddVersionModal';
@@ -22,7 +22,9 @@ import LoadingScreen from '../../components/LoadingScreen';
 // Function to create default version for a subject (moved outside component)
 const createDefaultVersion = async (
   subjectData: any, 
-  addSubjectVersionMutation: any
+  addSubjectVersionMutation: any,
+  handleSuccess: (message: string) => void,
+  handleError: (message: string) => void
 ) => {
   try {
     const defaultVersionData = generateDefaultVersionData(
@@ -33,12 +35,12 @@ const createDefaultVersion = async (
     
     const newVersion = await addSubjectVersionMutation.mutateAsync(defaultVersionData);
     if (newVersion) {
-      message.success('Default version created successfully!');
+      handleSuccess('Default version created successfully!');
       return [newVersion];
     }
   } catch (err: any) {
     const errorMessage = err.message || 'Failed to create default version.';
-    message.error('Failed to create default version: ' + errorMessage);
+    handleError('Failed to create default version: ' + errorMessage);
   }
   return [];
 };
@@ -48,7 +50,9 @@ const createDefaultSyllabus = async (
   subjectVersionId: number,
   subjectCode: string,
   subjectName: string,
-  addSyllabusMutation: any
+  addSyllabusMutation: any,
+  handleSuccess: (message: string) => void,
+  handleError: (message: string) => void
 ) => {
   try {
     const defaultSyllabusData = generateDefaultSyllabusData(
@@ -59,12 +63,12 @@ const createDefaultSyllabus = async (
     
     const newSyllabus = await addSyllabusMutation.mutateAsync(defaultSyllabusData);
     if (newSyllabus) {
-      message.success('Default syllabus created successfully!');
+      handleSuccess('Default syllabus created successfully!');
       return newSyllabus;
     }
   } catch (err: any) {
     const errorMessage = err.message || 'Failed to create default syllabus.';
-    message.error('Failed to create default syllabus: ' + errorMessage);
+    handleError('Failed to create default syllabus: ' + errorMessage);
   }
   return null;
 };
@@ -92,6 +96,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
   const [sessionMap, setSessionMap] = useState<Record<number, any[]>>({});
   
   const { showInfo } = useMessagePopupContext();
+  const { handleError, handleSuccess } = useApiErrorHandler();
 
   // API hooks
   const { getSubjectById } = useCRUDSubject();
@@ -116,8 +121,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [initLoading, setInitLoading] = useState<string | null>(null);
-
-  const { handleError, handleSuccess } = useApiErrorHandler();
 
   // Function to fetch prerequisites for a specific version
   const fetchPrerequisitesForVersion = useCallback(async (versionId: number) => {
@@ -206,7 +209,9 @@ const ManagerSubjectVersionPage: React.FC = () => {
           versionId,
           subjectData.subjectCode,
           subjectData.subjectName,
-          addSyllabusMutation
+          addSyllabusMutation,
+          handleSuccess,
+          handleError
         );
         
         if (newSyllabus) {
@@ -266,7 +271,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
       console.error('Error in fetchOrCreateSyllabus:', err);
       handleError('Failed to fetch/create syllabus: ' + err.message);
     }
-  }, [fetchSyllabusBySubjectVersionMutation, addSyllabusMutation, showInfo, handleError]);
+  }, [fetchSyllabusBySubjectVersionMutation, addSyllabusMutation, showInfo, handleError, handleSuccess]);
 
   // Fetch subject and versions
   useEffect(() => {
@@ -292,7 +297,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
           // No versions exist, create default version then refetch to get real ID
           showInfo('No versions found. Creating default version...');
           setInitLoading('Creating default version...');
-          const defaultVersions = await createDefaultVersion(subjectData, addSubjectVersionMutation);
+          const defaultVersions = await createDefaultVersion(subjectData, addSubjectVersionMutation, handleSuccess, handleError);
           setInitLoading('Fetching newly created version...');
           let refreshed: SubjectVersion[] = [];
           try {
@@ -551,7 +556,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
   };
 
   const handleAddOutcomeToSession = async (versionId: number, sessionId: number, outcomeId: number): Promise<void> => {
-    alert("Feature disabled for Manager")
+    // This feature is disabled for Manager
   };
 
   // Deprecated bulk handlers removed
