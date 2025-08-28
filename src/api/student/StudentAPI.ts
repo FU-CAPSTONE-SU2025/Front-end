@@ -1,6 +1,5 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import axios from "axios";
 import { AccountProps, AccountPropsCreate } from "../../interfaces/IAccount";
 import { 
     pagedStudentData, 
@@ -14,7 +13,8 @@ import {
     BookingAvailabilityData,
     JoinedSubject,
     SubjectCheckpoint,
-    SubjectCheckpointDetail
+    SubjectCheckpointDetail,
+    IUpdateStudentMajor
 } from "../../interfaces/IStudent";
 import { ChatSessionRequest, ChatSessionResponse } from "../../interfaces/IChat";
 
@@ -95,6 +95,22 @@ export const UpdateStudent = async (userId:number,data:any):Promise<AccountProps
         throwApiError(result);
         return null as never;
     }
+}
+export const UpdateStudentMajor = async (studentProfileId:number,data:IUpdateStudentMajor):Promise<any> => {
+  const props = {
+      data: data,
+      url: baseUrl+`/`+"Profile/student-profile/"+studentProfileId,
+      headers: GetHeader()
+  }
+  const result = await axiosUpdate(props)
+  if (result.success) {
+      //console.log(result.data)
+      return result.data
+  }
+  else {
+      throwApiError(result);
+      return null as never;
+  }
 }
 export const DisableUser = async (userId:number):Promise<AccountProps> => {
     const props = {

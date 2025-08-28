@@ -60,7 +60,6 @@ export function useAdvisorChat() {
   
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const isUnmountedRef = useRef(false);
-  const retryCountRef = useRef(0);
   const isConnectingRef = useRef(false);
   const isFetchingSessionsRef = useRef(false);
   

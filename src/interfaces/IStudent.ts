@@ -43,6 +43,11 @@ programId: number;
 registeredComboCode: string;
 curriculumCode: string;
 }
+export interface IUpdateStudentMajor{
+  programId?: number;
+  registeredComboCode?: string;
+  curriculumCode: string;
+  }
 
 export interface StudentDataListResponse {
   id: number;
