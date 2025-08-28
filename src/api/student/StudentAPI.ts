@@ -785,7 +785,7 @@ export const GetActiveStudentsByCombo = async (comboCode: string, pageNumber: nu
   
   const props = {
     data: null,
-    url: userURL + `/active/${comboCode}/paged?` + params.toString(),
+    url: userURL + `/active/comboFilter/${comboCode}/paged?` + params.toString(),
     headers: GetHeader()
   }
   
@@ -808,7 +808,7 @@ export const GetActiveStudentsByProgram = async (programId: number, pageNumber: 
   
   const props = {
     data: null,
-    url: userURL + `/active/${programId}/paged?` + params.toString(),
+    url: userURL + `/active/programFilter/${programId}/paged?` + params.toString(),
     headers: GetHeader()
   }
   
@@ -831,7 +831,7 @@ export const GetActiveStudentsByCurriculum = async (curriculumCode: string, page
   
   const props = {
     data: null,
-    url: userURL + `/active/${curriculumCode}/paged?` + params.toString(),
+    url: userURL + `/active/curriculumFilter/${curriculumCode}/paged?` + params.toString(),
     headers: GetHeader()
   }
   

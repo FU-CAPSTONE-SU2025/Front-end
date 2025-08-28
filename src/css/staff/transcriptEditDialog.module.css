@@ -112,7 +112,7 @@
 }
 
 .assessmentsTitle {
-  color: #1E40AF !important;
+  color: #ffffff !important;
   margin: 0 !important;
 }
 
@@ -123,6 +123,19 @@
 
 .assessmentsTable {
   margin-bottom: 1rem !important;
+  color: #ffffff !important;
+}
+
+/* Table Header Styling */
+.assessmentsTable :global(.ant-table-thead > tr > th) {
+  background-color: #1E40AF !important;
+  color: white !important;
+  border-color: #1E40AF !important;
+  font-weight: 600 !important;
+}
+
+.assessmentsTable :global(.ant-table-thead > tr > th::before) {
+  display: none !important;
 }
 
 /* Score Editing */

@@ -57,6 +57,7 @@ export const AddSubjectVersionToCurriculum = async (id: number, data: CreateSubj
       url: curriculumURL+"/"+id+"/subjects",
       headers: GetHeader(),
     };
+    console.log("AddSubjectVersionToCurriculum: ",props.data)
     const result = await axiosCreate(props);
     if (result.success) {
       return result.data;

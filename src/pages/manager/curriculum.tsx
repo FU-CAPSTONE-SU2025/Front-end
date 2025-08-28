@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Button, Modal, Form, Input, message, Affix, Table, Pagination, Tag, Spin, Card, Space, Row, Col, Typography, Empty, Select, ConfigProvider } from 'antd';
+import { Button, Modal, Input, Affix, Table, Pagination, Tag, Spin, Card, Space, Row, Col, Typography, Empty, Select, ConfigProvider } from 'antd';
 import {SearchOutlined, BookOutlined, EyeOutlined, CheckOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
@@ -10,7 +10,7 @@ import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
 import { useCRUDProgram } from '../../hooks/useCRUDSchoolMaterial';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 
 const CurriculumPageManager: React.FC = () => {
@@ -252,7 +252,7 @@ const CurriculumPageManager: React.FC = () => {
       title: 'Version',
       dataIndex: 'versionName',
       key: 'versionName',
-      render: (text: string, record: SubjectVersionWithCurriculumInfo) => (
+      render: (_text: string, record: SubjectVersionWithCurriculumInfo) => (
         <span style={{ fontWeight: '600', color: '#059669' }}>
           {record.versionName} ({record.versionCode})
         </span>

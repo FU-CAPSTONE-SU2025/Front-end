@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Select, DatePicker, Button, Space, Spin, Card, Table, Checkbox, Modal } from 'antd';
 import { SaveOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Curriculum, SubjectVersion, SubjectVersionWithCurriculumInfo, Program } from '../../interfaces/ISchoolProgram';
+import { Curriculum, SubjectVersion, SubjectVersionWithCurriculumInfo, Program, CreateSubjectToCurriculum } from '../../interfaces/ISchoolProgram';
 import dayjs from 'dayjs';
 import {useCRUDCurriculum, useCRUDSubjectVersion} from '../../hooks/useCRUDSchoolMaterial';
 import styles from '../../css/staff/curriculumEdit.module.css';
@@ -38,7 +38,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
   const [programPage, setProgramPage] = useState(1);
   const [programPageSize] = useState(10);
   const [hasMorePrograms, setHasMorePrograms] = useState(true);
-  const [programLoading, setProgramLoading] = useState(false);
+  const [programLoading] = useState(false);
 
   // Subject version management state
   const [allSubjectVersions, setAllSubjectVersions] = useState<SubjectVersion[]>([]);
@@ -227,11 +227,16 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
       handleError('Invalid semester number. Semester must be from 1 to 9', 'Validation Error');
       return;
     }
+    const requestData: CreateSubjectToCurriculum = {
+      subjectVersionId: addForm.subjectVersionId,
+      semesterNumber: addForm.semesterNumber,
+      isMandatory: addForm.isMandatory
+    };
     setAddLoading(true);
     try {
       await addSubjectVersionToCurriculum({
         curriculumId: id!,
-        subjectVersionId: addForm.subjectVersionId
+        createSubjectToCurriculum: requestData
       });
       handleSuccess('Subject version added successfully');
       

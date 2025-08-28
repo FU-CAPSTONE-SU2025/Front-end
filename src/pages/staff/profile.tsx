@@ -31,9 +31,6 @@ const actionCardVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.6 } },
 };
 
-const buttonVariants = {
-  hover: { scale: 1.05, transition: { duration: 0.2 } },
-};
 
 const StaffProfile: React.FC = () => {
   const navigate = useNavigate();
@@ -45,8 +42,6 @@ const StaffProfile: React.FC = () => {
   // Use the user profile hook
   const {
     getCurrentUserQuery,
-    updateProfileAsync,
-    isUpdatingProfile,
     isUpdateSuccess,
     updateError,
   } = useUserProfile();
