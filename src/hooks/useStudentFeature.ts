@@ -31,14 +31,12 @@ interface UseStudentFeatureParams {
 }
 
 export const useStudentFeature = ({ search, page, pageSize, searchType = 'code' }: UseStudentFeatureParams) => {
-  console.log('useStudentFeature called with:', { search, page, pageSize, searchType });
   return useQuery<PagedData<Syllabus> | null, Error>({
     queryKey: ['syllabus', search, searchType, page, pageSize],
     queryFn: () => {
-      console.log('Calling API with search:', search);
       return fetchSyllabusPaged({ search, page, pageSize, searchType });
     },
-    enabled: search !== undefined && search !== null, 
+    enabled: true, // Always enable to fetch data
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes

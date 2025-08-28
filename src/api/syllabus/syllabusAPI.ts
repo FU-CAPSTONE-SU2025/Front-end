@@ -46,62 +46,30 @@ interface FetchSyllabusParams {
 
 export const fetchSyllabusPaged = async (params: FetchSyllabusParams): Promise<PagedData<Syllabus>> => {
     const { search = '', page = 1, pageSize = 10, searchType = 'code' } = params;
-    const queryParams: any = {
-        page,
-        pageSize,
-    };
+    
+    // Build query parameters
+    const queryParams = new URLSearchParams({
+        pageNumber: page.toString(),
+        pageSize: pageSize.toString(),
+    });
+    
+    // Add search parameter if provided
+    if (search.trim()) {
+        queryParams.append('search', search.trim());
+        if (searchType !== 'all') {
+            queryParams.append('searchType', searchType);
+        }
+    }
     
     const props = {
-        data: queryParams,
-        url: syllabusURL,
+        data: null,
+        url: `${syllabusURL}?${queryParams.toString()}`,
         headers: GetHeader(),
     };
+    
     const result = await axiosRead(props);
     if (result.success) {
-
-        
-        // Filter ở frontend dựa trên searchType
-        let filteredItems = result.data.items;
-        
-    
-        
-        if (search.trim()) {
-            console.log('Filtering items...');
-            filteredItems = result.data.items.filter((item: Syllabus) => {
-                console.log('Checking item:', item.subjectCode, item.subjectName);
-                
-                if (searchType === 'code') {
-                    const matches = item.subjectCode.toLowerCase().includes(search.toLowerCase());
-                    console.log(`Code match for "${item.subjectCode}": ${matches}`);
-                    return matches;
-                } else if (searchType === 'name') {
-                    const matches = item.subjectName.toLowerCase().includes(search.toLowerCase());
-                    console.log(`Name match for "${item.subjectName}": ${matches}`);
-                    return matches;
-                } else {
-                    // searchType === 'all'
-                    const codeMatch = item.subjectCode.toLowerCase().includes(search.toLowerCase());
-                    const nameMatch = item.subjectName.toLowerCase().includes(search.toLowerCase());
-                    const matches = codeMatch || nameMatch;
-                    console.log(`All match for "${item.subjectCode}"/"${item.subjectName}": ${matches}`);
-                    return matches;
-                }
-            });
-            console.log('Filtered items count:', filteredItems.length);
-        }
-        
-        // Tính toán pagination cho filtered data
-        const totalCount = filteredItems.length;
-        const startIndex = (page - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-        const paginatedItems = filteredItems.slice(startIndex, endIndex);
-        
-        return {
-            items: paginatedItems,
-            pageNumber: page,
-            pageSize: pageSize,
-            totalCount: totalCount
-        };
+        return result.data;
     } else {
         throwApiError(result);
         return null as never;
