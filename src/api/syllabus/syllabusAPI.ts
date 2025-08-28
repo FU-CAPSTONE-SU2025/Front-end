@@ -51,9 +51,6 @@ export const fetchSyllabusPaged = async (params: FetchSyllabusParams): Promise<P
         pageSize,
     };
     
-    console.log('API Call - URL:', syllabusURL);
-    console.log('API Call - Query Params:', queryParams);
-    
     const props = {
         data: queryParams,
         url: syllabusURL,
@@ -61,14 +58,12 @@ export const fetchSyllabusPaged = async (params: FetchSyllabusParams): Promise<P
     };
     const result = await axiosRead(props);
     if (result.success) {
-        console.log('API Response:', result.data);
+
         
         // Filter ở frontend dựa trên searchType
         let filteredItems = result.data.items;
         
-        console.log('Original items count:', result.data.items.length);
-        console.log('Search term:', search);
-        console.log('Search type:', searchType);
+    
         
         if (search.trim()) {
             console.log('Filtering items...');
