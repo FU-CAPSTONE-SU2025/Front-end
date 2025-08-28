@@ -650,7 +650,7 @@ export const getUpcomingCheckpoints = async (): Promise<SubjectCheckpoint[]> => 
   }
 };
 
-// Get student-wide checkpoints/todos (paged) by student profile id
+// Add: Get checkpoints/todos for a student profile (paged with filters)
 export const getStudentCheckpoints = async (
   studentProfileId: number,
   pageNumber: number = 1,
@@ -658,27 +658,52 @@ export const getStudentCheckpoints = async (
   opts?: {
     isInCompletedOnly?: boolean;
     isNoneFilterStatus?: boolean;
-    isOrderedByNearToFarDeadlin?: boolean;
+    isOrderedByNearToFarDeadline?: boolean;
   }
-): Promise<{ items: Array<{ id: number; title: string; isCompleted: boolean; deadline: string }>; totalCount: number; pageNumber: number; pageSize: number; }> => {
+): Promise<{ items: SubjectCheckpoint[]; totalCount: number; pageNumber: number; pageSize: number }> => {
   const params = new URLSearchParams({
     pageNumber: pageNumber.toString(),
     pageSize: pageSize.toString(),
   });
-  if (typeof opts?.isInCompletedOnly === 'boolean') params.append('isInCompletedOnly', String(opts.isInCompletedOnly));
-  if (typeof opts?.isNoneFilterStatus === 'boolean') params.append('isNoneFilterStatus', String(opts.isNoneFilterStatus));
-  if (typeof opts?.isOrderedByNearToFarDeadlin === 'boolean') params.append('isOrderedByNearToFarDeadlin', String(opts.isOrderedByNearToFarDeadlin));
+  
+  if (typeof opts?.isInCompletedOnly === 'boolean') {
+    params.append('isInCompletedOnly', String(opts.isInCompletedOnly));
+  }
+  if (typeof opts?.isNoneFilterStatus === 'boolean') {
+    params.append('isNoneFilterStatus', String(opts.isNoneFilterStatus));
+  }
+  if (typeof opts?.isOrderedByNearToFarDeadline === 'boolean') {
+    params.append('isOrderedByNearToFarDeadline', String(opts.isOrderedByNearToFarDeadline));
+  }
+
   const props = {
     data: null,
-    url: baseUrl + `/JoinedSubjectCheckPoint/student/${studentProfileId}?` + params.toString(),
+    url: `${baseUrl}/JoinedSubjectCheckPoint/student/${studentProfileId}?${params.toString()}`,
     headers: GetHeader(),
   };
+
   const result = await axiosRead(props);
   if (result.success) {
     return result.data;
   } else {
     throwApiError(result);
-    return { items: [], totalCount: 0, pageNumber, pageSize } as never;
+    return null as never;
+  }
+};
+
+// Get all joined subjects for a student profile
+export const getJoinedSubjectsOfStudent = async (studentProfileId: number): Promise<any[]> => {
+  const props = {
+    data: null,
+    url: baseUrl + `/JoinedSubject/${studentProfileId}/all`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return Array.isArray(result.data) ? result.data : [];
+  } else {
+    throwApiError(result);
+    return [] as never;
   }
 };
 

@@ -4,6 +4,7 @@ import {
   FetchStudentById,
   GetPagedLeaveSchedulesOneStaff,
   getStudentCheckpoints,
+  getJoinedSubjectsOfStudent,
 } from '../api/student/StudentAPI';
 import { AdminViewBooking } from '../interfaces/IBookingAvailability';
 
@@ -38,13 +39,24 @@ export const useStudentApi = () => {
     pageNumber: number = 1,
     pageSize: number = 10,
     enabled: boolean = true,
-    opts?: { isInCompletedOnly?: boolean; isNoneFilterStatus?: boolean; isOrderedByNearToFarDeadlin?: boolean },
+    opts?: { isInCompletedOnly?: boolean; isNoneFilterStatus?: boolean; isOrderedByNearToFarDeadline?: boolean },
   ) =>
     useQuery<StudentCheckpointsPaged>({
-      queryKey: ['studentCheckpoints', studentProfileId, pageNumber, pageSize, opts?.isInCompletedOnly, opts?.isNoneFilterStatus, opts?.isOrderedByNearToFarDeadlin],
+      queryKey: ['studentCheckpoints', studentProfileId, pageNumber, pageSize, opts?.isInCompletedOnly, opts?.isNoneFilterStatus, opts?.isOrderedByNearToFarDeadline],
       queryFn: () => getStudentCheckpoints(studentProfileId as number, pageNumber, pageSize, opts),
       enabled: !!studentProfileId && enabled,
-      keepPreviousData: true,
+      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh for 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes - cache for 10 minutes
+      placeholderData: (previousData) => previousData, // Show previous data while loading new data
+    });
+
+  const useStudentJoinedSubjects = (studentProfileId: number | null, enabled: boolean = true) =>
+    useQuery<any[]>({
+      queryKey: ['studentJoinedSubjects', studentProfileId],
+      queryFn: () => getJoinedSubjectsOfStudent(studentProfileId as number),
+      enabled: !!studentProfileId && enabled,
+      staleTime: 10 * 60 * 1000, // 10 minutes - subjects don't change often
+      gcTime: 15 * 60 * 1000, // 15 minutes cache
     });
 
   return {
@@ -52,5 +64,6 @@ export const useStudentApi = () => {
     useFetchStudentById,
     useLeaveSchedulesOneStaff,
     useStudentCheckpoints,
+    useStudentJoinedSubjects,
   };
 };
