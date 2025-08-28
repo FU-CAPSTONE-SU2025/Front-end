@@ -80,15 +80,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
   hasSearched,
   onSubjectSelect,
 }) => {
-  console.log('ResourceTable props:', { data, isLoading, hasSearched, searchTerm, total });
-  
   const columns = getColumns(onSubjectSelect);
-
-  // Tạm thời bỏ điều kiện để debug
-  // if (!hasSearched) {
-  //   console.log('ResourceTable: hasSearched is false, returning null');
-  //   return null;
-  // }
 
   return (
     <motion.div

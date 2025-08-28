@@ -184,37 +184,7 @@ const Dashboard = () => {
             >
               <div className="w-full">
                 <UserInfoCard userInfor={studentDetail || {}} user={composedUser} />
-                <div className="mt-4 bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-5">
-                  <div className="flex items-center gap-4 mb-3">
-                    <img
-                      src={studentDetail?.avatarUrl || '/avatar.jpg'}
-                      alt="avatar"
-                      className="w-12 h-12 rounded-full object-cover border border-white/30"
-                    />
-                    <div>
-                      <div className="text-white text-base font-semibold">
-                        {studentDetail ? `${studentDetail.firstName ?? ''} ${studentDetail.lastName ?? ''}`.trim() : (isLoadingStudent ? 'Loading...' : 'Student')}
-                      </div>
-                      <div className="text-gray-300 text-xs">
-                        {studentDetail?.email || ''}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2 text-gray-200 text-sm">
-                    <div className="flex justify-between">
-                      <span className="opacity-80">Date of Birth</span>
-                      <span className="font-medium">
-                        {studentDetail?.dateOfBirth ? new Date(studentDetail.dateOfBirth).toLocaleDateString() : (isLoadingStudent ? 'Loading...' : '—')}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="opacity-80 mb-1">Career Goal</div>
-                      <div className="font-medium">
-                        {studentDetail?.studentDataDetailResponse?.careerGoal || (isLoadingStudent ? 'Loading...' : '—')}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+           
               </div>
             </motion.div>
 
