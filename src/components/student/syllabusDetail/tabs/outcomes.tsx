@@ -58,7 +58,7 @@ const Outcomes: React.FC<OutcomesProps> = ({ outcomes }) => {
                   
                   {/* Outcome content */}
                   <div className="flex-1 pt-1">
-                    <Text className="text-gray-900 font-medium text-base leading-relaxed">
+                    <Text className="text-gray-900 font-medium text-base leading-relaxed" style={{ whiteSpace: 'pre-line' }}>
                       {lo.description}
                     </Text>
                   </div>
