@@ -1,4 +1,4 @@
-import CourseList from '../../components/student/courseList';
+import SubjectCard from '../../components/student/subjectCard';
 import AcademicCharts from '../../components/student/academicCharts';
 import UserInfoCard from '../../components/student/userInfoCard';
 import { motion } from 'framer-motion';
@@ -122,21 +122,7 @@ const Dashboard = () => {
     return getSubjectsStats(currentSemesterSubjects);
   }, [currentSemesterSubjects]);
 
-  if (isLoading) {
-    return (
-      <div className="pt-20 mt-2 pb-8 flex-1 min-h-screen bg-transparent flex items-center justify-center">
-        <div className="text-white text-xl">Loading subjects...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="pt-20 mt-2 pb-8 flex-1 min-h-screen bg-transparent flex items-center justify-center">
-        <div className="text-red-400 text-xl">Error loading subjects: {error.message}</div>
-      </div>
-    );
-  }
+  // Keep full layout; show localized blocks instead of raw loading/error
 
   // Check if no data is available
   if (!joinedSubjects || joinedSubjects.length === 0) {
@@ -202,7 +188,6 @@ const Dashboard = () => {
                       You haven't enrolled in any subjects yet. Please contact your academic advisor to register for courses.
                     </p>
                   </div>
-                  
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                     <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
                       <div className="text-2xl font-bold text-white">0</div>
@@ -332,8 +317,38 @@ const Dashboard = () => {
                 </div>
               )}
               
-              {currentSemesterSubjects.length > 0 ? (
-                <CourseList subjects={currentSemesterSubjects} />
+              {/* Localized loading/error/empty rendering for subjects */}
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-200 opacity-80">Loading subjects...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-200 opacity-80">No data available right now.</p>
+                </div>
+              ) : currentSemesterSubjects.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                  {currentSemesterSubjects.map((subject, index) => (
+                    <motion.div
+                      key={subject.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ scale: 1.02, y: -5 }}
+                      className="w-full"
+                    >
+                      <SubjectCard
+                        id={subject.id}
+                        code={subject.subjectCode}
+                        name={subject.name}
+                        progress={subject.isCompleted ? 100 : subject.isPassed ? 80 : 30}
+                        credits={subject.credits}
+                        isPassed={subject.isPassed}
+                        isCompleted={subject.isCompleted}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
               ) : (
                 <div className="text-center py-8">
                   <p className="text-gray-200 opacity-60">No subjects found for this semester</p>

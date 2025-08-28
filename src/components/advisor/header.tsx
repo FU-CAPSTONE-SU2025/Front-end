@@ -11,7 +11,7 @@ const navItems = [
   { name: 'Work Schedule', path: '/advisor/workSchedule' },
   { name: 'Leave Schedule', path: '/advisor/leaveSchedule' },
   { name: 'Student Meeting', path: '/advisor/meeting' },
-
+  { name: 'Student Overview', path: '/advisor/studentOverview' },
 ];
 
 const Header: React.FC = () => {
@@ -36,13 +36,13 @@ const Header: React.FC = () => {
     visible: (i: number) => ({
       opacity: 1,
       x: 0,
-      transition: { delay: i * 0.15, duration: 0.3, ease: 'easeOut' },
+      transition: { delay: i * 0.15, duration: 0.3 },
     }),
   };
 
   const mobileMenuVariants = {
     hidden: { opacity: 0, x: -100 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.4 } },
     exit: { opacity: 0, x: -100, transition: { duration: 0.3 } },
   };
 
