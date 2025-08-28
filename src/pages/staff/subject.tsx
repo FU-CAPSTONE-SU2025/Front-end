@@ -334,7 +334,10 @@ const SubjectPage: React.FC = () => {
       },
     }}
   >
-    <div className={styles.sttContainer}>
+    <div className={styles.sttContainer}
+      style={{height:"210vh"}}
+      // only for this page to combat the dynamic rendering of the combo list
+    >
       {/* Sticky Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
         <div className={glassStyles.appleGlassCard} style={{ borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
