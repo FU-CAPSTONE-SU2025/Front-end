@@ -17,6 +17,7 @@ import { useCRUDSubject, useCRUDSubjectVersion, useCRUDSyllabus } from '../../ho
 import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../datas/mockData';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
+import LoadingScreen from '../../components/LoadingScreen';
 
 // Function to create default version for a subject (moved outside component)
 const createDefaultVersion = async (
@@ -114,11 +115,16 @@ const ManagerSubjectVersionPage: React.FC = () => {
   const [syllabusMap, setSyllabusMap] = useState<Record<number, Syllabus | null>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [initLoading, setInitLoading] = useState<string | null>(null);
 
   const { handleError, handleSuccess } = useApiErrorHandler();
 
   // Function to fetch prerequisites for a specific version
   const fetchPrerequisitesForVersion = useCallback(async (versionId: number) => {
+    if (!versionId || Number.isNaN(versionId) || versionId <= 0) {
+      console.warn('[Manager][Prereq] Skip fetch due to invalid versionId:', versionId);
+      return;
+    }
     setPrereqLoading(prev => ({ ...prev, [versionId]: true }));
     try {
       const timeoutPromise = new Promise((_, reject) => 
@@ -175,6 +181,10 @@ const ManagerSubjectVersionPage: React.FC = () => {
 
   // Handler to fetch or create syllabus for a specific version
   const fetchOrCreateSyllabus = useCallback(async (versionId: number, subjectData: any) => {
+    if (!versionId || Number.isNaN(versionId) || versionId <= 0) {
+      console.warn('[Manager][Syllabus] Skip due to invalid versionId:', versionId);
+      return;
+    }
     if (!subjectData) {
       return;
     }
@@ -225,7 +235,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
         }
       } else {
         // Syllabus exists, use it
-        // Check if the nested arrays exist and are arrays
         const assessments = Array.isArray(syllabusData.assessments) ? syllabusData.assessments : [];
         const materials = Array.isArray(syllabusData.learningMaterials) ? syllabusData.learningMaterials : [];
         const outcomes = Array.isArray(syllabusData.learningOutcomes) ? syllabusData.learningOutcomes : [];
@@ -236,7 +245,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
           [versionId]: syllabusData
         }));
         
-        // Update the maps with existing syllabus data
         setAssessmentMap(prev => ({
           ...prev,
           [versionId]: assessments
@@ -281,40 +289,51 @@ const ManagerSubjectVersionPage: React.FC = () => {
         }
         
         if (!versionsData || versionsData.length === 0) {
-          // No versions exist, create default version
+          // No versions exist, create default version then refetch to get real ID
           showInfo('No versions found. Creating default version...');
+          setInitLoading('Creating default version...');
           const defaultVersions = await createDefaultVersion(subjectData, addSubjectVersionMutation);
-          setSubjectVersions(defaultVersions);
-          if (defaultVersions.length > 0) {
-            setActiveKey(String(defaultVersions[0].id));
-            // Fetch syllabus for the first version
-            await fetchOrCreateSyllabus(defaultVersions[0].id, subjectData);
-            // Fetch prerequisites for the first version
-            try {
-              await fetchPrerequisitesForVersion(defaultVersions[0].id);
-            } catch (error) {
-              console.error('Failed to fetch prerequisites for default version:', error);
-            }
+          setInitLoading('Fetching newly created version...');
+          let refreshed: SubjectVersion[] = [];
+          try {
+            const resp = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+            if (Array.isArray(resp)) refreshed = resp; else if (resp && typeof resp === 'object' && 'data' in (resp as any)) refreshed = Array.isArray((resp as any).data) ? (resp as any).data : [];
+          } catch (refErr) {
+            console.error('[Manager] Refetch after create failed:', refErr);
+          }
+          const valid = (refreshed || []).filter(v => v && typeof v.id === 'number' && v.id > 0);
+          const newest = valid.slice().sort((a, b) => (b.id || 0) - (a.id || 0))[0];
+          if (newest) {
+            setSubjectVersions(valid);
+            setActiveKey(String(newest.id));
+            setInitLoading('Preparing syllabus...');
+            await new Promise(r => setTimeout(r, 600));
+            await fetchOrCreateSyllabus(newest.id, subjectData);
+            setInitLoading('Fetching prerequisites...');
+            await fetchPrerequisitesForVersion(newest.id);
+            setInitLoading(null);
+          } else {
+            handleError('Failed to load created version');
+            setInitLoading(null);
+            setLoading(false);
+            return;
           }
         } else {
           // Versions exist, use them
-          setSubjectVersions(versionsData);
-          if (versionsData.length > 0) {
-            setActiveKey(String(versionsData[0].id));
-            // Fetch syllabus for the first version
-            await fetchOrCreateSyllabus(versionsData[0].id, subjectData);
-            // Fetch prerequisites for all versions - with error handling
+          const valid = versionsData.filter(v => v && typeof v.id === 'number' && v.id > 0);
+          setSubjectVersions(valid);
+          if (valid.length > 0) {
+            setActiveKey(String(valid[0].id));
+            setInitLoading('Loading syllabus...');
+            await fetchOrCreateSyllabus(valid[0].id, subjectData);
             try {
+              setInitLoading('Loading prerequisites...');
               await fetchAllPrerequisites();
-            } catch (error) {
-              console.error('Failed to fetch all prerequisites:', error);
-              // Fallback: fetch prerequisites for the first version only
-              try {
-                await fetchPrerequisitesForVersion(versionsData[0].id);
-              } catch (prereqError) {
-                console.error('Failed to fetch prerequisites for first version:', prereqError);
-              }
+            } catch (e) {
+              console.error('Failed to fetch all prerequisites:', e);
             }
+            await fetchPrerequisitesForVersion(valid[0].id);
+            setInitLoading(null);
           }
         }
         
@@ -333,6 +352,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
   const handleTabChange = useCallback(async (key: string) => {
     setActiveKey(key);
     const versionId = Number(key);
+    if (!versionId || Number.isNaN(versionId) || versionId <= 0) return;
     
     // Fetch syllabus for this version if not already loaded
     if (!syllabusMap[versionId]) {
@@ -550,18 +570,30 @@ const ManagerSubjectVersionPage: React.FC = () => {
     }
   }, [setDefaultSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, handleSuccess, handleError]);
 
-  if (loading) {
+  if (loading || !!initLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <Typography.Text>Loading...</Typography.Text>
-      </div>
+      <>
+        <LoadingScreen isLoading={true} message={initLoading || 'Loading...'} />
+      </>
     );
   }
 
   if (error) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <Typography.Text type="danger">{error}</Typography.Text>
+      <div style={{ position: 'fixed', inset: 0, backdropFilter: 'blur(4px)', background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+        <div style={{ background: '#ffffff', borderRadius: 12, padding: 24, width: 'min(560px, 92vw)', boxShadow: '0 10px 30px rgba(0,0,0,0.25)', border: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+            <span style={{ display: 'inline-flex', width: 36, height: 36, borderRadius: 999, background: '#fee2e2', alignItems: 'center', justifyContent: 'center', color: '#dc2626', fontWeight: 800 }}>!</span>
+            <Typography.Title level={4} style={{ margin: 0, color: '#1f2937' }}>Something went wrong</Typography.Title>
+          </div>
+          <Typography.Paragraph style={{ color: '#6b7280', marginBottom: 16 }}>
+            {error}
+          </Typography.Paragraph>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button onClick={() => window.history.back()}>Back</Button>
+            <Button type="primary" onClick={() => window.location.reload()}>Retry</Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -580,11 +612,8 @@ const ManagerSubjectVersionPage: React.FC = () => {
                 {subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Subject'}
               </h2>
               <h3 className={styles.syllabusSubtitle}>
-                {subject?.description}
+                <span style={{ whiteSpace: 'pre-line' }}>{subject?.description}</span>
               </h3>
-              <p className={styles.syllabusSubtitle}>
-                Subject Versions & Learning Management
-              </p>
             </div>
           </div>
           <div className={styles.syllabusHeaderRight}>
@@ -662,11 +691,8 @@ const ManagerSubjectVersionPage: React.FC = () => {
                 {subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Subject'}
               </h2>
               <h3 className={styles.syllabusSubtitle}>
-                {subject?.description}
+                <span style={{ whiteSpace: 'pre-line' }}>{subject?.description}</span>
               </h3>
-              <p className={styles.syllabusSubtitle}>
-                Subject Versions & Learning Management
-              </p>
             </div>
           </div>
           <div className={styles.syllabusHeaderRight}>
@@ -688,7 +714,9 @@ const ManagerSubjectVersionPage: React.FC = () => {
             onChange={handleTabChange}
             type="card"
             tabBarStyle={{ background: 'transparent', borderRadius: 12, boxShadow: 'none', display: 'flex', justifyContent: 'center' }}
-            items={subjectVersions.map((version, index) => {
+            items={(Array.isArray(subjectVersions) ? subjectVersions : [])
+              .filter(v => v && typeof v.id === 'number' && v.id > 0)
+              .map((version, index) => {
               const isActive = activeKey === String(version.id);
               const syllabus = syllabusMap[version.id];
               const prerequisites = prereqMap[version.id];
@@ -743,7 +771,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                             <strong>Version Name:</strong> {version.versionName}
                           </div>
                           <div>
-                            <strong>Description:</strong> {version.description}
+                            <strong>Description:</strong> <span style={{ whiteSpace: 'pre-line' }}>{version.description}</span>
                           </div>
                           <div>
                             <strong>Effective From:</strong> {new Date(version.effectiveFrom).toLocaleDateString()}
