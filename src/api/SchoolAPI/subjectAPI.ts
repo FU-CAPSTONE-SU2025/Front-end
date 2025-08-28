@@ -20,24 +20,6 @@ export const AddSubject = async (data: CreateSubject): Promise<Subject | null> =
   }
 };
 
-/**
- * @deprecated Use AddPrerequisiteToSubjectVersion from subjectVersionAPI instead
- * This function will be removed in a future version
- */
-export const AddPrerequisitesSubject = async (id:number,prerequisitesId:number): Promise<Subject | null> => {
-    const props = {
-      data: null,
-      url: subjectURL + `/${id}/prerequisites/${prerequisitesId}`,
-      headers: GetHeader(),
-    };
-    const result = await axiosCreate(props);
-    if (result.success) {
-      return result.data;
-    } else {
-      throwApiError(result);
-    }
-  };
-
 
 export const RegisterMultipleSubject = async (data: CreateSubject[]): Promise<any> => {
   const props = {
