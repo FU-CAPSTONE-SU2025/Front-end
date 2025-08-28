@@ -2,34 +2,19 @@ import SubjectCard from '../../components/student/subjectCard';
 import AcademicCharts from '../../components/student/academicCharts';
 import UserInfoCard from '../../components/student/userInfoCard';
 import { motion } from 'framer-motion';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import SemesterSelect from '../../components/student/selectSemester';
 import { useJoinedSubjects } from '../../hooks/useStudentFeature';
 import { JoinedSubject, SemesterSubjects } from '../../interfaces/IStudent';
 import { groupSubjectsBySemester, getSemesterOptions, getSubjectsStats } from '../../utils/subjectUtils';
+import { GetCurrentStudentUser } from '../../api/Account/UserAPI';
+import { getAuthState } from '../../hooks/useAuthState';
+import { jwtDecode } from 'jwt-decode';
 
+// Note: UserInfoCard will receive userInfor from API; no mock user passed
 
-const user = {
-  name: 'Le Nguyen Thien An',
-  quote: 'SE170104',
-  avatar: '/avatar.jpg',
-  achievements: [
-    { icon: '🏆', label: 'Excellent student in SUMMER 2024' },
-    { icon: '🎉', label: 'Godd student in SUMMER 2025' },
-    { icon: '😺', label: 'Handsome student in SUMMER 2025' },
-  ],
-  gpaHistory: [
-    { semester: 'Fall 21', gpa: 3.2 },
-    { semester: 'Spring 22', gpa: 3.4 },
-    { semester: 'Summer 22', gpa: 3.5 },
-    { semester: 'Fall 22', gpa: 3.6 },
-    { semester: 'Spring 23', gpa: 3.7 },
-    { semester: 'Summer 23', gpa: 3.8 },
-    { semester: 'Fall 23', gpa: 3.9 },
-    { semester: 'Spring 24', gpa: 3.85 },
-    { semester: 'Summer 24', gpa: 3.9 },
-  ],
-};
+// Student info (fetched)
+type JwtPayload = { UserId?: number };
 
 const semestersAcademicData = [
   {
@@ -86,6 +71,10 @@ const semestersAcademicData = [
 
 const Dashboard = () => {
   const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
+  const { accessToken } = getAuthState();
+  const [studentId, setStudentId] = useState<number | null>(null);
+  const [studentDetail, setStudentDetail] = useState<any | null>(null);
+  const [isLoadingStudent, setIsLoadingStudent] = useState<boolean>(false);
   
   // Fetch joined subjects
   const { data: joinedSubjects, isLoading, error } = useJoinedSubjects();
@@ -108,6 +97,44 @@ const Dashboard = () => {
     }
   }, [semesterOptions, selectedSemester]);
 
+  // Extract student id from JWT
+  useEffect(() => {
+    try {
+      const payload: JwtPayload = jwtDecode(accessToken ?? '');
+      const id = payload?.UserId ?? null;
+      setStudentId(id);
+    } catch {
+      setStudentId(null);
+    }
+  }, [accessToken]);
+
+  // Fetch student detail
+  useEffect(() => {
+    const fetchDetail = async () => {
+      if (!studentId) return;
+      setIsLoadingStudent(true);
+      try {
+        const res = await GetCurrentStudentUser(studentId);
+        setStudentDetail(res);
+      } catch (e) {
+        // keep silent UI fallback
+        setStudentDetail(null);
+      } finally {
+        setIsLoadingStudent(false);
+      }
+    };
+    fetchDetail();
+  }, [studentId]);
+
+  // Compose minimal user props for UserInfoCard from real API data
+  const composedUser = useMemo(() => {
+    const name = studentDetail ? `${studentDetail.firstName ?? ''} ${studentDetail.lastName ?? ''}`.trim() || 'Student' : 'Student';
+    const quote = studentDetail?.studentDataDetailResponse?.careerGoal || 'Welcome back';
+    const avatar = studentDetail?.avatarUrl || '/avatar.jpg';
+    const achievements: Array<{ icon: string; label: string }> = [];
+    return { name, quote, avatar, achievements } as any;
+  }, [studentDetail]);
+  
   // Get current semester subjects
   const currentSemesterSubjects = selectedSemester ? semesterSubjects[selectedSemester] || [] : [];
   
@@ -156,7 +183,38 @@ const Dashboard = () => {
               transition={{ delay: 0.3, duration: 0.6 }}
             >
               <div className="w-full">
-                <UserInfoCard user={user} />
+                <UserInfoCard userInfor={studentDetail || {}} user={composedUser} />
+                <div className="mt-4 bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-5">
+                  <div className="flex items-center gap-4 mb-3">
+                    <img
+                      src={studentDetail?.avatarUrl || '/avatar.jpg'}
+                      alt="avatar"
+                      className="w-12 h-12 rounded-full object-cover border border-white/30"
+                    />
+                    <div>
+                      <div className="text-white text-base font-semibold">
+                        {studentDetail ? `${studentDetail.firstName ?? ''} ${studentDetail.lastName ?? ''}`.trim() : (isLoadingStudent ? 'Loading...' : 'Student')}
+                      </div>
+                      <div className="text-gray-300 text-xs">
+                        {studentDetail?.email || ''}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-gray-200 text-sm">
+                    <div className="flex justify-between">
+                      <span className="opacity-80">Date of Birth</span>
+                      <span className="font-medium">
+                        {studentDetail?.dateOfBirth ? new Date(studentDetail.dateOfBirth).toLocaleDateString() : (isLoadingStudent ? 'Loading...' : '—')}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="opacity-80 mb-1">Career Goal</div>
+                      <div className="font-medium">
+                        {studentDetail?.studentDataDetailResponse?.careerGoal || (isLoadingStudent ? 'Loading...' : '—')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
 
@@ -263,7 +321,8 @@ const Dashboard = () => {
             transition={{ delay: 0.3, duration: 0.6 }}
           >
             <div className="w-full">
-              <UserInfoCard user={user} />
+              <UserInfoCard userInfor={studentDetail || {}} user={composedUser} />
+              
             </div>
           </motion.div>
 

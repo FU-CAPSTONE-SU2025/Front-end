@@ -1,11 +1,7 @@
 import { motion } from 'framer-motion';
-import { Avatar, Tooltip, Button } from 'antd';
-import { UserOutlined, RiseOutlined, EyeOutlined, EditOutlined } from '@ant-design/icons';
-import { BarChart, Bar, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer, LabelList } from 'recharts';
-import React, { useState, useRef } from 'react';
-import GpaHistoryModal from './gpaFull';
-
-
+import { Avatar } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
+import React, { useState, useEffect, useMemo } from 'react';
 
 interface Achievement {
   icon: string;
@@ -19,143 +15,146 @@ interface UserInfo {
   name: string;
   quote: string;
   avatar: string;
-  achievements: Achievement[];
-  gpaHistory: GpaBySemester[];
+  achievements?: Achievement[];
+  gpaHistory?: GpaBySemester[];
+}
+
+// Lightweight shape for API user
+interface ApiUserInfo {
+  id?: number;
+  username?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string;
+  avatarUrl?: string | null;
+  roleName?: string;
+  status?: number;
+  studentDataDetailResponse?: {
+    id?: number;
+    enrolledAt?: string;
+    careerGoal?: string;
+    numberOfBan?: number;
+    programId?: number;
+    registeredComboCode?: string;
+    curriculumCode?: string;
+  };
 }
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  hover: { scale: 1.01, boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)', transition: { duration: 0.3 } },
+  hover: { scale: 1.01, boxShadow: '0 10px 20px rgba(0, 0, 0, 0.25)', transition: { duration: 0.3 } },
 };
 
-function getTotalGpa(gpaHistory: GpaBySemester[]) {
-  if (!gpaHistory.length) return 0;
-  const sum = gpaHistory.reduce((acc, cur) => acc + cur.gpa, 0);
-  return (sum / gpaHistory.length).toFixed(2);
-}
+const FALLBACK_AVATAR = 'https://i.pinimg.com/736x/86/af/d1/86afd13a3e5f13435b39c31a407bbaa9.jpg';
 
-const UserInfoCard: React.FC<{ user: UserInfo }> = ({ user }) => {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(user.avatar);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const recentGpa = user.gpaHistory.slice(-3);
-  const totalGpa = getTotalGpa(user.gpaHistory);
+const UserInfoCard: React.FC<{ user: UserInfo; userInfor: ApiUserInfo | any }> = ({ user, userInfor }) => {
+  const safeUser = useMemo(() => ({
+    name: user?.name ?? 'Student',
+    quote: user?.quote ?? '',
+    avatar: user?.avatar || FALLBACK_AVATAR,
+  }), [user]);
 
-  const handleEditAvatar = () => {
-    fileInputRef.current?.click();
-  };
+  const [avatarUrl, setAvatarUrl] = useState(safeUser.avatar);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setAvatarUrl(ev.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+  const hasApiData = useMemo(() => !!(userInfor && (userInfor.firstName || userInfor.lastName || userInfor.name)), [userInfor]);
+  const displayName = useMemo(() => {
+    if (userInfor?.firstName || userInfor?.lastName) {
+      return `${userInfor.firstName ?? ''} ${userInfor.lastName ?? ''}`.trim() || 'Student';
     }
-  };
+    return userInfor?.name || safeUser.name;
+  }, [userInfor, safeUser.name]);
+  const displayQuote = useMemo(() => {
+    return userInfor?.studentDataDetailResponse?.careerGoal || safeUser.quote || '';
+  }, [userInfor, safeUser.quote]);
+  const displayDob = useMemo(() => {
+    if (!userInfor?.dateOfBirth) return null;
+    try { return new Date(userInfor.dateOfBirth).toLocaleDateString(); } catch { return null; }
+  }, [userInfor]);
+
+  useEffect(() => {
+    if (userInfor && 'avatarUrl' in userInfor) {
+      setAvatarUrl(userInfor.avatarUrl || FALLBACK_AVATAR);
+    }
+  }, [userInfor?.avatarUrl]);
 
   return (
     <motion.div
-      className="w-full bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 lg:p-10 relative overflow-hidden"
+      className="relative w-full bg-white/10 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-8 lg:p-10 overflow-hidden"
       initial="hidden"
       animate="visible"
       variants={cardVariants}
       whileHover="hover"
     >
-      <div className="flex flex-col items-center text-center z-10 relative">
+      {/* Decorative halo */}
+      <div className="pointer-events-none select-none absolute -top-24 -right-24 w-72 h-72 rounded-full bg-gradient-to-tr from-blue-500/20 via-indigo-400/10 to-sky-400/0 blur-3xl" />
+      <div className="pointer-events-none select-none absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-gradient-to-tr from-sky-500/20 via-blue-400/10 to-indigo-400/0 blur-3xl" />
+
+      <div className="flex flex-col items-center text-center relative z-10">
+        {/* Avatar with subtle ring */}
         <div className="relative mb-6">
-          <motion.div whileHover={{ scale: 1.05, rotate: 2 }} transition={{ duration: 0.3 }}>
-            <Avatar
-              src={avatarUrl}
-              size={{ xs: 100, sm: 120, md: 140, lg: 160, xl: 180, xxl: 180 }}
-              icon={<UserOutlined />}
-              className="border-4 border-white/30 shadow-2xl"
-            />
-          </motion.div>
-          <button
-            type="button"
-            className="absolute bottom-2 right-2 w-7 h-7 flex items-center justify-center bg-transparent hover:bg-orange-500 text-white border border-white rounded-full shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-300"
-            style={{ zIndex: 2 }}
-            onClick={handleEditAvatar}
-            aria-label="Edit avatar"
-          >
-            <EditOutlined style={{ fontSize: 15, margin: 0, padding: 0, color: '#fff' }} />
-          </button>
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            style={{ display: 'none' }}
-            onChange={handleAvatarChange}
-          />
-        </div>
-        <div className="text-2xl sm:text-3xl font-bold text-white mb-2">
-          {user.name}
-        </div>
-        <div className="text-gray-300 text-lg italic mb-6">
-          {user.quote}
-        </div>
-        <div className="flex gap-4 mb-8 justify-center">
-          {user.achievements.map((ach, idx) => (
-            <Tooltip title={ach.label} key={idx}>
-              <motion.span
-                className="text-3xl sm:text-4xl cursor-pointer"
-                whileHover={{ scale: 1.2, rotate: 10 }}
-                transition={{ duration: 0.2 }}
-              >
-                {ach.icon}
-              </motion.span>
-            </Tooltip>
-          ))}
-        </div>
-        {/* GPA Section - simple style */}
-        <div className="w-full bg-white/10 rounded-2xl p-4 shadow border border-white/20 mb-2">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2 text-white font-semibold text-lg">
-              <RiseOutlined className="text-orange-400 text-xl" />
-              Grade Point Average
+          <div className="absolute inset-0 -z-10 translate-y-2 blur-2xl rounded-full bg-gradient-to-br from-blue-500/20 to-sky-400/10" style={{ width: 180, height: 180 }} />
+          <div className="p-1 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500">
+            <div className="rounded-full bg-black/30 p-1">
+              <Avatar
+                src={avatarUrl}
+                size={{ xs: 104, sm: 120, md: 144, lg: 168, xl: 184, xxl: 184 }}
+                icon={<UserOutlined />}
+                
+              />
             </div>
-            <Tooltip title="View Full History">
-              <Button
-                type="text"
-                shape="circle"
-                icon={<EyeOutlined style={{ color: '#fff', fontSize: 20 }} />}
-                onClick={() => setModalOpen(true)}
-                size="large"
-                className="border border-white bg-transparent hover:bg-orange-500 focus:bg-orange-500 text-white flex items-center justify-center transition-all duration-200"
-                style={{ width: 32, height: 32, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              />
-            </Tooltip>
           </div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-gray-400 text-base font-semibold">Recent 3 semesters</span>
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500 text-white font-bold text-lg shadow">
-              <RiseOutlined /> {totalGpa}
-            </span>
-          </div>
-          <ResponsiveContainer width="100%" height={120}>
-            <BarChart data={recentGpa} margin={{ top: 20, right: 0, left: 0, bottom: -10 }}>
-              <XAxis dataKey="semester" stroke="#a0a0a0" fontSize={12} tickLine={false} axisLine={false} />
-              <ReTooltip
-                cursor={{ fill: 'rgba(255,255,255,0.1)' }}
-                contentStyle={{ background: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: 12, color: 'white', fontWeight: 600, fontSize: 16 }}
-              />
-              <Bar dataKey="gpa" fill="#F97316" radius={[8, 8, 8, 8]} animationDuration={1000}>
-                <LabelList dataKey="gpa" position="top" fill="#f0f0f0" fontSize={14} fontWeight={600} />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
         </div>
-      
-        <GpaHistoryModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          gpaHistory={user.gpaHistory}
-          totalGpa={totalGpa}
-        />
+
+        {/* Name and quote */}
+        <div className="text-white font-extrabold tracking-tight mb-2" style={{ fontSize: 30, lineHeight: 1.15 }}>
+          {displayName}
+        </div>
+        {displayQuote && (
+          <div className="text-gray-200/95 italic mb-5 px-3 max-w-2xl" style={{ fontSize: 16 }}>
+            “{displayQuote}”
+          </div>
+        )}
+
+        {/* Info list */}
+        <div className="w-full max-w-xl text-left">
+          <div className="divide-y divide-white/10 rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
+            {userInfor?.email && (
+              <div className="px-5 py-3 flex items-center justify-between">
+                <span className="text-gray-300 text-sm">Email</span>
+                <span className="text-white font-medium break-all text-sm">{userInfor.email}</span>
+              </div>
+            )}
+            {displayDob && (
+              <div className="px-5 py-3 flex items-center justify-between">
+                <span className="text-gray-300 text-sm">Date of Birth</span>
+                <span className="text-white font-medium text-sm">{displayDob}</span>
+              </div>
+            )}
+            {userInfor?.studentDataDetailResponse?.curriculumCode && (
+              <div className="px-5 py-3 flex items-center justify-between">
+                <span className="text-gray-300 text-sm">Curriculum</span>
+                <span className="text-white font-medium text-right text-sm">{userInfor.studentDataDetailResponse.curriculumCode}</span>
+              </div>
+            )}
+            {userInfor?.studentDataDetailResponse?.enrolledAt && (
+              <div className="px-5 py-3 flex items-center justify-between">
+                <span className="text-gray-300 text-sm">Enrolled</span>
+                <span className="text-white font-medium text-sm">{new Date(userInfor.studentDataDetailResponse.enrolledAt).toLocaleDateString()}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Loading/empty placeholder */}
+        {!hasApiData && (
+          <div className="w-full max-w-xl mt-4">
+            <div className="bg-white/10 text-white/90 rounded-xl px-4 py-3 border border-white/20 text-center">
+              Profile info is loading or unavailable at the moment.
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

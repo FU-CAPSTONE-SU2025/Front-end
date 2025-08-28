@@ -52,6 +52,7 @@ import HistoryMeeting from "../pages/student/historyMeeting";
 import MeetingPage from "../pages/advisor/meetingPage";
 import BackgroundWrapper from "../components/common/backgroundWrapper";
 import StudentOverview from "../pages/advisor/studentOverview";
+import StudentDetail from "../pages/advisor/studentDetail";
 
 
 export const routes = createBrowserRouter([
@@ -208,6 +209,10 @@ export const routes = createBrowserRouter([
       {
         path: "studentOverview",
         Component: StudentOverview,
+      },
+      {
+        path: "studentDetail/:id",
+        Component: StudentDetail,
       },
     ]
   },

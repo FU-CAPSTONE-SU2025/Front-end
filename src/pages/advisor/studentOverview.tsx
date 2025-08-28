@@ -1,244 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Input, Select, Row, Col, ConfigProvider, Card, Space, Typography, Affix, Pagination, Empty, Modal, Descriptions, Avatar, Tag, Spin, Tabs, List } from 'antd';
-import { SearchOutlined, UserOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Table, Input, Select, Row, Col, ConfigProvider, Card, Space, Typography, Affix, Pagination, Empty } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import { useActiveStudentApi } from '../../hooks/useActiveStudentApi';
 import { useSchoolApi } from '../../hooks/useSchoolApi';
-import { GetCurrentStudentUser } from '../../api/Account/UserAPI';
-import { useStudentApi } from '../../hooks/useStudentApi';
+import { useNavigate } from 'react-router';
 
 const { Title, Text } = Typography;
-
-type StudentCheckpointItem = { id: number; title: string; isCompleted: boolean; deadline: string };
-type StudentCheckpointsPaged = { items: StudentCheckpointItem[]; totalCount: number; pageNumber: number; pageSize: number };
-
-// Inline, lower-case-first component name as requested
-const studentDetailModal: React.FC<{
-  open: boolean;
-  onClose: () => void;
-  studentId: number | null;
-  studentProfileId: number | null;
-}> = ({ open, onClose, studentId, studentProfileId }) => {
-  const [loading, setLoading] = useState(false);
-  const [detail, setDetail] = useState<any | null>(null);
-  const [activeKey, setActiveKey] = useState<string>('academic');
-  const [todoPage, setTodoPage] = useState(1);
-  const [todoPageSize, setTodoPageSize] = useState(5);
-  const [isInCompletedOnly, setIsInCompletedOnly] = useState<boolean>(true);
-  const [isNoneFilterStatus, setIsNoneFilterStatus] = useState<boolean>(false);
-  const [isOrderedByNearToFarDeadlin, setIsOrderedByNearToFarDeadlin] = useState<boolean>(true);
-  const { useStudentCheckpoints } = useStudentApi();
-  const { data: todoData, isLoading: todoLoading } = useStudentCheckpoints(
-    studentProfileId,
-    todoPage,
-    todoPageSize,
-    open && activeKey === 'todos',
-    { isInCompletedOnly, isNoneFilterStatus, isOrderedByNearToFarDeadlin }
-  ) as { data: StudentCheckpointsPaged | undefined; isLoading: boolean };
-
-  useEffect(() => {
-    const fetchDetail = async () => {
-      if (!open || !studentId) return;
-      setLoading(true);
-      try {
-        const res = await GetCurrentStudentUser(studentId);
-        setDetail(res);
-      } catch (err) {
-        console.error('Failed to fetch student detail', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDetail();
-  }, [open, studentId]);
-
-  const statusTag = (status?: number) => {
-    if (status === 0) return <Tag color="green">Active</Tag>;
-    if (status === 1) return <Tag color="red">Inactive</Tag>;
-    return <Tag>Unknown</Tag>;
-  };
-
-  return (
-    <Modal
-      title={<span style={{ color: '#0f172a', fontWeight: 600 }}>Student Detail</span>}
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      width={800}
-      destroyOnClose
-    >
-      {loading ? (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-          <Spin />
-        </div>
-      ) : (
-        <div style={{ paddingTop: 8 }}>
-          {/* Basic Header Info */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-            <Avatar size={56} src={detail?.avatarUrl || undefined} icon={<UserOutlined />} />
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 600, color: '#0f172a' }}>
-                {detail?.firstName} {detail?.lastName}
-              </div>
-              <div style={{ color: '#475569' }}>{detail?.email}</div>
-            </div>
-            <div style={{ marginLeft: 'auto' }}>{statusTag(detail?.status)}</div>
-          </div>
-
-          {/* Tabs below basic info */}
-          <Tabs
-            activeKey={activeKey}
-            onChange={setActiveKey}
-            items={[
-              {
-                key: 'academic',
-                label: 'Academic Profile',
-                children: (
-                  <>
-                    {/* Basic account details */}
-                    <Descriptions bordered column={2} size="middle">
-                      <Descriptions.Item label="User ID">{detail?.id ?? '-'}</Descriptions.Item>
-                      <Descriptions.Item label="Username">{detail?.username ?? '-'}</Descriptions.Item>
-                      <Descriptions.Item label="Role">{detail?.roleName ?? '-'}</Descriptions.Item>
-                      <Descriptions.Item label="Date of Birth">
-                        {detail?.dateOfBirth ? new Date(detail.dateOfBirth).toLocaleDateString() : '-'}
-                      </Descriptions.Item>
-                    </Descriptions>
-
-                    {/* Academic details */}
-                    <div style={{ height: 12 }} />
-                    <div style={{ fontWeight: 600, color: '#0f172a', margin: '4px 0 8px' }}>Academic</div>
-                    <Descriptions bordered column={2} size="middle">
-                      <Descriptions.Item label="Profile ID">
-                        {detail?.studentDataDetailResponse?.id ?? '-'}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Enrolled At">
-                        {detail?.studentDataDetailResponse?.enrolledAt
-                          ? new Date(detail.studentDataDetailResponse.enrolledAt).toLocaleString()
-                          : '-'}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Career Goal" span={2}>
-                        {detail?.studentDataDetailResponse?.careerGoal || '-'}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Number Of Ban">
-                        {detail?.studentDataDetailResponse?.numberOfBan ?? 0}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Program ID">
-                        {detail?.studentDataDetailResponse?.programId ?? '-'}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Registered Combo" span={2}>
-                        {detail?.studentDataDetailResponse?.registeredComboCode || '-'}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Curriculum Code" span={2}>
-                        {detail?.studentDataDetailResponse?.curriculumCode || '-'}
-                      </Descriptions.Item>
-                    </Descriptions>
-                  </>
-                ),
-              },
-              {
-                key: 'todos',
-                label: 'Todo List',
-                children: (
-                  <div>
-                    {/* Filter/Sort Controls */}
-                    <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'nowrap', overflowX: 'auto' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: 12, color: '#475569', marginBottom: 6 }}>Tasks</span>
-                        <Select
-                          value={isInCompletedOnly ? 'incomplete' : 'all'}
-                          onChange={(v) => { setTodoPage(1); setIsInCompletedOnly(v === 'incomplete'); }}
-                          style={{ width: 190 }}
-                          options={[
-                            { label: 'Incomplete', value: 'incomplete' },
-                            { label: 'All', value: 'all' },
-                          ]}
-                        />
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: 12, color: '#475569', marginBottom: 6 }}>Status</span>
-                        <Select
-                          value={isNoneFilterStatus ? 'ignore' : 'respect'}
-                          onChange={(v) => { setTodoPage(1); setIsNoneFilterStatus(v === 'ignore'); }}
-                          style={{ width: 200 }}
-                          options={[
-                            { label: 'Respect', value: 'respect' },
-                            { label: 'Ignore', value: 'ignore' },
-                          ]}
-                        />
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: 12, color: '#475569', marginBottom: 6 }}>Order</span>
-                        <Select
-                          value={isOrderedByNearToFarDeadlin ? 'deadline' : 'default'}
-                          onChange={(v) => { setTodoPage(1); setIsOrderedByNearToFarDeadlin(v === 'deadline'); }}
-                          style={{ width: 210 }}
-                          options={[
-                            { label: 'Deadline', value: 'deadline' },
-                            { label: 'Default', value: 'default' },
-                          ]}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Todo List with scroll and 5/page */}
-                    {todoLoading ? (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-                        <Spin />
-                      </div>
-                    ) : (
-                      <>
-                        <div style={{ maxHeight: 300, overflowY: 'auto', paddingRight: 8 }}>
-                          <List
-                            dataSource={todoData?.items || []}
-                            locale={{ emptyText: 'No todos found.' }}
-                            renderItem={(item) => (
-                              <List.Item>
-                                <List.Item.Meta
-                                  title={
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                      <span style={{ color: '#0f172a', fontWeight: 600 }}>{item.title}</span>
-                                      {item.isCompleted ? <Tag color="blue">Completed</Tag> : <Tag color="gold">Pending</Tag>}
-                                    </div>
-                                  }
-                                  description={
-                                    <div style={{ color: '#475569' }}>
-                                      Deadline: {item.deadline ? new Date(item.deadline).toLocaleString() : '-'}
-                                    </div>
-                                  }
-                                />
-                              </List.Item>
-                            )}
-                          />
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
-                          <Pagination
-                            current={todoPage}
-                            pageSize={todoPageSize}
-                            total={todoData?.totalCount || 0}
-                            showSizeChanger={false}
-                            onChange={(page) => {
-                              setTodoPage(page);
-                            }}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ),
-              },
-            ]}
-          />
-        </div>
-      )}
-    </Modal>
-  );
-};
 
 const StudentOverview: React.FC = () => {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const navigate = useNavigate();
 
   // Filter states - exclusive
   const [selectedCombo, setSelectedCombo] = useState<string | null>(null);
@@ -252,11 +26,6 @@ const StudentOverview: React.FC = () => {
   const [comboSearch, setComboSearch] = useState('');
   const [programSearch, setProgramSearch] = useState('');
   const [curriculumSearch, setCurriculumSearch] = useState('');
-
-  // Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
-  const [selectedStudentProfileId, setSelectedStudentProfileId] = useState<number | null>(null);
 
   // Hooks
   const { 
@@ -619,10 +388,8 @@ const StudentOverview: React.FC = () => {
           pagination={false}
           onRow={(record) => ({
             onClick: () => {
-              setSelectedStudentId(record.id);
-              const profileId = record?.studentDataListResponse?.id ?? record?.studentDataDetailResponse?.id ?? null;
-              setSelectedStudentProfileId(profileId);
-              setIsModalOpen(true);
+              const profileId = record?.studentDataListResponse?.id ?? record?.studentDataDetailResponse?.id;
+              navigate(`/advisor/studentDetail/${record.id}` + (profileId ? `?profileId=${profileId}` : ''));
             },
           })}
           style={{
@@ -646,14 +413,6 @@ const StudentOverview: React.FC = () => {
             />
           </div>
         )}
-
-        {/* Detail Modal */}
-        {React.createElement(studentDetailModal, {
-          open: isModalOpen,
-          onClose: () => setIsModalOpen(false),
-          studentId: selectedStudentId,
-          studentProfileId: selectedStudentProfileId,
-        })}
       </div>
     </ConfigProvider>
   );
