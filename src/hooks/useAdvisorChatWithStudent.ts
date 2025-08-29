@@ -104,47 +104,7 @@ export function useAdvisorChatWithStudent() {
   
   const accessToken = useAuths((state) => state.accessToken);
 
-  // Subscribe to Open Chat data - Facebook-like persistent data
-  useEffect(() => {
-    const unsubscribe = subscribeToOpenChat((openChatSessions) => {
-      if (!isUnmountedRef.current && openChatSessions.length > 0) {
-        setUnassignedSessions(openChatSessions);
-        unassignedSessionsRef.current = openChatSessions;
-      }
-    });
-    
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  // Subscribe to My Chat data - Facebook-like persistent data
-  useEffect(() => {
-    const unsubscribe = subscribeToMyChat((myChatSessions) => {
-      if (!isUnmountedRef.current && myChatSessions.length > 0) {
-        setSessions(myChatSessions);
-        setAllAssignedSessions(myChatSessions);
-        sessionsRef.current = myChatSessions;
-        allAssignedSessionsRef.current = myChatSessions;
-      }
-    });
-    
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  // Memoized session data to prevent unnecessary re-renders
-  const memoizedSessions = useMemo(() => sessions, [sessions]);
-  const memoizedUnassignedSessions = useMemo(() => unassignedSessions, [unassignedSessions]);
-  const memoizedAllAssignedSessions = useMemo(() => allAssignedSessions, [allAssignedSessions]);
-
-  // Update currentSession ref when currentSession changes
-  useEffect(() => {
-    currentSessionRef.current = currentSession;
-  }, [currentSession]);
-
-  // Function to get profile ID from token
+  // Function to get profile ID from token (moved above setupEventListeners)
   const getProfileIdFromToken = useCallback(() => {
     if (!accessToken) return null;
     try {
@@ -161,104 +121,7 @@ export function useAdvisorChatWithStudent() {
     }
   }, [accessToken]);
 
-  // Set advisorId from profileId when hook initializes
-  useEffect(() => {
-    const profileId = getProfileIdFromToken();
-    if (profileId && advisorId !== profileId) {
-      setAdvisorId(profileId);
-    }
-  }, [accessToken, advisorId, getProfileIdFromToken]);
-
-  // Add retry mechanism for session fetching (Open Chat)
-  const fetchSessionsWithRetry = useCallback(async (retryCount = 0) => {
-    const now = Date.now();
-    if (now - lastOpenFetchAtRef.current < 800) {
-      return;
-    }
-    lastOpenFetchAtRef.current = now;
-
-    if (!connectionRef.current || isFetchingSessionsRef.current) {
-      if (retryCount < 5) {
-        setTimeout(() => fetchSessionsWithRetry(retryCount + 1), 1000);
-      }
-      return;
-    }
-    
-    if (connectionRef.current.state !== signalR.HubConnectionState.Connected) {
-      if (retryCount < 5) {
-        setTimeout(() => fetchSessionsWithRetry(retryCount + 1), 1000);
-      }
-      return;
-    }
-    
-    isFetchingSessionsRef.current = true;
-    
-    try {
-      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_OPENED_SESSIONS, { pageNumber: 1, pageSize: 20 });
-    } catch (err) {
-      console.error('Failed to fetch open sessions:', err);
-      if (retryCount < 5) {
-        setTimeout(() => fetchSessionsWithRetry(retryCount + 1), 2000);
-      } else {
-        setError(`Failed to fetch sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      }
-    } finally {
-      isFetchingSessionsRef.current = false;
-    }
-  }, []);
-
-  // Fetch sessions from server (Open Chat sessions)
-  const fetchSessions = useCallback(async () => {
-    await fetchSessionsWithRetry();
-  }, [fetchSessionsWithRetry]);
-
-  // Fetch staff sessions for StudentChatTab (LIST_SESSIONS_BY_STAFF)
-  const fetchAssignedSessions = useCallback(async () => {
-    const now = Date.now();
-    if (now - lastStaffFetchAtRef.current < 800) {
-      return;
-    }
-    lastStaffFetchAtRef.current = now;
-
-    if (!connectionRef.current || isFetchingStaffRef.current) {
-      return;
-    }
-
-    try {
-      isFetchingStaffRef.current = true;
-      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_SESSIONS_BY_STAFF, { pageNumber: 1, pageSize: 20 });
-    } catch (err) {
-      console.error('Failed to fetch advisor/staff sessions:', err);
-      setError(`Failed to fetch staff sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      isFetchingStaffRef.current = false;
-    }
-  }, []);
-
-  // Fetch open sessions for OpenChatTab (LIST_OPENED_SESSIONS)
-  const fetchOpenSessions = useCallback(async () => {
-    const now = Date.now();
-    if (now - lastOpenFetchAtRef.current < 800) {
-      return;
-    }
-    lastOpenFetchAtRef.current = now;
-
-    if (!connectionRef.current || isFetchingSessionsRef.current) {
-      return;
-    }
-
-    try {
-      isFetchingSessionsRef.current = true;
-      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_OPENED_SESSIONS, { pageNumber: 1, pageSize: 20 });
-    } catch (err) {
-      console.error('Failed to fetch open sessions:', err);
-      setError(`Failed to fetch open sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      isFetchingSessionsRef.current = false;
-    }
-  }, []);
-
-  // Setup event listeners on existing connection
+  // Setup event listeners on existing connection (moved above ensureConnection)
   const setupEventListeners = useCallback((connection: signalR.HubConnection) => {
     if (!connection) return;
 
@@ -451,6 +314,162 @@ export function useAdvisorChatWithStudent() {
     });
   }, [getProfileIdFromToken]);
 
+  // Ensure there is an active SignalR connection before invoking hub methods
+  const ensureConnection = useCallback(async (): Promise<signalR.HubConnection> => {
+    // If we already have a connected instance, reuse it
+    if (connectionRef.current && connectionRef.current.state === signalR.HubConnectionState.Connected) {
+      return connectionRef.current;
+    }
+
+    // Create or reuse a managed connection (handles token refresh internally)
+    const connection = await signalRManager.getConnection(SIGNALR_CONFIG.ADVISORY_CHAT_HUB_URL, accessToken || '');
+
+    // Save ref, set state, and wire listeners if not already
+    connectionRef.current = connection;
+    setConnectionState(ConnectionState.Connected);
+    setError(null);
+    setupEventListeners(connection);
+
+    return connection;
+  }, [accessToken, setupEventListeners]);
+
+  // Subscribe to Open Chat data - Facebook-like persistent data
+  useEffect(() => {
+    const unsubscribe = subscribeToOpenChat((openChatSessions) => {
+      if (!isUnmountedRef.current && openChatSessions.length > 0) {
+        setUnassignedSessions(openChatSessions);
+        unassignedSessionsRef.current = openChatSessions;
+      }
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  // Subscribe to My Chat data - Facebook-like persistent data
+  useEffect(() => {
+    const unsubscribe = subscribeToMyChat((myChatSessions) => {
+      if (!isUnmountedRef.current && myChatSessions.length > 0) {
+        setSessions(myChatSessions);
+        setAllAssignedSessions(myChatSessions);
+        sessionsRef.current = myChatSessions;
+        allAssignedSessionsRef.current = myChatSessions;
+      }
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  // Memoized session data to prevent unnecessary re-renders
+  const memoizedSessions = useMemo(() => sessions, [sessions]);
+  const memoizedUnassignedSessions = useMemo(() => unassignedSessions, [unassignedSessions]);
+  const memoizedAllAssignedSessions = useMemo(() => allAssignedSessions, [allAssignedSessions]);
+
+  // Update currentSession ref when currentSession changes
+  useEffect(() => {
+    currentSessionRef.current = currentSession;
+  }, [currentSession]);
+
+  // Set advisorId from profileId when hook initializes
+  useEffect(() => {
+    const profileId = getProfileIdFromToken();
+    if (profileId && advisorId !== profileId) {
+      setAdvisorId(profileId);
+    }
+  }, [accessToken, advisorId, getProfileIdFromToken]);
+
+  // Add retry mechanism for session fetching (Open Chat)
+  const fetchSessionsWithRetry = useCallback(async (retryCount = 0) => {
+    const now = Date.now();
+    if (now - lastOpenFetchAtRef.current < 800) {
+      return;
+    }
+    lastOpenFetchAtRef.current = now;
+
+    if (!connectionRef.current || isFetchingSessionsRef.current) {
+      if (retryCount < 5) {
+        setTimeout(() => fetchSessionsWithRetry(retryCount + 1), 1000);
+      }
+      return;
+    }
+    
+    if (connectionRef.current.state !== signalR.HubConnectionState.Connected) {
+      if (retryCount < 5) {
+        setTimeout(() => fetchSessionsWithRetry(retryCount + 1), 1000);
+      }
+      return;
+    }
+    
+    isFetchingSessionsRef.current = true;
+    
+    try {
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_OPENED_SESSIONS, { pageNumber: 1, pageSize: 20 });
+    } catch (err) {
+      console.error('Failed to fetch open sessions:', err);
+      if (retryCount < 5) {
+        setTimeout(() => fetchSessionsWithRetry(retryCount + 1), 2000);
+      } else {
+        setError(`Failed to fetch sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      }
+    } finally {
+      isFetchingSessionsRef.current = false;
+    }
+  }, []);
+
+  // Fetch sessions from server (Open Chat sessions)
+  const fetchSessions = useCallback(async () => {
+    await fetchSessionsWithRetry();
+  }, [fetchSessionsWithRetry]);
+
+  // Fetch staff sessions for StudentChatTab (LIST_SESSIONS_BY_STAFF)
+  const fetchAssignedSessions = useCallback(async () => {
+    const now = Date.now();
+    if (now - lastStaffFetchAtRef.current < 800) {
+      return;
+    }
+    lastStaffFetchAtRef.current = now;
+
+    if (!connectionRef.current || isFetchingStaffRef.current) {
+      return;
+    }
+
+    try {
+      isFetchingStaffRef.current = true;
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_SESSIONS_BY_STAFF, { pageNumber: 1, pageSize: 20 });
+    } catch (err) {
+      console.error('Failed to fetch advisor/staff sessions:', err);
+      setError(`Failed to fetch staff sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      isFetchingStaffRef.current = false;
+    }
+  }, []);
+
+  // Fetch open sessions for OpenChatTab (LIST_OPENED_SESSIONS)
+  const fetchOpenSessions = useCallback(async () => {
+    const now = Date.now();
+    if (now - lastOpenFetchAtRef.current < 800) {
+      return;
+    }
+    lastOpenFetchAtRef.current = now;
+
+    if (!connectionRef.current || isFetchingSessionsRef.current) {
+      return;
+    }
+
+    try {
+      isFetchingSessionsRef.current = true;
+      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.LIST_OPENED_SESSIONS, { pageNumber: 1, pageSize: 20 });
+    } catch (err) {
+      console.error('Failed to fetch open sessions:', err);
+      setError(`Failed to fetch open sessions: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      isFetchingSessionsRef.current = false;
+    }
+  }, []);
+
   // Load more messages for infinite scroll
   const loadMoreMessages = useCallback(async (sessionId: number, pageNumber: number = 1) => {
     if (!connectionRef.current || !currentSessionRef.current) return;
@@ -481,9 +500,8 @@ export function useAdvisorChatWithStudent() {
 
   // Join session
   const joinSession = useCallback(async (sessionId: number) => {
-    if (!connectionRef.current) {
-      throw new Error('Connection not available');
-    }
+    // Ensure connection is established before attempting to join
+    const connection = await ensureConnection();
 
     try {
       // Find and set current session first
@@ -492,18 +510,27 @@ export function useAdvisorChatWithStudent() {
         setCurrentSession(session);
       }
 
-      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.JOIN_SESSION, sessionId);
+      await connection.invoke(SIGNALR_CONFIG.HUB_METHODS.JOIN_SESSION, sessionId);
       
       // Load initial messages after joining
       await loadInitialMessages(sessionId);
     } catch (err) {
-      throw new Error(`Failed to join session: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      // Retry once after ensuring connection again (covers transient negotiation errors)
+      try {
+        const retryConn = await ensureConnection();
+        await retryConn.invoke(SIGNALR_CONFIG.HUB_METHODS.JOIN_SESSION, sessionId);
+        await loadInitialMessages(sessionId);
+      } catch (finalErr) {
+        throw new Error(`Failed to join session: ${finalErr instanceof Error ? finalErr.message : 'Unknown error'}`);
+      }
     }
-  }, [loadInitialMessages]);
+  }, [ensureConnection, loadInitialMessages]);
 
   // Send message - improved like student
   const sendMessage = useCallback(async (content: string) => {
-    if (!connectionRef.current || !currentSessionRef.current) {
+    // Ensure connection is established; session must also be active
+    await ensureConnection();
+    if (!currentSessionRef.current) {
       throw new Error('No active session');
     }
 
@@ -513,11 +540,11 @@ export function useAdvisorChatWithStudent() {
         throw new Error('Message cannot be empty');
       }
 
-      await connectionRef.current.invoke(SIGNALR_CONFIG.HUB_METHODS.SEND_MESSAGE, currentSessionRef.current.id, content.trim());
+      await connectionRef.current!.invoke(SIGNALR_CONFIG.HUB_METHODS.SEND_MESSAGE, currentSessionRef.current.id, content.trim());
     } catch (err) {
       throw new Error(`Failed to send message: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
-  }, []);
+  }, [ensureConnection]);
 
   // Main effect for connection management - SINGLE CONNECTION ONLY
   useEffect(() => {
