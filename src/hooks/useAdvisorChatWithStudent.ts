@@ -17,9 +17,40 @@ let myChatListeners: Set<(sessions: StudentSession[]) => void> = new Set();
 let openChatTimeout: NodeJS.Timeout | null = null;
 let myChatTimeout: NodeJS.Timeout | null = null;
 
-// Update function for Open Chat only
+// Helper function to merge sessions without duplicates
+const mergeSessionsWithoutDuplicates = (existingSessions: StudentSession[], newSessions: StudentSession[]): StudentSession[] => {
+  const sessionMap = new Map<number, StudentSession>();
+  
+  // Add existing sessions to map
+  existingSessions.forEach(session => {
+    if (session && session.id) {
+      sessionMap.set(session.id, session);
+    }
+  });
+  
+  // Add or update new sessions
+  newSessions.forEach(session => {
+    if (session && session.id) {
+      // If session exists, update it (preserve existing data but update with new data)
+      const existing = sessionMap.get(session.id);
+      if (existing) {
+        sessionMap.set(session.id, { ...existing, ...session });
+      } else {
+        sessionMap.set(session.id, session);
+      }
+    }
+  });
+  
+  // Convert back to array and sort by updatedAt (newest first)
+  return Array.from(sessionMap.values()).sort((a, b) => 
+    new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime()
+  );
+};
+
+// Update function for Open Chat only - with smooth merging
 const updateOpenChatData = (sessions: StudentSession[]) => {
-  globalOpenChatData = sessions;
+  // Merge new sessions with existing ones
+  globalOpenChatData = mergeSessionsWithoutDuplicates(globalOpenChatData, sessions);
   
   if (openChatTimeout) {
     clearTimeout(openChatTimeout);
@@ -36,9 +67,10 @@ const updateOpenChatData = (sessions: StudentSession[]) => {
   }, 50);
 };
 
-// Update function for My Chat only
+// Update function for My Chat only - with smooth merging
 const updateMyChatData = (sessions: StudentSession[]) => {
-  globalMyChatData = sessions;
+  // Merge new sessions with existing ones
+  globalMyChatData = mergeSessionsWithoutDuplicates(globalMyChatData, sessions);
   
   if (myChatTimeout) {
     clearTimeout(myChatTimeout);
@@ -155,7 +187,7 @@ export function useAdvisorChatWithStudent() {
         const allAssigned = data.items;
         const unassigned = data.items.filter(session => session && session.staffId === 4);
         
-        // Update each tab separately
+        // Update each tab separately with smooth merging
         updateMyChatData(allAssigned);
         updateOpenChatData(unassigned);
         setDataFetched(true);
@@ -265,11 +297,19 @@ export function useAdvisorChatWithStudent() {
       if (!isUnmountedRef.current) {
         const currentAdvisorId = getProfileIdFromToken();
         if (session.staffId === currentAdvisorId) {
-          // Add to My Chat and remove from Open Chat (avoid duplicate)
-          const newMyChatData = [...globalMyChatData, session];
+          // Add to My Chat and remove from Open Chat with smooth transitions
+          updateMyChatData([session]);
+          // Remove from Open Chat by filtering out the session
           const newOpenChatData = globalOpenChatData.filter(s => s.id !== session.id);
-          updateMyChatData(newMyChatData);
-          updateOpenChatData(newOpenChatData);
+          globalOpenChatData = newOpenChatData;
+          // Trigger UI update for Open Chat
+          openChatListeners.forEach(listener => {
+            try {
+              listener(newOpenChatData);
+            } catch (error) {
+              console.error('Error in open chat listener:', error);
+            }
+          });
         }
       }
     });
@@ -286,19 +326,11 @@ export function useAdvisorChatWithStudent() {
       if (!isUnmountedRef.current) {
         const currentAdvisorId = getProfileIdFromToken();
         if (session.staffId === 4) {
-          // Add to Open Chat (unassigned) - avoid duplicate
-          const exists = globalOpenChatData.some(s => s.id === session.id);
-          if (!exists) {
-            const newOpenChatData = [...globalOpenChatData, session];
-            updateOpenChatData(newOpenChatData);
-          }
+          // Add to Open Chat (unassigned) with smooth animation
+          updateOpenChatData([session]);
         } else if (session.staffId === currentAdvisorId) {
-          // Add to My Chat (assigned) - avoid duplicate
-          const exists = globalMyChatData.some(s => s.id === session.id);
-          if (!exists) {
-            const newMyChatData = [...globalMyChatData, session];
-            updateMyChatData(newMyChatData);
-          }
+          // Add to My Chat (assigned) with smooth animation
+          updateMyChatData([session]);
         }
       }
     });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Avatar, Button, Popconfirm, Empty } from 'antd';
-import { DeleteOutlined, MessageOutlined } from '@ant-design/icons';
+import { DeleteOutlined, MessageOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import type { IChatSession } from '../../interfaces/IChatAI';
 
 interface HistoryModalProps {
@@ -67,71 +67,79 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
       footer={null}
       title={
         <div className="flex items-center gap-3">
-          <MessageOutlined className="text-blue-600 text-xl" />
-          <span className="text-xl font-bold text-gray-800">All Chat History</span>
-          <span className="text-sm text-gray-500 font-normal">({sessions.length} sessions)</span>
+          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+            <MessageOutlined className="text-gray-600 text-lg" />
+          </div>
+          <div>
+            <div className="text-lg font-semibold text-gray-900">Chat History</div>
+            <div className="text-sm text-gray-500 font-normal">{sessions.length} conversations</div>
+          </div>
         </div>
       }
-      width={500}
+      width={480}
       className="history-modal"
+      styles={{
+        header: {
+          borderBottom: '1px solid #f3f4f6',
+          paddingBottom: '16px',
+          marginBottom: '0'
+        },
+        body: {
+          padding: '20px 0'
+        }
+      }}
     >
-      <div className="max-h-[60vh] overflow-y-auto pr-2">
+      <div className="max-h-[60vh] overflow-y-auto">
         {sortedSessions.length === 0 ? (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={
-              <div className="text-gray-500">
-                <div className="text-base font-medium mb-1">No chat history yet</div>
-                <div className="text-sm">Start your first conversation with AISEA BOT!</div>
-              </div>
-            }
-            className="py-8"
-          />
-        ) : (
-          sortedSessions.map((session) => (
-            <div
-              key={session.id}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-3 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                selectedSessionId === session.id 
-                  ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 shadow-md' 
-                  : 'bg-gray-50 hover:bg-blue-50 border-2 border-transparent'
-              }`}
-              onClick={() => { onSelectSession(session.id); onClose(); }}
-            >
-              <Avatar 
-                src={AI_BOT.avatar} 
-                size={40}
-                style={{ objectFit: 'cover' }}
-                className="w-10 h-10 object-cover rounded-full border-2 border-blue-100 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-gray-900 truncate mb-1">
-                  {session.title}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {formatDate(session.updatedAt || session.createdAt)}
-                </div>
-              </div>
-              <Popconfirm
-                title="Delete this session?"
-                description="This action cannot be undone. All messages in this session will be permanently deleted."
-                onConfirm={e => { e?.stopPropagation(); handleDeleteSession(session.id); }}
-                onCancel={e => e?.stopPropagation()}
-                okText="Delete"
-                cancelText="Cancel"
-                okType="danger"
-                placement="left"
-              >
-                <Button
-                  type="text"
-                  icon={<DeleteOutlined style={{ color: '#dc2626' }} />}
-                  size="small"
-                  className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                  onClick={e => e.stopPropagation()}
-                />
-              </Popconfirm>
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <MessageOutlined className="text-gray-400 text-2xl" />
             </div>
-          ))
+            <div className="text-center">
+              <div className="text-gray-900 font-medium text-base mb-1">No conversations yet</div>
+              <div className="text-gray-500 text-sm">Start your first chat with AISEA BOT</div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {sortedSessions.map((session) => (
+              <div
+                key={session.id}
+                className={`group flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                  selectedSessionId === session.id 
+                    ? 'bg-gray-100 border border-gray-200' 
+                    : 'hover:bg-gray-50 border border-transparent'
+                }`}
+                onClick={() => { onSelectSession(session.id); onClose(); }}
+              >
+                <Avatar 
+                  src={AI_BOT.avatar} 
+                  size={36}
+                  style={{ objectFit: 'cover' }}
+                  className="flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-900 truncate mb-1">
+                    {session.title}
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <ClockCircleOutlined className="text-xs" />
+                    {formatDate(session.updatedAt || session.createdAt)}
+                  </div>
+                </div>
+                                 <Button
+                   type="primary"
+                   icon={<DeleteOutlined />}
+                   size="small"
+                   className=" duration-200 hover:text-red-500"
+                   onClick={e => {
+                     e.stopPropagation();
+                     handleDeleteSession(session.id);
+                   }}
+                 />
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </Modal>
