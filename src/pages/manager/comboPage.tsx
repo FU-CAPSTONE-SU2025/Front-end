@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Affix, Tag, message, Pagination, Spin, Empty, Modal, Space, Card, Typography, Row, Col, ConfigProvider } from 'antd';
-import { PlusOutlined,CheckOutlined, SearchOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Table, Input, Button, Affix, Tag, Pagination, Spin, Empty, Modal, Space, Card, Typography, Row, Col, ConfigProvider } from 'antd';
+import { PlusOutlined,CheckOutlined, SearchOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
-import { useNavigate } from 'react-router';
 import { useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
-import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
-import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 const ComboManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -18,9 +15,6 @@ const ComboManagerPage: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [approvalModalVisible, setApprovalModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ id: number; name: string } | null>(null);
-  const navigate = useNavigate();
-  const { handleError, handleSuccess } = useApiErrorHandler();
-  const { showWarning } = useMessagePopupContext();
 
   // CRUD hook
   const {
@@ -28,17 +22,12 @@ const ComboManagerPage: React.FC = () => {
     comboList,
     paginationCombo,
     getComboMutation,
-    addMultipleCombosMutation,
-    updateComboMutation,
-    addSubjectToComboMutation,
-    removeSubjectFromComboMutation,
     fetchComboSubjectsMutation
   } = useCRUDCombo();
 
   const [subjectModalOpen, setSubjectModalOpen] = useState(false);
   const [selectedCombo, setSelectedCombo] = useState<any>(null);
   const [comboSubjects, setComboSubjects] = useState<any[]>([]);
-  const [addSubjectId, setAddSubjectId] = useState<number | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
 
   // Approval hook
@@ -48,29 +37,9 @@ const ComboManagerPage: React.FC = () => {
     getAllCombos({ pageNumber: page, pageSize, search: search });
   }, [page, pageSize, search]);
 
-  const handleAddCombo = () => {
-    navigate('/manager/combo/add');
-  };
-
-  const handleEditCombo = (comboId: number) => {
-    navigate(`/manager/combo/edit/${comboId}`);
-  };
-
-  const handleDeleteCombo = async (id: number) => {
-    try {
-      // Note: deleteComboMutation is not available in the hook
-      // You may need to implement this functionality
-      handleSuccess('Deleted combo!');
-      // Refresh the combo list
-      getAllCombos({ pageNumber: page, pageSize, search: search });
-    } catch (error) {
-      handleError(error, 'Failed to delete combo');
-    }
-  };
 
   const handleOpenSubjectModal = async (combo: any) => {
     setSelectedCombo(combo);
-    setAddSubjectId(null);
     setSubjectModalOpen(true);
     setModalLoading(true);
     try {
@@ -266,27 +235,6 @@ const ComboManagerPage: React.FC = () => {
                   size="large"
                   className={glassStyles.appleGlassInput}
                 />
-              </Space>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Text strong>Actions</Text>
-                <Space>
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={handleAddCombo}
-                    style={{
-                      borderRadius: 12,
-                      background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-                      border: 'none',
-                      fontWeight: 600,
-                      boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)'
-                    }}
-                  >
-                    Add Combo
-                  </Button>
-                </Space>
               </Space>
             </Col>
           </Row>

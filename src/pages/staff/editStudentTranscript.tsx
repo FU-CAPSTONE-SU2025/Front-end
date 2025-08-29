@@ -295,10 +295,10 @@ const EditStudentTranscript: React.FC = () => {
       };
       const result = await registerStudentToSubject(joinedSubjectData);
       if (result) {
-        handleSuccess(`Successfully added ${selectedSubjectVersion.subjectName} to student's transcript`);
+        //handleSuccess(`Successfully added ${selectedSubjectVersion.subjectName} to student's transcript`);
         // Refresh joined subjects data
         await refetchJoinedSubjects();
-        // Reset
+        // Reset all previous modal query (or it will be bugged)
         setIsAddSubjectModalVisible(false);
         setSelectedSubjectVersion(null);
         setSelectedSemester(null);
@@ -487,7 +487,7 @@ const EditStudentTranscript: React.FC = () => {
                   <Title level={3} className={styles.studentName}>
                     {studentAccount ? `${studentAccount.firstName} ${studentAccount.lastName}` : ''}
                   </Title>
-                  <Text className={styles.studentId}>{studentAccount?.id ?? ''}</Text>
+                  <Text className={styles.studentId}>{studentAccount?.studentDataDetailResponse.id ?? ''}</Text>
                   <Tag color={(studentAccount?.studentDataDetailResponse.doGraduate) ? 'green' : 'orange'} className={styles.statusTag}>
                     {studentAccount?.studentDataDetailResponse.doGraduate? 'Graduated' : 'Enrolled'}
                   </Tag>

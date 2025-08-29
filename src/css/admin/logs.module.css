@@ -12,10 +12,10 @@
   box-sizing: border-box;
   background: transparent;
   z-index: 2;
+  padding: 0 2rem 0 2rem;
 }
 
 .card {
-  background: rgba(255,255,255,0.92);
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10);
   border-radius: 2rem;
   padding: 2.5rem 2.5rem 2rem 2.5rem;
@@ -28,7 +28,6 @@
 }
 
 .chartSection {
-  background: rgba(255,255,255,0.85);
   border-radius: 1.5rem;
   box-shadow: 0 2px 12px 0 rgba(30, 64, 175, 0.08);
   padding: 2rem 2rem 1.5rem 2rem;
@@ -37,28 +36,17 @@
 
 .chartHeader {
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  align-items: center;
+  align-items: left;
   margin-bottom: 1.2rem;
 }
 
-.chartHeader h2 {
-  color: #1E293B;
+.tableHeader h2, .chartHeader h2 {
+  color: #ffffff;
   font-family: 'Inter', sans-serif;
   font-size: 1.5rem;
   font-weight: 600;
-}
-
-.datePicker :global(.ant-calendar-picker-input),
-.datePicker :global(.ant-select-selector) {
-  background: rgba(255, 255, 255, 0.8) !important;
-  border: 1px solid rgba(30, 64, 175, 0.3) !important;
-  color: #1E293B !important;
-  border-radius: 8px !important;
-}
-
-.datePicker :global(.ant-calendar-picker-input::placeholder) {
-  color: rgba(30, 41, 59, 0.5) !important;
 }
 
 .chartContainer {
@@ -69,7 +57,6 @@
 }
 
 .tableSection {
-  background: rgba(255,255,255,0.85);
   border-radius: 1.5rem;
   box-shadow: 0 2px 12px 0 rgba(30, 64, 175, 0.08);
   padding: 2rem 2rem 1.5rem 2rem;
@@ -80,168 +67,6 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.2rem;
-}
-
-.tableHeader h2 {
-  color: #1E293B;
-  font-family: 'Inter', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.table {
-  width: 100%;
-  background: transparent !important;
-}
-
-.table :global(.ant-table) {
-  background: rgba(255, 255, 255, 0.85) !important;
-  backdrop-filter: blur(25px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(25px) saturate(120%) !important;
-  border-radius: 24px !important;
-  border: 2px solid rgba(255, 255, 255, 0.8) !important;
-  box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-  overflow: hidden;
-}
-
-.table :global(.ant-table-thead > tr > th) {
-  background: rgba(255, 255, 255, 0.95) !important;
-  color: #1E293B !important;
-  font-size: 0.875rem;
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  border-bottom: 2px solid rgba(30, 64, 175, 0.2) !important;
-  padding: 16px 12px !important;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-.table :global(.ant-table-tbody > tr > td) {
-  background: rgba(255, 255, 255, 0.95) !important;
-  color: #1E293B !important;
-  font-size: 0.875rem;
-  font-family: 'Geist', sans-serif;
-  font-weight: 500;
-  border-bottom: 1px solid rgba(30, 64, 175, 0.1) !important;
-  padding: 14px 12px !important;
-  transition: all 0.3s ease;
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-.table :global(.ant-table-tbody > tr:hover > td) {
-  background: rgba(30, 64, 175, 0.08) !important;
-  color: #1E293B !important;
-  transform: translateY(-1px);
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-.table :global(.ant-table-tbody > tr:nth-child(even) > td) {
-  background: rgba(248, 250, 252, 0.95) !important;
-  color: #1E293B !important;
-}
-
-.table :global(.ant-table-tbody > tr:nth-child(even):hover > td) {
-  background: rgba(30, 64, 175, 0.08) !important;
-  color: #1E293B !important;
-  transform: translateY(-1px);
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-.table :global(.ant-table-cell) {
-  border: none !important;
-}
-
-.table :global(.ant-table-selection-column) {
-  text-align: center;
-}
-
-.table :global(.ant-table-pagination) {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(25px) saturate(120%);
-  -webkit-backdrop-filter: blur(25px) saturate(120%);
-  border-radius: 16px;
-  padding: 1rem;
-  margin-top: 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-.table :global(.ant-pagination-item) {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 2px solid rgba(30, 64, 175, 0.25) !important;
-  color: #1E293B !important;
-  border-radius: 12px !important;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-.table :global(.ant-pagination-item:hover) {
-  border-color: #1E40AF !important;
-  box-shadow: 
-    0 0 0 4px rgba(30, 64, 175, 0.15), 
-    0 4px 12px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  transform: translateY(-1px);
-}
-
-.table :global(.ant-pagination-item-active) {
-  background: #fff !important;
-  border-color: #1E40AF !important;
-  color: #1E293B !important;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15), 0 0 0 2px #1E40AF;
-  z-index: 1;
-}
-
-.table :global(.ant-pagination-item-active):hover {
-  background: #f1f5f9 !important;
-  border-color: #1E40AF !important;
-  color: #1E293B !important;
-}
-
-.table :global(.ant-pagination-prev button, .ant-pagination-next button) {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 2px solid rgba(30, 64, 175, 0.25) !important;
-  color: #1E293B !important;
-  border-radius: 12px !important;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-.table :global(.ant-pagination-prev button:hover, .ant-pagination-next button:hover) {
-  border-color: #1E40AF !important;
-  box-shadow: 
-    0 0 0 4px rgba(30, 64, 175, 0.15), 
-    0 4px 12px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  transform: translateY(-1px);
-}
-
-.table :global(.ant-pagination-disabled button) {
-  opacity: 0.4;
-  cursor: not-allowed;
-  background: rgba(248, 250, 252, 0.7) !important;
-  border-color: rgba(203, 213, 225, 0.6) !important;
 }
 
 .exportButton {
@@ -259,7 +84,7 @@
   gap: 0.5rem;
 }
 .exportButton:hover {
-  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  background: linear-gradient( #43e97b) !important;
 }
 
 @media (max-width: 1023px) {

@@ -15,7 +15,7 @@ import {
 } from '../api/SchoolAPI/joinedSubjectAPI';
 import { AddSubjectVersionToCurriculum, FetchCurriculumList, FetchSubjectVersionsToCurriculum, FetchSubjectVersionsToCurriculumByCode, RemoveSubjectVersionFromCurriculum } from '../api/SchoolAPI/curriculumAPI';
 import { FetchComboList } from '../api/SchoolAPI/comboAPI';
-import { CreateSubjectToCurriculum } from '../interfaces/ISchoolProgram';
+import { BulkCreateJoinedSubjectMultipleStudents, BulkCreateJoinedSubjects, CreateJoinedSubject, CreateSubjectToCurriculum } from '../interfaces/ISchoolProgram';
 
 type AddSubjectVersionToCurriculumMutation = {
   curriculumId: number,
@@ -120,19 +120,19 @@ export const useSchoolApi = () => {
   });
 
   const disableSubjectMutation = useMutation({
-    mutationFn: DisableSubject,
+    mutationFn: (subjectId:number)=>DisableSubject(subjectId),
   });
 
   const registerMultipleStudentsMutation = useMutation({
-    mutationFn: RegisterMultipleStudentsToMultipleSubjects,
+    mutationFn: (data:BulkCreateJoinedSubjectMultipleStudents)=>RegisterMultipleStudentsToMultipleSubjects(data),
   });
 
   const registerOneStudentToMultipleSubjectsMutation = useMutation({
-    mutationFn: RegisterOneStudentsToMultipleSubjects,
+    mutationFn: (data:BulkCreateJoinedSubjects) =>RegisterOneStudentsToMultipleSubjects(data),
   });
 
   const registerStudentToSubjectMutation = useMutation({
-    mutationFn: RegisterStudentToSubject,
+    mutationFn: (data:CreateJoinedSubject)=> RegisterStudentToSubject(data),
   });
 
   return {

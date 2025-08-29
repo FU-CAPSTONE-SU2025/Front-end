@@ -27,7 +27,6 @@ const Profile: React.FC = () => {
   const [username, setUsername] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
-  const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [userId, setUserId] = useState<number | null>(null);
   const { accessToken } = getAuthState();
   const { categorizedData, refetch } = useActiveUserData();
@@ -52,7 +51,6 @@ const Profile: React.FC = () => {
     updateProfileAsync,
     isUpdatingProfile,
     isUpdateSuccess,
-    updateError,
   } = useUserProfile({
     userId: userId || 0,
     userRole: 'admin',
