@@ -1,0 +1,60 @@
+/* Subject Details Tabs Styling */
+.subject-details-tabs {
+  /* Override Ant Design default styles for dark theme */
+}
+
+.subject-details-tabs .ant-tabs-tab {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-weight: 500;
+  padding: 12px 0;
+  margin-right: 32px;
+  border: none;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.subject-details-tabs .ant-tabs-tab:hover {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.subject-details-tabs .ant-tabs-tab-active {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.subject-details-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #ffffff !important;
+}
+
+.subject-details-tabs .ant-tabs-ink-bar {
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6) !important;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.subject-details-tabs .ant-tabs-nav::before {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.subject-details-tabs .ant-tabs-content-holder {
+  padding-top: 24px;
+}
+
+/* Tab icons styling */
+.subject-details-tabs .ant-tabs-tab .anticon {
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .subject-details-tabs .ant-tabs-tab {
+    margin-right: 16px;
+    padding: 8px 0;
+  }
+  
+  .subject-details-tabs .ant-tabs-tab .anticon {
+    font-size: 14px;
+    margin-right: 6px;
+  }
+}
