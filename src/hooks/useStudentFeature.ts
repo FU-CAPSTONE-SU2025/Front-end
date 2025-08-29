@@ -27,14 +27,13 @@ interface UseStudentFeatureParams {
   search: string;
   page: number;
   pageSize: number;
-  searchType?: 'code' | 'name' | 'all';
 }
 
-export const useStudentFeature = ({ search, page, pageSize, searchType = 'code' }: UseStudentFeatureParams) => {
+export const useStudentFeature = ({ search, page, pageSize }: UseStudentFeatureParams) => {
   return useQuery<PagedData<Syllabus> | null, Error>({
-    queryKey: ['syllabus', search, searchType, page, pageSize],
+    queryKey: ['syllabus', search, page, pageSize],
     queryFn: () => {
-      return fetchSyllabusPaged({ search, page, pageSize, searchType });
+      return fetchSyllabusPaged({ search, page, pageSize });
     },
     enabled: true, // Always enable to fetch data
     placeholderData: keepPreviousData,

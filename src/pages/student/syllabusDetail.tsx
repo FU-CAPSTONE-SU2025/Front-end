@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Tabs, Spin, Alert, Button, Row, Col } from 'antd';
+import { Card, Tabs, Spin, Alert, Row, Col } from 'antd';
 import type { TabsProps } from 'antd';
-import { DownloadOutlined, FileTextOutlined, BookOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { FileTextOutlined, BookOutlined, CheckCircleOutlined, ClockCircleOutlined, BulbOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useSyllabusApi } from '../../hooks/useSyllabusApi';
 import Header from '../../components/student/syllabusDetail/header';
 import Sidebar from '../../components/student/syllabusDetail/sidebar';
 import { Assessments, Materials, Outcomes, Sessions } from '../../components/student/syllabusDetail/tabs';
+import { FetchSubjectTips } from '../../api/SchoolAPI/subjectAPI';
+import MarkdownRenderer from '../../components/common/markdownRenderer';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -32,7 +34,23 @@ const SyllabusDetail: React.FC = () => {
   const { data: syllabus, isLoading: loading, error: syllabusError } = useSyllabusById(id || '');
   const error = syllabusError ? 'Failed to fetch syllabus details.' : null;
 
+  // Tips inline section state
+  const [isTipsLoading, setIsTipsLoading] = useState(false);
+  const [tipsContent, setTipsContent] = useState<any>(null);
 
+  const handleGenerateTips = async () => {
+    if (!id) return;
+    setIsTipsLoading(true);
+    setTipsContent(null);
+    try {
+      const data = await FetchSubjectTips(Number(id));
+      setTipsContent(data);
+    } catch (e) {
+      setTipsContent({ message: 'Unable to generate tips right now. Please try again later.' });
+    } finally {
+      setIsTipsLoading(false);
+    }
+  };
 
   const tabItems: TabsProps['items'] = [
     { 
@@ -126,19 +144,44 @@ const SyllabusDetail: React.FC = () => {
                 />
               </Card>
             </motion.div>
+
+            {/* Inline Tips Section */}
+            <motion.div variants={itemVariants as any} className="mt-6">
+              <Card
+                bordered={false}
+                className="bg-white shadow-sm border border-gray-100"
+                variant='borderless'
+                title={(
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><BulbOutlined /> Study Tips</span>
+                    <button
+                      onClick={handleGenerateTips}
+                      disabled={isTipsLoading}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-600 bg-white shadow-sm"
+                    >
+                      <BulbOutlined />
+                      <span>{isTipsLoading ? 'Generating...' : 'Generate Tips'}</span>
+                    </button>
+                  </div>
+                )}
+              >
+                {isTipsLoading ? (
+                  <div className="flex items-center justify-center py-10"><Spin /></div>
+                ) : tipsContent ? (
+                  <div className="prose max-w-none">
+                    {typeof tipsContent === 'string' ? (
+                      <MarkdownRenderer content={tipsContent} />
+                    ) : (
+                      <MarkdownRenderer content={JSON.stringify(tipsContent, null, 2)} />
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-gray-500">Click Generate Tips to get AI-powered study advice.</div>
+                )}
+              </Card>
+            </motion.div>
           </Col>
         </Row>
-
-        <motion.div variants={itemVariants as any} className="mt-8 flex justify-center">
-          <Button
-            type="primary"
-            icon={<DownloadOutlined />}
-            size="large"
-            className="bg-blue-600 hover:bg-blue-700 border-none font-medium px-6 py-3 rounded-lg shadow-sm"
-          >
-            Download All Student Material
-          </Button>
-        </motion.div>
       </div>
       
       <style>{`

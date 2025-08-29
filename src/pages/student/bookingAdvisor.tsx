@@ -153,7 +153,7 @@ const BookingPage = () => {
         titleStudentIssue: formData.titleStudentIssue,
         contentIssue: formData.contentIssue,
       };
-      console.log("Booking payload:", payload);
+
       const result = await createBooking(payload);
       if (result) {
         setModalVisible(false);

@@ -58,7 +58,7 @@ export function useNotificationHub() {
           throw err;
         }
 
-        console.log(`🔄 Auth error on attempt ${attempts}, refreshing token...`);
+
         
         try {
           const refreshed = await RefreshToken();
@@ -71,7 +71,7 @@ export function useNotificationHub() {
           const newConn = await signalRManager.getConnection(SIGNALR_CONFIG.NOTIFICATION_HUB_URL, latestToken);
           connectionRef.current = newConn;
           
-          console.log('🔄 Token refreshed, retrying...');
+    
           // Continue loop to retry with new connection
         } catch (refreshErr) {
           console.error('❌ Token refresh failed:', refreshErr);
@@ -107,7 +107,7 @@ export function useNotificationHub() {
     try {
       await invokeWithAuthRetry(SIGNALR_CONFIG.HUB_METHODS.GET_NOTIFICATIONS, { pageNumber: 1, pageSize: 100 });
       retryCountRef.current = 0; 
-      console.log('🔔 GetNotifications called successfully');
+ 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch notifications';
       console.error('🔔 Failed to fetch notifications:', err);
@@ -132,11 +132,11 @@ export function useNotificationHub() {
     }
 
     const numId = Number(notificationId);
-    console.log(`🔄 Marking notification ${numId} as read...`);
+
 
     // Track pending to avoid duplicate calls
     if (pendingMarkAsReadRef.current.has(numId)) {
-      console.log(`⏳ Notification ${numId} already being marked as read`);
+
       return;
     }
     
@@ -150,7 +150,7 @@ export function useNotificationHub() {
 
     try {
       await invokeWithAuthRetry(SIGNALR_CONFIG.HUB_METHODS.MARK_AS_READ, numId);
-      console.log(`✅ Successfully called MarkAsRead for notification ${numId}`);
+    
       setError(null);
       
       // Clear from pending set
@@ -158,7 +158,7 @@ export function useNotificationHub() {
       
       // Fetch fresh notifications to ensure UI reflects actual server state
       // This is more reliable than waiting for server broadcasts
-      console.log(`🔄 Fetching fresh notifications after marking ${numId} as read...`);
+
       await fetchNotifications();
       
     } catch (err) {
@@ -183,11 +183,11 @@ export function useNotificationHub() {
 
     const unreadNotifications = notifications.filter(n => !n.isRead);
     if (unreadNotifications.length === 0) {
-      console.log('ℹ️ No unread notifications to mark');
+
       return;
     }
 
-    console.log(`🔄 Marking all ${unreadNotifications.length} notifications as read using MarkAsRead...`);
+    
 
     unreadNotifications.forEach(n => pendingMarkAsReadRef.current.add(Number(n.id)));
 
@@ -203,7 +203,7 @@ export function useNotificationHub() {
         await Promise.all(batch.map(async (notification) => {
           try {
             await invokeWithAuthRetry(SIGNALR_CONFIG.HUB_METHODS.MARK_AS_READ, Number(notification.id));
-            console.log(`✅ Marked notification ${notification.id} as read`);
+      
           } catch (err) {
             console.error(`❌ Failed to mark notification ${notification.id} as read:`, err);
             throw err;
@@ -214,7 +214,7 @@ export function useNotificationHub() {
         }
       }
 
-      console.log(`✅ Successfully marked all ${unreadNotifications.length} notifications as read`);
+     
       setError(null);
       
       // Clear pending set after successful operation
@@ -222,7 +222,7 @@ export function useNotificationHub() {
       
       // Fetch fresh notifications from server to ensure UI reflects actual DB state
       // This is more reliable than waiting for server broadcasts
-      console.log('🔄 Fetching fresh notifications from server...');
+
       await fetchNotifications();
       
     } catch (err) {
@@ -293,7 +293,7 @@ export function useNotificationHub() {
             } as NotificationItem;
           });
           const unreadCount = mappedNotifications.filter(n => !n.isRead).length;
-          console.log(`📊 Total notifications: ${mappedNotifications.length}, Unread: ${unreadCount}`);
+        
           setNotifications(mappedNotifications);
         } else if ('id' in data) {
           const readFlag = data.isRead ?? data.IsRead ?? data.read ?? data.is_read;
@@ -319,7 +319,7 @@ export function useNotificationHub() {
     const handleNotificationRead = (notificationId: number | string) => {
       if (!isUnmountedRef.current) {
         const idNum = Number(notificationId);
-        console.log(`📨 Server confirmed notification ${idNum} marked as read`);
+
         
         // Remove from pending set
         pendingMarkAsReadRef.current.delete(idNum);
@@ -332,17 +332,16 @@ export function useNotificationHub() {
     };
 
     connection.on(SIGNALR_CONFIG.HUB_METHODS.NOTIFICATION_RECEIVED, (data) => {
-      console.log('📨 NotificationReceived event received:', data);
+  
       handleNotificationEvent('NotificationReceived', data);
     });
 
     connection.on(SIGNALR_CONFIG.HUB_METHODS.NOTIFICATION_CREATED, (data) => {
-      console.log('📨 NotificationCreated event received:', data);
+
       handleNotificationEvent('NotificationCreated', data);
     });
 
     connection.on(SIGNALR_CONFIG.HUB_METHODS.NOTIFICATION_READ, (notificationId: number) => {
-      console.log('📨 NotificationRead event received for ID:', notificationId);
       handleNotificationRead(Number(notificationId));
     });
   }, [addNotification, fetchNotifications]);

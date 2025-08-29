@@ -38,14 +38,13 @@ export const GetSyllabusById = async (syllabusId: number) => {
 
 // Hàm lấy syllabus có hỗ trợ search và pagination
 interface FetchSyllabusParams {
-    search?: string;
+    search?: string
     page?: number;
     pageSize?: number;
-    searchType?: 'code' | 'name' | 'all';
 }
 
-export const fetchSyllabusPaged = async (params: FetchSyllabusParams): Promise<PagedData<Syllabus>> => {
-    const { search = '', page = 1, pageSize = 10, searchType = 'code' } = params;
+export const fetchSyllabusPaged = async (params: FetchSyllabusParams): Promise<PagedData<Syllabus> | null> => {
+    const { search = '', page = 1, pageSize = 10 } = params;
     
     // Build query parameters
     const queryParams = new URLSearchParams({
@@ -53,12 +52,9 @@ export const fetchSyllabusPaged = async (params: FetchSyllabusParams): Promise<P
         pageSize: pageSize.toString(),
     });
     
-    // Add search parameter if provided
+    // Add search parameter if provided - use subjectCodeSearch for backend
     if (search.trim()) {
-        queryParams.append('search', search.trim());
-        if (searchType !== 'all') {
-            queryParams.append('searchType', searchType);
-        }
+        queryParams.append('subjectCodeSearch', search.trim());
     }
     
     const props = {
