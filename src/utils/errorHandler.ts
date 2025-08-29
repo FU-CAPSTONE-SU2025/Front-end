@@ -48,3 +48,45 @@ export const extractErrorTitle = (error: any): string => {
   
   return 'Error';
 }; 
+export const extractNotificationErrorContent = (errorMessage: string): boolean => {
+  if (!errorMessage) return false;
+  const errorWords = [
+    'error',
+    'fail',
+    'failed',
+    'failure',
+    'exception',
+    'denied',
+    'invalid',
+    'unauthorized',
+    'forbidden',
+    'rejected',
+    'not found',
+    'unavailable',
+    'timeout'
+  ];
+  const lowerMsg = errorMessage.toLowerCase();
+  return errorWords.some(word => lowerMsg.includes(word));
+}
+
+export const extractNotificationSuccessContent = (successMessage: string): boolean => {
+  if (!successMessage) return false;
+  const successWords = [
+    'success',
+    'successful',
+    'completed',
+    'done',
+    'created',
+    'added',
+    'saved',
+    'updated',
+    'submitted',
+    'approved',
+    'enabled',
+    'activated',
+    'joined',
+    'registered'
+  ];
+  const lowerMsg = successMessage.toLowerCase();
+  return successWords.some(word => lowerMsg.includes(word));
+}

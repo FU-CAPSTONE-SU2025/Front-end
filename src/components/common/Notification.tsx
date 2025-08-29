@@ -4,6 +4,8 @@ import { Avatar, Button, Modal, Badge } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotificationHub } from '../../hooks/useNotificationHub';
 import { NotificationItem } from '../../interfaces/INotification';
+import { extractNotificationErrorContent ,extractNotificationSuccessContent} from '../../utils/errorHandler';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 
 function timeAgo(dateString?: string) {
   if (!dateString) return '';
@@ -35,6 +37,19 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
   const { notifications, loading, markAsRead, refreshNotifications } = useNotificationHub();
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [localRead, setLocalRead] = useState<{ [id: number]: boolean }>({});
+  const { handleError, handleSuccess } = useApiErrorHandler();
+  const shownErrorIdsRef = useRef<Set<number>>(new Set());
+  const shownSuccessIdsRef = useRef<Set<number>>(new Set());
+  const seenIdsRef = useRef<Set<number>>(new Set());
+
+  // Initialize seen ids on first render to avoid popping existing backlog
+  useEffect(() => {
+    if (seenIdsRef.current.size === 0 && notifications.length > 0) {
+      for (const n of notifications) {
+        seenIdsRef.current.add(Number(n.id));
+      }
+    }
+  }, [notifications]);
 
   // Calculate actual unread count considering localRead state
   const actualUnreadCount = notifications.filter(n => !n.isRead && !localRead[n.id]).length;
@@ -64,10 +79,61 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
     }
   }, [notifications, markAsRead]);
 
+  // Auto-surface new error/success notifications even when panel is closed
+  useEffect(() => {
+    if (!notifications || notifications.length === 0) return;
+    for (const n of notifications) {
+      const idNum = Number(n.id);
+      if (!seenIdsRef.current.has(idNum)) {
+        seenIdsRef.current.add(idNum);
+        // Prioritize error over success to avoid double popups
+        if (!shownErrorIdsRef.current.has(idNum) && extractNotificationErrorContent(n.title)) {
+          shownErrorIdsRef.current.add(idNum);
+          handleError(n.content);
+          break;
+        }
+        if (!shownSuccessIdsRef.current.has(idNum) && extractNotificationSuccessContent(n.title)) {
+          shownSuccessIdsRef.current.add(idNum);
+          handleSuccess(n.content);
+          break;
+        }
+      }
+    }
+  }, [notifications, handleError, handleSuccess]);
+
+  // Surface error-like notifications whenever list updates and panel is open
+  useEffect(() => {
+    if (!open) return;
+    for (const n of notifications) {
+      const idNum = Number(n.id);
+      if (!shownErrorIdsRef.current.has(idNum) && extractNotificationErrorContent(n.title)) {
+        shownErrorIdsRef.current.add(idNum);
+        handleError(n.content);
+        break;
+      }
+      if (!shownSuccessIdsRef.current.has(idNum) && extractNotificationSuccessContent(n.title)) {
+        shownSuccessIdsRef.current.add(idNum);
+        handleSuccess(n.content);
+        break;
+      }
+    }
+  }, [notifications, open, handleError, handleSuccess]);
+
   // ALL FUNCTIONS DEFINED WITH useCallback TO AVOID HOISTING ISSUES
   const handleNotificationClick = useCallback(async (n: NotificationItem, e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
+    }
+    // If notification content looks like an error/success, render the appropriate global popup
+    if (extractNotificationErrorContent(n.title)) {
+      shownErrorIdsRef.current.add(Number(n.id));
+      handleError(n.content);
+      return;
+    }
+    if (extractNotificationSuccessContent(n.title)) {
+      shownSuccessIdsRef.current.add(Number(n.id));
+      handleSuccess(n.content);
+      return;
     }
     // Optimistically mark all as read locally for immediate UI change
     optimisticallyMarkAllLocal();
@@ -77,7 +143,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
       await refreshNotifications();
     })();
     setSelectedNotification(n);
-  }, [optimisticallyMarkAllLocal, backgroundMarkAllPerItem, refreshNotifications]);
+  }, [optimisticallyMarkAllLocal, backgroundMarkAllPerItem, refreshNotifications, handleError, handleSuccess]);
 
   const handleModalClose = useCallback(() => {
     setSelectedNotification(null);
@@ -89,6 +155,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
     if (newOpen) {
       try {
         await refreshNotifications();
+        // Do not early-return; a notifications-change effect will surface any error/success content
         // Optimistically mark UI as read immediately
         optimisticallyMarkAllLocal();
         // Background mark-as-read per item after ensuring latest list, then refresh again
