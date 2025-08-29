@@ -54,7 +54,7 @@ export const RegisterStudent = async (data: AccountPropsCreate):Promise<any> => 
     }
     const result = await axiosCreate(props)
     if (result.success) {
-        //console.log(result.data)
+        //(result.data)
         return result.data
     }
     else {
@@ -72,7 +72,7 @@ export const FetchStudentById = async (userId:number):Promise<AccountProps> => {
     }
     const result = await axiosRead(props)
     if (result.success) {
-        //console.log(result.data)
+        //(result.data)
         return result.data
     }
     else {
@@ -88,7 +88,7 @@ export const UpdateStudent = async (userId:number,data:any):Promise<AccountProps
     }
     const result = await axiosUpdate(props)
     if (result.success) {
-        //console.log(result.data)
+        //(result.data)
         return result.data
     }
     else {
@@ -104,7 +104,7 @@ export const UpdateStudentMajor = async (studentProfileId:number,data:IUpdateStu
   }
   const result = await axiosUpdate(props)
   if (result.success) {
-      //console.log(result.data)
+      //(result.data)
       return result.data
   }
   else {
@@ -120,7 +120,7 @@ export const DisableUser = async (userId:number):Promise<AccountProps> => {
     }
     const result = await axiosDelete(props)
     if (result.success) {
-        //console.log(result.data)
+        //(result.data)
         return result.data
     }
     else {
@@ -145,7 +145,6 @@ export const GetActiveAdvisors = async (pageNumber: number = 1, pageSize: number
     
     const result = await axiosRead(props)
     if (result.success) {
-        console.log("Advisors data:", result.data)
         return result.data
     }
     else {
@@ -167,7 +166,6 @@ export const GetPagedLeaveSchedulesOneStaff = async (staffProfileId: number): Pr
   
   const result = await axiosRead(props)
   if (result.success) {
-      console.log("Leave schedules data:", result.data)
       return result.data
   }
   else {
@@ -186,7 +184,7 @@ export const GetBookingAvailability = async (staffProfileId: number): Promise<Bo
     
     const result = await axiosRead(props)
     if (result.success) {
-        console.log("Booking availability data:", result.data)
+  
         return result.data
     }
     else {
@@ -429,7 +427,6 @@ export const getJoinedSubjects = async (): Promise<JoinedSubject[]> => {
   };
   const result = await axiosRead(props);
   if (result.success) {
-    console.log("Joined subjects data:", result.data);
     // Ensure we always return an array
     return Array.isArray(result.data) ? result.data : [];
   } else {
@@ -447,7 +444,7 @@ export const getJoinedSubjectById = async (id: number): Promise<JoinedSubject> =
   };
   const result = await axiosRead(props);
   if (result.success) {
-    console.log("Joined subject data:", result.data);
+ 
     return result.data;
   } else {
     throwApiError(result);
@@ -466,7 +463,7 @@ export const getSubjectCheckpoints = async (joinedSubjectId: number): Promise<Su
   const result = await axiosRead(props);
   
   if (result.success) {
-    console.log("Subject checkpoints data:", result.data);
+ 
     // Ensure we always return an array
     return Array.isArray(result.data) ? result.data : [];
   } else {
@@ -486,7 +483,7 @@ export const getCheckpointDetail = async (checkpointId: number): Promise<Subject
   const result = await axiosRead(props);
   
   if (result.success) {
-    console.log("Checkpoint detail data:", result.data);
+ 
     return result.data;
   } else {
     throwApiError(result);
@@ -515,7 +512,6 @@ export const updateCheckpoint = async (checkpointId: number, data: {
   const result = await axiosUpdate(props);
   
   if (result.success) {
-    console.log("Checkpoint updated:", result.data);
     return result.data;
   } else {
     throwApiError(result);
@@ -534,7 +530,7 @@ export const deleteCheckpoint = async (checkpointId: number): Promise<boolean> =
   const result = await axiosDelete(props);
   
   if (result.success) {
-    console.log("Checkpoint deleted successfully");
+    ("Checkpoint deleted successfully");
     return true;
   } else {
     throwApiError(result);
@@ -553,7 +549,7 @@ export const completeCheckpoint = async (checkpointId: number): Promise<boolean>
   const result = await axiosUpdate(props);
   
   if (result.success) {
-    console.log("Checkpoint completed successfully");
+    ("Checkpoint completed successfully");
     return true;
   } else {
     throwApiError(result);
@@ -572,7 +568,6 @@ export const generateCheckpoints = async (joinedSubjectId: number, studentMessag
   const result = await axiosRead(props);
   
   if (result.success) {
-    console.log("Generated checkpoints:", result.data);
     return result.data;
   } else {
     throwApiError(result);
@@ -601,7 +596,6 @@ export const createCheckpoint = async (joinedSubjectId: number, data: {
   const result = await axiosCreate(props);
   
   if (result.success) {
-    console.log("Checkpoint created successfully:", result.data);
     return result.data;
   } else {
     throwApiError(result);
@@ -624,7 +618,7 @@ export const bulkSaveCheckpoints = async (joinedSubjectId: number, checkpoints: 
   const result = await axiosCreate(props);
   
   if (result.success) {
-    console.log("Checkpoints saved successfully");
+    ("Checkpoints saved successfully");
     return true;
   } else {
     throwApiError(result);
@@ -642,7 +636,6 @@ export const getUpcomingCheckpoints = async (): Promise<SubjectCheckpoint[]> => 
   
   const result = await axiosRead(props)
   if (result.success) {
-    console.log("Upcoming checkpoints data:", result.data);
     return result.data;
   } else {
     throwApiError(result);
@@ -844,3 +837,45 @@ export const GetActiveStudentsByCurriculum = async (curriculumCode: string, page
     return null as never;
   }
 }
+
+export const getPersonalCurriculumSubjects = async (): Promise<Array<{ subjectCode: string; subjectName: string; credits: number; semesterNumber: number }>> => {
+  const props = {
+    data: null,
+    url: baseUrl + "/Profile/personal-curriculum-subject",
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    const items = Array.isArray(result.data) ? result.data : [];
+    return items.map((x: any) => ({
+      subjectCode: x.subjectCode,
+      subjectName: x.subjectName,
+      credits: x.credits,
+      semesterNumber: x.semesterNumber,
+    }));
+  } else {
+    throwApiError(result);
+    return [] as never;
+  }
+};
+
+export const getPersonalComboSubjects = async (): Promise<Array<{ subjectCode: string; subjectName: string; credits: number; semesterNumber: number }>> => {
+  const props = {
+    data: null,
+    url: baseUrl + "/Profile/personal-combo-subject",
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    const items = Array.isArray(result.data) ? result.data : [];
+    return items.map((x: any) => ({
+      subjectCode: x.subjectCode,
+      subjectName: x.subjectName,
+      credits: x.credits,
+      semesterNumber: x.semesterNumber,
+    }));
+  } else {
+    throwApiError(result);
+    return [] as never;
+  }
+};

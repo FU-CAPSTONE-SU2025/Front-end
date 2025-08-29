@@ -43,11 +43,11 @@ const ResourceExplorer: React.FC = () => {
     setPage(1);
   }, [activeSearch]);
 
+  // Fetch syllabus data with search and pagination
   const { data, isLoading, error } = useStudentFeature({ 
     search: activeSearch, 
     page, 
-    pageSize,
-    searchType: 'code' // Chỉ search theo subject code
+    pageSize
   });
 
   const handleSubjectSelect = (subject: any) => {
@@ -58,6 +58,7 @@ const ResourceExplorer: React.FC = () => {
     const trimmedSearch = searchInput.trim();
     
     setHasSearched(true);
+    // If search is empty, show all subjects by setting activeSearch to empty string
     setActiveSearch(trimmedSearch);
   };
 
@@ -125,7 +126,7 @@ const ResourceExplorer: React.FC = () => {
           value={searchInput}
           onChange={setSearchInput}
           onEnter={handleSearchEnter}
-          placeholder="Search by subject code only... (Press Enter to search)"
+          placeholder="Search by subject code... (Press Enter to search, empty to show all)"
           className="mb-0"
         />
       </div>

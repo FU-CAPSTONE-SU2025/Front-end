@@ -92,10 +92,13 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
     >
       <div className="mb-4 px-2">
         <h3 className="text-xl font-semibold text-white">
-          Search Results
+          {searchTerm ? 'Search Results' : 'All Subjects'}
         </h3>
         <p className="text-gray-400 text-sm">
-          Found {total} result{total !== 1 ? 's' : ''} {searchTerm ? `for "${searchTerm}"` : 'for all subjects'}
+          {searchTerm 
+            ? `Found ${total} result${total !== 1 ? 's' : ''} for "${searchTerm}"`
+            : `Showing ${total} subject${total !== 1 ? 's' : ''}`
+          }
         </p>
       </div>
       <AnimatePresence>
@@ -126,10 +129,16 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <FileSearchOutlined style={{ fontSize: '48px', color: 'rgba(255, 255, 255, 0.25)' }} />
                   <p className="text-white font-semibold text-lg mt-4">
-                    {searchTerm ? `No results found for "${searchTerm}"` : 'No subjects found'}
+                    {searchTerm 
+                      ? `No results found for "${searchTerm}"`
+                      : 'No subjects available'
+                    }
                   </p>
                   <p className="text-gray-400 text-sm mt-1">
-                    Try searching with different keywords or check for typos.
+                    {searchTerm 
+                      ? 'Try searching with different keywords or check for typos.'
+                      : 'There are currently no subjects in the system.'
+                    }
                   </p>
                 </div>
               )

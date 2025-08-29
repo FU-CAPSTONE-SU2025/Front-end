@@ -1,8 +1,8 @@
 import SubjectCard from '../../components/student/subjectCard';
-import AcademicCharts from '../../components/student/academicCharts';
 import UserInfoCard from '../../components/student/userInfoCard';
 import { motion } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
+import { Tabs } from 'antd';
 import SemesterSelect from '../../components/student/selectSemester';
 import { useJoinedSubjects } from '../../hooks/useStudentFeature';
 import { JoinedSubject, SemesterSubjects } from '../../interfaces/IStudent';
@@ -10,6 +10,8 @@ import { groupSubjectsBySemester, getSemesterOptions, getSubjectsStats } from '.
 import { GetCurrentStudentUser } from '../../api/Account/UserAPI';
 import { getAuthState } from '../../hooks/useAuthState';
 import { jwtDecode } from 'jwt-decode';
+import { getPersonalCurriculumSubjects, getPersonalComboSubjects } from '../../api/student/StudentAPI';
+import AcademicCharts from '../../components/student/academicCharts';
 
 // Note: UserInfoCard will receive userInfor from API; no mock user passed
 
@@ -75,6 +77,12 @@ const Dashboard = () => {
   const [studentId, setStudentId] = useState<number | null>(null);
   const [studentDetail, setStudentDetail] = useState<any | null>(null);
   const [isLoadingStudent, setIsLoadingStudent] = useState<boolean>(false);
+  const [curriculumSubjects, setCurriculumSubjects] = useState<Array<{ subjectCode: string; subjectName: string; credits: number; semesterNumber: number }>>([]);
+  const [comboSubjects, setComboSubjects] = useState<Array<{ subjectCode: string; subjectName: string; credits: number; semesterNumber: number }>>([]);
+  const [isLoadingPersonal, setIsLoadingPersonal] = useState<boolean>(false);
+  const combinedPersonalSubjects = useMemo(() => {
+    return [...(curriculumSubjects || []), ...(comboSubjects || [])];
+  }, [curriculumSubjects, comboSubjects]);
   
   // Fetch joined subjects
   const { data: joinedSubjects, isLoading, error } = useJoinedSubjects();
@@ -126,6 +134,64 @@ const Dashboard = () => {
     fetchDetail();
   }, [studentId]);
 
+  // Fetch personal curriculum/combo subjects
+  useEffect(() => {
+    let mounted = true;
+    const run = async () => {
+      setIsLoadingPersonal(true);
+      try {
+        const [cur, combo] = await Promise.all([
+          getPersonalCurriculumSubjects(),
+          getPersonalComboSubjects(),
+        ]);
+        if (mounted) {
+          setCurriculumSubjects(cur || []);
+          setComboSubjects(combo || []);
+        }
+      } catch {
+        if (mounted) {
+          setCurriculumSubjects([]);
+          setComboSubjects([]);
+        }
+      } finally {
+        if (mounted) setIsLoadingPersonal(false);
+      }
+    };
+    run();
+    return () => { mounted = false; };
+  }, []);
+
+  const renderSubjectList = (items: Array<{ subjectCode: string; subjectName: string; credits: number; semesterNumber: number }>) => {
+    if (isLoadingPersonal) {
+      return <div className="text-center py-4 text-gray-200/80">Loading...</div>;
+    }
+    if (!items || items.length === 0) {
+      return <div className="text-center py-4 text-gray-200/70">No subjects available</div>;
+    }
+    return (
+      <div className="w-full">
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5">
+          <div className="grid grid-cols-12 text-gray-200/90 text-xs sm:text-sm px-4 py-3 border-b border-white/10 bg-white/5">
+            <div className="col-span-4 sm:col-span-3">Code</div>
+            <div className="col-span-8 sm:col-span-5">Name</div>
+            <div className="hidden sm:block sm:col-span-2 text-right">Credits</div>
+            <div className="col-span-4 sm:col-span-2 text-right">Semester</div>
+          </div>
+          <div className="divide-y divide-white/10">
+            {items.map((s, idx) => (
+              <div key={idx} className="grid grid-cols-12 items-center px-4 py-3 text-white/90">
+                <div className="col-span-4 sm:col-span-3 font-medium truncate">{s.subjectCode}</div>
+                <div className="col-span-8 sm:col-span-5 pr-2 truncate" title={s.subjectName}>{s.subjectName}</div>
+                <div className="hidden sm:block sm:col-span-2 text-right">{s.credits}</div>
+                <div className="col-span-4 sm:col-span-2 text-right">{s.semesterNumber}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Compose minimal user props for UserInfoCard from real API data
   const composedUser = useMemo(() => {
     const name = studentDetail ? `${studentDetail.firstName ?? ''} ${studentDetail.lastName ?? ''}`.trim() || 'Student' : 'Student';
@@ -149,7 +215,115 @@ const Dashboard = () => {
     return getSubjectsStats(currentSemesterSubjects);
   }, [currentSemesterSubjects]);
 
-  // Keep full layout; show localized blocks instead of raw loading/error
+  // Right content tabs renderer
+  const renderRightTabs = () => (
+    <Tabs
+      defaultActiveKey="academic"
+      items={[
+        {
+          key: 'academic',
+          label: <span className="text-white">Academic</span>,
+          children: (
+            <div className="mt-2">
+              {/* Courses Section inside Academic tab */}
+              <div className="w-full bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-4 sm:p-6 lg:p-8">
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 sm:mb-0">
+                    {currentSemesterName || 'Select Semester'}
+                  </h2>
+                  <SemesterSelect
+                    value={selectedSemester?.toString() || ''}
+                    options={semesterOptions}
+                    onChange={(value) => setSelectedSemester(value ? Number(value) : null)}
+                  />
+                </div>
+                <p className="text-gray-200 opacity-80 mb-4">
+                  Track your academic progress across all enrolled subjects
+                </p>
+                {currentSemesterSubjects.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-white">{semesterStats.total}</div>
+                      <div className="text-gray-200 text-sm">Total Subjects</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-green-400">{semesterStats.completed}</div>
+                      <div className="text-gray-200 text-sm">Completed</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-blue-400">{semesterStats.passed}</div>
+                      <div className="text-gray-200 text-sm">Passed</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-yellow-400">{semesterStats.totalCredits}</div>
+                      <div className="text-gray-200 text-sm">Total Credits</div>
+                    </div>
+                  </div>
+                )}
+                {isLoading ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-200 opacity-80">Loading subjects...</p>
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-200 opacity-80">No data available right now.</p>
+                  </div>
+                ) : currentSemesterSubjects.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    {currentSemesterSubjects.map((subject, index) => (
+                      <motion.div
+                        key={subject.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={{ scale: 1.02, y: -5 }}
+                        className="w-full"
+                      >
+                        <SubjectCard
+                          id={subject.id}
+                          code={subject.subjectCode}
+                          name={subject.name}
+                          progress={subject.isCompleted ? 100 : subject.isPassed ? 80 : 30}
+                          credits={subject.credits}
+                          isPassed={subject.isPassed}
+                          isCompleted={subject.isCompleted}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-200 opacity-60">No subjects found for this semester</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Academic Charts below courses */}
+              <div className="w-full p-4 sm:p-6 lg:p-8">
+                <div className="mb-2">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Academic Analytics</h2>
+                  <p className="text-gray-200 opacity-80">Visualize your performance and track your achievements</p>
+                </div>
+                <AcademicCharts semesters={semestersAcademicData} selectedSemester={selectedSemester?.toString() || 'Summer 24'} />
+              </div>
+            </div>
+          ),
+        },
+        {
+          key: 'curriculum',
+          label: <span className="text-white">Curriculum</span>,
+          children: (
+            <div className="mt-2">
+              <div className="mb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Personal Subjects</h2>
+              </div>
+              {renderSubjectList(combinedPersonalSubjects)}
+            </div>
+          ),
+        },
+      ]}
+    />
+  );
 
   // Check if no data is available
   if (!joinedSubjects || joinedSubjects.length === 0) {
@@ -184,76 +358,17 @@ const Dashboard = () => {
             >
               <div className="w-full">
                 <UserInfoCard userInfor={studentDetail || {}} user={composedUser} />
-           
               </div>
             </motion.div>
 
-            {/* Main Content Section */}
+            {/* Main Content Section with tabs */}
             <motion.div
               className="xl:col-span-2 w-full flex flex-col gap-8"
               initial={{ x: 100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.6 }}
             >
-              {/* No Data Section */}
-              <motion.div
-                className="w-full bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8 sm:p-12"
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-              >
-                <div className="text-center">
-                  <div className="mb-6">
-                    <div className="w-24 h-24 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
-                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                      No Subjects Found
-                    </h2>
-                    <p className="text-gray-200 opacity-80 text-lg mb-6 max-w-md mx-auto">
-                      You haven't enrolled in any subjects yet. Please contact your academic advisor to register for courses.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
-                      <div className="text-2xl font-bold text-white">0</div>
-                      <div className="text-gray-200 text-sm">Total Subjects</div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
-                      <div className="text-2xl font-bold text-green-400">0</div>
-                      <div className="text-gray-200 text-sm">Completed</div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
-                      <div className="text-2xl font-bold text-blue-400">0</div>
-                      <div className="text-gray-200 text-sm">Passed</div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
-                      <div className="text-2xl font-bold text-yellow-400">0</div>
-                      <div className="text-gray-200 text-sm">Total Credits</div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Analytics Section */}
-              <motion.div
-                className="w-full p-4 sm:p-6 lg:p-8"
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
-              >
-                <div className="mb-6">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                    Academic Analytics
-                  </h2>
-                  <p className="text-gray-200 opacity-80">
-                    Visualize your performance and track your achievements
-                  </p>
-                </div>
-                <AcademicCharts semesters={semestersAcademicData} selectedSemester={selectedSemester?.toString() || 'Summer 24'} />
-              </motion.div>
+              {renderRightTabs()}
             </motion.div>
           </div>
         </div>
@@ -296,112 +411,14 @@ const Dashboard = () => {
             </div>
           </motion.div>
 
-          {/* Main Content Section */}
+          {/* Main Content Section with tabs */}
           <motion.div
             className="xl:col-span-2 w-full flex flex-col gap-8"
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.6 }}
           >
-            {/* Courses Section */}
-            <motion.div
-              className="w-full bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-4 sm:p-6 lg:p-8"
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-            >
-                             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                 <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 sm:mb-0">
-                   {currentSemesterName || 'Select Semester'}
-                 </h2>
-                <SemesterSelect
-                  value={selectedSemester?.toString() || ''}
-                  options={semesterOptions}
-                  onChange={(value) => setSelectedSemester(value ? Number(value) : null)}
-                />
-              </div>
-              <p className="text-gray-200 opacity-80 mb-4">
-                Track your academic progress across all enrolled subjects
-              </p>
-              
-              {/* Statistics Section */}
-              {currentSemesterSubjects.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-white">{semesterStats.total}</div>
-                    <div className="text-gray-200 text-sm">Total Subjects</div>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-green-400">{semesterStats.completed}</div>
-                    <div className="text-gray-200 text-sm">Completed</div>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-blue-400">{semesterStats.passed}</div>
-                    <div className="text-gray-200 text-sm">Passed</div>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-yellow-400">{semesterStats.totalCredits}</div>
-                    <div className="text-gray-200 text-sm">Total Credits</div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Localized loading/error/empty rendering for subjects */}
-              {isLoading ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-200 opacity-80">Loading subjects...</p>
-                </div>
-              ) : error ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-200 opacity-80">No data available right now.</p>
-                </div>
-              ) : currentSemesterSubjects.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                  {currentSemesterSubjects.map((subject, index) => (
-                    <motion.div
-                      key={subject.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ scale: 1.02, y: -5 }}
-                      className="w-full"
-                    >
-                      <SubjectCard
-                        id={subject.id}
-                        code={subject.subjectCode}
-                        name={subject.name}
-                        progress={subject.isCompleted ? 100 : subject.isPassed ? 80 : 30}
-                        credits={subject.credits}
-                        isPassed={subject.isPassed}
-                        isCompleted={subject.isCompleted}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-200 opacity-60">No subjects found for this semester</p>
-                </div>
-              )}
-            </motion.div>
-
-            {/* Analytics Section */}
-            <motion.div
-              className="w-full p-4 sm:p-6 lg:p-8"
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-            >
-              <div className="mb-6">
-                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                  Academic Analytics
-                </h2>
-                <p className="text-gray-200 opacity-80">
-                  Visualize your performance and track your achievements
-                </p>
-              </div>
-              <AcademicCharts semesters={semestersAcademicData} selectedSemester={selectedSemester?.toString() || 'Summer 24'} />
-            </motion.div>
+            {renderRightTabs()}
           </motion.div>
         </div>
       </div>

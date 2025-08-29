@@ -128,3 +128,17 @@ export const ApproveSubject = async (subjectId: number, data: SubjectApproval): 
     throwApiError(result);
   }
 };
+
+export const FetchSubjectTips = async (subjectId: number): Promise<any> => {
+  const props = {
+    data: null,
+    url: subjectURL + `/gen-tip/${subjectId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+  }
+};
