@@ -26,3 +26,4 @@ test-cases
 *.sw?
 .env
 
+LAZY_LOADING_RESOURCES.md
