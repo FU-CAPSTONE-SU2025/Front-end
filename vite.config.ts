@@ -1,54 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import ViteImageOptimizer from 'vite-plugin-imagemin'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(), 
-    tailwindcss(),
-    ViteImageOptimizer({
-      // WebP optimization
-      webp: {
-        quality: 80,
-      },
-      // JPEG optimization
-      mozjpeg: {
-        quality: 80,
-        progressive: true,
-      },
-      // PNG optimization
-      pngquant: {
-        quality: [0.65, 0.8],
-        speed: 4,
-      },
-      // GIF optimization
-      gifsicle: {
-        optimizationLevel: 3,
-        interlaced: false,
-      },
-      // SVG optimization
-      svgo: {
-        plugins: [
-          {
-            name: 'preset-default',
-            params: {
-              overrides: {
-                removeViewBox: false,
-                addAttributesToSVGElement: {
-                  params: {
-                    attributes: [
-                      { xmlns: 'http://www.w3.org/2000/svg' }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        ]
-      }
-    })
+    tailwindcss()
   ],
   build: {
     minify: 'terser',
