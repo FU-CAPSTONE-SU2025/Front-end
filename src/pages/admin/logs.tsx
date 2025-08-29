@@ -1,16 +1,16 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, DatePicker, Table, Button } from 'antd';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { ConfigProvider, Table, Button } from 'antd';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import * as XLSX from 'xlsx';
 import styles from '../../css/admin/logs.module.css';
 import { useAuditLog } from '../../hooks/useAuditLog';
 import { AuditLog } from '../../interfaces/IAuditLog';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import useActiveUserData from '../../hooks/useActiveUserData';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 
 const LogsPage: React.FC = () => {
-  const [dateRange, setDateRange] = useState<[Date, Date] | null>(null);
   const { handleError, handleSuccess } = useApiErrorHandler();
   const { 
     auditLogs, 
@@ -99,38 +99,52 @@ const LogsPage: React.FC = () => {
   const handleTableChange = (pagination: any) => {
     fetchAuditLogs(pagination.current, pagination.pageSize);
   };
-
-
-
-  // Animation variants
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-  };
-
   return (
-    <ConfigProvider>
+    <ConfigProvider
+    theme={{
+      components: {
+        Table: {
+          headerBg: '#1E40AF',
+          headerColor: '#fff',
+          borderColor: 'rgba(30, 64, 175, 0.08)',
+          colorText: '#1E293B',
+          colorBgContainer: 'rgba(255,255,255,0.95)',
+          colorBgElevated: 'rgba(255,255,255,0.95)',
+          rowHoverBg: 'rgba(249, 115, 22, 0.05)',
+          colorPrimary: '#f97316',
+          colorPrimaryHover: '#1E40AF',
+        },
+        Input: {
+          colorBgBase:"rgba(255,255,255,0.8)",
+          colorText: '#1E293B',
+          colorPrimary: '#f97316',
+          colorPrimaryHover: '#1E40AF',
+          colorBorder:"black"
+        },
+        Select: {
+          colorBgContainer: 'rgba(255,255,255,0.8)',
+          colorBorder: 'none',
+          colorText: '#1E293B',
+          colorPrimary: '#f97316',
+          colorPrimaryHover: '#1E40AF',
+        },
+        Button: {
+          colorPrimary: '#f97316',
+          colorPrimaryHover: '#1E40AF',
+          colorText: '#fff',
+          colorTextLightSolid: '#fff',
+          colorTextDisabled: '#bdbdbd',
+        },
+      },
+    }}
+  >
       <div className={styles.container}>
-        <motion.div className={styles.card} variants={cardVariants} initial="hidden" animate="visible">
-          <h1>System Log & Monitoring</h1>
-          <div className={styles.chartSection}>
+          <motion.div  className={`${styles.chartSection} ${glassStyles.appleGlassCard}`} initial="hidden" animate="visible">
             <div className={styles.chartHeader}>
               <h2>Active Users by Role</h2>
-              <div style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '0.5rem' }}>
+              <div style={{ fontSize: '0.9rem', color: 'black', marginTop: '0.5rem' }}>
                 Current active user counts categorized by their roles in the system
               </div>
-              <DatePicker.RangePicker
-                onChange={(dates) => {
-                  if (dates && dates[0] && dates[1]) {
-                    setDateRange([dates[0].toDate(), dates[1].toDate()]);
-                  } else {
-                    setDateRange(null);
-                  }
-                }}
-                className={styles.datePicker}
-                disabled={true}
-                placeholder={['Historical data not available', 'Historical data not available']}
-              />
             </div>
             <div className={styles.chartContainer}>
               {userDataLoading ? (
@@ -157,8 +171,8 @@ const LogsPage: React.FC = () => {
                 </ResponsiveContainer>
               )}
             </div>
-          </div>
-          <div className={styles.tableSection}>
+          </motion.div >
+          <motion.div className={`${styles.tableSection} ${glassStyles.appleGlassCard}`} initial="hidden" animate="visible">
             <div className={styles.tableHeader}>
               <h2>Audit Logs</h2>
               <Button 
@@ -192,9 +206,7 @@ const LogsPage: React.FC = () => {
               onChange={handleTableChange}
               scroll={{ x: 'max-content' }}
             />
-          </div>
-          
-        </motion.div>
+          </motion.div>
       </div>
     </ConfigProvider>
   );

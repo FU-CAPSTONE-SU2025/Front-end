@@ -71,6 +71,8 @@ const EditAccount: React.FC = () => {
   const [hasMorePrograms, setHasMorePrograms] = useState(true);
   const [hasMoreCurriculums, setHasMoreCurriculums] = useState(true);
   const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
+  const [isCurriculumModalVisible, setIsCurriculumModalVisible] = useState(false);
+  const [curriculumSearchTerm, setCurriculumSearchTerm] = useState('');
 
   // Role checks
   const isStudent = role === 'student';
@@ -103,7 +105,7 @@ const EditAccount: React.FC = () => {
   };
 
   // Use the hook to get curriculums
-  const { data: curriculumsData, isLoading: curriculumsLoading } = usePagedCurriculumList(curriculumPage, 10, '', selectedProgramId || undefined);
+  const { data: curriculumsData, isLoading: curriculumsLoading } = usePagedCurriculumList(curriculumPage, 10, curriculumSearchTerm, selectedProgramId || undefined);
   
   // Update curriculums when data is loaded
   useEffect(() => {
@@ -210,6 +212,7 @@ const EditAccount: React.FC = () => {
     form.setFieldValue('curriculumCode', ''); // Clear curriculum selection
     if (programId) {
       fetchCurriculums(1, '', programId);
+      setIsCurriculumModalVisible(true);
     }
   };
 
@@ -227,7 +230,7 @@ const EditAccount: React.FC = () => {
     const el = e.target as HTMLDivElement;
     const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 5;
     if (nearBottom && hasMoreCurriculums && selectedProgramId) {
-      fetchCurriculums(curriculumPage + 1, '', selectedProgramId);
+      fetchCurriculums(curriculumPage + 1, curriculumSearchTerm, selectedProgramId);
     }
   };
 
@@ -244,9 +247,29 @@ const EditAccount: React.FC = () => {
     setCurriculums([]);
     setCurriculumPage(1);
     setHasMoreCurriculums(true);
+    setCurriculumSearchTerm(value);
     if (selectedProgramId) {
       fetchCurriculums(1, value, selectedProgramId);
     }
+  };
+
+  const openCurriculumModal = () => {
+    if (!selectedProgramId) return;
+    setIsCurriculumModalVisible(true);
+    setCurriculumSearchTerm('');
+    setCurriculumPage(1);
+    setCurriculums([]);
+    setHasMoreCurriculums(true);
+    fetchCurriculums(1, '', selectedProgramId);
+  };
+
+  const closeCurriculumModal = () => {
+    setIsCurriculumModalVisible(false);
+  };
+
+  const handleSelectCurriculum = (curriculum: Curriculum) => {
+    form.setFieldValue('curriculumCode', curriculum.curriculumCode);
+    setIsCurriculumModalVisible(false);
   };
 
   // Submit handler
@@ -651,37 +674,25 @@ const EditAccount: React.FC = () => {
                        </Form.Item>
                     </div>
                     <div className={styles.fieldColumn}>
-                                             <Form.Item 
-                         label="Curriculum Code" 
-                         name="curriculumCode" 
-                         rules={[{ required: true, message: 'Please select curriculum' }]}
-                       >
-                         <Select
-                           placeholder="Select curriculum"
-                      
-                           onSearch={handleCurriculumSearch}
-                           onPopupScroll={handleCurriculumScroll}
-                           onClear={() => {
-                             setCurriculums([]);
-                             setCurriculumPage(1);
-                             setHasMoreCurriculums(true);
-                             form.setFieldValue('curriculumCode', '');
-                           }}
-                           showSearch
-                           optionFilterProp="children"
-                           filterOption={(input, option) =>
-                             String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                           }
-                           notFoundContent={'No curriculums found'}
-                           disabled={!!id || !selectedProgramId}
-                         >
-                           {curriculums.map(curriculum => (
-                             <Option key={curriculum.id} value={curriculum.curriculumCode} label={curriculum.curriculumName}>
-                               {curriculum.curriculumName} ({curriculum.curriculumCode})
-                             </Option>
-                           ))}
-                         </Select>
-                       </Form.Item>
+                      <Form.Item 
+                        label="Curriculum Code" 
+                        name="curriculumCode" 
+                        rules={[{ required: true, message: 'Please select curriculum' }]}
+                      >
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <Input placeholder="Select a curriculum" readOnly value={form.getFieldValue('curriculumCode')} />
+                          <motion.button
+                            className={styles.saveButton}
+                            variants={buttonVariants}
+                            whileHover="hover"
+                            type="button"
+                            onClick={openCurriculumModal}
+                            disabled={!selectedProgramId || loading || disableLoading}
+                          >
+                            <div className={styles.buttonContent}>Choose</div>
+                          </motion.button>
+                        </div>
+                      </Form.Item>
                     </div>
                   </div>
                 </>
@@ -800,6 +811,49 @@ const EditAccount: React.FC = () => {
               </motion.div>
             </Form>
           </div>
+
+          {/* Curriculum Selection Modal */}
+          <Modal
+            open={isCurriculumModalVisible}
+            onCancel={closeCurriculumModal}
+            footer={null}
+            title="Select Curriculum"
+            width="80%"
+            style={{ top: 20 }}
+            maskStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
+            centered
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <Input
+                placeholder="Search curriculum"
+                value={curriculumSearchTerm}
+                onChange={(e) => handleCurriculumSearch(e.target.value)}
+              />
+              <div
+                style={{ maxHeight: 400, overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: 8, padding: 8 }}
+                onScroll={handleCurriculumScroll}
+              >
+                {curriculums.length === 0 && (
+                  <div style={{ padding: 16, textAlign: 'center', color: '#64748b' }}>
+                    {curriculumsLoading ? 'Loading...' : 'No curriculums found'}
+                  </div>
+                )}
+                {curriculums.map((c) => (
+                  <div
+                    key={c.id ?? c.curriculumCode}
+                    style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
+                    onClick={() => handleSelectCurriculum(c)}
+                  >
+                    <div style={{ fontWeight: 600 }}>{c.curriculumName}</div>
+                    <div style={{ color: '#64748b', fontSize: 12 }}>{c.curriculumCode}</div>
+                  </div>
+                ))}
+                {!hasMoreCurriculums && curriculums.length > 0 && (
+                  <div style={{ padding: 12, textAlign: 'center', color: '#94a3b8' }}>End of list</div>
+                )}
+              </div>
+            </div>
+          </Modal>
         </motion.div>
       </div>
     </ConfigProvider>
