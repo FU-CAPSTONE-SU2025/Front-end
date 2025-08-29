@@ -8,7 +8,6 @@ import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useSchoolApi } from '../../hooks/useSchoolApi';
 
 const { TextArea } = Input;
-const { Title } = Typography;
 
 interface SubjectEditProps {
   id?: number;
