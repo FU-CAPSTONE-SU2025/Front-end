@@ -222,11 +222,11 @@ const Dashboard = () => {
       items={[
         {
           key: 'academic',
-          label: <span className="text-white">Academic</span>,
+          label: <span className="text-white text-lg">Academic</span>,
           children: (
             <div className="mt-2">
               {/* Courses Section inside Academic tab */}
-              <div className="w-full bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-4 sm:p-6 lg:p-8">
+              <div className="!w-full !bg-white/10 !backdrop-blur-xl !rounded-2xl !shadow-2xl !border !border-white/20 p-4 sm:p-6 lg:p-8">
                 <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 sm:mb-0">
                     {currentSemesterName || 'Select Semester'}
@@ -299,7 +299,7 @@ const Dashboard = () => {
               </div>
 
               {/* Academic Charts below courses */}
-              <div className="w-full p-4 sm:p-6 lg:p-8">
+              <div className="w-full p-4 sm:p-6 lg:p-8 !bg-white/10 !backdrop-blur-xl !rounded-2xl !shadow-2xl !border !border-white/20 mt-5">
                 <div className="mb-2">
                   <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Academic Analytics</h2>
                   <p className="text-gray-200 opacity-80">Visualize your performance and track your achievements</p>
@@ -311,7 +311,7 @@ const Dashboard = () => {
         },
         {
           key: 'curriculum',
-          label: <span className="text-white">Curriculum</span>,
+          label: <span className="text-white text-lg">Curriculum</span>,
           children: (
             <div className="mt-2">
               <div className="mb-3">
@@ -334,18 +334,6 @@ const Dashboard = () => {
         transition={{ duration: 0.6, ease: 'easeOut' }}
         className="pt-20 mt-2 pb-8 flex-1 min-h-screen bg-transparent"
       >
-        {/* Header Section */}
-        <motion.div
-          className="px-4 sm:px-6 lg:px-8 mb-8"
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <p className="text-lg sm:text-xl text-gray-200 opacity-80 max-w-2xl mx-auto text-center">
-            Welcome back! Here's your academic overview and progress tracking.
-          </p>
-        </motion.div>
-
         {/* Main Content Grid */}
         <div className="w-full sm:px-4 flex flex-col gap-8">
           <div className="w-full grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -381,19 +369,9 @@ const Dashboard = () => {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="pt-20 mt-2   pb-8 flex-1  min-h-screen bg-transparent"
+      className="pt-20 mt-8 pb-8 flex-1  min-h-screen bg-transparent"
     >
       {/* Header Section */}
-      <motion.div
-        className="px-4 sm:px-6 lg:px-8 mb-8"
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-      >
-        <p className="text-lg sm:text-xl    text-gray-200 opacity-80 max-w-2xl mx-auto text-center">
-          Welcome back! Here's your academic overview and progress tracking.
-        </p>
-      </motion.div>
 
       {/* Main Content Grid */}
       <div className="w-full  sm:px-4  flex flex-col gap-8">

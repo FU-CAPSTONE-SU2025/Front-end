@@ -93,11 +93,11 @@ const CourseTracking = () => {
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-12"
+          className="mb-8"
         >
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Course Dashboard
+          <div className="text-center ">
+            <h1 className="text-4xl !mt-5 md:text-5xl font-bold text-white ">
+              Course Tracking
             </h1>
             <p className="text-gray-300 text-lg max-w-2xl mx-auto">
               Track your academic progress and stay on top of important deadlines

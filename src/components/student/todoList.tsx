@@ -7,7 +7,6 @@ import {
   CalendarOutlined,
   EditOutlined,
   DeleteOutlined,
-  RobotOutlined,
   PlusOutlined
 } from '@ant-design/icons';
 import { SubjectCheckpoint } from '../../interfaces/IStudent';
@@ -15,7 +14,6 @@ import { useSubjectCheckpoints, useCheckpointDetail, useDeleteCheckpoint } from 
 import CheckpointDetailModal from './checkpointDetailModal';
 import CheckpointEditModal from './checkpointEditModal';
 import DeleteCheckpointModal from './deleteCheckpointModal';
-import AIGenerateTodoModal from './aiGenerateTodoModal';
 import AddManualTodoModal from './addManualTodoModal';
 import { message } from 'antd';
 
@@ -33,7 +31,6 @@ const TodoList: React.FC<TodoListProps> = ({ checkpoints, isLoading = false, joi
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [deletingCheckpointId, setDeletingCheckpointId] = useState<number | null>(null);
   const [deletingCheckpointTitle, setDeletingCheckpointTitle] = useState<string>('');
-  const [isAIGenerateTodoModalVisible, setIsAIGenerateTodoModalVisible] = useState(false);
   const [isAddManualTodoModalVisible, setIsAddManualTodoModalVisible] = useState(false);
 
   // Hook for deleting checkpoint
@@ -49,9 +46,9 @@ const TodoList: React.FC<TodoListProps> = ({ checkpoints, isLoading = false, joi
     isEditModalVisible ? editingCheckpointId : null
   );
 
-  // Sort checkpoints by deadline (newest to oldest)
+  // Sort checkpoints by deadline (earliest to latest)
   const sortedCheckpoints = [...checkpoints].sort((a, b) => 
-    new Date(b.deadline).getTime() - new Date(a.deadline).getTime()
+    new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
   );
 
   const formatDate = (dateString: string) => {
@@ -141,14 +138,6 @@ const TodoList: React.FC<TodoListProps> = ({ checkpoints, isLoading = false, joi
     setEditingCheckpointId(null);
   };
 
-  const handleAIGenerateTodoClick = () => {
-    setIsAIGenerateTodoModalVisible(true);
-  };
-
-  const handleAIGenerateTodoModalClose = () => {
-    setIsAIGenerateTodoModalVisible(false);
-  };
-
   const handleAddManualTodoClick = () => {
     setIsAddManualTodoModalVisible(true);
   };
@@ -162,17 +151,6 @@ const TodoList: React.FC<TodoListProps> = ({ checkpoints, isLoading = false, joi
       <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-semibold text-center flex-1">Course Timeline</h2>
-          {joinedSubjectId && (
-            <Button
-              type="primary"
-              icon={<RobotOutlined />}
-              onClick={handleAIGenerateTodoClick}
-              size="large"
-              className="!bg-blue-500 hover:!bg-blue-600 !border-blue-500 hover:!border-blue-600"
-            >
-              AI Gen Todo
-            </Button>
-          )}
         </div>
         
         <div className="flex flex-col items-center justify-center py-16">
@@ -206,28 +184,17 @@ const TodoList: React.FC<TodoListProps> = ({ checkpoints, isLoading = false, joi
     return (
       <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-semibold text-center flex-1">Course Timeline</h2>
-          {joinedSubjectId && (
-            <Button
-              type="primary"
-              icon={<RobotOutlined />}
-              onClick={handleAIGenerateTodoClick}
-              size="large"
-              className="!bg-blue-500 hover:!bg-blue-600 !border-blue-500 hover:!border-blue-600"
-            >
-              AI Gen Todo
-            </Button>
-          )}
+          <h2 className="text-2xl font-semibold text-center !text-white  flex-1">Course Timeline</h2>
         </div>
         
         <div className="flex flex-col items-center justify-center py-16">
           
           {/* Text content with better spacing */}
           <div className="text-center space-y-3">
-            <h3 className="text-xl font-semibold text-white">
+            <h3 className="text-xl font-semibold !text-white">
               No Timeline Available
             </h3>
-            <p className="text-gray-300 text-base max-w-md mx-auto leading-relaxed">
+            <p className="!text-gray-300 text-base max-w-md mx-auto leading-relaxed">
               Course timeline and milestones will appear here once they are added to your curriculum.
             </p>
           </div>
@@ -240,42 +207,26 @@ const TodoList: React.FC<TodoListProps> = ({ checkpoints, isLoading = false, joi
           </div>
         </div>
 
-        {/* AI Generate Todo Modal */}
-        <AIGenerateTodoModal
-          isVisible={isAIGenerateTodoModalVisible}
-          onClose={handleAIGenerateTodoModalClose}
-          joinedSubjectId={joinedSubjectId}
-        />
+
       </div>
     );
   }
 
   return (
     <>
-      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
+      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl !p-6 !mb-10">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-center flex-1">Course Timeline</h2>
+          <h2 className="text-2xl font-semibold !text-white text-center flex-1">Course Timeline</h2>
           {joinedSubjectId && (
-            <div className="flex items-center gap-2">
-              <Button
-                type="primary"
-                icon={<RobotOutlined />}
-                onClick={handleAIGenerateTodoClick}
-                size="large"
-                className="!bg-blue-500 hover:!bg-blue-600 !border-blue-500 hover:!border-blue-600"
-              >
-                AI Gen Todo
-              </Button>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={handleAddManualTodoClick}
-                size="large"
-                className="!bg-green-500 hover:!bg-green-600 !border-green-500 hover:!border-green-600"
-              >
-                Add Manual Todo
-              </Button>
-            </div>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAddManualTodoClick}
+              size="large"
+              className=" !bg-orange-500 hover:!bg-orange-600 !border-orange-500 "
+            >
+              Add Manual Todo
+            </Button>
           )}
         </div>
         
@@ -335,7 +286,7 @@ const TodoList: React.FC<TodoListProps> = ({ checkpoints, isLoading = false, joi
                       </h3>
                       
                       <div className="flex items-center gap-4 text-sm">
-                        <div className="flex items-center gap-2 text-gray-300">
+                        <div className="flex items-center  gap-2 text-gray-300">
                           <CalendarOutlined className="w-4 h-4" />
                           <span>{formatDate(checkpoint.deadline)}</span>
                         </div>
@@ -346,12 +297,12 @@ const TodoList: React.FC<TodoListProps> = ({ checkpoints, isLoading = false, joi
                     <div className="flex items-center gap-2">
                       <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
                         checkpoint.isCompleted 
-                          ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                          ? 'bg-green-500/20 !text-green-400 border border-green-500/30'
                           : getDaysUntilDeadline(checkpoint.deadline) < 0
-                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                            ? 'bg-red-500/20 !text-red-400 border border-red-500/30'
                             : getDaysUntilDeadline(checkpoint.deadline) <= 3
-                              ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                              : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                              ? 'bg-orange-500/20 !text-orange-400 border border-orange-500/30'
+                              : 'bg-blue-500/20 !text-blue-400 border border-blue-500/30'
                       }`}>
                         {checkpoint.isCompleted ? (
                           <CheckCircleOutlined className="w-3 h-3" />
@@ -366,10 +317,10 @@ const TodoList: React.FC<TodoListProps> = ({ checkpoints, isLoading = false, joi
                         {/* Edit Button */}
                         <button
                           onClick={(e) => handleEditClick(e, checkpoint.id)}
-                          className="p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20 hover:border-white/30 w-6 h-6 flex items-center justify-center"
+                          className="p-1 rounded-full !bg-white/10 hover:bg-white/20 transition-colors border border-white/20 hover:border-white/30 w-6 h-6 flex items-center justify-center"
                           title="Edit checkpoint"
                         >
-                          <EditOutlined className="w-2.5 h-2.5 text-white" />
+                          <EditOutlined className="w-4  h-4 !text-white" />
                         </button>
 
                         {/* Delete Button */}
@@ -378,7 +329,7 @@ const TodoList: React.FC<TodoListProps> = ({ checkpoints, isLoading = false, joi
                           className="p-1 rounded-full bg-red-500/20 hover:bg-red-500/30 transition-colors border border-red-500/30 hover:border-red-500/50 w-6 h-6 flex items-center justify-center"
                           title="Delete checkpoint"
                         >
-                          <DeleteOutlined className="w-2.5 h-2.5 text-red-400" />
+                          <DeleteOutlined className="w-4 h-4 !text-red-400" />
                         </button>
                       </div>
                     </div>
@@ -424,13 +375,6 @@ const TodoList: React.FC<TodoListProps> = ({ checkpoints, isLoading = false, joi
         onConfirm={handleDeleteConfirm}
         checkpointTitle={deletingCheckpointTitle}
         isLoading={deleteCheckpointMutation.isPending}
-      />
-
-      {/* AI Generate Todo Modal */}
-      <AIGenerateTodoModal
-        isVisible={isAIGenerateTodoModalVisible}
-        onClose={handleAIGenerateTodoModalClose}
-        joinedSubjectId={joinedSubjectId}
       />
 
       {/* Add Manual Todo Modal */}

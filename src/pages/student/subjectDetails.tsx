@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Progress, Button, InputNumber, Tag } from 'antd';
-import { CalculatorOutlined, InfoCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { Progress, Button, InputNumber, Tag, Tabs } from 'antd';
+import { CalculatorOutlined, InfoCircleOutlined, ArrowLeftOutlined, RobotOutlined, CheckSquareOutlined, BarChartOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router';
-import CourseTimeline from '../../components/student/courseTimeline';
 import GradeCalculator from '../../components/student/gradeCalculator';
 import TodoList from '../../components/student/todoList';
+import AIGenerateTodoTab from '../../components/student/aiGenerateTodoTab';
 import { useJoinedSubjectById, useSubjectCheckpoints } from '../../hooks/useStudentFeature';
-import { JoinedSubject } from '../../interfaces/IStudent';
+import '../../css/student/subjectDetails.module.css';
 
 interface Grade {
   name: string;
@@ -44,6 +44,7 @@ const SubjectDetails = () => {
     const navigate = useNavigate();
     const [grades, setGrades] = useState<Grade[]>([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [activeTab, setActiveTab] = useState('todo');
 
     // Parse ID once and memoize it
     const parsedId = useMemo(() => id ? parseInt(id) : null, [id]);
@@ -55,7 +56,7 @@ const SubjectDetails = () => {
     const joinedSubjectId = useMemo(() => subject?.id || null, [subject?.id]);
 
     // Fetch subject checkpoints/todo list
-    const { data: checkpoints, isLoading: checkpointsLoading, error: checkpointsError } = useSubjectCheckpoints(joinedSubjectId);
+    const { data: checkpoints, isLoading: checkpointsLoading, error: checkpointsError, refetch: refetchCheckpoints } = useSubjectCheckpoints(joinedSubjectId);
 
     // Memoize mock data to prevent recreation on every render
     const mockData = useMemo(() => 
@@ -71,6 +72,13 @@ const SubjectDetails = () => {
 
     const handleGoBack = () => {
         navigate(-1);
+    };
+
+    const handleAISuccess = () => {
+        // Refetch checkpoints after AI generates new ones
+        refetchCheckpoints();
+        // Switch to todo tab to show the new items
+        setActiveTab('todo');
     };
 
     if (subjectLoading) {
@@ -128,59 +136,20 @@ const SubjectDetails = () => {
         return 30;
     };
 
-    return (
-        <div className="pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-white">
-            {/* Header with Back Button */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="mb-8"
-            >
-                {/* Back Button */}
-                <div className="mb-6">
-                    <Button
-                        type="text"
-                        icon={<ArrowLeftOutlined />}
-                        onClick={handleGoBack}
-                        className="!text-white !border-white/30 !bg-white/10 hover:!bg-white/20 !h-10 !px-4 !flex !items-center !gap-2 !backdrop-blur-md"
-                        size="large"
-                    >
-                        Back
-                    </Button>
-                </div>
-
-                <h1 className="text-4xl md:text-5xl font-bold">{subject.subjectCode}</h1>
-                <p className="text-lg text-gray-300">{subject.name}</p>
-                
-                {/* Subject Status and Info */}
-                <div className="mt-4 flex flex-wrap gap-4">
-                    <Tag color={subject.isCompleted ? "green" : subject.isPassed ? "blue" : "orange"} className="text-base">
-                        {subject.isCompleted ? "Completed" : subject.isPassed ? "Passed" : "In Progress"}
-                    </Tag>
-                    <Tag color="cyan" className="text-base">{subject.credits} Credits</Tag>
-                    <Tag color="purple" className="text-base">Version {subject.subjectVersionCode}</Tag>
-                    {subject.semesterName && (
-                        <Tag color="geekblue" className="text-base">{subject.semesterName}</Tag>
-                    )}
-                    {subject.githubRepositoryURL && (
-                        <Tag color="green" className="text-base">
-                            <a href={subject.githubRepositoryURL} target="_blank" rel="noopener noreferrer" className="text-white">
-                                GitHub Repository
-                            </a>
-                        </Tag>
-                    )}
-                </div>
-            </motion.div>
-
-            {/* Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Todo List */}
-                <motion.div 
-                    className="lg:col-span-2"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
+    // Tab items configuration
+    const tabItems = [
+        {
+            key: 'todo',
+            label: (
+                <span className="flex items-center text-lg gap-2">
+                    <span className='!text-white'>Todo List</span>
+                </span>
+            ),
+            children: (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
                 >
                     <TodoList 
                         checkpoints={checkpoints || []} 
@@ -188,13 +157,47 @@ const SubjectDetails = () => {
                         joinedSubjectId={joinedSubjectId}
                     />
                 </motion.div>
-
-                {/* Right Column: Grades & Progress */}
-                <motion.div 
-                    className="space-y-8"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
+            )
+        },
+        {
+            key: 'ai-generate',
+            label: (
+                <span className="flex  text-lg items-center gap-2">
+                    <span className='!text-white'>AI Generate Todo</span>
+                </span>
+            ),
+            children: (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                    {joinedSubjectId ? (
+                        <AIGenerateTodoTab 
+                            joinedSubjectId={joinedSubjectId}
+                            onSuccess={handleAISuccess}
+                        />
+                    ) : (
+                        <div className="text-center py-12 text-gray-300">
+                            Loading subject data...
+                        </div>
+                    )}
+                </motion.div>
+            )
+        },
+        {
+            key: 'grades',
+            label: (
+                <span className="flex  text-lg items-center gap-2">
+                    <span className='!text-white'>Grades & Progress</span>
+                </span>
+            ),
+            children: (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="space-y-8 !mb-10"
                 >
                     <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
                         <div className="flex items-center justify-between mb-4">
@@ -270,7 +273,73 @@ const SubjectDetails = () => {
                         </div>
                     </div>
                 </motion.div>
-            </div>
+            )
+        }
+    ];
+
+    return (
+        <div className="pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-white">
+            {/* Header with Back Button */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="mb-8"
+            >
+                {/* Back Button */}
+                <div className="mb-6">
+                    <Button
+                        type="text"
+                        icon={<ArrowLeftOutlined />}
+                        onClick={handleGoBack}
+                        className="!text-white !border-white/30 !bg-white/10 hover:!bg-white/20 !h-10 !px-4 !flex !items-center !gap-2 !backdrop-blur-md"
+                        size="large"
+                    >
+                        Back
+                    </Button>
+                </div>
+
+                <h1 className="text-4xl md:text-5xl font-bold">{subject.subjectCode}</h1>
+                <p className="text-lg text-gray-300">{subject.name}</p>
+                
+                {/* Subject Status and Info */}
+                <div className="mt-4 flex flex-wrap gap-4">
+                    <Tag color={subject.isCompleted ? "green" : subject.isPassed ? "blue" : "orange"} className="text-base">
+                        {subject.isCompleted ? "Completed" : subject.isPassed ? "Passed" : "In Progress"}
+                    </Tag>
+                    <Tag color="cyan" className="text-base">{subject.credits} Credits</Tag>
+                    <Tag color="purple" className="text-base">Version {subject.subjectVersionCode}</Tag>
+                    {subject.semesterName && (
+                        <Tag color="geekblue" className="text-base">{subject.semesterName}</Tag>
+                    )}
+                    {subject.githubRepositoryURL && (
+                        <Tag color="green" className="text-base">
+                            <a href={subject.githubRepositoryURL} target="_blank" rel="noopener noreferrer" className="text-white">
+                                GitHub Repository
+                            </a>
+                        </Tag>
+                    )}
+                </div>
+            </motion.div>
+
+            {/* Main Content with Tabs */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+            >
+                <Tabs
+                    activeKey={activeTab}
+                    onChange={setActiveTab}
+                    items={tabItems}
+                    className="subject-details-tabs"
+                    tabBarStyle={{
+                        marginBottom: '24px',
+                        borderBottom: '1px solid rgba(255,255,255,0.1)'
+                    }}
+                    tabBarGutter={32}
+                />
+            </motion.div>
 
             {/* Grade Calculator Modal */}
             <GradeCalculator

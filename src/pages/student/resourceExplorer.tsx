@@ -63,7 +63,7 @@ const ResourceExplorer: React.FC = () => {
   };
 
   return (
-    <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden px-4 lg:px-6">
+    <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden px-4 mt-8 lg:px-6">
       {/* Current Semester Subjects */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
