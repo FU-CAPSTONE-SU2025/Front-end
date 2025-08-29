@@ -4,6 +4,7 @@ import { MessageOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import AiAssistance from './aiAssistance';
 import AdvisorChatTab from './advisorChatTab';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Messenger: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -22,24 +23,36 @@ const Messenger: React.FC = () => {
     window.dispatchEvent(new CustomEvent('openMainChatBox', { detail: advisor }));
   };
 
+  const TabLabel: React.FC<{ icon: React.ReactNode; text: string; tabKey: string }>=({ icon, text, tabKey }) => (
+    <div
+      className={`relative flex items-center gap-2 px-2 py-1 select-none cursor-pointer transition-colors duration-200 ${
+        activeTab === tabKey ? 'text-blue-600' : 'text-gray-600 hover:text-gray-800'
+      }`}
+    >
+      <span className="transition-transform duration-200 group-hover:-translate-y-0.5">{icon}</span>
+      <span className="text-sm font-medium">{text}</span>
+      {activeTab === tabKey && (
+        <motion.div
+          layoutId="tabs-underline"
+          className="absolute -bottom-[6px] left-0 right-0 h-[2px] bg-blue-600 rounded-full"
+          transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+        />
+      )}
+    </div>
+  );
+
   const items = [
     {
       key: 'ai',
       label: (
-        <div className="flex items-center gap-2">
-          <MessageOutlined />
-          <span>AI Assistant</span>
-        </div>
+        <TabLabel icon={<MessageOutlined />} text="AI Assistant" tabKey="ai" />
       ),
       children: <AiAssistance handleAIClick={handleAIClick} />,
     },
     {
       key: 'advisor',
       label: (
-        <div className="flex items-center gap-2">
-          <UserOutlined />
-          <span>Advisor</span>
-        </div>
+        <TabLabel icon={<UserOutlined />} text="Advisor Chat" tabKey="advisor" />
       ),
       children: <AdvisorChatTab key="advisor-chat-tab" onChatBoxOpen={handleChatBoxOpen} drawerOpen={open} onCloseDrawer={() => setOpen(false)} />,
     },
@@ -66,7 +79,8 @@ const Messenger: React.FC = () => {
           onChange={setActiveTab}
           items={items}
           className="h-full"
-          tabBarStyle={{ margin: 0, padding: '0 16px' }}
+          tabBarStyle={{ margin: 0, padding: '0 16px 6px 16px' }}
+          rootClassName="student-messenger-tabs"
         />
       </Drawer>
     </>

@@ -28,6 +28,7 @@ const DeleteSessionModal: React.FC<DeleteSessionModalProps> = ({ open, onClose, 
       </p>
       <div className="flex gap-3 justify-between">
         <Button 
+        type='primary'
           onClick={onClose}
           className="px-6 py-2 h-auto"
         >

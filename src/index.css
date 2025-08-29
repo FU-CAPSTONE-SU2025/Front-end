@@ -358,3 +358,8 @@ button:focus-visible {
     border-radius: 0 0 8px 8px !important;
   }
 } 
+
+/* Hide default Ant Design ink bar for custom animated underline in student messenger */
+.student-messenger-tabs .ant-tabs-ink-bar {
+  display: none !important;
+} 

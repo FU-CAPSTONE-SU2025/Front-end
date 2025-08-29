@@ -1,10 +1,94 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Avatar, Button, Input, Modal, message, Badge, Spin } from 'antd';
+import { Avatar, Button, Input, Modal, message, Badge, Spin, Tooltip } from 'antd';
 import { SendOutlined, PlusOutlined, MessageOutlined } from '@ant-design/icons';
 import { useAdvisorChat, AdvisorSession } from '../../hooks/useAdvisorChat';
 import { motion } from 'framer-motion';
 import StaffNameDisplay from './staffNameDisplay';
 
+// Extracted Chat Item Component
+interface AdvisorChatItemProps {
+  session: AdvisorSession;
+  onSessionClick: (session: AdvisorSession) => void;
+  staffIdCounts: Map<number, number>;
+  sessionPositions: Map<number, number>;
+}
+
+const AdvisorChatItem: React.FC<AdvisorChatItemProps> = ({ 
+  session, 
+  onSessionClick, 
+  staffIdCounts, 
+  sessionPositions 
+}) => {
+  const isUnassigned = !session.staffId || session.staffId === 4;
+  const staffKey = session.staffId || 0;
+  const total = staffIdCounts.get(staffKey) || 1;
+  const position = sessionPositions.get(session.id) || 1;
+
+  const getAdvisorBaseName = (session: AdvisorSession) => {
+    const isUnassigned = !session.staffId || session.staffId === 4;
+    return isUnassigned
+      ? 'Unassigned Advisor'
+      : (session.staffName || session.title || `Advisor ${session.staffId}`);
+  };
+
+  return (
+    <motion.div
+      key={session.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="cursor-pointer transition-all duration-300 hover:bg-gray-50 border-b border-gray-100 hover:border-gray-200"
+      onClick={() => onSessionClick(session)}
+    >
+      <div className="flex items-center gap-4 p-4">
+        <div className="relative">
+          <Avatar 
+            src={isUnassigned ? 'https://i.pinimg.com/736x/2f/82/48/2f824875daa60e09c6cbd2edbca0a377.jpg' : (session.staffAvatar || 'https://i.pinimg.com/736x/2f/82/48/2f824875daa60e09c6cbd2edbca0a377.jpg')} 
+            size={48} 
+            className={`ring-3 shadow-md ${
+              isUnassigned ? 'ring-orange-100' : 'ring-gray-100'
+            }`}
+          />
+          {session.isOnline && !isUnassigned && (
+            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
+          )}
+          {isUnassigned && (
+            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-orange-400 rounded-full border-2 border-white" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-start mb-1">
+            <div className="font-semibold text-gray-800 text-base">
+              {/* Render resolved staff name; append numbering suffix if duplicate */}
+              <span className="align-middle">
+                <StaffNameDisplay 
+                  staffId={session.staffId}
+                  fallbackName={getAdvisorBaseName(session)}
+                />
+              </span>
+              {total > 1 && (
+                <span className="align-middle"> ({position})</span>
+              )}
+            </div>
+            {session.unreadCount && session.unreadCount > 0 && (
+              <Badge 
+                count={session.unreadCount} 
+                size="small"
+                className={isUnassigned ? 'bg-orange-500' : 'bg-red-500'}
+              />
+            )}
+          </div>
+       
+          {isUnassigned && (
+            <div className="text-xs text-orange-600 mt-1">
+              Waiting for assignment
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 interface AdvisorChatTabProps {
   onChatBoxOpen?: (session: AdvisorSession) => void;
@@ -21,8 +105,6 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
   const {
     connectionState,
     sessions,
-    currentSession,
-    messages,
     error,
     loading,
     dataFetched,
@@ -58,6 +140,78 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
     setForceUpdate(prev => prev + 1);
   }, [sessions]);
 
+  // Smooth auto-refresh: when any session's updatedAt changes, refetch (throttled)
+  const prevUpdatedMapRef = useRef<Map<number, string | undefined>>(new Map());
+  const lastAutoFetchAtRef = useRef<number>(0);
+  useEffect(() => {
+    if (!sessions || sessions.length === 0) {
+      prevUpdatedMapRef.current = new Map();
+      return;
+    }
+
+    let hasUpdateChange = false;
+    const nextMap = new Map<number, string | undefined>();
+    for (const s of sessions) {
+      const prev = prevUpdatedMapRef.current.get(s.id);
+      nextMap.set(s.id, s.updatedAt);
+      if (prev && s.updatedAt && prev !== s.updatedAt) {
+        hasUpdateChange = true;
+      }
+    }
+
+    prevUpdatedMapRef.current = nextMap;
+
+    const now = Date.now();
+    const cooldownPassed = now - lastAutoFetchAtRef.current > 800;
+    if (hasUpdateChange && cooldownPassed) {
+      lastAutoFetchAtRef.current = now;
+      fetchSessions().catch(() => {});
+    }
+  }, [sessions, fetchSessions]);
+
+  // Build numbering for duplicate advisors (same staffId)
+  const staffIdCountRef = useRef<Map<number, number>>(new Map());
+  const sessionPositionRef = useRef<Map<number, number>>(new Map());
+  useEffect(() => {
+    const counts = new Map<number, number>();
+    const positions = new Map<number, number>();
+
+    // Count by staffId
+    for (const s of sessions) {
+      const key = s.staffId || 0;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+
+    // Assign position order within each staffId
+    const orderTracker = new Map<number, number>();
+    for (const s of sessions) {
+      const key = s.staffId || 0;
+      const nextPos = (orderTracker.get(key) || 0) + 1;
+      orderTracker.set(key, nextPos);
+      positions.set(s.id, nextPos);
+    }
+
+    staffIdCountRef.current = counts;
+    sessionPositionRef.current = positions;
+  }, [sessions]);
+
+  // Compute base name and numbered display name
+  const getAdvisorBaseName = (session: AdvisorSession) => {
+    const isUnassigned = !session.staffId || session.staffId === 4;
+    return isUnassigned
+      ? 'Unassigned Advisor'
+      : (session.staffName || session.title || `Advisor ${session.staffId}`);
+  };
+
+  const getAdvisorDisplayName = (session: AdvisorSession) => {
+    const baseName = getAdvisorBaseName(session);
+    const staffKey = session.staffId || 0;
+    const total = staffIdCountRef.current.get(staffKey) || 1;
+    if (total <= 1) return baseName;
+    const position = sessionPositionRef.current.get(session.id) || 1;
+    return `${baseName} (${position})`;
+  };
+
   // Handle refresh sessions
   const handleRefreshSessions = async () => {
     try {
@@ -85,7 +239,7 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
     // Trigger GlobalChatBox to open
     const advisorData = {
       id: session.id.toString(),
-      name: session.staffName || session.title, // Will be updated by StaffNameDisplay
+      name: getAdvisorDisplayName(session),
       avatar: session.staffAvatar || 'https://i.pravatar.cc/150?img=1',
       isOnline: session.isOnline || false,
       role: 'Advisor'
@@ -95,6 +249,10 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
     
     try {
       await joinSession(session.id);
+      // Immediately refresh local list for smooth UX
+      await fetchSessions().catch(() => {});
+      // Broadcast to other tabs/components to refresh
+      window.dispatchEvent(new CustomEvent('advisorSessionJoined', { detail: { sessionId: session.id } }));
     } catch (err) {
       // Only show error for real connection issues, not for normal SignalR negotiation
       const errorMessage = err instanceof Error ? err.message : '';
@@ -145,115 +303,8 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
     }
   };
 
-
-
-  // Render individual chat item
-  const renderChatItem = (session: AdvisorSession) => {
-    // Determine if session is assigned or unassigned (staffId = 4 means unassigned)
-    const isUnassigned = !session.staffId || session.staffId === 4;
-    
-    return (
-      <motion.div
-        key={session.id}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="cursor-pointer transition-all duration-300 hover:bg-gray-50 border-b border-gray-100 hover:border-gray-200"
-        onClick={() => handleSessionClick(session)}
-      >
-        <div className="flex items-center gap-4 p-4">
-          <div className="relative">
-            <Avatar 
-              src={isUnassigned ? 'https://i.pinimg.com/736x/2f/82/48/2f824875daa60e09c6cbd2edbca0a377.jpg' : (session.staffAvatar || 'https://i.pinimg.com/736x/2f/82/48/2f824875daa60e09c6cbd2edbca0a377.jpg')} 
-              size={48} 
-              className={`ring-3 shadow-md ${
-                isUnassigned ? 'ring-orange-100' : 'ring-gray-100'
-              }`}
-            />
-            {session.isOnline && !isUnassigned && (
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
-            )}
-            {isUnassigned && (
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-orange-400 rounded-full border-2 border-white" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex justify-between items-start mb-1">
-              <div className="font-semibold text-gray-800 text-base">
-                <StaffNameDisplay 
-                  staffId={session.staffId}
-                  fallbackName={isUnassigned ? 'Unassigned Advisor' : (session.staffName || session.title)}
-                />
-              </div>
-              {session.unreadCount && session.unreadCount > 0 && (
-                <Badge 
-                  count={session.unreadCount} 
-                  size="small"
-                  className={isUnassigned ? 'bg-orange-500' : 'bg-red-500'}
-                />
-              )}
-            </div>
-         
-            {isUnassigned && (
-              <div className="text-xs text-orange-600 mt-1">
-                Waiting for assignment
-              </div>
-            )}
-          </div>
-        </div>
-      </motion.div>
-    );
-  };
-
-  // Render connection status
-  const renderConnectionStatus = () => {
-    const getStatusColor = () => {
-      switch (connectionState) {
-        case 'Connected':
-          return 'text-green-500';
-        case 'Connecting':
-        case 'Reconnecting':
-          return 'text-yellow-500';
-        case 'Disconnected':
-          return 'text-red-500';
-        default:
-          return 'text-gray-500';
-      }
-    };
-
-    return (
-      <div className={`text-xs ${getStatusColor()} flex items-center gap-1`}>
-        <div className={`w-2 h-2 rounded-full ${
-          connectionState === 'Connected' ? 'bg-green-500' :
-          connectionState === 'Connecting' || connectionState === 'Reconnecting' ? 'bg-yellow-500' :
-          'bg-red-500'
-        }`} />
-        {connectionState}
-      </div>
-    );
-  };
-
   return (
-    <div className="flex flex-col h-[600px] bg-white">
-      {/* Header with New Chat Button */}
-      <div className="border-b border-gray-200 p-4">
-        <div className="flex justify-between items-center mb-3">
-          <div>
-            <h3 className="text-lg font-bold text-gray-800 mb-1">Advisor Chats</h3>
-          </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            size="small"
-            onClick={() => setShowNewChatModal(true)}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            New Chat
-          </Button>
-        </div>
-      </div>
-
-      {/* Sessions List */}
+    <div className="flex flex-col h-[600px] bg-white relative">
       <div className="flex-1 overflow-y-auto bg-white">
         {loading && sessions.length === 0 ? (
           <div className="flex items-center justify-center h-32">
@@ -275,7 +326,15 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
         ) : (
           <>
             <div className="space-y-0" key={`sessions-${sessions.length}-${forceUpdate}`}>
-              {sessions.map(renderChatItem)}
+              {sessions.map((session) => (
+                <AdvisorChatItem
+                  key={session.id}
+                  session={session}
+                  onSessionClick={handleSessionClick}
+                  staffIdCounts={staffIdCountRef.current}
+                  sessionPositions={sessionPositionRef.current}
+                />
+              ))}
             </div>
             
             {/* Load More Sessions Button */}
@@ -295,7 +354,7 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
         )}
       </div>
 
-      {/* New Chat Modal */}
+     
       <Modal
         title="Start New Chat"
         open={showNewChatModal}
@@ -322,6 +381,20 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
           />
         </div>
       </Modal>
+
+      {/* Floating New Chat Action (fixed within tab) */}
+      <div className="absolute top-4 right-4 z-10">
+        <Tooltip title="New Chat" placement="left">
+          <Button
+            type="primary"
+            shape="circle"
+            icon={<PlusOutlined />}
+            size="large"
+            onClick={() => setShowNewChatModal(true)}
+            className="!flex !items-center !justify-center w-12 h-12 bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+          />
+        </Tooltip>
+      </div>
 
       {/* Error Display */}
       {error && (

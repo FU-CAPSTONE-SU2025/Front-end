@@ -246,8 +246,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-96 rounded-xl shadow-xl border z-50 overflow-hidden bg-white/90 border-white backdrop-blur-md"
-            style={{ WebkitBackdropFilter: 'blur(12px) saturate(180%)', backdropFilter: 'blur(12px) saturate(180%)' }}
+            className="absolute right-0 mt-2 w-96 rounded-xl shadow-xl border z-50 overflow-hidden bg-white border-gray-100"
           >
             <div className="p-4 border-b border-gray-100 font-bold text-gray-800 flex items-center justify-between">
               <div className="flex items-center gap-2">

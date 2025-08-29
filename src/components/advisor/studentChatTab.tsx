@@ -56,15 +56,51 @@ const StudentChatTab: React.FC<StudentChatTabProps> = ({ onChatBoxOpen, drawerOp
     return unique;
   }, [rawAssignedSessions]);
 
+  // Function to generate display names with numbering for duplicate student IDs
+  const generateDisplayNames = useCallback((sessions: StudentSession[]) => {
+    const studentIdCounts = new Map<number, number>();
+    const displayNames = new Map<number, string>();
+
+    // First pass: count occurrences of each student ID
+    sessions.forEach(session => {
+      const studentId = session.studentId;
+      studentIdCounts.set(studentId, (studentIdCounts.get(studentId) || 0) + 1);
+    });
+
+    // Second pass: generate display names with numbering
+    sessions.forEach(session => {
+      const studentId = session.studentId;
+      const count = studentIdCounts.get(studentId) || 1;
+      
+      if (count === 1) {
+        // Single occurrence, no numbering needed
+        displayNames.set(session.id, session.studentName || `Student ${studentId}`);
+      } else {
+        // Multiple occurrences, need to find the position
+        const sameStudentSessions = sessions.filter(s => s.studentId === studentId);
+        const position = sameStudentSessions.findIndex(s => s.id === session.id) + 1;
+        displayNames.set(session.id, `${session.studentName || `Student ${studentId}`} (${position})`);
+      }
+    });
+
+    return displayNames;
+  }, []);
+
+  // Generate display names for assigned sessions
+  const sessionDisplayNames = useMemo(() => {
+    return generateDisplayNames(assignedSessions);
+  }, [assignedSessions, generateDisplayNames]);
+
   // Handle session selection
   const handleSessionClick = async (session: StudentSession) => {
     if (drawerOpen && onCloseDrawer) {
       onCloseDrawer();
     }
     // Open chat box first (original flow), then join session
+    const displayName = sessionDisplayNames.get(session.id) || `Student ${session.studentId}`;
     const studentData = {
       id: session.id.toString(),
-      name: `Student ${session.studentId}`,
+      name: displayName,
       avatar: session.studentAvatar || 'https://cdn3d.iconscout.com/3d/premium/thumb/graduate-student-avatar-3d-icon-png-download-8179543.png',
       isOnline: session.isOnline || false,
       role: 'Student'
@@ -101,6 +137,7 @@ const StudentChatTab: React.FC<StudentChatTabProps> = ({ onChatBoxOpen, drawerOp
         ) : (
           <div className="space-y-0">
             {assignedSessions.map((session, index) => {
+              const displayName = sessionDisplayNames.get(session.id) || `Student ${session.studentId}`;
               return (
                 <motion.div
                   key={session.id}
@@ -124,7 +161,7 @@ const StudentChatTab: React.FC<StudentChatTabProps> = ({ onChatBoxOpen, drawerOp
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start mb-1">
                         <div className="font-semibold text-gray-800 text-base">
-                          {session.studentName || `Student ${session.studentId}`}
+                          {displayName}
                         </div>
                       </div>
                      
