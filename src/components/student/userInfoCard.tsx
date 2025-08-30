@@ -110,7 +110,7 @@ const UserInfoCard: React.FC<{ user: UserInfo; userInfor: ApiUserInfo | any }> =
         {/* Avatar with subtle ring */}
         <div className="relative mb-6">
           <div className="absolute inset-0 -z-10 translate-y-2 blur-2xl rounded-full bg-gradient-to-br from-blue-500/20 to-sky-400/10" style={{ width: 180, height: 180 }} />
-          <div className="p-1 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500">
+          <div className="p-1 rounded-full !bg-orange-500 hover:!bg-orange-600 !border-orange-500">
             <div className="rounded-full bg-black/30 p-1">
               <Avatar
                 src={avatarUrl}

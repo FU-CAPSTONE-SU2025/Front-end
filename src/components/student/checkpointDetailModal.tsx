@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import { SubjectCheckpointDetail } from '../../interfaces/IStudent';
 import { useCompleteCheckpoint } from '../../hooks/useStudentFeature';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -89,15 +90,16 @@ const CheckpointDetailModal: React.FC<CheckpointDetailModalProps> = ({
   const allLinkSlots = getAllLinkSlots();
 
   const completeCheckpointMutation = useCompleteCheckpoint();
+  const { showSuccess, showError } = useMessagePopupContext();
 
   const handleCompleteCheckpoint = async () => {
     if (!checkpointDetail?.id) return;
     try {
       await completeCheckpointMutation.mutateAsync(checkpointDetail.id);
-      message.success('Checkpoint marked as complete!');
+      showSuccess('Checkpoint marked as complete!');
       onClose();
     } catch (error) {
-      message.error('Failed to mark checkpoint as complete.');
+      showError('Failed to mark checkpoint as complete.');
       console.error(error);
     }
   };

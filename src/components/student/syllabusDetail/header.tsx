@@ -13,7 +13,7 @@ interface HeaderProps {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
 const Header: React.FC<HeaderProps> = ({ syllabus, navigate }) => {
@@ -27,22 +27,31 @@ const Header: React.FC<HeaderProps> = ({ syllabus, navigate }) => {
           type="text"
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate(-1)}
-          className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 mt-1"
+          className="!text-white !border-white/30 !bg-white/10 hover:!bg-white/20 !h-10 !px-4 !flex !items-center !gap-2 !backdrop-blur-md"
           size="large"
         />
         <div className="flex-1">
           <div className="flex items-baseline gap-3 mb-2">
-            <Title level={1} className="text-gray-900 mb-0 !text-4xl font-bold">
+            <Title level={1} className="!text-white mb-0 !text-4xl font-bold">
               {subj.subjectCode}
             </Title>
-            <Tag color="blue" className="text-sm font-medium">
+            <Tag 
+              color="processing" 
+              className="!text-sm !font-semibold !uppercase"
+              style={{
+                backgroundColor: '#1890ff',
+                color: 'white',
+                border: 'none',
+                padding: '4px 12px'
+              }}
+            >
               {subj.credits} Credits
             </Tag>
           </div>
-          <Title level={3} className="text-gray-600 mb-0 !text-xl font-normal">
+          <Title level={3} className="!text-white mb-0 !text-xl font-normal">
             {subj.subjectName}
           </Title>
-          <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+          <div className="flex items-center gap-4 mt-3 text-sm !text-white">
             <span>Version: {syllabus.subjectVersion?.versionName || 'N/A'}</span>
             <span>•</span>
             <span>Status: {subj.approvalStatus === 1 ? 'Approved' : 'Pending'}</span>
@@ -54,38 +63,38 @@ const Header: React.FC<HeaderProps> = ({ syllabus, navigate }) => {
       
       <Row gutter={[16, 16]} className="mt-4">
         <Col xs={12} sm={6}>
-          <Card bordered={false} className="text-center shadow-sm border border-gray-100 h-full">
+          <Card bordered={false} className="text-center !text-white !border-white/30 !bg-white/10  h-full">
             <Statistic
-              title={<span className="text-gray-500 text-xs font-medium">Assessments</span>}
+              title={<span className="!text-white text-xs font-medium">Assessments</span>}
               value={syllabus?.assessments?.length || 0}
-              valueStyle={{ color: '#1f2937', fontSize: '1.25rem', fontWeight: 'bold' }}
+              valueStyle={{ color: '#FFFF  ', fontSize: '1.25rem', fontWeight: 'bold' }}
             />
           </Card>
         </Col>
         <Col xs={12} sm={6}>
-          <Card bordered={false} className="text-center shadow-sm border border-gray-100 h-full">
+          <Card bordered={false} className="text-center !text-white !border-white/30 !bg-white/10  h-full">
             <Statistic
-              title={<span className="text-gray-500 text-xs font-medium">Sessions</span>}
+              title={<span className="!text-white text-xs font-medium">Sessions</span>}
               value={syllabus?.sessions?.length || 0}
-              valueStyle={{ color: '#1f2937', fontSize: '1.25rem', fontWeight: 'bold' }}
+              valueStyle={{ color: '#FFF', fontSize: '1.25rem', fontWeight: 'bold' }}
             />
           </Card>
         </Col>
         <Col xs={12} sm={6}>
-          <Card bordered={false} className="text-center shadow-sm border border-gray-100 h-full">
+          <Card bordered={false} className="text-center !text-white !border-white/30 !bg-white/10  h-full">
             <Statistic
-              title={<span className="text-gray-500 text-xs font-medium">Materials</span>}
+              title={<span className="!text-white text-xs font-medium">Materials</span>}
               value={syllabus?.learningMaterials?.length || 0}
-              valueStyle={{ color: '#1f2937', fontSize: '1.25rem', fontWeight: 'bold' }}
+              valueStyle={{ color: '#ffff', fontSize: '1.25rem', fontWeight: 'bold' }}
             />
           </Card>
         </Col>
         <Col xs={12} sm={6}>
-          <Card bordered={false} className="text-center shadow-sm border border-gray-100 h-full">
+          <Card bordered={false} className="text-center !text-white !border-white/30 !bg-white/10  h-full">
             <Statistic
-              title={<span className="text-gray-500 text-xs font-medium">Outcomes</span>}
+              title={<span className="!text-white text-xs font-medium">Outcomes</span>}
               value={syllabus?.learningOutcomes?.length || 0}
-              valueStyle={{ color: '#1f2937', fontSize: '1.25rem', fontWeight: 'bold' }}
+              valueStyle={{ color: '#ffff', fontSize: '1.25rem', fontWeight: 'bold' }}
             />
           </Card>
         </Col>

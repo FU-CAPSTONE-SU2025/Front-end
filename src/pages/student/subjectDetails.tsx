@@ -8,6 +8,8 @@ import TodoList from '../../components/student/todoList';
 import AIGenerateTodoTab from '../../components/student/aiGenerateTodoTab';
 import { useJoinedSubjectById, useSubjectCheckpoints, useSubjectMarks } from '../../hooks/useStudentFeature';
 import '../../css/student/subjectDetails.module.css';
+import CommitChart from '../../components/student/commitChart';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 interface Grade {
   name: string;
@@ -36,6 +38,10 @@ const SubjectDetails = () => {
     const [grades, setGrades] = useState<Grade[]>([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [activeTab, setActiveTab] = useState('todo');
+    const [isGitHubConnected, setIsGitHubConnected] = useState(false);
+    
+    // Message popup context
+    const { showSuccess, showError, showWarning, showInfo } = useMessagePopupContext();
 
     // Parse ID once and memoize it
     const parsedId = useMemo(() => id ? parseInt(id) : null, [id]);
@@ -118,13 +124,11 @@ const SubjectDetails = () => {
         setGrades(updatedGrades);
     };
 
-    const currentScore = calculateCurrentScore(grades);
-    const attendancePercentage = 0; // No attendance data from marks API
+
 
     // Calculate progress based on completed grades weight
     const getProgressPercentage = () => {
         if (subject.isCompleted) return 100;
-        if (subject.isPassed) return 80;
         
         // Calculate progress based on completed grades weight
         const completedGrades = grades.filter(grade => grade.score !== null);
@@ -133,17 +137,9 @@ const SubjectDetails = () => {
         
         if (totalWeight === 0) return 0;
         
-        // Normalize to 100% if total weight is not 100
+        // Calculate actual progress percentage based on completed weight
         const progressPercentage = (completedWeight / totalWeight) * 100;
-        
-        // If total weight is 100, use the actual percentage
-        // If total weight is less than 100, scale it proportionally
-        if (totalWeight === 100) {
-            return Math.round(progressPercentage);
-        } else {
-            // Scale the progress to reflect the actual completion relative to 100%
-            return Math.round((completedWeight / 100) * 100);
-        }
+        return Math.round(progressPercentage);
     };
 
     // Tab items configuration
@@ -321,21 +317,86 @@ const SubjectDetails = () => {
                 
                 {/* Subject Status and Info */}
                 <div className="mt-4 flex flex-wrap gap-4">
-                    <Tag color={subject.isCompleted ? "green" : subject.isPassed ? "blue" : "orange"} className="text-base">
+                    <Tag 
+                        color={subject.isCompleted ? "success" : subject.isPassed ? "processing" : "warning"} 
+                        className="text-base font-semibold"
+                        style={{
+                            backgroundColor: subject.isCompleted ? '#52c41a' : subject.isPassed ? '#1890ff' : '#faad14',
+                            color: 'white',
+                            border: 'none'
+                        }}
+                    >
                         {subject.isCompleted ? "Completed" : subject.isPassed ? "Passed" : "In Progress"}
                     </Tag>
-                    <Tag color="cyan" className="text-base">{subject.credits} Credits</Tag>
-                    <Tag color="purple" className="text-base">Version {subject.subjectVersionCode}</Tag>
+                    <Tag 
+                        color="cyan" 
+                        className="text-base font-semibold"
+                        style={{
+                            backgroundColor: '#13c2c2',
+                            color: 'white',
+                            border: 'none'
+                        }}
+                    >
+                        {subject.credits} Credits
+                    </Tag>
+                    <Tag 
+                        color="purple" 
+                        className="text-base font-semibold"
+                        style={{
+                            backgroundColor: '#722ed1',
+                            color: 'white',
+                            border: 'none'
+                        }}
+                    >
+                        Version {subject.subjectVersionCode}
+                    </Tag>
                     {subject.semesterName && (
-                        <Tag color="geekblue" className="text-base">{subject.semesterName}</Tag>
+                        <Tag 
+                            color="geekblue" 
+                            className="text-base font-semibold"
+                            style={{
+                                backgroundColor: '#2f54eb',
+                                color: 'white',
+                                border: 'none'
+                            }}
+                        >
+                            {subject.semesterName}
+                        </Tag>
                     )}
                     {subject.githubRepositoryURL && (
-                        <Tag color="green" className="text-base">
-                            <a href={subject.githubRepositoryURL} target="_blank" rel="noopener noreferrer" className="text-white">
+                        <Tag 
+                            color="success" 
+                            className="text-base font-semibold"
+                            style={{
+                                backgroundColor: '#52c41a',
+                                color: 'white',
+                                border: 'none'
+                            }}
+                        >
+                            <a href={subject.githubRepositoryURL} target="_blank" rel="noopener noreferrer" className="text-white hover:text-gray-100">
                                 GitHub Repository
                             </a>
                         </Tag>
                     )}
+                </div>
+            </motion.div>
+
+            {/* GitHub Activity Overview */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="mb-8"
+            >
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
+                    <div className="text-center mb-6">
+                        <h2 className="text-2xl !text-white font-semibold mb-2">GitHub Activity Overview</h2>
+                        <p className="text-gray-300 text-sm">Track your coding progress and commit history for this subject</p>
+                    </div>
+                    <CommitChart 
+                        isConnected={isGitHubConnected}
+                        onConnect={() => setIsGitHubConnected(true)}
+                    />
                 </div>
             </motion.div>
 

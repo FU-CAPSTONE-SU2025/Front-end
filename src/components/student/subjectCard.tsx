@@ -18,15 +18,12 @@ const cardVariants = {
   hover: { scale: 1.02, boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)', transition: { duration: 0.3 } },
 };
 
-function getProgressColor(progress: number, isPassed: boolean, isCompleted: boolean) {
-  if (isCompleted) return 'bg-green-500 text-white border-green-500';
-  if (isPassed) return 'bg-blue-500 text-white border-blue-500';
-  if (progress >= 50) return 'bg-yellow-400 text-black border-yellow-400';
-  return 'bg-red-500 text-white border-red-500';
+function getProgressColor(isPassed: boolean) {
+  if (isPassed) return 'bg-green-500 text-white border-green-500';
+  return 'bg-gray-500 text-white border-gray-500';
 }
 
-function getStatusText(isPassed: boolean, isCompleted: boolean) {
-  if (isCompleted) return 'Completed';
+function getStatusText(isPassed: boolean) {
   if (isPassed) return 'Passed';
   return 'In Progress';
 }
@@ -43,16 +40,18 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ id, code, name, progress, cre
     >
       {/* Header with code and status badge */}
       <div className="flex items-center justify-between">
-        <span className="text-white font-bold text-xl lg:text-2xl tracking-wide">
+        <span className="text-orange-300 font-bold text-xl lg:text-2xl tracking-wide">
           {code}
         </span>
         <div className="flex flex-col items-end gap-1">
-          <div
-            className={`rounded-full px-3 py-1 text-xs font-semibold border ${getProgressColor(progress, isPassed, isCompleted)}`}
-            style={{backdropFilter: 'blur(2px)'}}
-          >
-            {getStatusText(isPassed, isCompleted)}
-          </div>
+          {isPassed && (
+            <div
+              className={`rounded-full px-3 py-1 text-xs font-semibold border ${getProgressColor(isPassed)}`}
+              style={{backdropFilter: 'blur(2px)'}}
+            >
+              {getStatusText(isPassed)}
+            </div>
+          )}
           <span className="text-white/70 text-xs">
             {credits} credits
           </span>
@@ -62,18 +61,6 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ id, code, name, progress, cre
       {/* Subject name - takes up available space */}
       <div className="text-white/90 text-base lg:text-lg font-medium leading-relaxed flex-1">
         {name}
-      </div>
-      
-      {/* Progress Bar - stays at bottom */}
-      <div className="mt-auto">
-        <div className="w-full bg-white/10 rounded-full h-2.5">
-          <motion.div
-            className={`h-2.5 rounded-full ${isCompleted ? 'bg-green-500' : isPassed ? 'bg-blue-500' : progress >= 50 ? 'bg-yellow-400' : 'bg-red-500'}`}
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 1, delay: 0.5 }}
-          />
-        </div>
       </div>
     </motion.div>
   </Link>

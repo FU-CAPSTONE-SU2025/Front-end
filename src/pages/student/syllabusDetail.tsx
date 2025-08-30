@@ -142,7 +142,7 @@ const SyllabusDetail: React.FC = () => {
     { 
       key: '1', 
       label: (
-        <span className="flex items-center gap-2">
+        <span className="flex !text-white items-center gap-2">
           <FileTextOutlined />
           Assessments
         </span>
@@ -185,17 +185,16 @@ const SyllabusDetail: React.FC = () => {
     {
       key: 'content',
       label: (
-        <span className="flex items-center gap-2">
-          <FileTextOutlined />
+        <span className="flex text-lg items-center gap-2">
           Syllabus Content
         </span>
       ),
       children: (
-        <div className="space-y-6">
+        <div className="!space-y-5">
           <motion.div variants={itemVariants as any}>
             <Card
               variant='borderless'
-              className="bg-white shadow-sm border border-gray-100"
+              className="!text-white !border-white/30 !bg-white/10  shadow-lg"
               styles={{ body: { padding: 24 } }}
             >
               <Tabs
@@ -210,14 +209,14 @@ const SyllabusDetail: React.FC = () => {
           <motion.div variants={itemVariants as any}>
             <Card
               variant='borderless'
-              className="bg-white shadow-sm border border-gray-100"
+              className="!border-white/30 !bg-white/10 "
               title={(
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2"><BulbOutlined /> Study Tips</span>
+                  <span className="flex items-center gap-2 !text-white"><BulbOutlined /> Study Tips</span>
                   <button
                     onClick={handleGenerateTips}
                     disabled={isTipsLoading}
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-600 bg-white shadow-sm"
+                    className="inline-flex items-center gap-2 !px-3 !py-1 !bg-orange-500 hover:!bg-orange-600 !border-orange-500 !rounded-full !shadow-lg hover:!shadow-xl !text-white   transition-all duration-200"
                   >
                     <BulbOutlined />
                     <span>{isTipsLoading ? 'Generating...' : 'Generate Tips'}</span>
@@ -228,7 +227,7 @@ const SyllabusDetail: React.FC = () => {
               {isTipsLoading ? (
                 <div className="flex items-center justify-center py-10"><Spin /></div>
               ) : tipsContent ? (
-                <div className="prose max-w-none">
+                <div className="prose max-w-none !text-white">
                   {typeof tipsContent === 'string' ? (
                     <MarkdownRenderer content={tipsContent} />
                   ) : (
@@ -236,7 +235,7 @@ const SyllabusDetail: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="text-gray-500">Click Generate Tips to get AI-powered study advice.</div>
+                <div className="!text-gray-300">Click Generate Tips to get AI-powered study advice.</div>
               )}
             </Card>
           </motion.div>
@@ -246,8 +245,7 @@ const SyllabusDetail: React.FC = () => {
     {
       key: 'comments',
       label: (
-        <span className="flex items-center gap-2">
-          <MessageOutlined />
+        <span className="flex text-lg items-center gap-2">
           Student Comments
         </span>
       ),
@@ -255,7 +253,7 @@ const SyllabusDetail: React.FC = () => {
         <motion.div variants={itemVariants as any}>
           <Card
             variant='borderless'
-            className="bg-white shadow-sm border border-gray-100"
+            className="!border-white/30 !bg-white/10  shadow-lg"
             styles={{ body: { padding: 24 } }}
           >
             {/* Comment Input Section */}
@@ -272,11 +270,11 @@ const SyllabusDetail: React.FC = () => {
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder="Share your thoughts about this syllabus..."
                     rows={3}
-                    className="border-gray-200 rounded-lg resize-none"
+                    className="border-white/30 rounded-lg resize-none !bg-white/10 !text-white placeholder:!text-white/50"
                     maxLength={500}
                   />
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs !text-white/60">
                       {newComment.length}/500 characters
                     </span>
                     <Button
@@ -294,7 +292,7 @@ const SyllabusDetail: React.FC = () => {
               </div>
             </div>
 
-            <Divider />
+            <Divider className="!border-white/20" />
 
             {/* Comments List */}
             <div className="space-y-4">
@@ -302,7 +300,7 @@ const SyllabusDetail: React.FC = () => {
                 <div className="flex items-center justify-center py-10">
                   <div className="flex flex-col items-center gap-3">
                     <Spin size="large" />
-                    <span className="text-gray-500 text-sm">Loading comments...</span>
+                    <span className="!text-white/60 text-sm">Loading comments...</span>
                   </div>
                 </div>
               ) : commentsData?.items && commentsData.items.length > 0 ? (
@@ -317,7 +315,7 @@ const SyllabusDetail: React.FC = () => {
                         delay: index * 0.1,
                         ease: "easeOut"
                       }}
-                      className="group hover:bg-gray-50 rounded-lg p-3 transition-all duration-200"
+                      className="group hover:bg-white/10 rounded-lg p-3 transition-all duration-200"
                     >
                       <div className="flex gap-3">
                         <Avatar 
@@ -327,16 +325,16 @@ const SyllabusDetail: React.FC = () => {
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="font-semibold text-gray-900 truncate">{comment.fullName}</span>
-                            <span className="text-xs text-gray-500 flex-shrink-0">{formatDate(comment.createdAt)}</span>
+                            <span className="font-semibold !text-white truncate">{comment.fullName}</span>
+                            <span className="text-xs !text-white/60 flex-shrink-0">{formatDate(comment.createdAt)}</span>
                           </div>
-                          <p className="text-gray-700 mb-3 leading-relaxed break-words">{comment.content}</p>
+                          <p className="!text-white/80 mb-3 leading-relaxed break-words">{comment.content}</p>
                           
                           {/* Like/Dislike Actions */}
                           <div className="flex items-center gap-3">
                             <button
                               onClick={() => handleLikeComment(comment.id)}
-                              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-all duration-200 bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:scale-105 active:scale-95"
+                              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-all duration-200 bg-white/10 !text-white hover:bg-blue-500/20 hover:!text-blue-300 hover:scale-105 active:scale-95 border border-white/20"
                             >
                               <LikeOutlined className="text-base" />
                               <span className="font-medium">{comment.likeCount}</span>
@@ -344,7 +342,7 @@ const SyllabusDetail: React.FC = () => {
                             
                             <button
                               onClick={() => handleDislikeComment(comment.id)}
-                              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-all duration-200 bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600 hover:scale-105 active:scale-95"
+                              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-all duration-200 bg-white/10 !text-white hover:bg-red-500/20 hover:!text-red-300 hover:scale-105 active:scale-95 border border-white/20"
                             >
                               <DislikeOutlined className="text-base" />
                               <span className="font-medium">{comment.unlikeCount}</span>
@@ -368,7 +366,7 @@ const SyllabusDetail: React.FC = () => {
                         loading={commentsLoading}
                         type="text"
                         size="large"
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-6 py-2 h-auto text-base font-medium transition-all duration-200"
+                        className="!text-blue-300 hover:!text-blue-200 hover:bg-blue-500/20 px-6 py-2 h-auto text-base font-medium transition-all duration-200"
                       >
                         {commentsLoading ? (
                           <span className="flex items-center gap-2">
@@ -390,15 +388,15 @@ const SyllabusDetail: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="text-center py-16 text-gray-500"
+                  className="text-center py-16 !text-white/60"
                 >
                   <div className="flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                      <MessageOutlined className="text-3xl text-gray-400" />
+                    <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
+                      <MessageOutlined className="text-3xl !text-white/40" />
                     </div>
                     <div>
-                      <p className="text-lg font-medium text-gray-600 mb-1">No comments yet</p>
-                      <p className="text-gray-500">Be the first to share your thoughts about this syllabus!</p>
+                      <p className="text-lg font-medium !text-white/80 mb-1">No comments yet</p>
+                      <p className="!text-white/60">Be the first to share your thoughts about this syllabus!</p>
                     </div>
                   </div>
                 </motion.div>
@@ -412,10 +410,10 @@ const SyllabusDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-white">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
           <Spin size="large" />
-          <div className="text-gray-600 mt-4 block">Loading syllabus details...</div>
+          <div className="!text-white/80 mt-4 block">Loading syllabus details...</div>
         </div>
       </div>
     );
@@ -423,10 +421,10 @@ const SyllabusDetail: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-white">
-        <div className="text-center text-red-500">
-          <div className="text-xl font-semibold mb-2">Error</div>
-          <div className="text-gray-600">{error}</div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="text-xl font-semibold mb-2 !text-red-400">Error</div>
+          <div className="!text-white/60">{error}</div>
         </div>
       </div>
     );
@@ -437,9 +435,9 @@ const SyllabusDetail: React.FC = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="min-h-screen bg-gray-50"
+      className="!min-h-screen "
     >
-      <div className="container mx-auto px-4 py-8 mt-16">
+      <div className="!container !mx-auto !px-4 !py-8 !mt-16">
         <Header syllabus={syllabus} navigate={navigate} />
         
         <Row gutter={[24, 24]}>
@@ -450,20 +448,15 @@ const SyllabusDetail: React.FC = () => {
           <Col xs={24} lg={16}>
             <motion.div variants={itemVariants as any}>
               <Card
-                variant='borderless'
-                className="bg-white shadow-lg border-0 rounded-xl"
+          
+                className="!bg-white/10 !backdrop-blur-md !border !border-white/20 !shadow-2xl"
                 styles={{ body: { padding: 0 } }}
               >
                 <Tabs
                   defaultActiveKey="content"
                   items={contentTabItems}
                   className="minimal-tabs"
-                  tabBarStyle={{ 
-                    margin: 0, 
-                    padding: '0 24px', 
-                    background: '#fafafa',
-                    borderBottom: '1px solid #f0f0f0'
-                  }}
+
                 />
               </Card>
             </motion.div>
@@ -473,46 +466,49 @@ const SyllabusDetail: React.FC = () => {
       
       <style>{`
         .minimal-table .ant-table-thead > tr > th {
-          background: #f9fafb;
-          color: #374151;
-          font-weight: 600;
-          border-bottom: 1px solid #e5e7eb;
-          font-size: 12px;
+         
+          color: white !important;
+          font-weight: 600 !important;
+      
+          font-size: 12px !important;
         }
         .minimal-table .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #f3f4f6;
-          font-size: 12px;
+        
+          font-size: 12px !important;
+          color: white !important;
         }
         .minimal-table .ant-table-tbody > tr:hover > td {
-          background-color: #f9fafb;
+          background-color: rgba(255,255,255,0.1) !important;
         }
         .minimal-tabs .ant-tabs-tab {
-          font-weight: 500;
-          padding: 12px 20px;
-          font-size: 14px;
-          margin: 0 4px 0 0;
-          border-radius: 8px 8px 0 0;
-          transition: all 0.2s ease;
+          font-weight: 500 !important;
+          padding: 12px 20px !important;
+          font-size: 14px !important;
+          margin: 0 4px 0 0 !important;
+         
+          transition: all 0.2s ease !important;
+     
         }
-        .minimal-tabs .ant-tabs-tab:hover {
-          background: #f0f0f0;
-        }
-        .minimal-tabs .ant-tabs-tab-active {
-          background: #ffffff;
-          border-bottom: 2px solid #1890ff;
-        }
-        .minimal-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: #1890ff !important;
-          font-weight: 600;
-        }
+     
+     
+    
         .minimal-tabs .ant-tabs-content-holder {
-          padding: 24px;
+          padding: 24px !important;
         }
         .minimal-tabs .ant-tabs-nav::before {
-          border-bottom: none;
+          border-bottom: none !important;
         }
         .minimal-timeline .ant-timeline-item-content {
-          margin-left: 20px;
+          margin-left: 20px !important;
+        }
+        .minimal-tabs .ant-tabs-tab-btn {
+          color: rgba(255,255,255,0.8) !important;
+        }
+        .minimal-tabs .ant-tabs-tab-btn:hover {
+          color: white !important;
+        }
+        .minimal-tabs .ant-tabs-ink-bar {
+          background:rgb(254, 143, 25) !important;
         }
       `}</style>
     </motion.div>
