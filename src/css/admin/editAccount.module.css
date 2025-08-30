@@ -84,6 +84,7 @@
     0 8px 32px rgba(0, 0, 0, 0.2),
     0 0 0 1px rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
+  border-radius: 50%;
 }
 
 .avatar:hover {
@@ -91,6 +92,17 @@
   box-shadow: 
     0 12px 40px rgba(0, 0, 0, 0.25),
     0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+/* Ensure avatar content is circular */
+.avatar :global(img),
+.avatar :global(.ant-avatar) {
+  border-radius: 50% !important;
+  object-fit: cover;
+}
+
+.avatar :global(.ant-avatar) {
+  border-radius: 50% !important;
 }
 
 .name {

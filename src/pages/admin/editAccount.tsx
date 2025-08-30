@@ -79,7 +79,7 @@ const EditAccount: React.FC = () => {
   const isStaff = role === 'staff' || role === 'manager' || role === 'advisor';
 
   // Use the hook to get programs
-  const { data: programsData, isLoading: programsLoading } = usePagedProgramList(programPage, 10, '');
+  const { data: programsData } = usePagedProgramList(programPage, 10, '');
   
   // Update programs when data is loaded
   useEffect(() => {
@@ -635,66 +635,67 @@ const EditAccount: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className={styles.fieldRow}>
-                    <div className={styles.fieldColumn}>
-                                             <Form.Item 
-                         label="Program" 
-                         name="programId" 
-                         rules={[{ required: true, message: 'Please select program' }]}
-                       >
-                         <Select
-                           placeholder="Select program"
-                           onSearch={handleProgramSearch}
-                           onPopupScroll={handleProgramScroll}
-                           onChange={handleProgramChange}
-                           onClear={() => {
-                             setPrograms([]);
-                             setProgramPage(1);
-                             setHasMorePrograms(true);
-                             setSelectedProgramId(null);
-                             setCurriculums([]);
-                             setCurriculumPage(1);
-                             setHasMoreCurriculums(true);
-                             form.setFieldValue('curriculumCode', '');
-                           }}
-                           showSearch
-                           optionFilterProp="children"
-                           filterOption={(input, option) =>
-                             String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                           }
-                           notFoundContent={'No programs found'}
-                           disabled={!!id}
-                         >
-                           {programs.map(program => (
-                             <Option key={program.id} value={program.id} label={program.programName}>
-                               {program.programName}
-                             </Option>
-                           ))}
-                         </Select>
-                       </Form.Item>
-                    </div>
-                    <div className={styles.fieldColumn}>
-                      <Form.Item 
-                        label="Curriculum Code" 
-                        name="curriculumCode" 
-                        rules={[{ required: true, message: 'Please select curriculum' }]}
-                      >
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <Input placeholder="Select a curriculum" readOnly value={form.getFieldValue('curriculumCode')} />
-                          <motion.button
-                            className={styles.saveButton}
-                            variants={buttonVariants}
-                            whileHover="hover"
-                            type="button"
-                            onClick={openCurriculumModal}
-                            disabled={!selectedProgramId || loading || disableLoading}
+                  {!id && (
+                    <div className={styles.fieldRow}>
+                      <div className={styles.fieldColumn}>
+                        <Form.Item 
+                          label="Program" 
+                          name="programId" 
+                          rules={[{ required: true, message: 'Please select program' }]}
+                        >
+                          <Select
+                            placeholder="Select program"
+                            onSearch={handleProgramSearch}
+                            onPopupScroll={handleProgramScroll}
+                            onChange={handleProgramChange}
+                            onClear={() => {
+                              setPrograms([]);
+                              setProgramPage(1);
+                              setHasMorePrograms(true);
+                              setSelectedProgramId(null);
+                              setCurriculums([]);
+                              setCurriculumPage(1);
+                              setHasMoreCurriculums(true);
+                              form.setFieldValue('curriculumCode', '');
+                            }}
+                            showSearch
+                            optionFilterProp="children"
+                            filterOption={(input, option) =>
+                              String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                            }
+                            notFoundContent={'No programs found'}
                           >
-                            <div className={styles.buttonContent}>Choose</div>
-                          </motion.button>
-                        </div>
-                      </Form.Item>
+                            {programs.map(program => (
+                              <Option key={program.id} value={program.id} label={program.programName}>
+                                {program.programName}
+                              </Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                      </div>
+                      <div className={styles.fieldColumn}>
+                        <Form.Item 
+                          label="Curriculum Code" 
+                          name="curriculumCode" 
+                          rules={[{ required: true, message: 'Please select curriculum' }]}
+                        >
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <Input placeholder="Select a curriculum" readOnly value={form.getFieldValue('curriculumCode')} />
+                            <motion.button
+                              className={styles.saveButton}
+                              variants={buttonVariants}
+                              whileHover="hover"
+                              type="button"
+                              onClick={openCurriculumModal}
+                              disabled={!selectedProgramId || loading || disableLoading}
+                            >
+                              <div className={styles.buttonContent}>Choose</div>
+                            </motion.button>
+                          </div>
+                        </Form.Item>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </>
               )}
 
