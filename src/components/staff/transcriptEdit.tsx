@@ -442,6 +442,7 @@ export default function TranscriptEdit({ joinedSubjectId, onClose, onDataUpdate 
           className={styles.assessmentsTable}
           bordered
         />
+        
         {/* Final Grade Calculation */}
         <div className={styles.finalGradeSection}>
           <Row justify="space-between" align="middle">

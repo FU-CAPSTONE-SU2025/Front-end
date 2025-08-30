@@ -123,11 +123,11 @@ export const extractValidationErrors = (error: any): Record<string, string[]> =>
 };
 
 
-const MAX_REFRESH_RETRIES = 5;
+const MAX_REFRESH_RETRIES = 3;
 var current_retry = 0
 let refreshPromise: Promise<boolean> | null = null;
 
-const tokenRefreshed = async (): Promise<boolean> => {
+const ensureTokenRefreshed = async (): Promise<boolean> => {
     if (!refreshPromise) {
         refreshPromise = RefreshToken()
             .then((refersh) => {
@@ -143,7 +143,7 @@ const tokenRefreshed = async (): Promise<boolean> => {
             });
     }
     return refreshPromise;
-}
+}// Generic Axios request handler with retry logic
 export const makeRequest = async (
     method: Method,
     url: string,
@@ -172,24 +172,23 @@ export const makeRequest = async (
             console.error("Axios error:", error);
             //console.error("Axios error response:", error.response);
             const errorResponse: AxiosErrorResponse | undefined = error.response;
+            
             if (errorResponse && errorResponse.status === 401) {
                 console.error("Unauthorized access - possibly token expired or invalid");
                 if (current_retry < MAX_REFRESH_RETRIES) {
-                    const refreshedToken: boolean = await tokenRefreshed();
+                    const refreshedToken: boolean = await ensureTokenRefreshed();
                     if (refreshedToken) {
                         // Retry the original request with preserved args and merged fresh auth headers
-                        const newHeaders = { ...(header ?? {}), ...(GetHeader() ?? {}) };
-                        return await makeRequest(method, url, data, newHeaders);
+                        const mergedHeaders = { ...(header ?? {}), ...(GetHeader() ?? {}) };
+                        return await makeRequest(method, url, data, mergedHeaders);
                     }
-                    console.log(`Unable to refresh: ${current_retry} times`)
                 }
-                alert("Invalid Request or Token is expired. Please log in again")
-                window.location.href = "/";
                 return {
                     success: false,
                     error: createErrorResponse("Unauthorized", 401)
                 };
             }
+            
             // Try to parse the backend error response
             if (errorResponse) {
                 try {
@@ -217,6 +216,7 @@ export const makeRequest = async (
                     };
                 }
             }
+            
             // No response from server
             return { 
                 success: false, 
