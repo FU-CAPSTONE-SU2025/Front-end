@@ -186,6 +186,8 @@
   border-color: #94a3b8;
 }
 
+
+
 /* Ensure avatar content is circular */
 .avatar :global(img),
 .avatar :global(.ant-avatar) {

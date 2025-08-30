@@ -530,19 +530,19 @@ const EditAccount: React.FC = () => {
       <div className={styles.container}>
         <motion.div className={styles.profileCard} variants={cardVariants} initial="hidden" animate="visible">
           <div className={styles.userInfo}>
-            <div className={styles.avatarSection}>
-              <AvatarUpload
-                userId={parseInt(id || '0')}
-                currentAvatarUrl={currentAvatarUrl}
-                userRole={getUserRole()}
-                size={120}
-                onAvatarUpdate={handleAvatarUpdate}
-                disabled={isLoadingUser}
-                className={styles.avatar}
-              />
-            </div>
+            {id && (
+                <AvatarUpload
+                  userId={parseInt(id)}
+                  currentAvatarUrl={currentAvatarUrl}
+                  userRole={getUserRole()}
+                  size={120}
+                  onAvatarUpdate={handleAvatarUpdate}
+                  disabled={isLoadingUser}
+                  className={styles.avatar}
+                />
+            )}
             <h1 className={styles.name}>
-              {isStudent ? 'Edit Student Account' : 'Edit Staff Account'}
+              {id ? (isStudent ? 'Edit Student Account' : 'Edit Staff Account') : (isStudent ? 'Create Student Account' : 'Create Staff Account')}
             </h1>
           </div>
 
