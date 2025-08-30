@@ -14,11 +14,6 @@ import {
   IViewSubjectAssessment
 } from '../interfaces/ISubjectMarkReport';
 import { useApiErrorHandler } from './useApiErrorHandler';
-
-/**
- * Subject Mark Report API hooks
- * Wraps subject mark report APIs behind React Query mutations so UI components don't call APIs directly.
- */
 export const useSubjectMarkReport = () => {
   const { handleError } = useApiErrorHandler();
   const queryClient = useQueryClient();
@@ -32,6 +27,8 @@ export const useSubjectMarkReport = () => {
       // Invalidate subject mark report queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['subjectMarkReport'] });
       queryClient.invalidateQueries({ queryKey: ['selfSubjectMarkReport'] });
+      // Also invalidate joined subject by ID to refresh isPassed status
+      queryClient.invalidateQueries({ queryKey: ['joinedSubjectById'] });
     },
     onError: (err) => handleError(err, 'Failed to add subject mark report'),
   });
@@ -61,6 +58,8 @@ export const useSubjectMarkReport = () => {
       // Invalidate subject mark report queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['subjectMarkReport'] });
       queryClient.invalidateQueries({ queryKey: ['selfSubjectMarkReport'] });
+      // Also invalidate joined subject by ID to refresh isPassed status
+      queryClient.invalidateQueries({ queryKey: ['joinedSubjectById'] });
     },
     onError: (err) => handleError(err, 'Failed to update subject mark report'),
   });
@@ -74,6 +73,8 @@ export const useSubjectMarkReport = () => {
       // Invalidate subject mark report queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['subjectMarkReport'] });
       queryClient.invalidateQueries({ queryKey: ['selfSubjectMarkReport'] });
+      // Also invalidate joined subject by ID to refresh isPassed status
+      queryClient.invalidateQueries({ queryKey: ['joinedSubjectById'] });
     },
     onError: (err) => handleError(err, 'Failed to delete subject mark report'),
   });
@@ -112,5 +113,8 @@ export const useSubjectMarkReportTemplate = (subjectCode: string, subjectVersion
         return null;
       }
     },
+    enabled: !!subjectCode && !!subjectVersionCode,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
   });
 };

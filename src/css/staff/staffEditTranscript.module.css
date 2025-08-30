@@ -151,6 +151,8 @@
   border-radius: 16px !important;
   box-shadow: 0 8px 32px rgba(30, 64, 175, 0.12) !important;
   backdrop-filter: blur(20px) !important;
+  height: auto;
+  max-height: max-content;
 }
 
 .sectionTitle {
@@ -268,9 +270,14 @@
 }
 
 .subjectsList {
-  max-height: 400px;
+  max-height: max-content;
+  height: auto;
   overflow-y: auto;
   padding-right: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 1rem;
 }
 
 .subjectsList::-webkit-scrollbar {
@@ -295,10 +302,11 @@
   background: rgba(255, 255, 255, 0.90) !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
-  margin-bottom: 0.75rem !important;
-  padding: 0.75rem !important;
+  margin-bottom: 0 !important;
+  padding: 1rem !important;
   transition: all 0.3s ease !important;
   cursor: pointer !important;
+  height: fit-content;
 }
 
 .subjectListItem:hover {
@@ -306,6 +314,8 @@
   box-shadow: 0 4px 12px rgba(255, 145, 77, 0.2) !important;
   transform: translateX(4px) !important;
 }
+
+
 
 .grade {
   color: #16a34a !important;
@@ -356,6 +366,12 @@
   .subjectCard {
     height: auto !important;
     min-height: 180px !important;
+  }
+  
+  .subjectsList {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem;
   }
   
   .allSubjectsHeader {

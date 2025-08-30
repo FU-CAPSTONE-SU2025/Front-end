@@ -23,7 +23,7 @@
 
 .closeButton {
   border-radius: 12px !important;
-  background: #FF914D !important;
+  background: red !important;
   border: none !important;
   color: white !important;
   font-weight: 600 !important;
@@ -35,6 +35,22 @@
 
 .closeButton:hover {
   background: #e8822e !important;
+}
+
+.refreshButton {
+  border-radius: 12px !important;
+  background: #3b82f6 !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 600 !important;
+  height: 48px !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  transition: background 0.3s ease !important;
+}
+
+.refreshButton:hover {
+  background: #2563eb !important;
 }
 
 /* Subject Description Card */
@@ -81,6 +97,11 @@
   border: 1px solid #bbf7d0 !important;
 }
 
+.gradeCardRed {
+  background: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+}
+
 .gradeValue {
   margin: 0 !important;
 }
@@ -95,6 +116,10 @@
 
 .gradeValueGreen {
   color: #16a34a !important;
+}
+
+.gradeValueRed {
+  color: #dc2626 !important;
 }
 
 /* Assessments Table Card */

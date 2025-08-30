@@ -24,10 +24,10 @@ const encryptedStorage = {
     // Encrypt the data before storing
     const stringifiedData = JSON.stringify(value);
     const encryptedData = CryptoJS.AES.encrypt(stringifiedData, ENCRYPTION_KEY).toString();
-    localStorage.setItem(name, encryptedData);
+    sessionStorage.setItem(name, encryptedData);
   },
   removeItem:  (name: string) => {
-    localStorage.removeItem(name);
+    sessionStorage.removeItem(name);
   },
 };
 

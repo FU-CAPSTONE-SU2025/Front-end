@@ -10,6 +10,7 @@ import {
   RegisterOneStudentsToMultipleSubjects,
   RegisterStudentToSubject,
   FetchJoinedSubjectList,
+  FetchJoinedSubjectListById,
   FetchPagedSemesterList,
   FetchPagedSemesterBlockType,
 } from '../api/SchoolAPI/joinedSubjectAPI';
@@ -99,6 +100,12 @@ export const useSchoolApi = () => {
     enabled: !!studentProfileId,
   });
 
+  const useJoinedSubjectById = (joinedSubjectId: number) => useQuery({
+    queryKey: ['joinedSubjectById', joinedSubjectId],
+    queryFn: () => FetchJoinedSubjectListById(joinedSubjectId),
+    enabled: !!joinedSubjectId,
+  });
+
   // Semester queries
   const usePagedSemesterList = (page: number = 1) => useQuery({
     queryKey: ['pagedSemesterList', page],
@@ -149,6 +156,7 @@ export const useSchoolApi = () => {
     useSubjectVersionsToCurriculum,
     useSubjectVersionsToCurriculumByCode,
     useJoinedSubjectList,
+    useJoinedSubjectById,
     usePagedSemesterList,
     usePagedSemesterBlockType,
     

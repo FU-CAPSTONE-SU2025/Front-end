@@ -73,6 +73,19 @@ export const FetchJoinedSubjectList = async (
   }
 };
 
+export const FetchJoinedSubjectListById = async (joinedSubjectId: number): Promise<JoinedSubject> => {
+  const props = {
+    data: null,
+    url: joinedSubjectURL + `/${joinedSubjectId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+  }
+}
 export const DeleteJoinedSubject = async (joinedSubjectId: number): Promise<any> => {
   const props = {
     data: null,

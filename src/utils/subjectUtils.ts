@@ -1,4 +1,5 @@
 import { JoinedSubject, SemesterSubjects } from '../interfaces/IStudent';
+import { JoinedSubjectAssessment } from '../interfaces/ISubjectMarkReport';
 
 /**
  * Groups subjects by semester ID
@@ -88,3 +89,14 @@ export const getSubjectsStats = (subjects: JoinedSubject[]) => {
     completionRate: total > 0 ? (completed / total) * 100 : 0
   };
 };
+
+  export const calculateFinalGrade = (assessments:JoinedSubjectAssessment[]) => {
+    const validAssessments = assessments.filter(assessment => assessment.score !== undefined);
+    if (validAssessments.length === 0) return 0;
+
+    const totalWeightedScore = validAssessments.reduce((sum, assessment) => {
+      return sum + (assessment.score! / assessment.maxScore) * assessment.weight;
+    }, 0);
+
+    return totalWeightedScore.toFixed(2);
+  };

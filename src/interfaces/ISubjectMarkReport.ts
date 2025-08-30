@@ -28,3 +28,12 @@ export interface IViewSubjectAssessment {
     minScore: number;
     score: number;
 }
+
+export interface JoinedSubjectAssessment {
+    category: string;
+    weight: number;
+    minScore: number;
+    score?: number;
+    maxScore: number;
+    isExisting: boolean;
+  }

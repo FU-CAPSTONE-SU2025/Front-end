@@ -21,7 +21,6 @@ const { Title, Text } = Typography;
 const { Search } = Input;
 
 
-
 const EditStudentTranscript: React.FC = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
@@ -40,6 +39,7 @@ const EditStudentTranscript: React.FC = () => {
   } = useSchoolApi();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<JoinedSubject | null>(null);
+  const [modalKey, setModalKey] = useState(0); // Force modal recreation
   const [isModalVisible, setIsModalVisible] = useState(false);
   
   // Student account data for API calls
@@ -86,7 +86,6 @@ const EditStudentTranscript: React.FC = () => {
 
   // Joined subjects state
   const [joinedSubjects, setJoinedSubjects] = useState<JoinedSubject[]>([]);
-
   // Use the hook to get student data
   const { data: accountData, refetch: refetchStudent } = useFetchStudentById(studentId || '');
   
@@ -249,9 +248,14 @@ const EditStudentTranscript: React.FC = () => {
     setSelectedSubject(subject);
     setIsModalVisible(true);
   };
+
   const handleModalClose = () => {
     setIsModalVisible(false);
-    setSelectedSubject(null);
+      setSelectedSubject(null);
+      // Force modal recreation on next open by a trigger
+    setModalKey(prev => prev + 1);
+    // Refresh joined subjects data to get updated transcript information
+    refetchJoinedSubjects();
   };
 
   const handleAddSubjectClick = async () => {
@@ -303,17 +307,17 @@ const EditStudentTranscript: React.FC = () => {
     }
   };
 
-  // Derive current subjects from joinedSubjects ( isActive:true == not done course)
-  const currentSubjects: JoinedSubject[] = (joinedSubjects || [])
-    .filter(js => js.isActive && !js.isPassed);
-  //  current subject == isActive:true && isPassed:false
+  // Derive completed subjects from joinedSubjects (isPassed:true == completed course)
+  const completedSubjects: JoinedSubject[] = (joinedSubjects || [])
+    .filter(js => js.isPassed === true);
   
-  const getProgressColor = (progress: number) => {
-    if (progress < 30) return '#ef4444';
-    if (progress < 60) return '#f59e0b';
-    if (progress < 80) return '#eab308';
-    return '#22c55e';
-  };
+  // Derive other subjects (isPassed:false == could be in progress or failed, we don't know yet)
+  const otherSubjects: JoinedSubject[] = (joinedSubjects || [])
+    .filter(js => js.isPassed === false);
+  
+  // All subjects (completed + other)
+  const allEditableSubjects: JoinedSubject[] = [...completedSubjects, ...otherSubjects];
+  
 
   // Bulk import open/close
   const handleBulkImport = () => {
@@ -439,7 +443,6 @@ const EditStudentTranscript: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {/* Header */}
       <div className={styles.header}>
         <Button 
           icon={<ArrowLeftOutlined />} 
@@ -557,11 +560,53 @@ const EditStudentTranscript: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            {/* Current Subjects Card */}
+            {/* Transcript Summary Card */}
             <Card className={styles.subjectsCard} style={{ marginBottom: 24 }}>
               <div className={styles.sectionHeader}>
                 <Title level={4} className={styles.sectionTitle}>
-                  Current Studying Subjects
+                  Transcript Summary
+                </Title>
+                {joinedLoading && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Spin size="small" />
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                      Loading...
+                    </Text>
+                  </div>
+                )}
+              </div>
+              <Row gutter={[16, 16]}>
+                <Col span={8}>
+                  <div style={{ textAlign: 'center', padding: '16px' }}>
+                    <Title level={2} style={{ color: '#3b82f6', margin: 0 }}>
+                      {allEditableSubjects.length}
+                    </Title>
+                    <Text type="secondary">Total Subjects</Text>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div style={{ textAlign: 'center', padding: '16px' }}>
+                    <Title level={2} style={{ color: '#22c55e', margin: 0 }}>
+                      {completedSubjects.length}
+                    </Title>
+                    <Text type="secondary">Passed</Text>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div style={{ textAlign: 'center', padding: '16px' }}>
+                    <Title level={2} style={{ color: '#f59e0b', margin: 0 }}>
+                      {otherSubjects.length}
+                    </Title>
+                    <Text type="secondary">Other (In Progress/Failed)</Text>
+                  </div>
+                </Col>
+              </Row>
+            </Card>
+            {/* Other Subjects Card */}
+            <Card className={styles.subjectsCard} style={{ marginBottom: 24 }}>
+              <div className={styles.sectionHeader}>
+                <Title level={4} className={styles.sectionTitle}>
+                  Other Subjects (In Progress/Failed)
                 </Title>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <ExcelImportButton onClick={handleBulkImport} size="middle">
@@ -578,7 +623,7 @@ const EditStudentTranscript: React.FC = () => {
                 </div>
               </div>
               <Row gutter={[16, 16]}>
-                {currentSubjects.map((subject, index) => (
+                {otherSubjects.map((subject, index) => (
                   <Col span={12} key={subject.id}>
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
@@ -589,6 +634,7 @@ const EditStudentTranscript: React.FC = () => {
                         className={styles.subjectCard}
                         hoverable
                         onClick={() => handleSubjectClick(subject)}
+                        style={{ border: '2px solid #f59e0b' }}
                       >
                         <div className={styles.subjectHeader}>
                           <Text strong className={styles.subjectTitle}>{subject.name || subject.subjectName}</Text>
@@ -598,22 +644,83 @@ const EditStudentTranscript: React.FC = () => {
                           Block: {subject.semesterStudyBlockType} • Semester: {subject.semesterName || 'N/A'}
                         </Text>
                         <div className={styles.progressSection}>
-                          <Text>Progress</Text>
-                          <Progress 
-                            percent={subject.isPassed ? 100 : 0} 
-                            size="small" 
-                            strokeColor={getProgressColor(subject.isPassed ? 100 : 0)}
-                            trailColor="#f1f5f9"
-                          />
+                          <Text>Status</Text>
+                          <Tag color="orange" style={{ marginTop: '8px' }}>Click to View</Tag>
                         </div>
                       </Card>
                     </motion.div>
                   </Col>
                 ))}
+                {otherSubjects.length === 0 && (
+                  <Col span={24}>
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                      <Text type="secondary">No other subjects</Text>
+                    </div>
+                  </Col>
+                )}
               </Row>
             </Card>
 
-            {/* All Subjects Card */}
+            {/* Completed Subjects Card */}
+            <Card className={styles.subjectsCard} style={{ marginBottom: 24 }}>
+              <div className={styles.sectionHeader}>
+                <Title level={4} className={styles.sectionTitle}>
+                  Completed Subjects (Click to view Marks)
+                </Title>
+                <Text type="secondary" style={{ fontSize: '14px' }}>
+                  Click on any subject to edit assessment scores
+                </Text>
+              </div>
+              <Row gutter={[16, 16]}>
+                {completedSubjects.map((subject, index) => (
+                  <Col span={12} key={subject.id}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                    >
+                      <Card 
+                        className={styles.subjectCard}
+                        hoverable
+                        onClick={() => handleSubjectClick(subject)}
+                        style={{ border: '2px solid #22c55e' }}
+                      >
+                        <div className={styles.subjectHeader}>
+                          <Text strong className={styles.subjectTitle}>{subject.name || subject.subjectName}</Text>
+                          <Text className={styles.subjectCode}>{subject.subjectCode} • v{subject.subjectVersionCode}</Text>
+                        </div>
+                        <Text className={styles.subjectDescription} style={{ whiteSpace: 'pre-line' }}>
+                          Block: {subject.semesterStudyBlockType} • Semester: {subject.semesterName || 'N/A'}
+                        </Text>
+                        <div className={styles.progressSection}>
+                          <Text>Status</Text>
+                          <Tag color="green" style={{ marginTop: '8px' }}>Passed</Tag>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  </Col>
+                ))}
+                {completedSubjects.length === 0 && (
+                  <Col span={24}>
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                      <Text type="secondary">No Passed subjects yet</Text>
+                    </div>
+                  </Col>
+                )}
+              </Row>
+            </Card>
+          </motion.div>
+        </Col>
+      </Row>
+
+      {/* All Subjects Card - Full Width Row */}
+      <Row style={{ marginTop: '24px' }}>
+        <Col span={24}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             <Card className={styles.allSubjectsCard}>
               <div className={styles.allSubjectsHeader}>
                 <Title level={4} className={styles.sectionTitle}>
@@ -634,30 +741,57 @@ const EditStudentTranscript: React.FC = () => {
                     <Spin />
                   </div>
                 ) : (
-                  (joinedSubjects || []).map((js, index) => (
+                  (joinedSubjects || [])
+                    .filter(js => 
+                      searchQuery === '' || 
+                      (js.name || js.subjectName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      (js.subjectCode || '').toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .map((js, index) => (
                     <motion.div
                       key={`${js.subjectCode}-${js.subjectVersionCode}-${js.semesterName}-${index}`}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.25 }}
                     >
-                      <Card className={styles.subjectListItem}>
-                        <Row align="middle">
-                          <Col span={8}>
-                            <Text strong>{js.name || js.subjectName}</Text>
-                            <br />
-                            <Text type="secondary">{js.subjectCode} • v{js.subjectVersionCode}</Text>
-                          </Col>
-                          <Col span={4}>
-                            <Text>Credits: {js.credits ?? '-'}</Text>
-                          </Col>
-                          <Col span={4} style={{ textAlign: 'right' }}>
-                            <Tag>{js.semesterStudyBlockType}</Tag>
-                          </Col>
-                        </Row>
+                      <Card 
+                        className={styles.subjectListItem}
+                        hoverable
+                        onClick={() => handleSubjectClick(js)}
+                        style={{ 
+                          cursor: 'pointer',
+                          border: js.isPassed === true ? '2px solid #22c55e' : 
+                                  '1px solid #e5e7eb'
+                        }}
+                      >
+                        <div className={styles.subjectHeader}>
+                          <Text strong className={styles.subjectTitle}>{js.name || js.subjectName}</Text>
+                          <Text className={styles.subjectCode}>{js.subjectCode} • v{js.subjectVersionCode}</Text>
+                        </div>
+                        <Text className={styles.subjectDescription} style={{ whiteSpace: 'pre-line' }}>
+                          Credits: {js.credits ?? '-'} • Block: {js.semesterStudyBlockType}
+                        </Text>
+                        <div className={styles.progressSection}>
+                          <Text>Status</Text>
+                          <Tag color={
+                            js.isPassed === true ? 'green' : 'orange'
+                          } style={{ marginTop: '8px' }}>
+                            {js.isPassed === true ? 'Passed' : "Click To View"}
+                          </Tag>
+                        </div>
                       </Card>
                     </motion.div>
                   ))
+                )}
+                {joinedSubjects && joinedSubjects.length > 0 && 
+                 joinedSubjects.filter(js => 
+                   searchQuery === '' || 
+                   (js.name || js.subjectName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                   (js.subjectCode || '').toLowerCase().includes(searchQuery.toLowerCase())
+                 ).length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '24px', color: '#6b7280' }}>
+                    <Text type="secondary">No subjects match your search criteria</Text>
+                  </div>
                 )}
               </div>
             </Card>
@@ -667,6 +801,7 @@ const EditStudentTranscript: React.FC = () => {
 
       {/* Transcript Edit Modal */}
       <Modal
+        key={modalKey} // Force recreation when key changes
         open={isModalVisible}
         onCancel={handleModalClose}
         footer={null}
@@ -677,8 +812,15 @@ const EditStudentTranscript: React.FC = () => {
       >
         {selectedSubject && (
           <TranscriptEdit 
-            joinedSubject={selectedSubject}
+            key={`${modalKey}-${selectedSubject.id}`} // Force recreation with fresh data
+            joinedSubjectId={selectedSubject.id}
             onClose={handleModalClose}
+            onDataUpdate={() => {
+              // Force modal recreation and data refresh when data is updated
+              console.log('Data updated, forcing modal refresh...');
+              setModalKey(prev => prev + 1);
+              refetchJoinedSubjects();
+            }}
           />
         )}
       </Modal>

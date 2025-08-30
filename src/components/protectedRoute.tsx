@@ -11,8 +11,8 @@ export const protectedLoader = (allowedRoles: string[]) => {
      if( userRole && !allowedRoles.includes(userRole.toString()) || !accessToken) {
        return redirect('/404');
     }
-    if(localStorage.getItem("auth-storage")==null){
-      alert("Your session has expired, please login again.")
+    if(sessionStorage.getItem("auth-storage")==null){
+      alert("Your token has expired, please login again.")
       return redirect('/');
     }
     // NOTE: Uncommment these code above in production, they are for protection, duh

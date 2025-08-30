@@ -1,35 +1,30 @@
-import  { useState, useEffect, useRef } from 'react';
+import  { useState, useEffect } from 'react';
 import { Card, Typography, Row, Col, Button, Table, Tag, InputNumber, Spin } from 'antd';
 import { CloseOutlined, SaveOutlined, EditOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/transcriptEditDialog.module.css';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useSubjectMarkReport, useSubjectMarkReportTemplate } from '../../hooks/useSubjectMarkReport';
+import { useSchoolApi } from '../../hooks/useSchoolApi';
 import { JoinedSubject } from '../../interfaces/ISchoolProgram';
-import { ICreateSubjectMarkReport } from '../../interfaces/ISubjectMarkReport';
+import { ICreateSubjectMarkReport, JoinedSubjectAssessment } from '../../interfaces/ISubjectMarkReport';
+import { calculateFinalGrade } from '../../utils/subjectUtils';
 
 const { Title, Text } = Typography;
-
-interface Assessment {
-  category: string;
-  weight: number;
-  minScore: number;
-  score?: number;
-  maxScore: number;
-  isExisting: boolean;
-}
-
 interface Props {
-  joinedSubject: JoinedSubject;
+  joinedSubjectId: number; // Pass ID instead of full object to avoid stale data
   onClose: () => void;
+  onDataUpdate?: () => void; // Optional callback for data updates
 }
 
-export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
+export default function TranscriptEdit({ joinedSubjectId, onClose, onDataUpdate }: Props) {
   const { handleSuccess, handleError } = useApiErrorHandler();
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [assessments, setAssessments] = useState<JoinedSubjectAssessment[]>([]);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [tempScore, setTempScore] = useState<number>(0);
-  const hasFetchedMarks = useRef(false);
-  const [marksError, setMarksError] = useState<string | null>(null);
+
+  // Fetch the latest joined subject data by ID
+  const { useJoinedSubjectById } = useSchoolApi();
+  const { data: joinedSubject, isLoading: joinedSubjectLoading } = useJoinedSubjectById(joinedSubjectId);
 
   // Subject mark report hooks
   const { 
@@ -45,23 +40,24 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
     error: templateError,
     refetch: refetchTemplate
   } = useSubjectMarkReportTemplate(
-    joinedSubject.subjectCode, 
-    joinedSubject.subjectVersionCode
+    joinedSubject?.subjectCode || '', 
+    joinedSubject?.subjectVersionCode || ''
   );
 
   // Reset all state when component mounts or joinedSubject changes
   useEffect(() => {
+    if (!joinedSubject) return;
+    
     // Reset all state
     setAssessments([]);
     setExistingMarks([]);
     setEditingCategory(null);
     setTempScore(0);
-    setMarksError(null);
-    hasFetchedMarks.current = false;
+    
     
     // Refetch template data
     refetchTemplate();
-  }, [joinedSubject.id, joinedSubject.subjectCode, joinedSubject.subjectVersionCode, refetchTemplate]);
+  }, [joinedSubject?.id, joinedSubject?.subjectCode, joinedSubject?.subjectVersionCode, refetchTemplate]);
 
   // Fetch existing marks for this subject
   const [existingMarks, setExistingMarks] = useState<any[]>([]);
@@ -70,11 +66,10 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
   // Fetch existing marks when component mounts
   useEffect(() => {
     const fetchExistingMarks = async () => {
-      if (!joinedSubject.id || joinedSubject.id <= 0) {
+      if (!joinedSubject?.id || joinedSubject.id <= 0) {
         console.log('No valid joinedSubject.id, skipping marks fetch');
         return;
       }
-      
       setMarksLoading(true);
       try {
         const marks = await fetchSubjectMarkReportMutation.mutateAsync(joinedSubject.id);
@@ -95,13 +90,13 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
     };
 
     fetchExistingMarks();
-  }, [joinedSubject.id]); 
+  }, [joinedSubject?.id]); 
 
   // Merge template data with existing marks
   useEffect(() => {
     if (!templateData || !Array.isArray(templateData)) return;
 
-    const mergedAssessments: Assessment[] = templateData.map(template => {
+    const mergedAssessments: JoinedSubjectAssessment[] = templateData.map(template => {
       const existingMark = existingMarks.find(mark => mark.category === template.category);
       
       return {
@@ -117,17 +112,6 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
     setAssessments(mergedAssessments);
   }, [templateData, existingMarks]);
 
-  // Calculate weighted average
-  const calculateFinalGrade = () => {
-    const validAssessments = assessments.filter(assessment => assessment.score !== undefined);
-    if (validAssessments.length === 0) return 0;
-
-    const totalWeightedScore = validAssessments.reduce((sum, assessment) => {
-      return sum + (assessment.score! / assessment.maxScore) * assessment.weight;
-    }, 0);
-
-    return totalWeightedScore.toFixed(2);
-  };
 
   // Calculate total weight of existing assessments (real ones, not template)
   const calculateTotalExistingWeight = () => {
@@ -176,6 +160,38 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
     }
   };
 
+  // Get status card CSS class based on the status
+  const getStatusCardClass = () => {
+    const status = getSubjectStatus();
+    switch (status) {
+      case 'Pass':
+        return styles.gradeCardGreen;
+      case 'Failed':
+        return styles.gradeCardRed;
+      case 'In Progress':
+        return styles.gradeCardOrange;
+      default:
+        return styles.gradeCardBlue;
+    }
+  };
+
+  // Get status value CSS class based on the status
+  const getStatusValueClass = () => {
+    const status = getSubjectStatus();
+    switch (status) {
+      case 'Pass':
+        return styles.gradeValueGreen;
+      case 'Failed':
+        return styles.gradeValueRed;
+      case 'In Progress':
+        return styles.gradeValueOrange;
+      default:
+        return styles.gradeValueBlue;
+    }
+  };
+
+
+
   // Handle score editing
   const startEditing = (category: string) => {
     const assessment = assessments.find(a => a.category === category);
@@ -209,7 +225,7 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
         };
 
         await addSubjectMarkReportMutation.mutateAsync({
-          joinedSubjectId: joinedSubject.id,
+          joinedSubjectId: joinedSubjectId,
           data: [markData]
         });
       }
@@ -225,6 +241,11 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
 
       setEditingCategory(null);
       handleSuccess('Score updated successfully!');
+      
+      // Notify parent that data has been updated
+      if (onDataUpdate) {
+        onDataUpdate();
+      }
     } catch (error) {
       handleError('Failed to save score');
     }
@@ -235,17 +256,8 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
     setTempScore(0);
   };
 
-  // Enhanced close handler that ensures clean state
+  // Simple close handler
   const handleClose = () => {
-    // Reset all state before closing
-    setAssessments([]);
-    setExistingMarks([]);
-    setEditingCategory(null);
-    setTempScore(0);
-    setMarksError(null);
-    hasFetchedMarks.current = false;
-    
-    // Call the original onClose
     onClose();
   };
 
@@ -271,14 +283,9 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
       title: 'Weight',
       dataIndex: 'weight',
       key: 'weight',
-      render: (weight: number, record: Assessment) => (
+      render: (weight: number, _record: JoinedSubjectAssessment) => (
         <div>
           <Text>{weight}%</Text>
-          {record.isExisting && (
-            <Text type="secondary" style={{ fontSize: '10px', display: 'block' }}>
-              ✓ Counted
-            </Text>
-          )}
         </div>
       ),
     },
@@ -291,7 +298,7 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
     {
       title: 'Score',
       key: 'score',
-      render: (record: Assessment) => (
+      render: (record: JoinedSubjectAssessment) => (
         <div className={styles.scoreContainer}>
           {editingCategory === record.category ? (
             <>
@@ -309,12 +316,6 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
                 icon={<SaveOutlined />} 
                 onClick={() => saveScore(record.category)}
                 className={styles.saveButton}
-              />
-              <Button 
-                type="link" 
-                icon={<CloseOutlined />} 
-                onClick={cancelEditing}
-                className={styles.cancelButton}
               />
             </>
           ) : (
@@ -336,7 +337,7 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
     {
       title: 'Status',
       key: 'status',
-      render: (record: Assessment) => (
+      render: (record: JoinedSubjectAssessment) => (
         <Tag color={record.isExisting ? 'green' : 'orange'}>
           {record.isExisting ? 'Scored' : 'Not Scored'}
         </Tag>
@@ -344,7 +345,7 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
     },
   ];
 
-  if (templateLoading || marksLoading) {
+  if (templateLoading || marksLoading || joinedSubjectLoading || !joinedSubject) {
     return (
       <div className={styles.container}>
         <div style={{ textAlign: 'center', padding: '50px' }}>
@@ -376,15 +377,15 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
           <Text type="secondary" className={styles.subjectDetails}>
             {joinedSubject.subjectCode} • v{joinedSubject.subjectVersionCode} • {joinedSubject.credits} Credits
           </Text>
+          <div style={{ marginTop: '8px' }}>
+            <Tag 
+              color={getStatusColor(getSubjectStatus())} 
+              style={{ fontSize: '14px', padding: '4px 12px' }}
+            >
+              Status: {getSubjectStatus()}
+            </Tag>
+          </div>
         </div>
-        <Button 
-          icon={<CloseOutlined />} 
-          onClick={handleClose}
-          size="large"
-          className={styles.closeButton}
-        >
-          Close
-        </Button>
       </div>
 
       {/* Grade Summary */}
@@ -392,7 +393,7 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
         <Col span={8}>
           <Card className={`${styles.gradeCard} ${styles.gradeCardOrange}`}>
             <Title level={3} className={`${styles.gradeValue} ${styles.gradeValueOrange}`}>
-              {calculateFinalGrade()}%
+              {calculateFinalGrade(assessments)}%
             </Title>
             <Text type="secondary">Current Grade</Text>
           </Card>
@@ -406,14 +407,19 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
           </Card>
         </Col>
         <Col span={8}>
-          <Card className={`${styles.gradeCard} ${styles.gradeCardGreen}`}>
-            <Title level={3} className={`${styles.gradeValue} ${styles.gradeValueGreen}`}>
+          <Card className={`${styles.gradeCard} ${getStatusCardClass()}`}>
+            <Title level={3} className={`${styles.gradeValue} ${getStatusValueClass()}`}>
+              {templateLoading || marksLoading ? (
+                <Spin size="small" style={{ marginRight: '8px' }} />
+              ) : null}
               {getSubjectStatus()}
             </Title>
             <Text type="secondary">Status</Text>
-            <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
-              Weight: {calculateTotalExistingWeight()}/100%
-            </Text>
+            {(templateLoading || marksLoading) && (
+              <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: '4px', color: '#3b82f6' }}>
+                Recalculating...
+              </Text>
+            )}
           </Card>
         </Col>
       </Row>
@@ -445,7 +451,7 @@ export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
             </Col>
             <Col>
               <Text className={styles.finalGradeValue}>
-                {calculateFinalGrade()}%
+                {calculateFinalGrade(assessments)}%
               </Text>
             </Col>
           </Row>
