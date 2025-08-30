@@ -252,28 +252,96 @@ const SubjectVersionPage: React.FC = () => {
         
         if (newSyllabus) {
           console.log('[Syllabus] Created for version', versionId, 'id:', newSyllabus.id);
-          setSyllabusMap(prev => ({
-            ...prev,
-            [versionId]: newSyllabus
-          }));
           
-          // Update the assessment, material, outcome, and session maps with the new syllabus data
-          setAssessmentMap(prev => ({
-            ...prev,
-            [versionId]: newSyllabus.assessments || []
-          }));
-          setMaterialMap(prev => ({
-            ...prev,
-            [versionId]: newSyllabus.learningMaterials || []
-          }));
-          setOutcomeMap(prev => ({
-            ...prev,
-            [versionId]: newSyllabus.learningOutcomes || []
-          }));
-          setSessionMap(prev => ({
-            ...prev,
-            [versionId]: newSyllabus.sessions || []
-          }));
+          // Add delay to ensure backend has finalized the syllabus creation
+          await new Promise(resolve => setTimeout(resolve, 800));
+          
+          // Refetch the syllabus to ensure we have the complete data with proper ID and nested arrays
+          try {
+            console.log('[Syllabus] Refetching after creation for version', versionId);
+            const refetchedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+            
+            if (refetchedSyllabus) {
+              console.log('[Syllabus] Refetch successful for version', versionId, 'id:', refetchedSyllabus.id);
+              setSyllabusMap(prev => ({
+                ...prev,
+                [versionId]: refetchedSyllabus
+              }));
+              
+              // Update the assessment, material, outcome, and session maps with the refetched syllabus data
+              const assessments = Array.isArray(refetchedSyllabus.assessments) ? refetchedSyllabus.assessments : [];
+              const materials = Array.isArray(refetchedSyllabus.learningMaterials) ? refetchedSyllabus.learningMaterials : [];
+              const outcomes = Array.isArray(refetchedSyllabus.learningOutcomes) ? refetchedSyllabus.learningOutcomes : [];
+              const sessions = Array.isArray(refetchedSyllabus.sessions) ? refetchedSyllabus.sessions : [];
+              
+              setAssessmentMap(prev => ({
+                ...prev,
+                [versionId]: assessments
+              }));
+              setMaterialMap(prev => ({
+                ...prev,
+                [versionId]: materials
+              }));
+              setOutcomeMap(prev => ({
+                ...prev,
+                [versionId]: outcomes
+              }));
+              setSessionMap(prev => ({
+                ...prev,
+                [versionId]: sessions
+              }));
+              
+              console.log('[Syllabus] Maps updated for version', versionId, 'assessments:', assessments.length, 'materials:', materials.length, 'outcomes:', outcomes.length, 'sessions:', sessions.length);
+            } else {
+              console.warn('[Syllabus] Refetch returned null for version', versionId);
+              // Fallback to using the original created syllabus
+              setSyllabusMap(prev => ({
+                ...prev,
+                [versionId]: newSyllabus
+              }));
+              
+              setAssessmentMap(prev => ({
+                ...prev,
+                [versionId]: newSyllabus.assessments || []
+              }));
+              setMaterialMap(prev => ({
+                ...prev,
+                [versionId]: newSyllabus.learningMaterials || []
+              }));
+              setOutcomeMap(prev => ({
+                ...prev,
+                [versionId]: newSyllabus.learningOutcomes || []
+              }));
+              setSessionMap(prev => ({
+                ...prev,
+                [versionId]: newSyllabus.sessions || []
+              }));
+            }
+          } catch (refetchError) {
+            console.error('[Syllabus] Refetch failed for version', versionId, refetchError);
+            // Fallback to using the original created syllabus
+            setSyllabusMap(prev => ({
+              ...prev,
+              [versionId]: newSyllabus
+            }));
+            
+            setAssessmentMap(prev => ({
+              ...prev,
+              [versionId]: newSyllabus.assessments || []
+            }));
+            setMaterialMap(prev => ({
+              ...prev,
+              [versionId]: newSyllabus.learningMaterials || []
+            }));
+            setOutcomeMap(prev => ({
+              ...prev,
+              [versionId]: newSyllabus.learningOutcomes || []
+            }));
+            setSessionMap(prev => ({
+              ...prev,
+              [versionId]: newSyllabus.sessions || []
+            }));
+          }
         } else {
           console.warn('[Syllabus] Create returned null for version', versionId);
         }
