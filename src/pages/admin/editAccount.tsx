@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Form, Input, Select, DatePicker, ConfigProvider, Modal } from 'antd';
+import { Form, Input, Select, DatePicker, ConfigProvider, Modal, Switch } from 'antd';
 import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 import styles from '../../css/admin/editAccount.module.css';
@@ -11,6 +11,7 @@ import { Program, Curriculum } from '../../interfaces/ISchoolProgram';
 import { useSchoolApi } from '../../hooks/useSchoolApi';
 
 import AvatarUpload from '../../components/common/AvatarUpload';
+import { generateUsernameFromEmail, generateRandomPassword, generateUniqueUsername } from '../../utils/accountUtils';
 
 const { Option } = Select;
 
@@ -78,6 +79,10 @@ const EditAccount: React.FC = () => {
   const isStudent = role === 'student';
   const isStaff = role === 'staff' || role === 'manager' || role === 'advisor';
 
+  // Login method toggle state (only for student creation)
+  const [isGoogleLogin, setIsGoogleLogin] = useState(false);
+  const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
+
   // Use the hook to get programs
   const { data: programsData } = usePagedProgramList(programPage, 10, '');
   
@@ -135,6 +140,9 @@ const EditAccount: React.FC = () => {
     if (isStudent) {
       fetchPrograms(1);
     }
+    // Reset login method toggle when role changes
+    setIsGoogleLogin(false);
+    setShowGeneratedPassword(false);
   }, [isStudent]);
 
   // Only fetch user data if editing (id is present)
@@ -143,6 +151,8 @@ const EditAccount: React.FC = () => {
       // Create mode: clear form and state
       setCurrentUser(null);
       setCurrentAvatarUrl('');
+      setIsGoogleLogin(false); // Reset login method toggle
+      setShowGeneratedPassword(false); // Reset password visibility
       form.resetFields();
       setIsLoadingUser(false);
       return;
@@ -420,6 +430,49 @@ const EditAccount: React.FC = () => {
     setCurrentAvatarUrl(newAvatarUrl);
   };
 
+  // Handle login method toggle change
+  const handleLoginMethodChange = (checked: boolean) => {
+    setIsGoogleLogin(checked);
+    setShowGeneratedPassword(false); // Reset password visibility
+    
+    if (checked) {
+      // Google Login selected: Auto-generate username and password
+      const email = form.getFieldValue('email');
+      if (email) {
+        const generatedUsername = generateUsernameFromEmail(email);
+        form.setFieldValue('username', generatedUsername);
+      }
+      
+      // Generate random password
+      const generatedPassword = generateRandomPassword(20);
+      form.setFieldValue('password', generatedPassword);
+      form.setFieldValue('confirmPassword', generatedPassword);
+    }
+  };
+
+  // Handle email change to auto-generate username if Google Login is enabled
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const email = e.target.value;
+    if (isGoogleLogin && email) {
+      const generatedUsername = generateUsernameFromEmail(email);
+      form.setFieldValue('username', generatedUsername);
+    }
+  };
+
+  // Copy generated password to clipboard
+  const copyPasswordToClipboard = async () => {
+    const password = form.getFieldValue('password');
+    if (password) {
+      try {
+        await navigator.clipboard.writeText(password);
+        handleSuccess('Password copied to clipboard!');
+      } catch (err) {
+        console.error('Failed to copy password:', err);
+        handleError('Failed to copy password to clipboard');
+      }
+    }
+  };
+
   const getUserRole = () => {
     if (isStudent) return 'student';
     if (role === 'manager') return 'manager';
@@ -491,12 +544,31 @@ const EditAccount: React.FC = () => {
             <h1 className={styles.name}>
               {isStudent ? 'Edit Student Account' : 'Edit Staff Account'}
             </h1>
-            <div className={styles.profileInfo}>
-              <div className={styles.role}>{currentUser?.roleName || 'User'}</div>
-              <div className={styles.divider}>•</div>
-              <div className={styles.email}>{currentUser?.email || 'No email'}</div>
-            </div>
           </div>
+
+          {/* Login Method Toggle - Only show for student creation */}
+          {!id && isStudent && (
+            <div className={styles.loginMethodToggle}>
+              <div className={styles.toggleLabel}>Login Method</div>
+              <div className={styles.toggleContainer}>
+                <span className={styles.toggleOption}>FEID Login</span>
+                <Switch
+                  checked={isGoogleLogin}
+                  onChange={handleLoginMethodChange}
+                  checkedChildren="Google"
+                  unCheckedChildren="FEID"
+                  className={styles.toggleSwitch}
+                />
+                <span className={styles.toggleOption}>Google Login</span>
+              </div>
+              <div className={styles.toggleDescription}>
+                {isGoogleLogin 
+                  ? 'Username will be auto-generated from email. Password will be auto-generated.'
+                  : 'Standard username and password creation.'
+                }
+              </div>
+            </div>
+          )}
 
           <div className={styles.formFields}>
             <Form
@@ -549,7 +621,10 @@ const EditAccount: React.FC = () => {
                       { type: 'email', message: 'Please enter a valid email' }
                     ]}
                   >
-                    <Input placeholder="Enter email address" />
+                    <Input 
+                      placeholder="Enter email address" 
+                      onChange={handleEmailChange}
+                    />
                   </Form.Item>
                 </div>
               </div>
@@ -563,7 +638,52 @@ const EditAccount: React.FC = () => {
                       rules={[{ required: true, message: 'Please enter password' }]}
                       hasFeedback
                     >
-                      <Input.Password placeholder="Enter password"  autoComplete="new-password" />
+                      <Input.Password 
+                        placeholder={isGoogleLogin ? "Auto-generated password" : "Enter password"}
+                        autoComplete="new-password"
+                        visibilityToggle={true}
+                        onChange={(e) => {
+                          if (isGoogleLogin) {
+                            // Prevent editing in Google mode by restoring the generated password
+                            const generatedPassword = form.getFieldValue('password');
+                            if (e.target.value !== generatedPassword) {
+                              e.target.value = generatedPassword;
+                              form.setFieldValue('password', generatedPassword);
+                            }
+                          }
+                        }}
+                        addonAfter={
+                          isGoogleLogin ? (
+                            <div className={styles.passwordButtons}>
+                              <button
+                                type="button"
+                                onClick={copyPasswordToClipboard}
+                                style={{
+                                  background: '#10B981',
+                                  color: 'white',
+                                  border: '1px solid #10B981',
+                                  borderRadius: '6px',
+                                  fontSize: '11px',
+                                  fontWeight: '500',
+                                  cursor: 'pointer',
+                                  padding: '4px 8px',
+                                  transition: 'all 0.2s ease',
+                                  minWidth: '40px'
+                                }}
+                                title="Copy password"
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = '#059669';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = '#10B981';
+                                }}
+                              >
+                                Copy
+                              </button>
+                            </div>
+                          ) : null
+                        }
+                      />
                     </Form.Item>
                   </div>
                   <div className={styles.fieldColumn}>
@@ -584,7 +704,77 @@ const EditAccount: React.FC = () => {
                         })
                       ]}
                     >
-                      <Input.Password placeholder="Confirm password" autoComplete="new-password" />
+                      <Input.Password 
+                        placeholder={isGoogleLogin ? "Auto-generated password" : "Confirm password"}
+                        autoComplete="new-password"
+                        visibilityToggle={true}
+                        onChange={(e) => {
+                          if (isGoogleLogin) {
+                            // Prevent editing in Google mode by restoring the generated password
+                            const generatedPassword = form.getFieldValue('password');
+                            if (e.target.value !== generatedPassword) {
+                              e.target.value = generatedPassword;
+                              form.setFieldValue('confirmPassword', generatedPassword);
+                            }
+                          }
+                        }}
+                        addonAfter={
+                          isGoogleLogin ? (
+                            <div className={styles.passwordButtons}>
+                              <button
+                                type="button"
+                                onClick={() => setShowGeneratedPassword(!showGeneratedPassword)}
+                                style={{
+                                  background: showGeneratedPassword ? '#1E40AF' : '#f1f5f9',
+                                  color: showGeneratedPassword ? 'white' : '#1E40AF',
+                                  border: '1px solid #1E40AF',
+                                  borderRadius: '6px',
+                                  fontSize: '11px',
+                                  fontWeight: '500',
+                                  cursor: 'pointer',
+                                  padding: '4px 8px',
+                                  transition: 'all 0.2s ease',
+                                  minWidth: '40px'
+                                }}
+                                title="Show/Hide password"
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = showGeneratedPassword ? '#1d4ed8' : '#e2e8f0';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = showGeneratedPassword ? '#1E40AF' : '#f1f5f9';
+                                }}
+                              >
+                                {showGeneratedPassword ? 'Hide' : 'Show'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => copyPasswordToClipboard()}
+                                style={{
+                                  background: '#10B981',
+                                  color: 'white',
+                                  border: '1px solid #10B981',
+                                  borderRadius: '6px',
+                                  fontSize: '11px',
+                                  fontWeight: '500',
+                                  cursor: 'pointer',
+                                  padding: '4px 8px',
+                                  transition: 'all 0.2s ease',
+                                  minWidth: '40px'
+                                }}
+                                title="Copy password"
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = '#059669';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = '#10B981';
+                                }}
+                              >
+                                Copy
+                              </button>
+                            </div>
+                          ) : null
+                        }
+                      />
                     </Form.Item>
                   </div>
                 </div>

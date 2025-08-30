@@ -25,7 +25,8 @@
 }
 
 .container {
-  width: calc(100% - 250px);
+  width: auto;
+  max-width: 1200px;
   position: absolute;
   left: 0;
   top: 0;
@@ -40,8 +41,8 @@
 }
 
 .profileCard {
-  width: 100%;
-  max-width: 800px;
+  width: 70rem;
+  max-width: 1200px;
   height: calc(100vh - 4rem);
   padding: 2rem;
   position: relative;
@@ -94,6 +95,97 @@
     0 0 0 1px rgba(255, 255, 255, 0.7);
 }
 
+/* Login Method Toggle Styles */
+.loginMethodToggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.toggleLabel {
+  color: #0F172A;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.toggleContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.toggleOption {
+  color: #64748B;
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-width: 80px;
+  text-align: center;
+}
+
+.toggleOption:first-child {
+  color: #EA580C;
+}
+
+.toggleOption:last-child {
+  color: #1E40AF;
+}
+
+.toggleSwitch {
+  background: #EA580C !important;
+}
+
+.toggleSwitch:global(.ant-switch-checked) {
+  background: #1E40AF !important;
+}
+
+.toggleDescription {
+  color: #64748B;
+  font-size: 0.875rem;
+  text-align: center;
+  max-width: 400px;
+  line-height: 1.4;
+}
+
+/* Password button styling */
+.passwordButtons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.passwordButtons button {
+  font-family: inherit;
+  outline: none;
+  user-select: none;
+}
+
+/* Style for Google mode password fields */
+.passwordButtons + .ant-input-password {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+.passwordButtons + .ant-input-password:focus {
+  border-color: #1E40AF;
+  box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1);
+}
+
+.passwordButtons + .ant-input-password:hover {
+  border-color: #94a3b8;
+}
+
 /* Ensure avatar content is circular */
 .avatar :global(img),
 .avatar :global(.ant-avatar) {
@@ -117,7 +209,7 @@
 .profileInfo {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 2rem;
   flex-wrap: wrap;
   justify-content: center;
 }
