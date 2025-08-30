@@ -488,7 +488,6 @@ const SubjectVersionPage: React.FC = () => {
             }
           } catch (error) {
             console.error('Error creating default version:', error);
-            handleError('Failed to create default version. Please try again.');
             setInitLoading(null);
           }
         } else {
@@ -556,7 +555,7 @@ const SubjectVersionPage: React.FC = () => {
       
       setModalVisible(false);
     } catch (err: any) {
-      handleError('Failed to add version: ' + err.message);
+      console.log('Failed to add version: ' + err.message);
     } finally {
       setAdding(false);
     }

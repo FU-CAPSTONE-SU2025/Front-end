@@ -183,8 +183,6 @@ export const makeRequest = async (
                         return await makeRequest(method, url, data, mergedHeaders);
                     }
                 }
-                alert("Invalid Request or Token is expired. Please log in again")
-                window.location.href = "/";
                 return {
                     success: false,
                     error: createErrorResponse("Unauthorized", 401)

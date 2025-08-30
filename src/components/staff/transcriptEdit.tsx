@@ -1,123 +1,299 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Typography, Row, Col, Button, Table, Tag, InputNumber } from 'antd';
+import  { useState, useEffect, useRef } from 'react';
+import { Card, Typography, Row, Col, Button, Table, Tag, InputNumber, Spin } from 'antd';
 import { CloseOutlined, SaveOutlined, EditOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/transcriptEditDialog.module.css';
-import  useCRUDStudent  from '../../hooks/useCRUDStudent';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { useSubjectMarkReport, useSubjectMarkReportTemplate } from '../../hooks/useSubjectMarkReport';
+import { JoinedSubject } from '../../interfaces/ISchoolProgram';
+import { ICreateSubjectMarkReport } from '../../interfaces/ISubjectMarkReport';
 
 const { Title, Text } = Typography;
 
-interface Subject {
-  id: number;
-  title: string;
-  code: string;
-  credits: number;
-  description: string;
-  progress: number;
-  status: 'Current' | 'Completed' | 'Failed';
-  semester: number;
-  grade?: string;
-}
-
 interface Assessment {
-  id: number;
-  type: string;
-  name: string;
-  score: number;
+  category: string;
+  weight: number;
+  minScore: number;
+  score?: number;
   maxScore: number;
-  weight: number; // percentage weight in final grade
+  isExisting: boolean;
 }
 
 interface Props {
-  transcriptId: number;
-  subject: Subject;
+  joinedSubject: JoinedSubject;
   onClose: () => void;
 }
 
-// Mock assessment data
-const initialAssessments: Assessment[] = [
-  { id: 1, type: 'Progress Test', name: 'Progress Test 01', score: 8.5, maxScore: 10, weight: 10 },
-  { id: 2, type: 'Progress Test', name: 'Progress Test 02', score: 9.0, maxScore: 10, weight: 10 },
-  { id: 3, type: 'Assignment', name: 'Assignment 01', score: 9.2, maxScore: 10, weight: 15 },
-  { id: 4, type: 'Assignment', name: 'Assignment 02', score: 8.8, maxScore: 10, weight: 15 },
-  { id: 5, type: 'Participation', name: 'Class Participation', score: 9.5, maxScore: 10, weight: 10 },
-  { id: 6, type: 'Practical Exam', name: 'Midterm Practical', score: 7.5, maxScore: 10, weight: 20 },
-  { id: 7, type: 'Final Exam', name: 'Final Examination', score: 8.0, maxScore: 10, weight: 20 },
-];
-
-export default function TranscriptEdit({ transcriptId, subject, onClose }: Props) {
-  const { handleSuccess } = useApiErrorHandler();
-  const [assessments, setAssessments] = useState<Assessment[]>(initialAssessments);
-  const [editingId, setEditingId] = useState<number | null>(null);
+export default function TranscriptEdit({ joinedSubject, onClose }: Props) {
+  const { handleSuccess, handleError } = useApiErrorHandler();
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [tempScore, setTempScore] = useState<number>(0);
+  const hasFetchedMarks = useRef(false);
+  const [marksError, setMarksError] = useState<string | null>(null);
 
-  // CRUD hook
-  const {
-    updateStudentScoreMutation,
-  } = useCRUDStudent();
+  // Subject mark report hooks
+  const { 
+    fetchSubjectMarkReportMutation, 
+    addSubjectMarkReportMutation,
+    updateSubjectMarkReportMutation 
+  } = useSubjectMarkReport();
 
+  // Get assessment template for this subject
+  const { 
+    data: templateData, 
+    isLoading: templateLoading, 
+    error: templateError,
+    refetch: refetchTemplate
+  } = useSubjectMarkReportTemplate(
+    joinedSubject.subjectCode, 
+    joinedSubject.subjectVersionCode
+  );
+
+  // Reset all state when component mounts or joinedSubject changes
+  useEffect(() => {
+    // Reset all state
+    setAssessments([]);
+    setExistingMarks([]);
+    setEditingCategory(null);
+    setTempScore(0);
+    setMarksError(null);
+    hasFetchedMarks.current = false;
+    
+    // Refetch template data
+    refetchTemplate();
+  }, [joinedSubject.id, joinedSubject.subjectCode, joinedSubject.subjectVersionCode, refetchTemplate]);
+
+  // Fetch existing marks for this subject
+  const [existingMarks, setExistingMarks] = useState<any[]>([]);
+  const [marksLoading, setMarksLoading] = useState(false);
+
+  // Fetch existing marks when component mounts
+  useEffect(() => {
+    const fetchExistingMarks = async () => {
+      if (!joinedSubject.id || joinedSubject.id <= 0) {
+        console.log('No valid joinedSubject.id, skipping marks fetch');
+        return;
+      }
+      
+      setMarksLoading(true);
+      try {
+        const marks = await fetchSubjectMarkReportMutation.mutateAsync(joinedSubject.id);
+        setExistingMarks(marks || []);
+      } catch (error: any) {
+        console.error('Failed to fetch existing marks:', error);
+        // Handle 404 specifically - this means no marks exist yet, which is normal
+        if (error?.response?.status === 404) {
+          console.log('No marks found for this subject - consider adding the marks');
+          setExistingMarks([]);
+        } else {
+          console.error('Unexpected error fetching marks:', error);
+          setExistingMarks([]);
+        }
+      } finally {
+        setMarksLoading(false);
+      }
+    };
+
+    fetchExistingMarks();
+  }, [joinedSubject.id]); 
+
+  // Merge template data with existing marks
+  useEffect(() => {
+    if (!templateData || !Array.isArray(templateData)) return;
+
+    const mergedAssessments: Assessment[] = templateData.map(template => {
+      const existingMark = existingMarks.find(mark => mark.category === template.category);
+      
+      return {
+        category: template.category,
+        weight: template.weight,
+        minScore: template.minScore,
+        score: existingMark?.score,
+        maxScore: 10, // Assuming max score is 10, adjust if needed
+        isExisting: !!existingMark
+      };
+    });
+
+    setAssessments(mergedAssessments);
+  }, [templateData, existingMarks]);
 
   // Calculate weighted average
   const calculateFinalGrade = () => {
-    const totalWeightedScore = assessments.reduce((sum, assessment) => {
-      return sum + (assessment.score / assessment.maxScore) * assessment.weight;
+    const validAssessments = assessments.filter(assessment => assessment.score !== undefined);
+    if (validAssessments.length === 0) return 0;
+
+    const totalWeightedScore = validAssessments.reduce((sum, assessment) => {
+      return sum + (assessment.score! / assessment.maxScore) * assessment.weight;
     }, 0);
+
     return totalWeightedScore.toFixed(2);
   };
 
-  // Handle score editing
-  const startEditing = (assessment: Assessment) => {
-    setEditingId(assessment.id);
-    setTempScore(assessment.score);
+  // Calculate total weight of existing assessments (real ones, not template)
+  const calculateTotalExistingWeight = () => {
+    const existingAssessments = assessments.filter(assessment => assessment.isExisting);
+    return existingAssessments.reduce((sum, assessment) => sum + assessment.weight, 0);
   };
 
-  const saveScore = async (assessmentId: number) => {
-    setAssessments(prev => 
-      prev.map(assessment => 
-        assessment.id === assessmentId 
-          ? { ...assessment, score: tempScore }
-          : assessment
-      )
-    );
-    setEditingId(null);
-    await updateStudentScoreMutation.mutateAsync({ studentId: transcriptId, subjectId: subject.id, score: tempScore });
-    handleSuccess('Score updated successfully!');
+  // Determine subject status based on the three-state logic
+  const getSubjectStatus = () => {
+    const totalExistingWeight = calculateTotalExistingWeight();
+    
+    if (joinedSubject.isPassed === true) {
+      console.log(`Status: Pass (isPassed: ${joinedSubject.isPassed}, weight: ${totalExistingWeight}/100)`);
+      return 'Pass';
+    } else if (joinedSubject.isPassed === false) {
+      if (totalExistingWeight < 100) {
+        console.log(`Status: In Progress (isPassed: ${joinedSubject.isPassed}, weight: ${totalExistingWeight}/100)`);
+        return 'In Progress';
+      } else {
+        console.log(`Status: Failed (isPassed: ${joinedSubject.isPassed}, weight: ${totalExistingWeight}/100)`);
+        return 'Failed';
+      }
+    } else {
+      // Handle undefined/null case
+      if (totalExistingWeight < 100) {
+        console.log(`Status: In Progress (isPassed: ${joinedSubject.isPassed}, weight: ${totalExistingWeight}/100)`);
+        return 'In Progress';
+      } else {
+        console.log(`Status: Unknown (isPassed: ${joinedSubject.isPassed}, weight: ${totalExistingWeight}/100)`);
+        return 'Unknown';
+      }
+    }
+  };
+
+  // Get status color based on the status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Pass':
+        return 'green';
+      case 'Failed':
+        return 'red';
+      case 'In Progress':
+        return 'orange';
+      default:
+        return 'default';
+    }
+  };
+
+  // Handle score editing
+  const startEditing = (category: string) => {
+    const assessment = assessments.find(a => a.category === category);
+    if (assessment) {
+      setEditingCategory(category);
+      setTempScore(assessment.score || 0);
+    }
+  };
+
+  const saveScore = async (category: string) => {
+    const assessment = assessments.find(a => a.category === category);
+    if (!assessment) return;
+
+    try {
+      if (assessment.isExisting) {
+        // Update existing mark
+        const existingMark = existingMarks.find(mark => mark.category === category);
+        if (existingMark) {
+          await updateSubjectMarkReportMutation.mutateAsync({
+            id: existingMark.id,
+            data: { category, weight: assessment.weight, minScore: assessment.minScore, score: tempScore }
+          });
+        }
+      } else {
+        // Add new mark
+        const markData: ICreateSubjectMarkReport = {
+          category,
+          weight: assessment.weight,
+          minScore: assessment.minScore,
+          score: tempScore
+        };
+
+        await addSubjectMarkReportMutation.mutateAsync({
+          joinedSubjectId: joinedSubject.id,
+          data: [markData]
+        });
+      }
+
+      // Update local state
+      setAssessments(prev => 
+        prev.map(a => 
+          a.category === category 
+            ? { ...a, score: tempScore, isExisting: true }
+            : a
+        )
+      );
+
+      setEditingCategory(null);
+      handleSuccess('Score updated successfully!');
+    } catch (error) {
+      handleError('Failed to save score');
+    }
   };
 
   const cancelEditing = () => {
-    setEditingId(null);
+    setEditingCategory(null);
     setTempScore(0);
+  };
+
+  // Enhanced close handler that ensures clean state
+  const handleClose = () => {
+    // Reset all state before closing
+    setAssessments([]);
+    setExistingMarks([]);
+    setEditingCategory(null);
+    setTempScore(0);
+    setMarksError(null);
+    hasFetchedMarks.current = false;
+    
+    // Call the original onClose
+    onClose();
   };
 
   // Table columns for assessments
   const columns = [
     {
-      title: 'Assessment Type',
-      dataIndex: 'type',
-      key: 'type',
-      render: (type: string) => (
+      title: 'Assessment Category',
+      dataIndex: 'category',
+      key: 'category',
+      render: (category: string) => (
         <Tag color={
-          type === 'Progress Test' ? 'blue' :
-          type === 'Assignment' ? 'green' :
-          type === 'Participation' ? 'orange' :
-          type === 'Practical Exam' ? 'purple' :
-          'red'
+          category === 'Assignment' ? 'green' :
+          category === 'Final Exam' ? 'red' :
+          category === 'Midterm' ? 'orange' :
+          category === 'Participation' ? 'blue' :
+          'default'
         }>
-          {type}
+          {category}
         </Tag>
       ),
     },
     {
-      title: 'Assessment Name',
-      dataIndex: 'name',
-      key: 'name',
+      title: 'Weight',
+      dataIndex: 'weight',
+      key: 'weight',
+      render: (weight: number, record: Assessment) => (
+        <div>
+          <Text>{weight}%</Text>
+          {record.isExisting && (
+            <Text type="secondary" style={{ fontSize: '10px', display: 'block' }}>
+              ✓ Counted
+            </Text>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: 'Min Score',
+      dataIndex: 'minScore',
+      key: 'minScore',
+      render: (minScore: number) => <Text>{minScore}</Text>,
     },
     {
       title: 'Score',
       key: 'score',
       render: (record: Assessment) => (
         <div className={styles.scoreContainer}>
-          {editingId === record.id ? (
+          {editingCategory === record.category ? (
             <>
               <InputNumber
                 value={tempScore}
@@ -131,7 +307,7 @@ export default function TranscriptEdit({ transcriptId, subject, onClose }: Props
               <Button 
                 type="link" 
                 icon={<SaveOutlined />} 
-                onClick={() => saveScore(record.id)}
+                onClick={() => saveScore(record.category)}
                 className={styles.saveButton}
               />
               <Button 
@@ -143,11 +319,13 @@ export default function TranscriptEdit({ transcriptId, subject, onClose }: Props
             </>
           ) : (
             <>
-              <Text className={styles.scoreText}>{record.score}/{record.maxScore}</Text>
+              <Text className={styles.scoreText}>
+                {record.score !== undefined ? `${record.score}/${record.maxScore}` : 'Not scored'}
+              </Text>
               <Button 
                 type="link" 
                 icon={<EditOutlined />} 
-                onClick={() => startEditing(record)}
+                onClick={() => startEditing(record.category)}
                 className={styles.editButton}
               />
             </>
@@ -156,19 +334,36 @@ export default function TranscriptEdit({ transcriptId, subject, onClose }: Props
       ),
     },
     {
-      title: 'Percentage',
-      key: 'percentage',
+      title: 'Status',
+      key: 'status',
       render: (record: Assessment) => (
-        <Text>{((record.score / record.maxScore) * 100).toFixed(1)}%</Text>
+        <Tag color={record.isExisting ? 'green' : 'orange'}>
+          {record.isExisting ? 'Scored' : 'Not Scored'}
+        </Tag>
       ),
     },
-    {
-      title: 'Weight',
-      dataIndex: 'weight',
-      key: 'weight',
-      render: (weight: number) => <Text>{weight}%</Text>,
-    },
   ];
+
+  if (templateLoading || marksLoading) {
+    return (
+      <div className={styles.container}>
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <Spin size="large" />
+          <div style={{ marginTop: 16 }}>Loading assessment data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (templateError) {
+    return (
+      <div className={styles.container}>
+        <div style={{ textAlign: 'center', padding: '50px', color: 'red' }}>
+          Failed to load assessment template. Please try again.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -176,29 +371,21 @@ export default function TranscriptEdit({ transcriptId, subject, onClose }: Props
       <div className={styles.header}>
         <div className={styles.headerContent}>
           <Title level={2} className={styles.subjectTitle}>
-            {subject.title}
+            {joinedSubject.name || joinedSubject.subjectName}
           </Title>
           <Text type="secondary" className={styles.subjectDetails}>
-            {subject.code} • {subject.credits} Credits • Semester {subject.semester}
+            {joinedSubject.subjectCode} • v{joinedSubject.subjectVersionCode} • {joinedSubject.credits} Credits
           </Text>
         </div>
         <Button 
           icon={<CloseOutlined />} 
-          onClick={onClose}
+          onClick={handleClose}
           size="large"
           className={styles.closeButton}
         >
           Close
         </Button>
       </div>
-
-      {/* Subject Description */}
-      <Card className={styles.descriptionCard}>
-        <Title level={4} className={styles.descriptionTitle}>Subject Description</Title>
-        <Text className={styles.descriptionText}>
-          {subject.description}
-        </Text>
-      </Card>
 
       {/* Grade Summary */}
       <Row gutter={16} className={styles.gradeSummaryRow}>
@@ -213,17 +400,20 @@ export default function TranscriptEdit({ transcriptId, subject, onClose }: Props
         <Col span={8}>
           <Card className={`${styles.gradeCard} ${styles.gradeCardBlue}`}>
             <Title level={3} className={`${styles.gradeValue} ${styles.gradeValueBlue}`}>
-              {subject.progress}%
+              {assessments.filter(a => a.score !== undefined).length}/{assessments.length}
             </Title>
-            <Text type="secondary">Progress</Text>
+            <Text type="secondary">Assessments Scored</Text>
           </Card>
         </Col>
         <Col span={8}>
           <Card className={`${styles.gradeCard} ${styles.gradeCardGreen}`}>
             <Title level={3} className={`${styles.gradeValue} ${styles.gradeValueGreen}`}>
-              {subject.status === 'Completed' ? subject.grade : 'In Progress'}
+              {getSubjectStatus()}
             </Title>
             <Text type="secondary">Status</Text>
+            <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
+              Weight: {calculateTotalExistingWeight()}/100%
+            </Text>
           </Card>
         </Col>
       </Row>
@@ -235,13 +425,13 @@ export default function TranscriptEdit({ transcriptId, subject, onClose }: Props
             Assessment Scores
           </Title>
           <Text className={styles.assessmentsHint}>
-            Click the edit icon to modify scores
+            Click the edit icon to modify scores. Unscored assessments will be created when you first enter a score.
           </Text>
         </div>
         <Table
           columns={columns}
           dataSource={assessments}
-          rowKey="id"
+          rowKey="category"
           pagination={false}
           className={styles.assessmentsTable}
           bordered
@@ -255,12 +445,7 @@ export default function TranscriptEdit({ transcriptId, subject, onClose }: Props
             </Col>
             <Col>
               <Text className={styles.finalGradeValue}>
-                {calculateFinalGrade()}% 
-                {subject.status === 'Completed' && subject.grade && (
-                  <span className={styles.letterGrade}>
-                    (Letter Grade: {subject.grade})
-                  </span>
-                )}
+                {calculateFinalGrade()}%
               </Text>
             </Col>
           </Row>

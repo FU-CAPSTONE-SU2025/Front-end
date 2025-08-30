@@ -98,10 +98,6 @@ All components use the existing staff styling system (`staffTranscript.module.cs
 - Audit logging
 - Permission-based field access
 
-# Staff Syllabus Components
-
-This directory contains modular components for the syllabus management functionality. The components have been extracted from the main `subjectSyllabus.tsx` page to improve maintainability and reusability.
-
 ## Components
 
 ### AssessmentTable

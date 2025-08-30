@@ -44,8 +44,6 @@ const ManagerSubjectPage = lazy(() => import('../pages/manager/subject'));
 const ManagerSubjectDetail = lazy(() => import('../pages/manager/subjectDetail'));
 const EditStudentTranscript = lazy(() => import("../pages/staff/editStudentTranscript"));
 const SubjectPage = lazy(() => import("../pages/staff/subject"));
-const SubjectSyllabus = lazy(() => import("../pages/staff/subjectSyllabus"));
-const ManagerSubjectSyllabus = lazy(() => import("../pages/manager/subjectSyllabus"));
 const ChatAI = lazy(() => import("../pages/student/chatAI"));
 const AdvisorDashboard = lazy(() => import("../pages/advisor/dashboard"));
 const WorkSchedule = lazy(() => import("../pages/advisor/workSchedule"));
@@ -283,14 +281,6 @@ export const routes = createBrowserRouter([
         ),
       },
       {
-        path: "subject/:subjectId/syllabus/:syllabusId?",
-        element: (
-          <Suspense fallback={<PageLoader />}>
-            <SubjectSyllabus />
-          </Suspense>
-        ),
-      },
-      {
         path: "subject/:subjectId/version",
         element: (
           <Suspense fallback={<PageLoader />}>
@@ -439,14 +429,6 @@ export const routes = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <ManagerSubjectVersionPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: "subject/:subjectId/syllabus/:syllabusId?",
-        element: (
-          <Suspense fallback={<PageLoader />}>
-            <ManagerSubjectSyllabus />
           </Suspense>
         ),
       },

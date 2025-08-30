@@ -2,15 +2,15 @@ import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from 
 import { baseUrl, GetHeader } from "../template";
 
 import { ISubjectMarkReport,ICreateSubjectMarkReport, IUpdateSubjectMarkReport, IViewSubjectAssessment } from '../../interfaces/ISubjectMarkReport';
-const subjectMarkURL = baseUrl + "/SubjectMarkRp";
+const subjectMarkURL = baseUrl + "/SubjecMarkRp"; // Typeto in the backend
 
-export const FetchViewSubjectMarkReportTemplate = async (subjectCode: string,subjectVersionCode:string): Promise<IViewSubjectAssessment> => {
+export const FetchViewSubjectMarkReportTemplate = async (subjectCode: string,subjectVersionCode:string): Promise<IViewSubjectAssessment[]> => {
   const props = {
     data: null,
     url: subjectMarkURL+`/view-template-import?subjectCode=${subjectCode}&subjectVersionCode=${subjectVersionCode}`,
     headers: GetHeader(),
   };
-  const result = await axiosCreate(props);
+  const result = await axiosRead(props);
   if (result.success) {
     return result.data;
   } else {
@@ -25,6 +25,7 @@ export const AddSubjectMarkReport = async (joinedSubjectId: number,data: ICreate
     url: subjectMarkURL+`/${joinedSubjectId}`,
     headers: GetHeader(),
   };
+   console.log("AddSubjectMarkReport",props)
   const result = await axiosCreate(props);
   if (result.success) {
     return result.data;

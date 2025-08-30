@@ -289,8 +289,45 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
               <Option value="other">Other</Option>
             </Select>
           </Form.Item>
-          <Form.Item name="completionCriteria" label="Completion Criteria">
-            <TextArea rows={3} placeholder="Describe completion criteria..." />
+          <Form.Item
+          // converting the criteria number into string for BE handler
+            name="completionCriteria"
+            label="Completion Criteria"
+            rules={[
+              {
+                required: true,
+                message: 'Please enter a number between 0 and 10',
+              },
+              {
+                validator: (_, value) => {
+                  if (value === undefined || value === null || value === '') {
+                    return Promise.resolve();
+                  }
+                  const num = Number(value);
+                  if (!isNaN(num) && num >= 0 && num <= 10) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Number must be between 0 and 10'));
+                },
+              },
+            ]}
+            getValueFromEvent={e => {
+              // Accept only numbers, but always return as string
+              if (typeof e === 'number' || typeof e === 'string') {
+                const val = e.toString().replace(/[^0-9.]/g, '');
+                return val;
+              }
+              return '';
+            }}
+          >
+            <InputNumber
+              min={0}
+              max={10}
+              step={0.1}
+              style={{ width: '100%' }}
+              placeholder="Enter a number from 0 to 10"
+              stringMode
+            />
           </Form.Item>
           <div className={styles.syllabusActions}>
             <Button onClick={() => setAssessmentModalVisible(false)} className={`${styles.syllabusButton} ${styles.cancelButton}`}>

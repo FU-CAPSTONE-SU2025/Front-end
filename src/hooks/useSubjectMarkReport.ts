@@ -98,7 +98,7 @@ export const useSubjectMarkReport = () => {
 export const useSubjectMarkReportTemplate = (subjectCode: string, subjectVersionCode: string) => {
   const { handleError } = useApiErrorHandler();
 
-  return useQuery<IViewSubjectAssessment | null>({
+  return useQuery<IViewSubjectAssessment[] | null>({
     queryKey: ['subjectMarkReportTemplate', subjectCode, subjectVersionCode],
     queryFn: async () => {
       if (!subjectCode || !subjectVersionCode) {

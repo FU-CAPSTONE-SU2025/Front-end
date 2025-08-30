@@ -26,4 +26,5 @@ export interface IViewSubjectAssessment {
     category: string;
     weight: number;
     minScore: number;
+    score: number;
 }

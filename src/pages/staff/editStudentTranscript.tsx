@@ -20,17 +20,7 @@ import useCRUDStudent from '../../hooks/useCRUDStudent';
 const { Title, Text } = Typography;
 const { Search } = Input;
 
-interface Subject {
-  id: number;
-  title: string;
-  code: string;
-  credits: number;
-  description: string;
-  progress: number; // 0-100 for current subjects
-  status: 'Current' | 'Completed' | 'Failed';
-  semester: number;
-  grade?: string;
-}
+
 
 const EditStudentTranscript: React.FC = () => {
   const { studentId } = useParams();
@@ -49,7 +39,7 @@ const EditStudentTranscript: React.FC = () => {
     usePagedCurriculumList
   } = useSchoolApi();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<JoinedSubject | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   
   // Student account data for API calls
@@ -255,7 +245,7 @@ const EditStudentTranscript: React.FC = () => {
   };
 
   // Modal: Add Subject
-  const handleSubjectClick = (subject: Subject) => {
+  const handleSubjectClick = (subject: JoinedSubject) => {
     setSelectedSubject(subject);
     setIsModalVisible(true);
   };
@@ -313,20 +303,11 @@ const EditStudentTranscript: React.FC = () => {
     }
   };
 
-  // Derive current subjects from joinedSubjects (not completed)
-  const currentSubjects: Subject[] = (joinedSubjects || [])
-    .filter(js => !js.isCompleted)
-    .map((js, idx) => ({
-      id: idx,
-      title: js.name || js.subjectName,
-      code: js.subjectCode,
-      credits: (js.credits as number) ?? 0,
-      description: `Block: ${js.semesterStudyBlockType}`,
-      progress: js.isCompleted ? 100 : 0,
-      status: 'Current' as const,
-      semester: parseInt(String(js.semesterName || '').replace(/\D/g, '')) || 0,
-    }));
-
+  // Derive current subjects from joinedSubjects ( isActive:true == not done course)
+  const currentSubjects: JoinedSubject[] = (joinedSubjects || [])
+    .filter(js => js.isActive && !js.isPassed);
+  //  current subject == isActive:true && isPassed:false
+  
   const getProgressColor = (progress: number) => {
     if (progress < 30) return '#ef4444';
     if (progress < 60) return '#f59e0b';
@@ -610,16 +591,18 @@ const EditStudentTranscript: React.FC = () => {
                         onClick={() => handleSubjectClick(subject)}
                       >
                         <div className={styles.subjectHeader}>
-                          <Text strong className={styles.subjectTitle}>{subject.title}</Text>
-                          <Text className={styles.subjectCode}>{subject.code}</Text>
+                          <Text strong className={styles.subjectTitle}>{subject.name || subject.subjectName}</Text>
+                          <Text className={styles.subjectCode}>{subject.subjectCode} • v{subject.subjectVersionCode}</Text>
                         </div>
-                        <Text className={styles.subjectDescription} style={{ whiteSpace: 'pre-line' }}>{subject.description}</Text>
+                        <Text className={styles.subjectDescription} style={{ whiteSpace: 'pre-line' }}>
+                          Block: {subject.semesterStudyBlockType} • Semester: {subject.semesterName || 'N/A'}
+                        </Text>
                         <div className={styles.progressSection}>
                           <Text>Progress</Text>
                           <Progress 
-                            percent={subject.progress} 
+                            percent={subject.isPassed ? 100 : 0} 
                             size="small" 
-                            strokeColor={getProgressColor(subject.progress)}
+                            strokeColor={getProgressColor(subject.isPassed ? 100 : 0)}
                             trailColor="#f1f5f9"
                           />
                         </div>
@@ -668,12 +651,6 @@ const EditStudentTranscript: React.FC = () => {
                           <Col span={4}>
                             <Text>Credits: {js.credits ?? '-'}</Text>
                           </Col>
-                          <Col span={6}>
-                            <Tag color={js.isPassed ? 'green' : 'red'}>{js.isPassed ? 'Passed' : 'Not passed'}</Tag>
-                            <Tag color={js.isCompleted ? 'blue' : 'orange'} style={{ marginLeft: 8 }}>
-                              {js.isCompleted ? 'Completed' : 'In progress'}
-                            </Tag>
-                          </Col>
                           <Col span={4} style={{ textAlign: 'right' }}>
                             <Tag>{js.semesterStudyBlockType}</Tag>
                           </Col>
@@ -696,12 +673,11 @@ const EditStudentTranscript: React.FC = () => {
         width="90%"
         style={{ top: 20 }}
         className={styles.transcriptModal}
-        maskStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
+        styles={{ mask: { backgroundColor: 'rgba(0, 0, 0, 0.7)' } }}
       >
         {selectedSubject && (
           <TranscriptEdit 
-            transcriptId={selectedSubject.id}
-            subject={selectedSubject}
+            joinedSubject={selectedSubject}
             onClose={handleModalClose}
           />
         )}
