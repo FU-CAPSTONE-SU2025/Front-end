@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Progress, Button, InputNumber, Tag, Tabs } from 'antd';
+import { Progress, Button, InputNumber, Tag, Tabs, Tooltip } from 'antd';
 import { CalculatorOutlined, InfoCircleOutlined, ArrowLeftOutlined, RobotOutlined, CheckSquareOutlined, BarChartOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router';
 import GradeCalculator from '../../components/student/gradeCalculator';
 import TodoList from '../../components/student/todoList';
 import AIGenerateTodoTab from '../../components/student/aiGenerateTodoTab';
-import { useJoinedSubjectById, useSubjectCheckpoints } from '../../hooks/useStudentFeature';
+import { useJoinedSubjectById, useSubjectCheckpoints, useSubjectMarks } from '../../hooks/useStudentFeature';
 import '../../css/student/subjectDetails.module.css';
 
 interface Grade {
@@ -17,27 +17,18 @@ interface Grade {
   isSuggested?: boolean;
 }
 
-// Mock data for grades - In a real app, you'd fetch this based on subjectId
-const getMockGradeData = (subjectCode: string) => ({
-  grades: [
-    { name: 'Assignment 1', score: 10, weight: 10 },
-    { name: 'Assignment 2', score: 9, weight: 10 },
-    { name: 'Assignment 3', score: null, weight: 10, isEditable: true },
-    { name: 'Assignment 4', score: null, weight: 10, isEditable: true },
-    { name: 'Lab 1', score: 10, weight: 5 },
-    { name: 'Lab 2', score: 9, weight: 5 },
-    { name: 'Lab 3', score: null, weight: 5, isEditable: true },
-    { name: 'Practical Exam', score: null, weight: 20, isEditable: true },
-    { name: 'Final Exam', score: null, weight: 30, isEditable: true },
-  ],
-  progress: {
-    completed: 20,
-    total: 24,
-    absentPercentage: 10,
-    absentCount: 2,
-    totalSessions: 20,
-  }
-});
+// Transform API marks data to Grade format
+const transformMarksToGrades = (marks: any[]): Grade[] => {
+  if (!marks || marks.length === 0) return [];
+  
+  return marks.map(mark => ({
+    name: mark.category,
+    score: mark.score,
+    weight: mark.weight,
+    isEditable: false, // Marks from API are read-only
+    isSuggested: false
+  }));
+};
 
 const SubjectDetails = () => {
     const { id } = useParams<{ id: string }>();
@@ -58,17 +49,18 @@ const SubjectDetails = () => {
     // Fetch subject checkpoints/todo list
     const { data: checkpoints, isLoading: checkpointsLoading, error: checkpointsError, refetch: refetchCheckpoints } = useSubjectCheckpoints(joinedSubjectId);
 
-    // Memoize mock data to prevent recreation on every render
-    const mockData = useMemo(() => 
-        subject ? getMockGradeData(subject.subjectCode) : null, 
-        [subject?.subjectCode]
+    // Fetch subject marks
+    const { data: marks, isLoading: marksLoading, error: marksError, refetch: refetchMarks } = useSubjectMarks(joinedSubjectId);
+
+    // Transform marks data to grades format
+    const transformedGrades = useMemo(() => 
+        marks ? transformMarksToGrades(marks) : [], 
+        [marks]
     );
 
     useEffect(() => {
-        if (mockData) {
-            setGrades(mockData.grades);
-        }
-    }, [mockData]);
+        setGrades(transformedGrades);
+    }, [transformedGrades]);
 
     const handleGoBack = () => {
         navigate(-1);
@@ -81,7 +73,7 @@ const SubjectDetails = () => {
         setActiveTab('todo');
     };
 
-    if (subjectLoading) {
+    if (subjectLoading || marksLoading) {
         return (
             <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden flex items-center justify-center">
                 <div className="text-white text-xl">Loading subject details...</div>
@@ -89,10 +81,10 @@ const SubjectDetails = () => {
         );
     }
 
-    if (subjectError) {
+    if (subjectError || marksError) {
         return (
             <div className="pt-20 flex flex-col w-full min-h-screen overflow-x-hidden flex items-center justify-center">
-                <div className="text-red-400 text-xl">Error loading subject: {subjectError.message}</div>
+                <div className="text-red-400 text-xl">Error loading subject: {subjectError?.message || marksError?.message}</div>
             </div>
         );
     }
@@ -127,13 +119,31 @@ const SubjectDetails = () => {
     };
 
     const currentScore = calculateCurrentScore(grades);
-    const attendancePercentage = mockData ? (mockData.progress.completed / mockData.progress.total) * 100 : 0;
+    const attendancePercentage = 0; // No attendance data from marks API
 
-    // Calculate progress based on subject status
+    // Calculate progress based on completed grades weight
     const getProgressPercentage = () => {
         if (subject.isCompleted) return 100;
         if (subject.isPassed) return 80;
-        return 30;
+        
+        // Calculate progress based on completed grades weight
+        const completedGrades = grades.filter(grade => grade.score !== null);
+        const totalWeight = grades.reduce((sum, grade) => sum + (grade.weight || 0), 0);
+        const completedWeight = completedGrades.reduce((sum, grade) => sum + (grade.weight || 0), 0);
+        
+        if (totalWeight === 0) return 0;
+        
+        // Normalize to 100% if total weight is not 100
+        const progressPercentage = (completedWeight / totalWeight) * 100;
+        
+        // If total weight is 100, use the actual percentage
+        // If total weight is less than 100, scale it proportionally
+        if (totalWeight === 100) {
+            return Math.round(progressPercentage);
+        } else {
+            // Scale the progress to reflect the actual completion relative to 100%
+            return Math.round((completedWeight / 100) * 100);
+        }
     };
 
     // Tab items configuration
@@ -162,7 +172,7 @@ const SubjectDetails = () => {
         {
             key: 'ai-generate',
             label: (
-                <span className="flex  text-lg items-center gap-2">
+                <span className="flex items-center text-lg gap-2">
                     <span className='!text-white'>AI Generate Todo</span>
                 </span>
             ),
@@ -188,7 +198,7 @@ const SubjectDetails = () => {
         {
             key: 'grades',
             label: (
-                <span className="flex  text-lg items-center gap-2">
+                <span className="flex items-center text-lg gap-2">
                     <span className='!text-white'>Grades & Progress</span>
                 </span>
             ),
@@ -199,32 +209,25 @@ const SubjectDetails = () => {
                     transition={{ duration: 0.5, delay: 0.2 }}
                     className="space-y-8 !mb-10"
                 >
-                    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-2xl font-semibold">Current Score</h2>
-                            <Tag color={currentScore >= 5 ? "green" : "red"} className="text-lg font-bold">
-                                {currentScore.toFixed(2)}/10
-                            </Tag>
-                        </div>
-                        
-                        <Button 
-                            type="primary" 
-                            size="large" 
-                            icon={<CalculatorOutlined />}
-                            onClick={() => setIsModalVisible(true)}
-                            className="w-full !h-12 !text-base !font-bold !bg-orange-500 hover:!bg-orange-600 !border-orange-500 mb-4"
-                        >
-                            Pass Score Calculator
-                        </Button>
-
-                        <div className="text-center text-gray-300 text-sm">
-                            <InfoCircleOutlined className="mr-1" />
-                            Click to calculate required scores for passing
-                        </div>
-                    </div>
+                  
                     
-                    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
-                        <h2 className="text-2xl font-semibold mb-4 text-center">Progress Summary</h2>
+                                        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl !text-white font-semibold">Progress Summary</h2>
+                            <Tooltip 
+                                title="Calculate Pass Score" 
+                                placement="left"
+                                color="rgba(0, 0, 0, 0.8)"
+                            >
+                                <Button 
+                                    type="primary" 
+                                    size="large" 
+                                    icon={<CalculatorOutlined />}
+                                    onClick={() => setIsModalVisible(true)}
+                                    className="!h-10 !w-10 !p-0 !flex !items-center !justify-center !bg-orange-500 hover:!bg-orange-600 !border-orange-500 !rounded-full !shadow-lg hover:!shadow-xl !transition-all !duration-300 !relative !z-50"
+                                />
+                            </Tooltip>
+                        </div>
                         <div className="flex justify-center items-center gap-6 mb-6">
                             <Progress 
                                 type="dashboard" 
@@ -236,40 +239,54 @@ const SubjectDetails = () => {
                             />
                         </div>
                         <p className="text-center text-gray-300 mb-6">
-                            {mockData ? `${mockData.progress.absentPercentage}% absent so far (${mockData.progress.absentCount} absent on ${mockData.progress.totalSessions} total)` : 'No attendance data available'}
+                            {(() => {
+                                const completedGrades = grades.filter(grade => grade.score !== null);
+                                const totalWeight = grades.reduce((sum, grade) => sum + (grade.weight || 0), 0);
+                                const completedWeight = completedGrades.reduce((sum, grade) => sum + (grade.weight || 0), 0);
+                                
+                                if (grades.length === 0) {
+                                    return 'No grades available for this subject';
+                                }
+                                
+                                const weightStatus = totalWeight === 100 
+                                    ? 'Complete grading structure' 
+                                    : `Incomplete grading structure (${totalWeight}% of 100%)`;
+                                
+                                return `${completedGrades.length} of ${grades.length} grades completed (${completedWeight}% of ${totalWeight}% total weight) - ${weightStatus}`;
+                            })()}
                         </p>
                         
-                        <h3 className="font-semibold mb-4">Grade Details</h3>
+                        <h3 className="font-semibold mb-4 text-white">Grade Details</h3>
                         <div className="space-y-3">
-                            {grades.map((grade, index) => (
-                                <div key={index} className="flex justify-between items-center bg-black/20 p-3 rounded-lg">
-                                    <div className="flex items-center gap-2">
+                            {grades.length > 0 ? (
+                                grades.map((grade, index) => (
+                                    <div key={index} className="flex justify-between items-center bg-black/20 p-3 rounded-lg">
+                                                                            <div className="flex items-center gap-2">
                                         <span className="text-gray-200">{grade.name}</span>
-                                        {grade.isEditable && grade.score === null && (
-                                            <Tag color="orange">Pending</Tag>
-                                        )}
-                                        {grade.isSuggested && (
-                                            <Tag color="blue">Suggested</Tag>
-                                        )}
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        {grade.isEditable ? (
-                                            <InputNumber
-                                                min={0}
-                                                max={10}
-                                                step={0.1}
-                                                value={grade.score}
-                                                onChange={(value) => handleGradeChange(index, value)}
-                                                className="!w-20 !bg-white/10 !border-white/20 !text-white"
-                                                placeholder="Score"
-                                            />
-                                        ) : (
-                                            <span className="font-bold text-lg">{grade.score}</span>
-                                        )}
-                                        <span className="text-gray-400 text-sm">({grade.weight}%)</span>
+                                        <div className="flex items-center gap-2">
+                                            {grade.isEditable ? (
+                                                <InputNumber
+                                                    min={0}
+                                                    max={10}
+                                                    step={0.1}
+                                                    value={grade.score}
+                                                    onChange={(value) => handleGradeChange(index, value)}
+                                                    className="!w-20 !bg-white/10 !border-white/20 !text-white"
+                                                    placeholder="Score"
+                                                />
+                                            ) : (
+                                                <span className="font-bold text-white text-lg">{grade.score}</span>
+                                            )}
+                                            <span className="text-gray-400 text-sm">({grade.weight}%)</span>
+                                        </div>
                                     </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-8 text-gray-400">
+                                    No grades available for this subject
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
                 </motion.div>
@@ -346,7 +363,7 @@ const SubjectDetails = () => {
                 isVisible={isModalVisible}
                 onClose={() => setIsModalVisible(false)}
                 grades={grades}
-                onGradesUpdate={handleGradesUpdate}
+               
             />
         </div>
     );
