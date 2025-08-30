@@ -35,44 +35,55 @@
   position: absolute;
 }
 
+/* Button positioning - Bottom left to right */
 .avatar :global(.bottom-1) {
   bottom: -0.5rem;
+  left: -0.5rem;
 }
 
 .avatar :global(.right-1) {
   right: -0.5rem;
+  bottom: -0.5rem;
 }
 
 .avatar :global(.left-1) {
   left: -0.5rem;
+  bottom: -0.5rem;
 }
 
 .avatar :global(.w-6) {
   width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .avatar :global(.h-6) {
   height: 2rem;
 }
 
+/* Edit button - Orange theme */
 .avatar :global(.bg-orange-500) {
-  background-color: #f97316;
-}
-
-.avatar :global(.bg-red-500) {
-  background-color: #ef4444;
+  background-color: #EA580C;
 }
 
 .avatar :global(.hover\\:bg-orange-600:hover) {
-  background-color: #ea580c;
+  background-color: #C2410C;
+}
+
+/* Delete button - Red theme */
+.avatar :global(.bg-red-500) {
+  background-color: #ef4444;
 }
 
 .avatar :global(.hover\\:bg-red-600:hover) {
   background-color: #dc2626;
 }
 
+/* Button text and icons - Always white */
 .avatar :global(.text-white) {
-  color: white;
+  color: white !important;
 }
 
 .avatar :global(.border-white) {
@@ -87,12 +98,13 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
+/* Remove hover scaling and transitions */
 .avatar :global(.transition-all) {
-  transition: all 0.2s ease;
+  transition: none;
 }
 
 .avatar :global(.duration-200) {
-  transition-duration: 200ms;
+  transition-duration: 0ms;
 }
 
 .avatar :global(.focus\\:outline-none:focus) {
@@ -100,15 +112,15 @@
 }
 
 .avatar :global(.focus\\:ring-2:focus) {
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  box-shadow: none;
 }
 
 .avatar :global(.focus\\:ring-orange-300:focus) {
-  box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.5);
+  box-shadow: none;
 }
 
 .avatar :global(.focus\\:ring-red-300:focus) {
-  box-shadow: 0 0 0 2px rgba(252, 165, 165, 0.5);
+  box-shadow: none;
 }
 
 .avatar :global(.z-2) {

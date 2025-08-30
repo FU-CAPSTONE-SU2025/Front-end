@@ -597,7 +597,7 @@ const EditStudentTranscript: React.FC = () => {
                     <Title level={2} style={{ color: '#f59e0b', margin: 0 }}>
                       {otherSubjects.length}
                     </Title>
-                    <Text type="secondary">Other (In Progress/Failed)</Text>
+                    <Text type="secondary">In Progress or Not Passed</Text>
                   </div>
                 </Col>
               </Row>

@@ -73,12 +73,11 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   const avatarSize = typeof size === 'number' ? size : 120;
 
   return (
-    <div className={`relative inline-block ${className}`}>
+    <div style={{ position: 'relative', display: 'inline-block' }} className={className}>
       <motion.div
         whileHover={{ scale: disabled ? 1 : 1.05 }}
         transition={{ duration: 0.3 }}
-        className="relative"
-        style={{ padding: '1rem' }}
+        style={{ position: 'relative', padding: '1rem' }}
       >
         {localAvatarUrl ? (
           <OptimizedImage
@@ -86,10 +85,13 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
             alt={`${userRole} avatar`}
             width={avatarSize}
             height={avatarSize}
-            className={`border-4 border-white/30 shadow-2xl rounded-full ${disabled ? 'opacity-60' : 'cursor-pointer'}`}
             style={{
               borderRadius: '50%',
               objectFit: 'cover',
+              border: '4px solid rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              opacity: disabled ? 0.6 : 1,
+              cursor: disabled ? 'default' : 'pointer'
             }}
             lazy={false}
             priority={true}
@@ -100,7 +102,12 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
             src={getPlaceholderAvatar()}
             size={size}
             icon={<UserOutlined />}
-            className={`border-4 border-white/30 shadow-2xl ${disabled ? 'opacity-60' : 'cursor-pointer'}`}
+            style={{
+              border: '4px solid rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              opacity: disabled ? 0.6 : 1,
+              cursor: disabled ? 'default' : 'pointer'
+            }}
             onClick={handleEditAvatar}
           />
         )}
@@ -110,11 +117,19 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full"
             style={{
-              width: avatarSize,
-              height: avatarSize,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
               borderRadius: '50%',
+              width: avatarSize,
+              height: avatarSize
             }}
           >
             <Progress 
@@ -132,11 +147,19 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full"
             style={{
-              width: avatarSize,
-              height: avatarSize,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
               borderRadius: '50%',
+              width: avatarSize,
+              height: avatarSize
             }}
           >
             <LoadingOutlined style={{ fontSize: 24, color: '#10B981' }} spin />
@@ -148,12 +171,34 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           <motion.button
             type="button"
             onClick={handleEditAvatar}
-            className="absolute -bottom-2 -right-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 shadow-lg transition-colors duration-200"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            style={{
+              position: 'absolute',
+              bottom: '-8px',
+              left: '-8px',
+              width: '32px',
+              height: '32px',
+              backgroundColor: '#EA580C',
+              border: '2px solid white',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+              transition: 'background-color 0.2s ease',
+              zIndex: 10
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#C2410C';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#EA580C';
+            }}
+            whileHover={{ scale: 1 }}
+            whileTap={{ scale: 1 }}
             disabled={isAvatarUploading}
           >
-            <EditOutlined style={{ fontSize: 16 }} />
+            <EditOutlined style={{ fontSize: 16, color: 'white' }} />
           </motion.button>
         )}
         
@@ -161,13 +206,35 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         {showDeleteButton && !disabled && localAvatarUrl && (
           <motion.button
             type="button"
-            onClick={handleDeleteAvatar}
-            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-colors duration-200"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            onClick={handleAvatarDelete}
+            style={{
+              position: 'absolute',
+              bottom: '-8px',
+              right: '-8px',
+              width: '32px',
+              height: '32px',
+              backgroundColor: '#ef4444',
+              border: '2px solid white',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+              transition: 'background-color 0.2s ease',
+              zIndex: 10
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#dc2626';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ef4444';
+            }}
+            whileHover={{ scale: 1 }}
+            whileTap={{ scale: 1 }}
             disabled={isAvatarUploading}
           >
-            <DeleteOutlined style={{ fontSize: 12 }} />
+            <DeleteOutlined style={{ fontSize: 12, color: 'white' }} />
           </motion.button>
         )}
       </motion.div>
