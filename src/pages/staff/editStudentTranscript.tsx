@@ -904,7 +904,7 @@ const EditStudentTranscript: React.FC = () => {
           </Col>
         </Row>
 
-        {/* Footer with buttons on left and right */}
+        {/* Add subject modal with buttons on left and right */}
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -1025,7 +1025,7 @@ const EditStudentTranscript: React.FC = () => {
             )}
           </Col>
 
-          {/* Right Side - Current Selection Info */}
+          {/* Right Side - Combo Selection Info */}
           <Col span={8}>
             <div style={{ marginBottom: 16 }}>
               <Text strong style={{ fontSize: '16px', marginBottom: '8px', display: 'block' }}>
@@ -1065,7 +1065,7 @@ const EditStudentTranscript: React.FC = () => {
           </Col>
         </Row>
 
-        {/* Footer with buttons */}
+        {/* update combo button */}
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
