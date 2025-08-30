@@ -38,6 +38,7 @@ interface ApiUserInfo {
     programId?: number;
     registeredComboCode?: string;
     curriculumCode?: string;
+    gitAccountUsername?: string;
   };
 }
 
@@ -72,6 +73,20 @@ const UserInfoCard: React.FC<{ user: UserInfo; userInfor: ApiUserInfo | any }> =
     if (!userInfor?.dateOfBirth) return null;
     try { return new Date(userInfor.dateOfBirth).toLocaleDateString(); } catch { return null; }
   }, [userInfor]);
+
+  // Log user data for debugging
+  useEffect(() => {
+    console.log('=== UserInfoCard Debug Data ===');
+    console.log('user prop:', user);
+    console.log('userInfor prop:', userInfor);
+    console.log('hasApiData:', hasApiData);
+    console.log('displayName:', displayName);
+    console.log('displayQuote:', displayQuote);
+    console.log('displayDob:', displayDob);
+    console.log('gitAccountUsername:', userInfor?.studentDataDetailResponse?.gitAccountUsername);
+    console.log('studentDataDetailResponse:', userInfor?.studentDataDetailResponse);
+    console.log('================================');
+  }, [user, userInfor, hasApiData, displayName, displayQuote, displayDob]);
 
   useEffect(() => {
     if (userInfor && 'avatarUrl' in userInfor) {
@@ -144,6 +159,12 @@ const UserInfoCard: React.FC<{ user: UserInfo; userInfor: ApiUserInfo | any }> =
                 <span className="text-white font-medium text-sm">{new Date(userInfor.studentDataDetailResponse.enrolledAt).toLocaleDateString()}</span>
               </div>
             )}
+            <div className="px-5 py-3 flex items-center justify-between">
+              <span className="text-gray-300 text-sm">Github</span>
+              <span className="text-white font-medium text-sm">
+                {userInfor?.studentDataDetailResponse?.gitAccountUsername || 'No data'}
+              </span>
+            </div>
           </div>
         </div>
 

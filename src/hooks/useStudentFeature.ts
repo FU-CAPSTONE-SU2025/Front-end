@@ -20,7 +20,10 @@ import {
     bulkSaveCheckpoints,
     createCheckpoint,
     getUpcomingCheckpoints,
-    getSubjectMarks
+    getSubjectMarks,
+    postSubjectComment,
+    getSubjectComments,
+    postCommentReaction
 } from '../api/student/StudentAPI';
 import { AdvisorMeetingPaged, BookingAvailabilityData, PagedAdvisorData, PagedLeaveScheduleData, MaxBanData, CurrentBanData, JoinedSubject, SubjectCheckpoint, SubjectCheckpointDetail, SubjectMark } from '../interfaces/IStudent';
 
@@ -432,5 +435,60 @@ export const useSubjectMarks = (joinedSubjectId: number | null) => {
     refetchOnReconnect: false,
     retry: 1, // Only retry once on failure
     retryDelay: 1000, // Wait 1 second before retry
+  });
+};
+
+export const usePostSubjectComment = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ subjectId, content }: { subjectId: number; content: string }) => {
+      const data = await postSubjectComment(subjectId, content);
+      return data;
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate and refetch comments if needed
+      queryClient.invalidateQueries({ queryKey: ['subjectComments', variables.subjectId] });
+    },
+    onError: (error) => {
+      console.error('Error posting comment:', error);
+    },
+  });
+};
+
+export const useSubjectComments = (subjectId: number | null, pageNumber: number = 1, pageSize: number = 5) => {
+  return useQuery<any, Error>({
+    queryKey: ['subjectComments', subjectId, pageNumber, pageSize],
+    queryFn: async () => {
+      if (!subjectId) return { items: [], totalCount: 0, pageNumber: 1, pageSize: 5 };
+      const data = await getSubjectComments(subjectId);
+      return data || { items: [], totalCount: 0, pageNumber: 1, pageSize: 5 };
+    },
+    enabled: !!subjectId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false,
+    retry: 1,
+    retryDelay: 1000,
+  });
+};
+
+export const usePostCommentReaction = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ commentId, reactionType }: { commentId: number; reactionType: number }) => {
+      const data = await postCommentReaction(commentId, reactionType);
+      return data;
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate comments to refresh the reaction counts
+      queryClient.invalidateQueries({ queryKey: ['subjectComments'] });
+    },
+    onError: (error) => {
+      console.error('Error posting reaction:', error);
+    },
   });
 };
