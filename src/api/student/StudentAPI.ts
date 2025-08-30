@@ -896,3 +896,51 @@ export const getSubjectMarks = async (joinedSubjectId: number): Promise<SubjectM
         return null as never;
     }
 }
+
+export const postSubjectComment = async (subjectId: number, content: string): Promise<any> => {
+    const props = {
+        data: { subjectId, content },
+        url: baseUrl + '/SubjectComment',
+        headers: GetHeader()
+    }
+    const result = await axiosCreate(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        throwApiError(result);
+        return null as never;
+    }
+}
+
+export const getSubjectComments = async (subjectId: number): Promise<any> => {
+    const props = {
+        data: null,
+        url: baseUrl + `/SubjectComment/subject/${subjectId}`,
+        headers: GetHeader()
+    }
+    const result = await axiosRead(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        throwApiError(result);
+        return null as never;
+    }
+}
+
+export const postCommentReaction = async (commentId: number, reactionType: number): Promise<any> => {
+    const props = {
+        data: { reactionType },
+        url: baseUrl + `/SubjectComment/${commentId}/reactions`,
+        headers: GetHeader()
+    }
+    const result = await axiosCreate(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        throwApiError(result);
+        return null as never;
+    }
+}
