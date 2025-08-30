@@ -19,9 +19,10 @@ import {
     generateCheckpoints,
     bulkSaveCheckpoints,
     createCheckpoint,
-    getUpcomingCheckpoints
+    getUpcomingCheckpoints,
+    getSubjectMarks
 } from '../api/student/StudentAPI';
-import { AdvisorMeetingPaged, BookingAvailabilityData, PagedAdvisorData, PagedLeaveScheduleData, MaxBanData, CurrentBanData, JoinedSubject, SubjectCheckpoint, SubjectCheckpointDetail } from '../interfaces/IStudent';
+import { AdvisorMeetingPaged, BookingAvailabilityData, PagedAdvisorData, PagedLeaveScheduleData, MaxBanData, CurrentBanData, JoinedSubject, SubjectCheckpoint, SubjectCheckpointDetail, SubjectMark } from '../interfaces/IStudent';
 
 interface UseStudentFeatureParams {
   search: string;
@@ -406,6 +407,26 @@ export const useUpcomingCheckpoints = () => {
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 1, // Only retry once on failure
+    retryDelay: 1000, // Wait 1 second before retry
+  });
+};
+
+// Hook for fetching subject marks/grades
+export const useSubjectMarks = (joinedSubjectId: number | null) => {
+  return useQuery<SubjectMark[], Error>({
+    queryKey: ['subjectMarks', joinedSubjectId],
+    queryFn: async () => {
+      if (!joinedSubjectId) return [];
+      const data = await getSubjectMarks(joinedSubjectId);
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: !!joinedSubjectId,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,

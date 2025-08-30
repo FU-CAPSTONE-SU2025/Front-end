@@ -278,3 +278,14 @@ export interface SubjectCheckpointDetail extends SubjectCheckpoint {
   link4: string | null;
   link5: string | null;
 }
+
+export interface SubjectMark {
+  id: number;
+  createdAt: string;
+  category: string;
+  weight: number;
+  minScore: number;
+  scoreUpdatedBy: string;
+  joinedSubjectId: number;
+  score: number;
+}
