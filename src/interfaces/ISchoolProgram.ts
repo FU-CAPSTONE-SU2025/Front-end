@@ -367,7 +367,6 @@ export interface JoinedSubject{
   name: string;
   semesterName: string | null;
   isPassed: boolean;
-  isCompleted: boolean;
   isActive: boolean;
   credits: number | null;
   studentProfileId: number;
