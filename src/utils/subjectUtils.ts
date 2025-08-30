@@ -93,7 +93,6 @@ export const getSubjectsStats = (subjects: JoinedSubject[]) => {
   export const calculateFinalGrade = (assessments:JoinedSubjectAssessment[]) => {
     const validAssessments = assessments.filter(assessment => assessment.score !== undefined);
     if (validAssessments.length === 0) return 0;
-
     const totalWeightedScore = validAssessments.reduce((sum, assessment) => {
       return sum + (assessment.score! / assessment.maxScore) * assessment.weight;
     }, 0);
