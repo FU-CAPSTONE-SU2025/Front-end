@@ -121,7 +121,6 @@ const StaffProfile: React.FC = () => {
   // Mock logout function (replace with actual auth logic)
   const handleLogout = () => {
     logout();
-    localStorage.removeItem('authToken'); // Example placeholder
     navigate('/');
   };
 

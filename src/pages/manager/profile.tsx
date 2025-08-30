@@ -123,7 +123,6 @@ const ManagerProfile: React.FC = () => {
   // Mock logout function (replace with actual auth logic)
   const handleLogout = () => {
     logout();
-    localStorage.removeItem('authToken'); // Example placeholder
     navigate('/');
   };
 
@@ -155,7 +154,7 @@ const ManagerProfile: React.FC = () => {
           {/* Left Card: AccountProps */}
           <motion.div
             className={styles.card}
-            variants={leftCardVariants}
+            variants={leftCardVariants as any}
             initial="hidden"
             animate="visible"
          
@@ -178,7 +177,7 @@ const ManagerProfile: React.FC = () => {
           <div className={styles.rightColumn}>
             <motion.div
               className={styles.card}
-              variants={rightCardVariants}
+              variants={rightCardVariants as any}
               initial="hidden"
               animate="visible"
             >
@@ -195,7 +194,7 @@ const ManagerProfile: React.FC = () => {
             {/* Action Card */}
             <motion.div
               className={styles.actionCard}
-              variants={actionCardVariants}
+              variants={actionCardVariants as any}
               initial="hidden"
               animate="visible"
             >

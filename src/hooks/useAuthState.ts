@@ -8,7 +8,7 @@ const ENCRYPTION_KEY = import.meta.env.VITE_THERE_IS_AN_EGG || 'tralala';
 // Custom storage with encryption
 const encryptedStorage = {
   getItem: (name:string) => {
-    const encryptedData = localStorage.getItem(name);
+    const encryptedData = sessionStorage.getItem(name);
     if (!encryptedData) return null;
     try {
       // Decrypt the stored data
