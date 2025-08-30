@@ -606,7 +606,7 @@ const EditStudentTranscript: React.FC = () => {
             <Card className={styles.subjectsCard} style={{ marginBottom: 24 }}>
               <div className={styles.sectionHeader}>
                 <Title level={4} className={styles.sectionTitle}>
-                  Other Subjects (In Progress/Failed)
+                  Other Subjects (In Progress or Not Passed)
                 </Title>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <ExcelImportButton onClick={handleBulkImport} size="middle">
@@ -643,10 +643,6 @@ const EditStudentTranscript: React.FC = () => {
                         <Text className={styles.subjectDescription} style={{ whiteSpace: 'pre-line' }}>
                           Block: {subject.semesterStudyBlockType} • Semester: {subject.semesterName || 'N/A'}
                         </Text>
-                        <div className={styles.progressSection}>
-                          <Text>Status</Text>
-                          <Tag color="orange" style={{ marginTop: '8px' }}>Click to View</Tag>
-                        </div>
                       </Card>
                     </motion.div>
                   </Col>
