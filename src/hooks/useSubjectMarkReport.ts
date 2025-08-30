@@ -1,15 +1,17 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import {
   AddSubjectMarkReport,
   FetchSubjectMarkReport,
   FetchSelfSubjectMarkReport,
   UpdateSubjectMarkReport,
   DeleteSubjectMarkReport,
+  FetchViewSubjectMarkReportTemplate,
 } from '../api/SchoolAPI/subjectMarkReportAPI';
 import { 
   ISubjectMarkReport, 
   ICreateSubjectMarkReport, 
-  IUpdateSubjectMarkReport 
+  IUpdateSubjectMarkReport,
+  IViewSubjectAssessment
 } from '../interfaces/ISubjectMarkReport';
 import { useApiErrorHandler } from './useApiErrorHandler';
 
@@ -91,4 +93,24 @@ export const useSubjectMarkReport = () => {
     updateSubjectMarkReportMutation,
     deleteSubjectMarkReportMutation,
   };
+};
+
+export const useSubjectMarkReportTemplate = (subjectCode: string, subjectVersionCode: string) => {
+  const { handleError } = useApiErrorHandler();
+
+  return useQuery<IViewSubjectAssessment | null>({
+    queryKey: ['subjectMarkReportTemplate', subjectCode, subjectVersionCode],
+    queryFn: async () => {
+      if (!subjectCode || !subjectVersionCode) {
+        handleError("error", 'Missing query data');
+        return null;
+      }
+      try {
+        return await FetchViewSubjectMarkReportTemplate(subjectCode, subjectVersionCode);
+      } catch (error) {
+        handleError(error, 'Failed to fetch subject mark report template');
+        return null;
+      }
+    },
+  });
 };

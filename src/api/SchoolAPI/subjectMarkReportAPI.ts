@@ -1,8 +1,22 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 
-import { ISubjectMarkReport,ICreateSubjectMarkReport, IUpdateSubjectMarkReport } from '../../interfaces/ISubjectMarkReport';
+import { ISubjectMarkReport,ICreateSubjectMarkReport, IUpdateSubjectMarkReport, IViewSubjectAssessment } from '../../interfaces/ISubjectMarkReport';
 const subjectMarkURL = baseUrl + "/SubjectMarkRp";
+
+export const FetchViewSubjectMarkReportTemplate = async (subjectCode: string,subjectVersionCode:string): Promise<IViewSubjectAssessment> => {
+  const props = {
+    data: null,
+    url: subjectMarkURL+`/view-template-import?subjectCode=${subjectCode}&subjectVersionCode=${subjectVersionCode}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosCreate(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+  }
+};
 
 // reusing the same API endpoint for both the solo adding or bulk adding
 export const AddSubjectMarkReport = async (joinedSubjectId: number,data: ICreateSubjectMarkReport[]): Promise<any> => {
