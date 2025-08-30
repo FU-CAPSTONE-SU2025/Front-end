@@ -23,7 +23,9 @@ import {
     getSubjectMarks,
     postSubjectComment,
     getSubjectComments,
-    postCommentReaction
+    postCommentReaction,
+    getGitHubRepoData,
+    updateGitHubRepoURL
 } from '../api/student/StudentAPI';
 import { AdvisorMeetingPaged, BookingAvailabilityData, PagedAdvisorData, PagedLeaveScheduleData, MaxBanData, CurrentBanData, JoinedSubject, SubjectCheckpoint, SubjectCheckpointDetail, SubjectMark } from '../interfaces/IStudent';
 
@@ -489,6 +491,47 @@ export const usePostCommentReaction = () => {
     },
     onError: (error) => {
       console.error('Error posting reaction:', error);
+    },
+  });
+};
+
+// Hook for fetching GitHub repository data
+export const useGitHubRepoData = (owner: string | null, repoName: string | null) => {
+  return useQuery<any, Error>({
+    queryKey: ['gitHubRepoData', owner, repoName],
+    queryFn: async () => {
+      if (!owner || !repoName) return null;
+      const data = await getGitHubRepoData(owner, repoName);
+      return data;
+    },
+    enabled: !!(owner && repoName),
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 2,
+    retryDelay: 1000,
+  });
+};
+
+// Hook for updating GitHub repository URL
+export const useUpdateGitHubRepoURL = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<any, Error, { joinedSubjectId: number; publicRepoURL: string }>({
+    mutationFn: ({ joinedSubjectId, publicRepoURL }) => updateGitHubRepoURL(joinedSubjectId, publicRepoURL),
+    onSuccess: (data, variables) => {
+      // Invalidate and refetch subject data to get updated githubRepositoryURL
+      queryClient.invalidateQueries({ queryKey: ['joinedSubject'] });
+      
+      // Invalidate GitHub repo data to refresh
+      queryClient.invalidateQueries({ queryKey: ['gitHubRepoData'] });
+      
+      console.log('GitHub repository URL updated successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Failed to update GitHub repository URL:', error);
     },
   });
 };

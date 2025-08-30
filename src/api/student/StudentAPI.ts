@@ -944,3 +944,37 @@ export const postCommentReaction = async (commentId: number, reactionType: numbe
         return null as never;
     }
 }
+
+// Get GitHub repository data
+export const getGitHubRepoData = async (owner: string, repoName: string): Promise<any> => {
+    const props = {
+        data: null,
+        url: baseUrl + `/GitRepo?owner=${owner}&repoName=${repoName}`,
+        headers: GetHeader()
+    }
+    const result = await axiosRead(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        throwApiError(result);
+        return null as never;
+    }
+}
+
+// Update GitHub repository URL for a joined subject
+export const updateGitHubRepoURL = async (joinedSubjectId: number, publicRepoURL: string): Promise<any> => {
+    const props = {
+        data: null, // No body data needed
+        url: baseUrl + `/GitRepo/${joinedSubjectId}?publicRepoURL=${encodeURIComponent(publicRepoURL)}`,
+        headers: GetHeader()
+    }
+    const result = await axiosUpdate(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        throwApiError(result);
+        return null as never;
+    }
+}

@@ -6,7 +6,7 @@ import { useParams, useNavigate } from 'react-router';
 import GradeCalculator from '../../components/student/gradeCalculator';
 import TodoList from '../../components/student/todoList';
 import AIGenerateTodoTab from '../../components/student/aiGenerateTodoTab';
-import { useJoinedSubjectById, useSubjectCheckpoints, useSubjectMarks } from '../../hooks/useStudentFeature';
+import { useJoinedSubjectById, useSubjectCheckpoints, useSubjectMarks, useGitHubRepoData, useUpdateGitHubRepoURL } from '../../hooks/useStudentFeature';
 import '../../css/student/subjectDetails.module.css';
 import CommitChart from '../../components/student/commitChart';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
@@ -57,6 +57,52 @@ const SubjectDetails = () => {
 
     // Fetch subject marks
     const { data: marks, isLoading: marksLoading, error: marksError, refetch: refetchMarks } = useSubjectMarks(joinedSubjectId);
+
+    // Parse GitHub URL to extract owner and repo name
+    const gitHubInfo = useMemo(() => {
+        if (!subject?.githubRepositoryURL) return null;
+        
+        try {
+            const match = subject.githubRepositoryURL.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+            if (match) {
+                return {
+                    owner: match[1],
+                    repoName: match[2].replace(/\.git$/, '') // Remove .git if present
+                };
+            }
+        } catch (error) {
+            console.error('Error parsing GitHub URL:', error);
+        }
+        return null;
+    }, [subject?.githubRepositoryURL]);
+
+    // Fetch GitHub repository data
+    const { 
+        data: gitHubRepoData, 
+        isLoading: gitHubLoading, 
+        error: gitHubError 
+    } = useGitHubRepoData(gitHubInfo?.owner || null, gitHubInfo?.repoName || null);
+
+    // Update GitHub repository URL
+    const { mutateAsync: updateGitHubRepoURL, isPending: isUpdatingGitHub } = useUpdateGitHubRepoURL();
+
+    // Auto-connect GitHub if we have a valid repository URL
+    useEffect(() => {
+        if (gitHubInfo && !isGitHubConnected) {
+            setIsGitHubConnected(true);
+        }
+    }, [gitHubInfo, isGitHubConnected]);
+
+    // Handle GitHub URL update
+    const handleUpdateGitHubURL = async (joinedSubjectId: number, publicRepoURL: string) => {
+        try {
+            await updateGitHubRepoURL({ joinedSubjectId, publicRepoURL });
+            showSuccess('GitHub repository updated successfully!');
+        } catch (error) {
+            showError('Failed to update GitHub repository');
+            throw error; // Re-throw to let CommitChart handle it
+        }
+    };
 
     // Transform marks data to grades format
     const transformedGrades = useMemo(() => 
@@ -396,6 +442,12 @@ const SubjectDetails = () => {
                     <CommitChart 
                         isConnected={isGitHubConnected}
                         onConnect={() => setIsGitHubConnected(true)}
+                        repoData={gitHubRepoData}
+                        isLoading={gitHubLoading}
+                        error={gitHubError}
+                        joinedSubjectId={joinedSubjectId}
+                        onUpdateGitHubURL={handleUpdateGitHubURL}
+                        isUpdating={isUpdatingGitHub}
                     />
                 </div>
             </motion.div>
