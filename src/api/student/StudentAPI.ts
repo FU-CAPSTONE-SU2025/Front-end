@@ -14,7 +14,8 @@ import {
     JoinedSubject,
     SubjectCheckpoint,
     SubjectCheckpointDetail,
-    IUpdateStudentMajor
+    IUpdateStudentMajor,
+    SubjectMark
 } from "../../interfaces/IStudent";
 import { ChatSessionRequest, ChatSessionResponse } from "../../interfaces/IChat";
 
@@ -879,3 +880,19 @@ export const getPersonalComboSubjects = async (): Promise<Array<{ subjectCode: s
     return [] as never;
   }
 };
+
+export const getSubjectMarks = async (joinedSubjectId: number): Promise<SubjectMark[]> => {
+    const props = {
+        data: null,
+        url: baseUrl + `/SubjecMarkRp/${joinedSubjectId}`,
+        headers: GetHeader()
+    }
+    const result = await axiosRead(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        throwApiError(result);
+        return null as never;
+    }
+}
