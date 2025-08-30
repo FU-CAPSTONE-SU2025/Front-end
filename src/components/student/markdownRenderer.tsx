@@ -23,7 +23,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
     text = text.replace(/_(.*?)_/g, '<em style="font-style: italic;">$1</em>');
 
     // Handle lists
-    text = text.replace(/^\s*[-*+]\s+(.+)$/gm, '<li style="margin: 0.25rem 0;">$1</li>');
+    text = text.replace(/^\s*[-*+]\s+(.+)$/gm, '<li style="margin: 0 0;">$1</li>');
     text = text.replace(/^\s*\d+\.\s+(.+)$/gm, '<li style="margin: 0.25rem 0;">$1</li>');
 
     // Wrap lists in ul/ol

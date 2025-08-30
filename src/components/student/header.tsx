@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Avatar, Dropdown} from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router';
 import Messenger from './messenger';
 import Notification from '../common/Notification';
 import { useAuths } from '../../hooks/useAuthState';
+import { GetCurrentStudentUser } from '../../api/Account/UserAPI';
+import { getAuthState } from '../../hooks/useAuthState';
+import { jwtDecode } from 'jwt-decode';
 
 const navItems = [
   { name: 'Dashboard', path: '/student' },
@@ -14,11 +17,57 @@ const navItems = [
   { name: 'Advisor Support', path: '/student/bookingAdvisor' },
 ];
 
+// Note: UserInfoCard will receive userInfor from API; no mock user passed
+// Student info (fetched)
+type JwtPayload = { UserId?: number };
+
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [studentId, setStudentId] = useState<number | null>(null);
+  const [studentDetail, setStudentDetail] = useState<any | null>(null);
+  const [isLoadingStudent, setIsLoadingStudent] = useState<boolean>(false);
   const navigate = useNavigate();
   const location = useLocation();
   const logout = useAuths((state) => state.logout);
+  const { accessToken } = getAuthState();
+
+  // Extract student id from JWT
+  useEffect(() => {
+    try {
+      const payload: JwtPayload = jwtDecode(accessToken ?? '');
+      const id = payload?.UserId ?? null;
+      setStudentId(id);
+    } catch {
+      setStudentId(null);
+    }
+  }, [accessToken]);
+
+  // Fetch student detail
+  useEffect(() => {
+    const fetchDetail = async () => {
+      if (!studentId) return;
+      setIsLoadingStudent(true);
+      try {
+        const res = await GetCurrentStudentUser(studentId);
+        setStudentDetail(res);
+      } catch (e) {
+        // keep silent UI fallback
+        setStudentDetail(null);
+      } finally {
+        setIsLoadingStudent(false);
+      }
+    };
+    fetchDetail();
+  }, [studentId]);
+
+  // Compose avatar URL with fallback
+  const avatarUrl = useMemo(() => {
+    if (studentDetail?.avatarUrl) {
+      return studentDetail.avatarUrl;
+    }
+    // Fallback avatar same as UserInfoCard
+    return 'https://i.pinimg.com/736x/86/af/d1/86afd13a3e5f13435b39c31a407bbaa9.jpg';
+  }, [studentDetail?.avatarUrl]);
 
   const toggleMenu = () => setIsMenuOpen((open) => !open);
 
@@ -163,7 +212,7 @@ const Header: React.FC = () => {
           <Dropdown menu={{ items: avatarMenuItems }} trigger={["click"]} placement="bottomRight">
             <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="cursor-pointer">
               <Avatar
-                src="https://i.pravatar.cc/150?img=3"
+                src={avatarUrl}
                 size={{ xs: 20, sm: 24, md: 26, lg: 28, xl: 30 }}
                 className="ring-1 ring-orange-200 hover:ring-orange-400 transition-all duration-300"
               />

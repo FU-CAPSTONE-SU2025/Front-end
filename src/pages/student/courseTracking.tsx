@@ -1,56 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import SubjectCard from '../../components/student/subjectCard';
-import CommitChart from '../../components/student/commitChart';
-import ImportantExams from '../../components/student/importantExams';
 import SemesterSelect from '../../components/student/selectSemester';
 import UpcomingTodosTimeline from '../../components/student/upcomingTodosTimeline';
 import { useJoinedSubjects } from '../../hooks/useStudentFeature';
 import { JoinedSubject, SemesterSubjects } from '../../interfaces/IStudent';
 import { groupSubjectsBySemester, getSemesterOptions } from '../../utils/subjectUtils';
 
-const importantExams = [
-  {
-    date: 'June 9, 2024',
-    type: 'Practical Exam',
-    course: 'PRN212',
-    name: 'Basic Cross-Platform Application Programming With .NET',
-  },
-  {
-    date: 'June 9, 2024',
-    type: 'Practical Exam',
-    course: 'PRM231',
-    name: 'Basic Cross-Platform Application Programming With .NET',
-  },
-  {
-    date: 'June 9, 2024',
-    type: 'Practical Exam',
-    course: 'PMG201c',
-    name: 'Basic Cross-Platform Application Programming With .NET',
-  },
-  {
-    date: 'June 9, 2024',
-    type: 'Final Exam',
-    course: 'PMG201c',
-    name: 'Basic Cross-Platform Application Programming With .NET',
-  },
-  {
-    date: 'June 9, 2024',
-    type: 'Final Exam',
-    course: 'PRM231',
-    name: 'Basic Cross-Platform Application Programming With .NET',
-  },
-  {
-    date: 'June 9, 2024',
-    type: 'Final Exam',
-    course: 'PRN212',
-    name: 'Basic Cross-Platform Application Programming With .NET',
-  },
-];
-
 const CourseTracking = () => {
   const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
-  const [isGitHubConnected, setIsGitHubConnected] = useState(false);
   
   // Fetch joined subjects
   const { data: joinedSubjects, isLoading, error } = useJoinedSubjects();
@@ -200,25 +158,6 @@ const CourseTracking = () => {
               </div>
             </div>
           )}
-        </motion.div>
-
-        {/* Activity Overview Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="mb-16"
-        >
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2">Activity Overview</h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-blue-400 mx-auto rounded-full"></div>
-          </div>
-          <div className="max-w-5xl mx-auto">
-            <CommitChart 
-              isConnected={isGitHubConnected}
-              onConnect={() => setIsGitHubConnected(true)}
-            />
-          </div>
         </motion.div>
 
         {/* Upcoming Todos Timeline Section */}

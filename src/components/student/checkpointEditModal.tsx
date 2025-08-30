@@ -4,6 +4,7 @@ import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { SubjectCheckpointDetail } from '../../interfaces/IStudent';
 import { useUpdateCheckpoint } from '../../hooks/useStudentFeature';
 import dayjs from 'dayjs';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 const { TextArea } = Input;
 const { Title } = Typography;
@@ -22,6 +23,7 @@ const CheckpointEditModal: React.FC<CheckpointEditModalProps> = ({
   const [form] = Form.useForm();
   const [linkFields, setLinkFields] = useState<string[]>([]);
   const updateCheckpointMutation = useUpdateCheckpoint();
+  const { showSuccess, showError } = useMessagePopupContext();
 
   // Initialize form and link fields when modal opens
   useEffect(() => {
@@ -76,10 +78,10 @@ const CheckpointEditModal: React.FC<CheckpointEditModalProps> = ({
         data: updateData
       });
 
-      message.success('Checkpoint updated successfully!');
+      showSuccess('Checkpoint updated successfully!');
       onClose();
     } catch (error) {
-      message.error('Failed to update checkpoint');
+      showError('Failed to update checkpoint');
     }
   };
 

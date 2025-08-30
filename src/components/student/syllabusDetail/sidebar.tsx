@@ -12,47 +12,81 @@ interface SidebarProps {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
 const SubjectOverview: React.FC<{ subj: any }> = ({ subj }) => (
   <motion.div variants={itemVariants}>
     <Card
       bordered={false}
-      className="shadow-sm border border-gray-100"
+      className="!bg-white/10 !backdrop-blur-md !border !border-white/20 !shadow-2xl"
       bodyStyle={{ padding: 24 }}
     >
-      <Title level={4} className="text-gray-900 mb-4">Subject Overview</Title>
+      <Title level={4} className="!text-white mb-4">Subject Overview</Title>
       <div className="space-y-4">
         <div>
-          <Text strong className="text-gray-700 block mb-2">Description</Text>
-          <Text className="text-gray-600" style={{ whiteSpace: 'pre-line' }}>{subj.description}</Text>
+          <Text strong className="!text-white block mb-2">Description</Text>
+          <Text className="!text-white" style={{ whiteSpace: 'pre-line' }}>{subj.description}</Text>
         </div>
         <div>
-          <Text strong className="text-gray-700 block mb-2">Prerequisites</Text>
-          <Text className="text-gray-600">{subj.prerequisites || 'None'}</Text>
+          <Text strong className="!text-white block mb-2">Prerequisites</Text>
+          <Text className="!text-white">{subj.prerequisites || 'None'}</Text>
         </div>
         
-        <Divider className="my-4" />
+        <Divider className="my-4 !border-white/20" />
         
-        <div className="flex flex-wrap gap-2">
-          <Tag color={subj.approvalStatus === 1 ? 'green' : 'orange'} className="text-xs">
+        <div className="!flex !flex-wrap !gap-2">
+          <Tag 
+            color={subj.approvalStatus === 1 ? 'success' : 'warning'} 
+            className="!text-sm !font-semibold !uppercase"
+            style={{
+              backgroundColor: subj.approvalStatus === 1 ? '#52c41a' : '#faad14',
+              color: 'white',
+              border: 'none',
+              padding: '4px 12px'
+            }}
+          >
             {subj.approvalStatus === 1 ? 'Approved' : 'Pending'}
           </Tag>
           {subj.approvedBy && (
-            <Tag color="blue" className="text-xs">
-              <UserOutlined className="mr-1" />
+            <Tag 
+              color="processing" 
+              className="!text-sm !font-semibold !uppercase"
+              style={{
+                backgroundColor: '#1890ff',
+                color: 'white',
+                border: 'none',
+                padding: '4px 12px'
+              }}
+            >
               {subj.approvedBy}
             </Tag>
           )}
           {subj.approvedAt && (
-            <Tag color="cyan" className="text-xs">
-              <CalendarOutlined className="mr-1" />
+            <Tag 
+              color="cyan" 
+              className="!text-sm !font-semibold !uppercase"
+              style={{
+                backgroundColor: '#13c2c2',
+                color: 'white',
+                border: 'none',
+                padding: '4px 12px'
+              }}
+            >
               {dayjs(subj.approvedAt).format('YYYY-MM-DD')}
             </Tag>
           )}
           {subj.rejectionReason && (
-            <Tag color="red" className="text-xs">
+            <Tag 
+              color="error" 
+              className="!text-sm !font-semibold !uppercase"
+              style={{
+                backgroundColor: '#ff4d4f',
+                color: 'white',
+                border: 'none',
+                padding: '4px 12px'
+              }}
+            >
               Rejected: {subj.rejectionReason}
             </Tag>
           )}
@@ -66,25 +100,43 @@ const VersionInfo: React.FC<{ version: any }> = ({ version }) => (
   <motion.div variants={itemVariants}>
     <Card
       bordered={false}
-      className="shadow-sm border border-gray-100"
+      className="!bg-white/10  !backdrop-blur-md !border !border-white/20 !shadow-2xl"
       bodyStyle={{ padding: 24 }}
     >
-      <Title level={4} className="text-gray-900 mb-4">Version Information</Title>
+      <Title level={4} className="!text-white mb-4">Version Information</Title>
       
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Text strong className="text-gray-700 block mb-1">Version Name</Text>
-            <Text className="text-lg text-gray-900 font-medium">{version.versionName}</Text>
-            <Text className="text-gray-500 text-sm">({version.versionCode})</Text>
+            <Text strong className="!text-white block mb-1">Version Name</Text>
+            <Text className="text-lg !text-white font-medium">{version.versionName}</Text>
+            <Text className="!text-white text-sm">({version.versionCode})</Text>
           </div>
           <div>
-            <Text strong className="text-gray-700 block mb-1">Status</Text>
-            <div className="flex gap-2">
-              <Tag color={version.isActive ? 'green' : 'red'} className="text-xs">
+            <Text strong className="!text-white block mb-1">Status</Text>
+            <div className="!flex !gap-2">
+              <Tag 
+                color={version.isActive ? 'success' : 'error'} 
+                className="!text-sm !font-semibold !uppercase"
+                style={{
+                  backgroundColor: version.isActive ? '#52c41a' : '#ff4d4f',
+                  color: 'white',
+                  border: 'none',
+                  padding: '4px 12px'
+                }}
+              >
                 {version.isActive ? 'Active' : 'Inactive'}
               </Tag>
-              <Tag color={version.isDefault ? 'blue' : 'gray'} className="text-xs">
+              <Tag 
+                color={version.isDefault ? 'processing' : 'default'} 
+                className="!text-sm !font-semibold !uppercase"
+                style={{
+                  backgroundColor: version.isDefault ? '#1890ff' : '#8c8c8c',
+                  color: 'white',
+                  border: 'none',
+                  padding: '4px 12px'
+                }}
+              >
                 {version.isDefault ? 'Default' : 'Custom'}
               </Tag>
             </div>
@@ -92,15 +144,15 @@ const VersionInfo: React.FC<{ version: any }> = ({ version }) => (
         </div>
         
         <div>
-          <Text strong className="text-gray-700 block mb-1">Description</Text>
-          <Text className="text-gray-600" style={{ whiteSpace: 'pre-line' }}>{version.description}</Text>
+          <Text strong className="!text-white block mb-1">Description</Text>
+          <Text className="!text-white" style={{ whiteSpace: 'pre-line' }}>{version.description}</Text>
         </div>
         
-        <div className="bg-gray-50 p-3 rounded-lg">
-          <Text strong className="text-gray-700 block mb-1">Effective Period</Text>
-          <div className="flex items-center gap-2 text-sm">
-            <ClockCircleOutlined className="text-gray-500" />
-            <Text className="text-gray-600">
+        <div className="!bg-white/10 !backdrop-blur-md !border !border-white/20 !shadow-2xl p-3 rounded-lg">
+          <Text strong className="!text-white block mb-1">Effective Period</Text>
+          <div className="flex items-center gap-2 text-sm ">
+            <ClockCircleOutlined className="!text-white" />
+            <Text className="!text-white">
               {version.effectiveFrom ? dayjs(version.effectiveFrom).format('YYYY-MM-DD') : '-'}
               {version.effectiveTo && ` → ${dayjs(version.effectiveTo).format('YYYY-MM-DD')}`}
             </Text>

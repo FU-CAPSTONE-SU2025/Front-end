@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Input, Button, Typography, Space, Spin, message, Form, Switch, Card, Tag } from 'antd';
 import { RobotOutlined, SaveOutlined, SendOutlined, EditOutlined, DeleteOutlined, CheckOutlined, CloseOutlined, CalendarOutlined } from '@ant-design/icons';
 import { useGenerateCheckpoints, useBulkSaveCheckpoints } from '../../hooks/useStudentFeature';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -35,12 +36,16 @@ const AIGenerateTodoTab: React.FC<AIGenerateTodoTabProps> = ({
   const [editForm] = Form.useForm();
   const [doReplaceAll, setDoReplaceAll] = useState(false);
 
+  // Message popup context
+  const { showSuccess, showError, showWarning, showInfo } = useMessagePopupContext();
+
+  // Hooks for API calls
   const generateCheckpointsMutation = useGenerateCheckpoints();
   const bulkSaveCheckpointsMutation = useBulkSaveCheckpoints();
 
   const handleGenerate = async () => {
     if (!studentMessage.trim()) {
-      message.warning('Please enter a message for AI generation');
+      showWarning('Please enter a message for AI generation');
       return;
     }
 
@@ -48,17 +53,17 @@ const AIGenerateTodoTab: React.FC<AIGenerateTodoTabProps> = ({
     try {
       const result = await generateCheckpointsMutation.mutateAsync({
         joinedSubjectId,
-        studentMessage
+        studentMessage: studentMessage.trim()
       });
-      
+
       if (result && result.length > 0) {
         setGeneratedCheckpoints(result);
-        message.success(`Generated ${result.length} checkpoints successfully!`);
+        showSuccess(`Generated ${result.length} checkpoints successfully!`);
       } else {
-        message.info('No checkpoints were generated. Try a different message.');
+        showInfo('No checkpoints were generated. Try a different message.');
       }
     } catch (error) {
-      message.error('Failed to generate checkpoints. Please try again.');
+      showError('Failed to generate checkpoints. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -66,25 +71,31 @@ const AIGenerateTodoTab: React.FC<AIGenerateTodoTabProps> = ({
 
   const handleSave = async () => {
     if (generatedCheckpoints.length === 0) {
-      message.warning('No checkpoints to save');
+      showWarning('No checkpoints to save');
       return;
     }
 
+    setIsGenerating(true);
     try {
       await bulkSaveCheckpointsMutation.mutateAsync({
         joinedSubjectId,
-        checkpoints: generatedCheckpoints,
+        checkpoints: generatedCheckpoints.map(checkpoint => ({
+          ...checkpoint,
+          joinedSubjectId
+        })),
         doReplaceAll
       });
       
-      message.success('Checkpoints saved successfully!');
+      showSuccess('Checkpoints saved successfully!');
       setGeneratedCheckpoints([]);
       setStudentMessage('');
       setDoReplaceAll(false);
       form.resetFields();
       onSuccess?.();
     } catch (error) {
-      message.error('Failed to save checkpoints. Please try again.');
+      showError('Failed to save checkpoints. Please try again.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -133,7 +144,7 @@ const AIGenerateTodoTab: React.FC<AIGenerateTodoTabProps> = ({
       setGeneratedCheckpoints(updatedCheckpoints);
       setEditingIndex(null);
       editForm.resetFields();
-      message.success('Checkpoint updated successfully!');
+      showSuccess('Checkpoint updated successfully!');
     });
   };
 
@@ -145,7 +156,7 @@ const AIGenerateTodoTab: React.FC<AIGenerateTodoTabProps> = ({
   const handleDeleteCheckpoint = (index: number) => {
     const updatedCheckpoints = generatedCheckpoints.filter((_, i) => i !== index);
     setGeneratedCheckpoints(updatedCheckpoints);
-    message.success('Checkpoint removed successfully!');
+    showSuccess('Checkpoint removed successfully!');
   };
 
   return (
@@ -386,11 +397,11 @@ const AIGenerateTodoTab: React.FC<AIGenerateTodoTabProps> = ({
                 type="primary"
                 icon={<SaveOutlined />}
                 onClick={handleSave}
-                loading={bulkSaveCheckpointsMutation.isPending}
+                loading={isGenerating}
                 size="large"
                 className="w-full !mt-5 !h-12 !text-base !font-bold !bg-orange-500 hover:!bg-orange-600 !border-orange-500 mt-4"
               >
-                {bulkSaveCheckpointsMutation.isPending ? 'Saving…' : 'Save All Checkpoints'}
+                {isGenerating ? 'Saving…' : 'Save All Checkpoints'}
               </Button>
             </>
           )}

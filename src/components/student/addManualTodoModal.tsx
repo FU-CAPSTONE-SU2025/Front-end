@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, Typography, Space, message, DatePicker } fr
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
 import { useCreateCheckpoint } from '../../hooks/useStudentFeature';
 import dayjs from 'dayjs';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 
 const { TextArea } = Input;
 const { Title } = Typography;
@@ -21,6 +22,7 @@ const AddManualTodoModal: React.FC<AddManualTodoModalProps> = ({
   const [form] = Form.useForm();
   const [linkCount, setLinkCount] = useState(2); // Start with 2 link fields
   const createCheckpointMutation = useCreateCheckpoint();
+  const { showSuccess, showError } = useMessagePopupContext();
 
   const handleClose = () => {
     form.resetFields();
@@ -70,10 +72,10 @@ const AddManualTodoModal: React.FC<AddManualTodoModalProps> = ({
         }
       });
       
-      message.success('Todo item added successfully!');
+      showSuccess('Todo item added successfully!');
       handleClose();
     } catch (error) {
-      message.error('Failed to add todo item. Please try again.');
+      showError('Failed to add todo item. Please try again.');
     }
   };
 

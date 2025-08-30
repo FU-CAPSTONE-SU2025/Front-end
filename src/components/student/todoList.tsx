@@ -11,11 +11,11 @@ import {
 } from '@ant-design/icons';
 import { SubjectCheckpoint } from '../../interfaces/IStudent';
 import { useSubjectCheckpoints, useCheckpointDetail, useDeleteCheckpoint } from '../../hooks/useStudentFeature';
+import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 import CheckpointDetailModal from './checkpointDetailModal';
 import CheckpointEditModal from './checkpointEditModal';
 import DeleteCheckpointModal from './deleteCheckpointModal';
 import AddManualTodoModal from './addManualTodoModal';
-import { message } from 'antd';
 
 interface TodoListProps {
   checkpoints: SubjectCheckpoint[];
@@ -32,6 +32,9 @@ const TodoList: React.FC<TodoListProps> = ({ checkpoints, isLoading = false, joi
   const [deletingCheckpointId, setDeletingCheckpointId] = useState<number | null>(null);
   const [deletingCheckpointTitle, setDeletingCheckpointTitle] = useState<string>('');
   const [isAddManualTodoModalVisible, setIsAddManualTodoModalVisible] = useState(false);
+
+  // Message popup context
+  const { showSuccess, showError } = useMessagePopupContext();
 
   // Hook for deleting checkpoint
   const deleteCheckpointMutation = useDeleteCheckpoint();
@@ -117,12 +120,12 @@ const TodoList: React.FC<TodoListProps> = ({ checkpoints, isLoading = false, joi
     if (deletingCheckpointId) {
       try {
         await deleteCheckpointMutation.mutateAsync(deletingCheckpointId);
-        message.success('Checkpoint deleted successfully');
+        showSuccess('Checkpoint deleted successfully');
         setIsDeleteModalVisible(false);
         setDeletingCheckpointId(null);
         setDeletingCheckpointTitle('');
       } catch (error) {
-        message.error('Failed to delete checkpoint');
+        showError('Failed to delete checkpoint');
       }
     }
   };
