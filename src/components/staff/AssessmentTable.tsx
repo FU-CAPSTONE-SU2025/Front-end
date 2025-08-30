@@ -260,8 +260,10 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
           <div className={styles.formRow}>
             <Form.Item name="category" label="Category" rules={[{ required: true }]}>
               <Select placeholder="Select category">
+                <Option value="Participation">Participation</Option>
+                <Option value="Progress test">Progress test</Option>
                 <Option value="Assignment">Assignment</Option>
-                <Option value="Quiz">Quiz</Option>
+                <Option value="Pratical Exam">Pratical Exam</Option>
                 <Option value="Final Exam">Final Exam</Option>
               </Select>
             </Form.Item>
