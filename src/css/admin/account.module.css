@@ -7,8 +7,7 @@
   }
 }
 .avatar {
-  width: 8rem;
-  height: 8rem;
+
   border-radius: 50%; 
   border: 4px solid rgba(255, 255, 255, 0.9);
   box-shadow: 
@@ -16,7 +15,6 @@
     0 0 0 1px rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
   cursor: pointer;
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -30,98 +28,12 @@
     0 0 0 1px rgba(255, 255, 255, 0.7);
 }
 
-/* Avatar button positioning improvements */
-.avatar :global(.absolute) {
-  position: absolute;
-}
-
-/* Button positioning - Bottom left to right */
-.avatar :global(.bottom-1) {
-  bottom: -0.5rem;
-  left: -0.5rem;
-}
-
-.avatar :global(.right-1) {
-  right: -0.5rem;
-  bottom: -0.5rem;
-}
-
-.avatar :global(.left-1) {
-  left: -0.5rem;
-  bottom: -0.5rem;
-}
-
-.avatar :global(.w-6) {
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.avatar :global(.h-6) {
-  height: 2rem;
-}
-
-/* Edit button - Orange theme */
-.avatar :global(.bg-orange-500) {
-  background-color: #EA580C;
-}
-
-.avatar :global(.hover\\:bg-orange-600:hover) {
-  background-color: #C2410C;
-}
-
-/* Delete button - Red theme */
-.avatar :global(.bg-red-500) {
-  background-color: #ef4444;
-}
-
-.avatar :global(.hover\\:bg-red-600:hover) {
-  background-color: #dc2626;
-}
-
-/* Button text and icons - Always white */
-.avatar :global(.text-white) {
-  color: white !important;
-}
-
-.avatar :global(.border-white) {
-  border-color: white;
-}
-
-.avatar :global(.rounded-full) {
-  border-radius: 50%;
-}
-
-.avatar :global(.shadow-md) {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-/* Remove hover scaling and transitions */
-.avatar :global(.transition-all) {
-  transition: none;
-}
-
-.avatar :global(.duration-200) {
-  transition-duration: 0ms;
-}
-
-.avatar :global(.focus\\:outline-none:focus) {
-  outline: none;
-}
-
-.avatar :global(.focus\\:ring-2:focus) {
-  box-shadow: none;
-}
-
-.avatar :global(.focus\\:ring-orange-300:focus) {
-  box-shadow: none;
-}
-
-.avatar :global(.focus\\:ring-red-300:focus) {
-  box-shadow: none;
-}
+/* Avatar button positioning improvements - REMOVED - now using inline styles */
+/* Button positioning - Bottom left to right - REMOVED - now using inline styles */
+/* Edit button - Orange theme - REMOVED - now using inline styles */
+/* Delete button - Red theme - REMOVED - now using inline styles */
+/* Button text and icons - Always white - REMOVED - now using inline styles */
+/* Remove hover scaling and transitions - REMOVED - now using inline styles */
 
 .avatar :global(.z-2) {
   z-index: 2;

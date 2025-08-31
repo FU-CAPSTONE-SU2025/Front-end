@@ -7,6 +7,7 @@ interface PaginationParams {
   pageSize: number;
   filterType?: string;
   filterValue?: string;
+  search?: string;
 }
 
 export default function useCRUDStaff() {
@@ -15,7 +16,7 @@ export default function useCRUDStaff() {
       const data = await FetchStaffList(
         params.pageNumber, 
         params.pageSize, 
-        undefined, // searchQuery removed - will be handled client-side
+        params.search,
         params.filterType, 
         params.filterValue
       );
