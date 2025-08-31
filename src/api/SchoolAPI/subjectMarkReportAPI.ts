@@ -1,7 +1,7 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 
-import { ISubjectMarkReport,ICreateSubjectMarkReport, IUpdateSubjectMarkReport, IViewSubjectAssessment } from '../../interfaces/ISubjectMarkReport';
+import { ISubjectMarkReport,ICreateSubjectMarkReport, IUpdateSubjectMarkReport, IViewSubjectAssessment, IPersonalAcademicTranscript } from '../../interfaces/ISubjectMarkReport';
 const subjectMarkURL = baseUrl + "/SubjecMarkRp"; // Typeto in the backend
 
 export const FetchViewSubjectMarkReportTemplate = async (subjectCode: string,subjectVersionCode:string): Promise<IViewSubjectAssessment[]> => {
@@ -51,6 +51,21 @@ export const FetchSubjectMarkReport = async (joinedSubjectId: number): Promise<I
 };
   // for STUDENT only
   export const FetchSelfSubjectMarkReport = async (): Promise<ISubjectMarkReport[]> => {
+    const props = {
+      data: null,
+      url: subjectMarkURL+`/personal-academic-transcript`,
+      headers: GetHeader(),
+    };
+    const result = await axiosRead(props);
+    if (result.success) {
+      return result.data;
+    } else {
+      throwApiError(result);
+    }
+  };
+
+  // for STUDENT only - Personal Academic Transcript
+  export const FetchPersonalAcademicTranscript = async (): Promise<IPersonalAcademicTranscript[]> => {
     const props = {
       data: null,
       url: subjectMarkURL+`/personal-academic-transcript`,
