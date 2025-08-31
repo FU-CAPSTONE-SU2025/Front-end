@@ -17,6 +17,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
   placeholder = "Search for subjects, courses, or resources...",
   className = "",
 }) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      onEnter();
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -35,13 +41,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             type="text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            onKeyDown={(e) => {
-              console.log('SearchBar onKeyDown:', e.key);
-              if (e.key === 'Enter' && onEnter) {
-                console.log('SearchBar: Calling onEnter');
-                onEnter();
-              }
-            }}
+            onKeyDown={handleKeyDown}
             placeholder={placeholder}
             className="w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm placeholder-white/40 outline-none transition-all duration-200 hover:bg-white/10 hover:border-white/30 focus:bg-white/10 focus:border-white/40 !text-white"
             style={{ color: 'white' }}

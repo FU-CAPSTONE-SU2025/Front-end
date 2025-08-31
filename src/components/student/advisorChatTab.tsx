@@ -283,7 +283,6 @@ const AdvisorChatTab: React.FC<AdvisorChatTabProps> = ({ onChatBoxOpen, drawerOp
         setNewChatMessage('');
         
         // Automatically refresh sessions to show the new chat session
-        console.log('🔄 Refreshing sessions after creating new chat...');
         await fetchSessions();
         
         // Force UI update to ensure new session is displayed

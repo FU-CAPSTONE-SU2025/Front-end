@@ -1,22 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import SearchBar from '../../components/student/searchBar';
-import ResourceTable from '../../components/student/resourceTable';
-import { useStudentFeature, useJoinedSubjects } from '../../hooks/useStudentFeature';
+import { useJoinedSubjects, useSyllabusByJoinedSubject, useCheckpointCompletionPercentage, useJoinedSubjectStatusMapping } from '../../hooks/useStudentFeature';
 import { groupSubjectsBySemester, getSemesterOptions } from '../../utils/subjectUtils';
+import { GetCurrentStudentUser } from '../../api/Account/UserAPI';
+import { getAuthState } from '../../hooks/useAuthState';
+import { jwtDecode } from 'jwt-decode';
 
 const ResourceExplorer: React.FC = () => {
   const navigate = useNavigate();
-  const [searchInput, setSearchInput] = useState('');
-  const [activeSearch, setActiveSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [hasSearched, setHasSearched] = useState(false);
   const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
+  const [selectedJoinedSubjectId, setSelectedJoinedSubjectId] = useState<number | null>(null);
+  const [studentProfileId, setStudentProfileId] = useState<number | null>(null);
+  const [studentDetail, setStudentDetail] = useState<any | null>(null);
+  const [isLoadingStudent, setIsLoadingStudent] = useState<boolean>(false);
+
+  // Get studentProfileId from studentDataDetailResponse.id
+  useEffect(() => {
+    const fetchStudentDetail = async () => {
+      try {
+        const { accessToken } = getAuthState();
+        if (accessToken) {
+          const payload: any = jwtDecode(accessToken);
+          const userId = payload?.UserId ?? null;
+          
+          if (userId) {
+            setIsLoadingStudent(true);
+            const res = await GetCurrentStudentUser(userId);
+            setStudentDetail(res);
+            // Set studentProfileId from studentDataDetailResponse.id
+            const profileId = res?.studentDataDetailResponse?.id;
+            setStudentProfileId(profileId);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch student detail:', error);
+        setStudentProfileId(null);
+      } finally {
+        setIsLoadingStudent(false);
+      }
+    };
+
+    fetchStudentDetail();
+  }, []);
 
   // Fetch joined subjects for current semester display
   const { data: joinedSubjects, isLoading: subjectsLoading } = useJoinedSubjects();
+
+  // Fetch syllabus by joined subject ID to get syllabusId
+  const { data: syllabusIdData, isLoading: syllabusIdLoading } = useSyllabusByJoinedSubject(selectedJoinedSubjectId);
+
+  // Fetch checkpoint completion percentage and status mapping using actual studentProfileId from studentDataDetailResponse.id
+  const { data: completionData, isLoading: completionLoading } = useCheckpointCompletionPercentage(studentProfileId);
+  const { data: statusData, isLoading: statusLoading } = useJoinedSubjectStatusMapping(studentProfileId);
 
   // Group subjects by semester
   const semesterSubjects = React.useMemo(() => {
@@ -36,30 +72,46 @@ const ResourceExplorer: React.FC = () => {
     }
   }, [semesterOptions, selectedSemester]);
 
+  // When syllabusId is received, navigate to syllabus detail
+  React.useEffect(() => {
+    if (syllabusIdData && syllabusIdData.syllabusId && selectedJoinedSubjectId) {
+      navigate(`/student/syllabus/${syllabusIdData.syllabusId}`);
+      setSelectedJoinedSubjectId(null);
+    }
+  }, [syllabusIdData, selectedJoinedSubjectId, navigate]);
+
   // Get current semester subjects
   const currentSemesterSubjects = selectedSemester ? semesterSubjects[selectedSemester] || [] : [];
 
-  useEffect(() => {
-    setPage(1);
-  }, [activeSearch]);
-
-  // Fetch syllabus data with search and pagination
-  const { data, isLoading, error } = useStudentFeature({ 
-    search: activeSearch, 
-    page, 
-    pageSize
-  });
-
-  const handleSubjectSelect = (subject: any) => {
-    navigate(`/student/syllabus/${subject.id}`);
+  // Helper function to get completion percentage for a subject
+  const getCompletionPercentage = (joinedSubjectId: number) => {
+    if (!completionData) return 0;
+    const subject = completionData.find((item: any) => item.joinedSubjectId === joinedSubjectId);
+    return subject ? subject.completedPercentage : 0;
   };
 
-  const handleSearchEnter = () => {
-    const trimmedSearch = searchInput.trim();
-    
-    setHasSearched(true);
-    // If search is empty, show all subjects by setting activeSearch to empty string
-    setActiveSearch(trimmedSearch);
+  // Helper function to get status for a subject
+  const getSubjectStatus = (joinedSubjectId: number) => {
+    if (!statusData) return 'IN-PROGRESS';
+    const subject = statusData.find((item: any) => item.joinedSubjectId === joinedSubjectId);
+    return subject ? subject.status : 'IN-PROGRESS';
+  };
+
+  // Helper function to get status color and text
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'PASSED':
+        return { color: 'bg-green-500', text: 'Passed' };
+      case 'NOT PASSED':
+        return { color: 'bg-red-500', text: 'Not Passed' };
+      case 'IN-PROGRESS':
+      default:
+        return { color: 'bg-blue-500', text: 'In Progress' };
+    }
+  };
+
+  const handleSubjectSelect = (subject: any) => {
+    setSelectedJoinedSubjectId(subject.id);
   };
 
   return (
@@ -75,7 +127,7 @@ const ResourceExplorer: React.FC = () => {
           <h2 className="text-lg font-bold text-white mb-3">
             Current Semester Subjects
           </h2>
-          {subjectsLoading ? (
+          {subjectsLoading || completionLoading || statusLoading ? (
             <div className="text-center py-4">
               <p className="text-gray-200 opacity-80">Loading subjects...</p>
             </div>
@@ -87,10 +139,10 @@ const ResourceExplorer: React.FC = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05, duration: 0.2 }}
-                  className="flex items-center justify-between p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200 cursor-pointer"
+                  className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200 cursor-pointer"
                   onClick={() => handleSubjectSelect(subject)}
                 >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     <span className="text-yellow-300 font-bold text-sm whitespace-nowrap">
                       {subject.subjectCode}
                     </span>
@@ -98,15 +150,29 @@ const ResourceExplorer: React.FC = () => {
                       {subject.name}
                     </h3>
                   </div>
-                  <div className="flex items-center gap-2 ml-2">
-                    <span className="text-white font-bold text-sm">
-                      {subject.isCompleted ? 100 : subject.isPassed ? 80 : 30}%
-                    </span>
-                    <div className="w-12 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-300"
-                        style={{ width: `${subject.isCompleted ? 100 : subject.isPassed ? 80 : 30}%` }}
-                      />
+                  <div className="flex items-center gap-3 ml-2">
+                    {/* Status Badge */}
+                    {(() => {
+                      const status = getSubjectStatus(subject.id);
+                      const statusInfo = getStatusInfo(status);
+                      return (
+                        <div className={`px-2 py-1 rounded-full text-xs font-semibold text-white ${statusInfo.color}`}>
+                          {statusInfo.text}
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* Progress Section */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-bold text-sm">
+                        {getCompletionPercentage(subject.id)}%
+                      </span>
+                      <div className="w-16 h-2 bg-white/20 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-300"
+                          style={{ width: `${getCompletionPercentage(subject.id)}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -119,33 +185,6 @@ const ResourceExplorer: React.FC = () => {
           )}
         </div>
       </motion.div>
-
-      {/* Search Bar - Always show */}
-      <div className="mb-6 w-full max-w-7xl mx-auto">
-        <SearchBar
-          value={searchInput}
-          onChange={setSearchInput}
-          onEnter={handleSearchEnter}
-          placeholder="Search by subject code... (Press Enter to search, empty to show all)"
-          className="mb-0"
-        />
-      </div>
-
-      {/* Table - Only show after user has searched */}
-      {hasSearched && (
-        <ResourceTable
-          data={data?.items || []}
-          isLoading={isLoading}
-          page={page}
-          pageSize={pageSize}
-          total={data?.totalCount || 0}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
-          searchTerm={activeSearch}
-          hasSearched={hasSearched}
-          onSubjectSelect={handleSubjectSelect}
-        />
-      )}
     </div>
   );
 };

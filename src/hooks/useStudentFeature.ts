@@ -24,8 +24,12 @@ import {
     postSubjectComment,
     getSubjectComments,
     postCommentReaction,
+    deleteSubjectComment,
     getGitHubRepoData,
-    updateGitHubRepoURL
+    updateGitHubRepoURL,
+    getSyllabusByJoinedSubject,
+    getCheckpointCompletionPercentage,
+    getJoinedSubjectStatusMapping
 } from '../api/student/StudentAPI';
 import { AdvisorMeetingPaged, BookingAvailabilityData, PagedAdvisorData, PagedLeaveScheduleData, MaxBanData, CurrentBanData, JoinedSubject, SubjectCheckpoint, SubjectCheckpointDetail, SubjectMark } from '../interfaces/IStudent';
 
@@ -287,7 +291,7 @@ export const useUpdateCheckpoint = () => {
       // Invalidate checkpoints list to refresh the main list
       queryClient.invalidateQueries({ queryKey: ['subjectCheckpoints'] });
       
-      console.log('Checkpoint updated successfully:', updatedCheckpoint);
+      // console.log('Checkpoint updated successfully:', updatedCheckpoint); - removed for production
     },
     onError: (error) => {
       console.error('Failed to update checkpoint:', error);
@@ -309,7 +313,7 @@ export const useDeleteCheckpoint = () => {
         // Remove checkpoint detail from cache if it exists
         queryClient.removeQueries({ queryKey: ['checkpointDetail', checkpointId] });
         
-        console.log('Checkpoint deleted successfully');
+        // console.log('Checkpoint deleted successfully'); - removed for production
       }
     },
     onError: (error) => {
@@ -332,7 +336,7 @@ export const useCompleteCheckpoint = () => {
         // Invalidate checkpoint detail if it exists
         queryClient.invalidateQueries({ queryKey: ['checkpointDetail', checkpointId] });
         
-        console.log('Checkpoint completed successfully');
+        // console.log('Checkpoint completed successfully'); - removed for production
       }
     },
     onError: (error) => {
@@ -343,10 +347,13 @@ export const useCompleteCheckpoint = () => {
 
 // Hook for AI generating checkpoints
 export const useGenerateCheckpoints = () => {
+  const queryClient = useQueryClient();
   return useMutation<any[], Error, { joinedSubjectId: number; studentMessage: string }>({
     mutationFn: ({ joinedSubjectId, studentMessage }) => generateCheckpoints(joinedSubjectId, studentMessage),
     onSuccess: (data) => {
-      console.log('Checkpoints generated successfully:', data);
+      // console.log('Checkpoints generated successfully:', data); - removed for production
+      queryClient.invalidateQueries({ queryKey: ['subjectCheckpoints'] });
+      queryClient.invalidateQueries({ queryKey: ['joinedSubjects'] });
     },
     onError: (error) => {
       console.error('Failed to generate checkpoints:', error);
@@ -365,7 +372,7 @@ export const useBulkSaveCheckpoints = () => {
         // Invalidate checkpoints list to refresh the main list
         queryClient.invalidateQueries({ queryKey: ['subjectCheckpoints'] });
         
-        console.log('Checkpoints saved successfully');
+        // console.log('Checkpoints saved successfully'); - removed for production
       }
     },
     onError: (error) => {
@@ -394,7 +401,7 @@ export const useCreateCheckpoint = () => {
       // Invalidate checkpoints list to refresh the main list
       queryClient.invalidateQueries({ queryKey: ['subjectCheckpoints'] });
       
-      console.log('Checkpoint created successfully:', newCheckpoint);
+              // console.log('Checkpoint created successfully:', newCheckpoint); - removed for production
     },
     onError: (error) => {
       console.error('Failed to create checkpoint:', error);
@@ -495,6 +502,75 @@ export const usePostCommentReaction = () => {
   });
 };
 
+export const useDeleteSubjectComment = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (commentId: number) => {
+      const data = await deleteSubjectComment(commentId);
+      return data;
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate comments to refresh the list after deletion
+      queryClient.invalidateQueries({ queryKey: ['subjectComments'] });
+    },
+    onError: (error) => {
+      console.error('Error deleting comment:', error);
+    },
+  });
+};
+
+export const useSyllabusByJoinedSubject = (joinedSubjectId: number | null) => {
+  return useQuery<any, Error>({
+    queryKey: ['syllabusByJoinedSubject', joinedSubjectId],
+    queryFn: async () => {
+      if (!joinedSubjectId) return null;
+      const data = await getSyllabusByJoinedSubject(joinedSubjectId);
+      return data;
+    },
+    enabled: !!joinedSubjectId,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false,
+  });
+};
+
+export const useCheckpointCompletionPercentage = (studentProfileId: number | null) => {
+  return useQuery<any, Error>({
+    queryKey: ['checkpointCompletionPercentage', studentProfileId],
+    queryFn: async () => {
+      if (!studentProfileId) return [];
+      const data = await getCheckpointCompletionPercentage(studentProfileId);
+      return data || [];
+    },
+    enabled: !!studentProfileId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false,
+  });
+};
+
+export const useJoinedSubjectStatusMapping = (studentProfileId: number | null) => {
+  return useQuery<any, Error>({
+    queryKey: ['joinedSubjectStatusMapping', studentProfileId],
+    queryFn: async () => {
+      if (!studentProfileId) return [];
+      const data = await getJoinedSubjectStatusMapping(studentProfileId);
+      return data || [];
+    },
+    enabled: !!studentProfileId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false,
+  });
+};
+
 // Hook for fetching GitHub repository data
 export const useGitHubRepoData = (owner: string | null, repoName: string | null) => {
   return useQuery<any, Error>({
@@ -528,7 +604,7 @@ export const useUpdateGitHubRepoURL = () => {
       // Invalidate GitHub repo data to refresh
       queryClient.invalidateQueries({ queryKey: ['gitHubRepoData'] });
       
-      console.log('GitHub repository URL updated successfully:', data);
+              // console.log('GitHub repository URL updated successfully:', data); - removed for production
     },
     onError: (error) => {
       console.error('Failed to update GitHub repository URL:', error);

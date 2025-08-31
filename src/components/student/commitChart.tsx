@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Button, Spin, Alert, Input } from 'antd';
+import { Button, Spin, Alert, Input, Skeleton } from 'antd';
 import { GitHubRepoData, ContributionHelper, ContributionData } from '../../interfaces/IGithub';
 
 interface CommitChartProps {
@@ -99,12 +99,115 @@ const CommitChart: React.FC<CommitChartProps> = ({
   };
 
   const contributionData = generateContributionData();
+  
+  // Get chart info with proper month labels
+  const chartInfo = contributionData ? 
+    ContributionHelper.createContributionChartWithLabels(contributionData) : null;
+
+  // Render contribution chart placeholder when no data
+  const renderContributionChartPlaceholder = () => (
+    <div className="mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <Skeleton.Input 
+          active 
+          size="small" 
+          className="!w-48 !h-5 !bg-white/10" 
+        />
+      </div>
+      
+      {/* Chart grid placeholder - same dimensions as real chart */}
+      <div className="grid grid-cols-52 grid-rows-7 gap-1">
+        {Array.from({ length: 364 }).map((_, idx) => (
+          <div
+            key={idx}
+            className="w-3 h-3 rounded-sm bg-white/10 animate-pulse"
+          />
+        ))}
+      </div>
+      
+      {/* Month labels placeholder - show actual months from data if available */}
+      <div className="flex justify-between text-xs mt-3 text-gray-300 font-medium">
+        {chartInfo && chartInfo.monthLabels.length > 0 ? (
+          chartInfo.monthLabels.map((monthInfo, idx) => (
+            <span key={idx} className="flex-1 text-center truncate">
+              {monthInfo.month}
+            </span>
+          ))
+        ) : (
+          // Fallback to standard months if no data
+          <>
+            <span>Jan</span>
+            <span>Feb</span>
+            <span>Mar</span>
+            <span>Apr</span>
+            <span>May</span>
+            <span>Jun</span>
+            <span>Jul</span>
+            <span>Aug</span>
+            <span>Sep</span>
+            <span>Oct</span>
+            <span>Nov</span>
+            <span>Dec</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  // Render repository info placeholder when no data
+  const renderRepositoryInfoPlaceholder = () => (
+    <div className="mb-6 p-5 rounded-xl shadow-lg">
+      {/* Header placeholder */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <Skeleton.Avatar active size={40} className="!bg-white/10" />
+            <div className="flex-1">
+              <Skeleton.Input active size="small" className="!w-48 !h-6 !bg-white/10 mb-2" />
+              <div className="flex gap-2">
+                <Skeleton.Input active size="small" className="!w-16 !h-5 !bg-white/10" />
+                <Skeleton.Input active size="small" className="!w-20 !h-5 !bg-white/10" />
+              </div>
+            </div>
+          </div>
+          <Skeleton.Input active size="small" className="!w-96 !h-4 !bg-white/10 mt-3" />
+        </div>
+      </div>
+
+      {/* Stats Grid placeholder */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <div key={idx} className="text-center p-3 bg-white/10 rounded-lg border border-white/20">
+            <Skeleton.Input active size="small" className="!w-16 !h-8 !bg-white/20 mx-auto mb-1" />
+            <Skeleton.Input active size="small" className="!w-12 !h-3 !bg-white/20 mx-auto" />
+          </div>
+        ))}
+      </div>
+
+      {/* Additional Info placeholder */}
+      <div className="mt-6 pt-4 border-t border-white/20">
+        <div className="flex flex-wrap items-center gap-4">
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <Skeleton.Input key={idx} active size="small" className="!w-32 !h-4 !bg-white/10" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   // Show loading when connecting or waiting for data
   if (isConnecting || isWaitingForData || isLoading) {
     return (
-      <div className="overflow-x-auto p-8 bg-white/18 backdrop-blur-16 border border-white/30 rounded-2xl shadow-lg">
-        <div className="text-center">
+      <div className="overflow-x-auto p-6 bg-white/18 backdrop-blur-16 border border-white/30 rounded-2xl shadow-lg">
+        <div className="flex items-center justify-between mb-4">
+          <Skeleton.Input active size="small" className="!w-32 !h-6 !bg-white/10" />
+          <Skeleton.Input active size="small" className="!w-40 !h-5 !bg-white/10" />
+        </div>
+        
+        {renderRepositoryInfoPlaceholder()}
+        {renderContributionChartPlaceholder()}
+        
+        <div className="text-center mt-6">
           <Spin size="large" />
           <p className="text-white mt-4">
             {isConnecting ? 'Connecting to GitHub...' : 
@@ -123,7 +226,15 @@ const CommitChart: React.FC<CommitChartProps> = ({
 
   if (!isConnected) {
     return (
-      <div className="overflow-x-auto p-8 bg-white/18 backdrop-blur-16 border border-white/30 rounded-2xl shadow-lg">
+      <div className="overflow-x-auto p-6 bg-white/18 backdrop-blur-16 border border-white/30 rounded-2xl shadow-lg">
+        <div className="flex items-center justify-between mb-4">
+          <Skeleton.Input active size="small" className="!w-32 !h-6 !bg-white/10" />
+          <Skeleton.Input active size="small" className="!w-40 !h-5 !bg-white/10" />
+        </div>
+        
+        {renderRepositoryInfoPlaceholder()}
+        {renderContributionChartPlaceholder()}
+        
         <div className="text-center">
           <div className="mb-6">
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -173,7 +284,15 @@ const CommitChart: React.FC<CommitChartProps> = ({
 
   if (error) {
     return (
-      <div className="overflow-x-auto p-8 bg-white/18 backdrop-blur-16 border border-white/30 rounded-2xl shadow-lg">
+      <div className="overflow-x-auto p-6 bg-white/18 backdrop-blur-16 border border-white/30 rounded-2xl shadow-lg">
+        <div className="flex items-center justify-between mb-4">
+          <Skeleton.Input active size="small" className="!w-32 !h-6 !bg-white/10" />
+          <Skeleton.Input active size="small" className="!w-40 !h-5 !bg-white/10" />
+        </div>
+        
+        {renderRepositoryInfoPlaceholder()}
+        {renderContributionChartPlaceholder()}
+        
         <Alert
           message="Error loading GitHub data"
           description={error.message}
@@ -187,7 +306,15 @@ const CommitChart: React.FC<CommitChartProps> = ({
 
   if (!repoData || !contributionData) {
     return (
-      <div className="overflow-x-auto p-8 bg-white/18 backdrop-blur-16 border border-white/30 rounded-2xl shadow-lg">
+      <div className="overflow-x-auto p-6 bg-white/18 backdrop-blur-16 border border-white/30 rounded-2xl shadow-lg">
+        <div className="flex items-center justify-between mb-4">
+          <Skeleton.Input active size="small" className="!w-32 !h-6 !bg-white/10" />
+          <Skeleton.Input active size="small" className="!w-40 !h-5 !bg-white/10" />
+        </div>
+        
+        {renderRepositoryInfoPlaceholder()}
+        {renderContributionChartPlaceholder()}
+        
         <div className="text-center">
           <p className="text-white mb-4">No GitHub data available</p>
           
@@ -227,7 +354,7 @@ const CommitChart: React.FC<CommitChartProps> = ({
       </div>
       
       {/* Repository Info */}
-      <div className="mb-6 p-5  rounded-xl shadow-lg">
+      <div className="mb-6 p-5 rounded-xl shadow-lg">
         {/* Header with repo name and status */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
@@ -352,9 +479,16 @@ const CommitChart: React.FC<CommitChartProps> = ({
       {/* Contribution Chart */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-white text-sm font-medium">
-            {contributionData.totalContributions} contributions in the last year
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-white text-sm font-medium">
+              {contributionData.totalContributions} contributions
+            </span>
+            {chartInfo && (
+              <span className="text-gray-400 text-xs">
+                from {chartInfo.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to {chartInfo.endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </span>
+            )}
+          </div>
         </div>
         
         <div className="grid grid-cols-52 grid-rows-7 gap-1">
@@ -380,18 +514,29 @@ const CommitChart: React.FC<CommitChartProps> = ({
         
         {/* Month labels */}
         <div className="flex justify-between text-xs mt-3 text-gray-300 font-medium">
-          <span>Jan</span>
-          <span>Feb</span>
-          <span>Mar</span>
-          <span>Apr</span>
-          <span>May</span>
-          <span>Jun</span>
-          <span>Jul</span>
-          <span>Aug</span>
-          <span>Sep</span>
-          <span>Oct</span>
-          <span>Nov</span>
-          <span>Dec</span>
+          {chartInfo && chartInfo.monthLabels.length > 0 ? (
+            chartInfo.monthLabels.map((monthInfo, idx) => (
+              <span key={idx} className="flex-1 text-center truncate">
+                {monthInfo.month}
+              </span>
+            ))
+          ) : (
+            // Fallback to standard months if no data
+            <>
+              <span>Jan</span>
+              <span>Feb</span>
+              <span>Mar</span>
+              <span>Apr</span>
+              <span>May</span>
+              <span>Jun</span>
+              <span>Jul</span>
+              <span>Aug</span>
+              <span>Sep</span>
+              <span>Oct</span>
+              <span>Nov</span>
+              <span>Dec</span>
+            </>
+          )}
         </div>
       </div>
 
