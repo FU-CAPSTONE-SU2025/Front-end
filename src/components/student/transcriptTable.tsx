@@ -19,12 +19,11 @@ const TranscriptTable: React.FC<TranscriptTableProps> = ({ data, isLoading }) =>
     if (isPassed) {
       return { color: 'bg-green-500', text: 'Passed' };
     } else {
-      return { color: 'bg-orange-500', text: 'In Progress' };
+      return { color: 'bg-red-500', text: 'Not Pass' };
     }
   };
 
   const formatScore = (score: number) => {
-    if (score === 0) return 'N/A';
     return score.toFixed(2);
   };
 
