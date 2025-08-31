@@ -6,9 +6,11 @@ import { groupSubjectsBySemester, getSemesterOptions } from '../../utils/subject
 import { GetCurrentStudentUser } from '../../api/Account/UserAPI';
 import { getAuthState } from '../../hooks/useAuthState';
 import { jwtDecode } from 'jwt-decode';
+
 import SearchBar from '../../components/student/searchBar';
 import ResourceTable from '../../components/student/resourceTable';
 import { useStudentFeature } from '../../hooks/useStudentFeature';
+
 
 const ResourceExplorer: React.FC = () => {
   const navigate = useNavigate();
@@ -18,11 +20,13 @@ const ResourceExplorer: React.FC = () => {
   const [studentDetail, setStudentDetail] = useState<any | null>(null);
   const [isLoadingStudent, setIsLoadingStudent] = useState<boolean>(false);
 
+
   // Search and pagination state
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [hasSearched, setHasSearched] = useState<boolean>(false);
+
 
   // Get studentProfileId from studentDataDetailResponse.id
   useEffect(() => {
@@ -54,13 +58,16 @@ const ResourceExplorer: React.FC = () => {
   }, []);
 
 
+
   const { data: joinedSubjects, isLoading: subjectsLoading } = useJoinedSubjects();
 
   // Fetch syllabus by joined subject ID to get syllabusId
   const { data: syllabusIdData, isLoading: syllabusIdLoading } = useSyllabusByJoinedSubject(selectedJoinedSubjectId);
+
   // Fetch checkpoint completion percentage and status mapping using actual studentProfileId from studentDataDetailResponse.id
   const { data: completionData, isLoading: completionLoading } = useCheckpointCompletionPercentage(studentProfileId);
   const { data: statusData, isLoading: statusLoading } = useJoinedSubjectStatusMapping(studentProfileId);
+
 
   // Only fetch syllabus data when hasSearched is true
   const { data: syllabusData, isLoading: syllabusLoading } = useStudentFeature({
@@ -69,6 +76,7 @@ const ResourceExplorer: React.FC = () => {
     pageSize,
   });
   console.log(syllabusData);
+
   // Group subjects by semester
   const semesterSubjects = React.useMemo(() => {
     if (!joinedSubjects) return {};
@@ -112,6 +120,7 @@ const ResourceExplorer: React.FC = () => {
     return subject ? subject.status : 'IN-PROGRESS';
   };
 
+
   // Helper function to get status color and text
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -146,6 +155,7 @@ const ResourceExplorer: React.FC = () => {
   const handleSyllabusSelect = (syllabus: any) => {
     // Navigate to syllabus detail page
     navigate(`/student/syllabus/${syllabus.id}`);
+
   };
 
   return (
@@ -220,6 +230,7 @@ const ResourceExplorer: React.FC = () => {
         </div>
       </motion.div>
 
+
       {/* Search Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -258,6 +269,7 @@ const ResourceExplorer: React.FC = () => {
           />
         </motion.div>
       )}
+
     </div>
   );
 };
