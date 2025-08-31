@@ -27,6 +27,11 @@ const createDefaultVersion = async (
   handleError: (message: string) => void
 ) => {
   try {
+    // Check if subject is approved before creating version
+    if (subjectData.approvalStatus !== "APPROVED") {
+      throw new Error('Cannot create versions for unapproved subjects. Please approve the subject first.');
+    }
+    
     const defaultVersionData = generateDefaultVersionData(
       subjectData.id,
       subjectData.subjectCode,
@@ -283,6 +288,14 @@ const ManagerSubjectVersionPage: React.FC = () => {
         // Fetch subject first
         const subjectData = await getSubjectById.mutateAsync(Number(subjectId));
         setSubject(subjectData);
+        
+        // Check if subject is approved before proceeding
+        if (subjectData.approvalStatus !== "APPROVED") {
+          handleError('Cannot create versions for unapproved subjects. Please approve the subject first.');
+          setError('Subject must be approved before creating versions.');
+          setLoading(false);
+          return;
+        }
         
         // Fetch subject versions
         let versionsData: SubjectVersion[] | null = null;

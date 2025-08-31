@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Select, Affix, Tag, Pagination, Spin, Empty, Card, Typography, Space, Row, Col, ConfigProvider } from 'antd';
-import {SearchOutlined, CheckOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import {SearchOutlined, CheckOutlined, EditOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
-import { curriculums, combos } from '../../datas/schoolData';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
+import { Subject } from '../../interfaces/ISchoolProgram';
+import { useSchoolApi } from '../../hooks/useSchoolApi';
 
 const { Option } = Select;
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 const SubjectManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
-  const [curriculumFilter, setCurriculumFilter] = useState<number | undefined>();
-  const [comboFilter, setComboFilter] = useState<number | undefined>();
+  const [curriculumFilter, setCurriculumFilter] = useState<string | undefined>();
+  const [comboFilter, setComboFilter] = useState<string | undefined>();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [approvalModalVisible, setApprovalModalVisible] = useState(false);
@@ -23,21 +24,57 @@ const SubjectManagerPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // API-backed lists for filters with infinite scroll
+  const { useInfiniteComboList, useInfiniteCurriculumList } = useSchoolApi();
+  const [comboListPage, setComboListPage] = useState(1);
+  const [comboListSearch, setComboListSearch] = useState('');
+  const [comboOptions, setComboOptions] = useState<any[]>([]);
+  const { data: comboPaged, isLoading: comboFetching } = useInfiniteComboList(comboListPage, 10, comboListSearch);
+
+  const [curriculumListPage, setCurriculumListPage] = useState(1);
+  const [curriculumListSearch, setCurriculumListSearch] = useState('');
+  const [curriculumOptions, setCurriculumOptions] = useState<any[]>([]);
+  const { data: curriculumPaged, isLoading: curriculumFetching } = useInfiniteCurriculumList(curriculumListPage, 10, curriculumListSearch, undefined);
+
+  // Accumulate options for infinite scroll
+  useEffect(() => {
+    const items = comboPaged?.items || [];
+    if (comboListPage === 1) setComboOptions(items);
+    else if (items.length) setComboOptions(prev => {
+      const exist = new Set(prev.map((i: any) => i.id));
+      const unique = items.filter((i: any) => !exist.has(i.id));
+      return [...prev, ...unique];
+    });
+  }, [comboPaged, comboListPage]);
+
+  useEffect(() => {
+    const items = curriculumPaged?.items || [];
+    if (curriculumListPage === 1) setCurriculumOptions(items);
+    else if (items.length) setCurriculumOptions(prev => {
+      const exist = new Set(prev.map((i: any) => i.id));
+      const unique = items.filter((i: any) => !exist.has(i.id));
+      return [...prev, ...unique];
+    });
+  }, [curriculumPaged, curriculumListPage]);
+
+  // Reset pages on search change
+  useEffect(() => { setComboListPage(1); }, [comboListSearch]);
+  useEffect(() => { setCurriculumListPage(1); }, [curriculumListSearch]);
+
   // CRUD hook
   const {
     getAllSubjects,
     subjectList,
     paginationSubject,
     isLoading,
-    addMultipleSubjectsMutation
   } = useCRUDSubject();
 
   // Approval hook
   const { handleApproval, isApproving } = useApprovalActions();
 
   useEffect(() => {
-    getAllSubjects({ pageNumber: page, pageSize, search: search });
-  }, [page, pageSize, search]);
+    getAllSubjects({ pageNumber: page, pageSize, search: search,curriculumCode:curriculumFilter,comboName:comboFilter });
+  }, [page, pageSize, search, curriculumFilter, comboFilter]);
 
   useEffect(() => {
     const title = searchParams.get('title');
@@ -49,7 +86,7 @@ const SubjectManagerPage: React.FC = () => {
     setApprovalModalVisible(true);
   };
 
-  const handleApprovalConfirm = async (approvalStatus: number, rejectionReason?: string) => {
+  const handleApprovalConfirm = async (approvalStatus: 'APPROVED' | 'PENDING' | 'REJECTED', rejectionReason?: string) => {
     if (!selectedItem) return;
     
     try {
@@ -74,15 +111,15 @@ const SubjectManagerPage: React.FC = () => {
       key: 'approvalInfo',
       align: 'left' as 'left',
       width: 200,
-      render: (_: any, record: any) => {
-        if (record.approvalStatus === 2) {
+      render: (_: any, record: Subject) => {
+        if (record.approvalStatus === "APPROVED") {
           return (
             <div style={{ fontSize: 12, color: '#52c41a' }}>
               <div>Approved by: {record.approvedBy || 'Unknown'}</div>
               <div>Date: {record.approvedAt ? new Date(record.approvedAt).toLocaleDateString() : 'Unknown'}</div>
             </div>
           );
-        } else if (record.approvalStatus === 3) {
+        } else if (record.approvalStatus === "REJECTED") {
           return (
             <div style={{ fontSize: 12, color: '#ff4d4f' }}>
               <div>Rejected</div>
@@ -103,13 +140,13 @@ const SubjectManagerPage: React.FC = () => {
       key: 'actions',
       align: 'center' as 'center',
       width: 280,
-      render: (_: any, record: any) => {
-        const isApproved = record.approvalStatus === 2;
+      render: (_: any, record: Subject) => {
+        const isApproved = record.approvalStatus === "APPROVED";
         return (
           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
             {/* Approved Status Display */}
-            <Tag color={isApproved ? 'green' : record.approvalStatus === 3 ? 'red' : 'orange'} style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6, marginBottom: 0 }}>
-              {isApproved ? 'Approved' : record.approvalStatus === 3 ? 'Rejected' : 'Pending'}
+            <Tag color={isApproved ? 'green' : record.approvalStatus === "REJECTED" ? 'red' : 'orange'} style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6, marginBottom: 0 }}>
+              {isApproved ? 'Approved' : record.approvalStatus === "REJECTED" ? 'Rejected' : 'Pending'}
             </Tag>
             
             {/* Edit Status Button */}
@@ -119,7 +156,7 @@ const SubjectManagerPage: React.FC = () => {
               size="small"
               onClick={async () => {
                 if (isApproved) {
-                  await handleApproval('subject', record.id, 1, null); // Set back to pending
+                  await handleApproval('subject', record.id, "PENDING", null); // Set back to pending
                 } else {
                   handleApprove(record.id, record.subjectName);
                 }
@@ -176,71 +213,56 @@ const SubjectManagerPage: React.FC = () => {
   >
     <div className={styles.sttContainer}>
 
-      {/* Toolbar */}
+      {/* Sticky Toolbar */}
       <Affix offsetTop={80} style={{zIndex: 10}}>
-        <Card 
-          className={glassStyles.appleGlassCard}
-          style={{ 
-            marginBottom: 24,
-            padding: '0rem 2rem',
-            background: 'rgba(255, 255, 255, 0.25)',
-            backdropFilter: 'blur(30px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.2)'
-          }}
-        >
-          <Row gutter={[16, 16]} align="middle">
-            <Col xs={24} sm={8}>
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Text strong>Search Subjects</Text>
-                <Input
-                  placeholder="Search by Subject Name or ID"
-                  prefix={<SearchOutlined />}
-                  value={search}
-                  onChange={e => { setSearch(e.target.value); setPage(1); }}
-                  style={{borderRadius: 12, width: '100%'}}
-                  size="large"
-                  className={glassStyles.appleGlassInput}
-                />
-              </Space>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Text strong>Filter by Curriculum</Text>
-                <Select
-                  allowClear
-                  placeholder="Select Curriculum"
-                  style={{borderRadius: 12, width: '100%'}}
-                  size="large"
-                  value={curriculumFilter}
-                  onChange={setCurriculumFilter}
-                  className={glassStyles.appleGlassInput}
-                >
-                  {curriculums.map(c => (
-                    <Option key={c.id} value={c.id}>{c.curriculumName}</Option>
-                  ))}
-                </Select>
-              </Space>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Text strong>Filter by Combo</Text>
-                <Select
-                  allowClear
-                  placeholder="Select Combo"
-                  style={{borderRadius: 12, width: '100%'}}
-                  size="large"
-                  value={comboFilter}
-                  onChange={setComboFilter}
-                  className={glassStyles.appleGlassInput}
-                >
-                  {combos.map(cb => (
-                    <Option key={cb.id} value={cb.id}>{cb.comboName}</Option>
-                  ))}
-                </Select>
-              </Space>
-            </Col>
-          </Row>
-        </Card>
+        <div className={glassStyles.appleGlassCard} style={{ borderRadius: 20, boxShadow: '0 4px 18px rgba(30,64,175,0.13)', padding: 24, marginBottom: 32, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center'}}>
+          <Input
+            placeholder="Search by Subject Name or ID"
+            prefix={<SearchOutlined />}
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            style={{maxWidth: 240, borderRadius: 999}}
+            size="large"
+          />
+          <Select
+            allowClear
+            placeholder="Filter by Curriculum"
+            style={{minWidth: 240, borderRadius: 999}}
+            size="large"
+            value={curriculumFilter}
+            showSearch
+            onSearch={(v) => setCurriculumListSearch(v)}
+            filterOption={false}
+            onPopupScroll={(e) => {
+              const el = e.target as HTMLDivElement;
+              if (el.scrollTop + el.clientHeight >= el.scrollHeight - 4 && !curriculumFetching) {
+                const total = curriculumPaged?.totalCount || 0;
+                if (curriculumOptions.length < total) setCurriculumListPage(p => p + 1);
+              }
+            }}
+            onChange={(val) => setCurriculumFilter(val)}
+            options={curriculumOptions.map((c: any) => ({ value: c.curriculumCode, label: `${c.curriculumName} (${c.curriculumCode})` }))}
+          />
+          <Select
+            allowClear
+            placeholder="Filter by Combo"
+            style={{minWidth: 240, borderRadius: 999}}
+            size="large"
+            value={comboFilter}
+            showSearch
+            onSearch={(v) => setComboListSearch(v)}
+            filterOption={false}
+            onPopupScroll={(e) => {
+              const el = e.target as HTMLDivElement;
+              if (el.scrollTop + el.clientHeight >= el.scrollHeight - 4 && !comboFetching) {
+                const total = comboPaged?.totalCount || 0;
+                if (comboOptions.length < total) setComboListPage(p => p + 1);
+              }
+            }}
+            onChange={(val) => setComboFilter(val)}
+            options={comboOptions.map((cb: any) => ({ value: cb.comboName, label: cb.comboName }))}
+          />
+        </div>
       </Affix>
         <Spin spinning={isLoading} tip="Loading subjects...">
           <Table

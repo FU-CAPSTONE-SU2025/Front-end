@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, Input, Select, Table, Modal, message } from 'antd';
+import { ConfigProvider, Input, Select, Modal } from 'antd';
 import { useNavigate } from 'react-router';
 import styles from '../../css/admin/students.module.css';
 import BulkDataImport from '../../components/common/bulkDataImport';
@@ -8,10 +8,8 @@ import AccountCounter from '../../components/admin/accountCounter';
 import DataTable from '../../components/common/dataTable';
 import useActiveUserData from '../../hooks/useActiveUserData';
 import useCRUDStaff from '../../hooks/useCRUDStaff';
-import { StaffProfileData } from '../../interfaces/IStaff';
 import ExcelImportButton from '../../components/common/ExcelImportButton';
 import { useAdminUsers } from '../../hooks/useAdminUsers';
-import { transformBulkImportData, validateBulkData, getApiFunctionName } from '../../utils/bulkImportTransformers';
 import { AccountProps } from '../../interfaces/IAccount';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
@@ -44,15 +42,25 @@ const StaffList: React.FC = () => {
     loadStaffData();
   }, []);
 
-  // Load data when pagination or filters change (search is now client-side)
+  // Load data when pagination or filters change (search is now handled separately)
   useEffect(() => {
     loadStaffData();
   }, [currentPage, pageSize, filterType, filterValue]);
+
+  // Debounced search effect to avoid too many API calls
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadStaffData();
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   const loadStaffData = () => {
     getAllStaff({
       pageNumber: currentPage,
       pageSize: pageSize,
+      search: searchQuery || undefined,
       filterType: filterType || undefined,
       filterValue: filterValue || undefined
     });
@@ -166,10 +174,10 @@ const StaffList: React.FC = () => {
     setCurrentPage(1); // Reset to first page when filter value changes
   };
 
-  // Handle search change (client-side, no need to reset page or reload data)
+  // Handle search change (server-side, triggers API call with debounce)
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page for client-side pagination
+    setCurrentPage(1); // Reset to first page when search changes
   };
 
   const handlePageChange = (page: number, size: number) => {
@@ -235,10 +243,10 @@ const StaffList: React.FC = () => {
         padding: '0 12px',
         borderRadius: '12px',
         color: '#fff',
-        background: record.status === 0 ? '#22c55e' : '#ef4444',
+        background: record.status === "ACTIVE" ? '#22c55e' : '#ef4444',
         fontWeight: 500
       }}>
-        {record.status === 0 ? 'Active' : 'Inactive'}
+        {record.status}
       </span>
     ) },
   ];
@@ -386,7 +394,7 @@ const StaffList: React.FC = () => {
                 </ExcelImportButton>
               </div>
             </div>
-            {/* External Table display with server-side pagination and client-side search */}
+            {/* External Table display with server-side pagination and server-side search */}
             <DataTable
               columns={columns}
               data={staffList}
@@ -397,8 +405,6 @@ const StaffList: React.FC = () => {
                 onClick: () => handleRowClick(record),
               })}
               loading={isLoading}
-              search={searchQuery}
-              searchFields={['id', 'firstName', 'lastName', 'email']}
             />
             {isDeleteMode && (
               <motion.div

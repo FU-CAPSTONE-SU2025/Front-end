@@ -17,6 +17,8 @@ import {
 import { AddSubjectVersionToCurriculum, FetchCurriculumList, FetchSubjectVersionsToCurriculum, FetchSubjectVersionsToCurriculumByCode, RemoveSubjectVersionFromCurriculum } from '../api/SchoolAPI/curriculumAPI';
 import { FetchComboList } from '../api/SchoolAPI/comboAPI';
 import { BulkCreateJoinedSubjectMultipleStudents, BulkCreateJoinedSubjects, CreateJoinedSubject, CreateSubjectToCurriculum } from '../interfaces/ISchoolProgram';
+import { FetchJoinedSubjectMapStatus } from '../api/SchoolAPI/joinedSubjectAPI';
+import { JoinedSubjectMapStatus } from '../interfaces/ISchoolProgram';
 
 type AddSubjectVersionToCurriculumMutation = {
   curriculumId: number,
@@ -168,4 +170,14 @@ export const useSchoolApi = () => {
     registerOneStudentToMultipleSubjects: registerOneStudentToMultipleSubjectsMutation.mutateAsync,
     registerStudentToSubject: registerStudentToSubjectMutation.mutateAsync,
   };
+};
+
+export const useJoinedSubjectMapStatus = (studentProfileID: number) => {
+  return useQuery<JoinedSubjectMapStatus[]>({
+    queryKey: ['joinedSubjectMapStatus', studentProfileID],
+    queryFn: () => FetchJoinedSubjectMapStatus(studentProfileID),
+    enabled: !!studentProfileID,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
 };

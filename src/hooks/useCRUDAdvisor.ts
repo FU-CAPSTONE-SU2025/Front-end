@@ -22,6 +22,7 @@ interface PaginationParams {
   pageSize: number;
   filterType?: string;
   filterValue?: string;
+  search?: string;
 }
 
 export default function useCRUDAdvisor() {
@@ -30,7 +31,7 @@ export default function useCRUDAdvisor() {
       const data = await FetchAdvisorList(
         params.pageNumber, 
         params.pageSize, 
-        undefined, // searchQuery removed - will be handled client-side
+        params.search,
         params.filterType, 
         params.filterValue
       );

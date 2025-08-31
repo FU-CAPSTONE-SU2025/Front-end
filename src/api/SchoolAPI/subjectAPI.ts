@@ -39,13 +39,13 @@ export const FetchSubjectList = async (
   pageNumber?: number,
   pageSize?: number,
   search?: string,
-  filterType?: string,
-  filterValue?: string
+  comboName?: string,
+  curriculumCode?: string
 ): Promise<PagedData<Subject> | null> => {
   let params = new URLSearchParams();
   // Build query parameters
   if(pageNumber && pageSize){
-   params = new URLSearchParams({
+    params = new URLSearchParams({
     pageNumber: pageNumber.toString(),
     pageSize: pageSize.toString(),
   });
@@ -54,11 +54,13 @@ export const FetchSubjectList = async (
   if (search) {
     params.append("search", search);
   }
-
-  if (filterType && filterValue) {
-    params.append("filterType", filterType);
-    params.append("filterValue", filterValue);
+  if (comboName) {
+    params.append("comboName", comboName);
   }
+  if (curriculumCode) {
+    params.append("curriculumCode", curriculumCode);
+  }
+
   }
   const props = {
     data: null,

@@ -4,7 +4,7 @@ import {SearchOutlined, BookOutlined, EyeOutlined, CheckOutlined } from '@ant-de
 import styles from '../../css/staff/staffTranscript.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useCRUDCurriculum, useCRUDSubjectVersion } from '../../hooks/useCRUDSchoolMaterial';
-import { SubjectVersionWithCurriculumInfo} from '../../interfaces/ISchoolProgram';
+import { Curriculum, SubjectVersionWithCurriculumInfo} from '../../interfaces/ISchoolProgram';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
@@ -166,12 +166,12 @@ const CurriculumPageManager: React.FC = () => {
       key: 'status',
       align: 'center' as const,
       width: 120,
-      render: (_: any, record: any) => (
+      render: (_: any, record: Curriculum) => (
         <Tag
-          color={record.approvalStatus === 2 ? '#52c41a' : record.approvalStatus === 3 ? '#ff4d4f' : '#faad14'}
+          color={record.approvalStatus === "APPROVED" ? '#52c41a' : record.approvalStatus === "REJECTED" ? '#ff4d4f' : '#faad14'}
           style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6 }}
         >
-          {record.approvalStatus === 2 ? 'Approved' : record.approvalStatus === 3 ? 'Rejected' : 'Pending Approval'}
+          {record.approvalStatus}
         </Tag>
       ),
     },
@@ -180,8 +180,8 @@ const CurriculumPageManager: React.FC = () => {
       key: 'actions',
       align: 'center' as const,
       width: 120,
-      render: (_: any, record: any) => {
-        const isApproved = record.approvalStatus === 2;
+      render: (_: any, record: Curriculum) => {
+        const isApproved = record.approvalStatus === "APPROVED";
         return (
           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
             <Button
@@ -190,7 +190,7 @@ const CurriculumPageManager: React.FC = () => {
               size="small"
               onClick={async () => {
                 if (isApproved) {
-                  await handleApproval('curriculum', record.id, 1, null); // Set back to pending
+                  await handleApproval('curriculum', record.id, "PENDING", null); // Set back to pending
                 } else {
                   handleApprove(record.id, record.curriculumName);
                 }
@@ -293,7 +293,7 @@ const CurriculumPageManager: React.FC = () => {
     setApprovalModalVisible(true);
   };
 
-  const handleApprovalConfirm = async (approvalStatus: number, rejectionReason?: string) => {
+  const handleApprovalConfirm = async (approvalStatus: "APPROVED" | "PENDING" | "REJECTED", rejectionReason?: string) => {
     if (!selectedItem) return;
     
     try {

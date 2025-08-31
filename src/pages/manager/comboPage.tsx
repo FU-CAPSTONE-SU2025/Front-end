@@ -6,6 +6,7 @@ import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { useCRUDCombo } from '../../hooks/useCRUDSchoolMaterial';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
+import { Combo } from '../../interfaces/ISchoolProgram';
 
 const { Text } = Typography;
 
@@ -58,7 +59,7 @@ const ComboManagerPage: React.FC = () => {
     setApprovalModalVisible(true);
   };
 
-  const handleApprovalConfirm = async (approvalStatus: number, rejectionReason?: string) => {
+  const handleApprovalConfirm = async (approvalStatus: "APPROVED" | "PENDING" | "REJECTED", rejectionReason?: string) => {
     if (!selectedItem) return;
     
     try {
@@ -93,15 +94,15 @@ const ComboManagerPage: React.FC = () => {
       key: 'approvalInfo',
       align: 'left' as const,
       width: 200,
-      render: (_: any, record: any) => {
-        if (record.approvalStatus === 2) {
+      render: (_: any, record: Combo) => {
+        if (record.approvalStatus === "APPROVED") {
           return (
             <div style={{ fontSize: 12, color: '#52c41a' }}>
               <div>Approved by: {record.approvedBy || 'Unknown'}</div>
               <div>Date: {record.approvedAt ? new Date(record.approvedAt).toLocaleDateString() : 'Unknown'}</div>
             </div>
           );
-        } else if (record.approvalStatus === 3) {
+        } else if (record.approvalStatus === "REJECTED") {
           return (
             <div style={{ fontSize: 12, color: '#ff4d4f' }}>
               <div>Rejected</div>
@@ -121,11 +122,11 @@ const ComboManagerPage: React.FC = () => {
       title: 'Status',
       key: 'status',
       align: 'center' as const,
-      render: (_: any, record: any) => {
-        const isApproved = record.approvalStatus === 2;
+      render: (_: any, record: Combo) => {
+        const isApproved = record.approvalStatus === "APPROVED";
         return (
-          <Tag color={isApproved ? 'green' : record.approvalStatus === 3 ? 'red' : 'orange'} style={{ fontWeight: 600, fontSize: 14 }}>
-            {isApproved ? 'Approved' : record.approvalStatus === 3 ? 'Rejected' : 'Pending'}
+          <Tag color={isApproved ? 'green' : record.approvalStatus === "REJECTED" ? 'red' : 'orange'} style={{ fontWeight: 600, fontSize: 14 }}>
+            {isApproved ? 'Approved' : record.approvalStatus === "REJECTED" ? 'Rejected' : 'Pending'}
           </Tag>
         );
       },
@@ -136,7 +137,7 @@ const ComboManagerPage: React.FC = () => {
       align: 'center' as const,
       width: 200,
       render: (_: any, record: any) => {
-        const isApproved = record.approvalStatus === 2;
+        const isApproved = record.approvalStatus === "APPROVED";
         return (
           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
             <Button
@@ -145,7 +146,7 @@ const ComboManagerPage: React.FC = () => {
               size="small"
               onClick={async () => {
                 if (isApproved) {
-                  await handleApproval('combo', record.id, 1, null); // Set back to pending
+                  await handleApproval('combo', record.id, "PENDING", null); // Set back to pending
                 } else {
                   handleApprove(record.id, record.comboName);
                 }

@@ -56,6 +56,8 @@ interface PaginationParams {
   search?: string;
   programId?: number;
   subjectId?:number;
+  comboName?:string;
+  curriculumCode?:string;
 }
 
 export function useCRUDCurriculum() {
@@ -121,16 +123,6 @@ export function useCRUDCurriculum() {
       console.error(error);
     },
   });
-
-  const fetchSubjectsMutation = useMutation<PagedData<Subject> | null, unknown, void>({
-    mutationFn: async () => {
-      const result = await FetchSubjectList(1, 10);
-      return result;
-    },
-    onError: (error) => {
-      console.error(error);
-    },
-  });
   
   const isSuccessCreateCurriculum = addCurriculumMutation.isSuccess;
   const isSuccessUpdateCurriculum = updateCurriculumMutation.isSuccess;
@@ -152,7 +144,6 @@ export function useCRUDCurriculum() {
     addMultipleCurriculumsMutation,
     getCurriculumMutation,
     fetchCurriculumSubjectVersionsMutation,
-    fetchSubjectsMutation,
     getAllCurriculums: getCurriculumMutation.mutate,
     curriculumList,
     paginationCurriculum,
@@ -176,8 +167,9 @@ export function useCRUDSubject() {
         const data = await FetchSubjectList(
           params.pageNumber,
           params.pageSize,
-          params.search
-
+          params.search,
+          params.comboName,
+          params.curriculumCode
         );
         return data;
       }

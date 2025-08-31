@@ -29,6 +29,7 @@ export const GetAllStudent = async (pageNumber: number = 1, pageSize: number = 1
         pageSize: pageSize.toString(),
         search:search
     });
+    
     if (filterType && filterValue) {
         params.append('filterType', filterType);
         params.append('filterValue', filterValue);

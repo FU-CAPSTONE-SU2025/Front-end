@@ -38,8 +38,6 @@ export const SIGNALR_CONFIG = {
     REMOVE_SESSION_FROM_UNASSIGNED: 'RemoveSessionFromUnassigned',
     LOAD_MORE_MESSAGES_METHOD: 'LoadMoreMessagesMethod',
     ASSIGN_ADVISOR_TO_SESSION: 'AssignAdvisorToSession',
-    
-    
     GET_NOTIFICATIONS: 'GetNotifications',
     MARK_AS_READ: 'MarkAsRead',
     NOTIFICATION_RECEIVED: 'NotificationReceivedMethod',
@@ -336,7 +334,7 @@ class SignalRConnectionManager {
     }
   }
 
-  private notifyListeners(connectionKey: string, event: string) {
+  private notifyListeners(connectionKey: string, _event: string) {
     const listeners = this.listeners.get(connectionKey);
     if (listeners) {
       listeners.forEach(listener => listener());

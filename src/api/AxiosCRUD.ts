@@ -183,6 +183,10 @@ export const makeRequest = async (
                         return await makeRequest(method, url, data, mergedHeaders);
                     }
                 }
+                else{
+                    alert("your token might have expired, please login again")
+                    window.location.href = "/";
+                }
                 return {
                     success: false,
                     error: createErrorResponse("Unauthorized", 401)

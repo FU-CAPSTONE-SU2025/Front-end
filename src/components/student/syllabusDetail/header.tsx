@@ -54,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({ syllabus, navigate }) => {
           <div className="flex items-center gap-4 mt-3 text-sm !text-white">
             <span>Version: {syllabus.subjectVersion?.versionName || 'N/A'}</span>
             <span>•</span>
-            <span>Status: {subj.approvalStatus === 1 ? 'Approved' : 'Pending'}</span>
+            <span>Status: {subj.approvalStatus }</span>
             <span>•</span>
             <span>Last Updated: {syllabus.updatedAt ? dayjs(syllabus.updatedAt).format('MMM DD, YYYY') : 'N/A'}</span>
           </div>
