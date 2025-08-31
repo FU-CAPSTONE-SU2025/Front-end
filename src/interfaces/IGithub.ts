@@ -147,6 +147,7 @@ export interface GitHubRepoData {
      * Convert CommitActivityWeek[] thành ContributionData cho chart
      */
     static convertToContributionData(commitActivity: CommitActivityWeek[]): ContributionData {
+
       // Luôn luôn tạo khung cố định từ tháng 1 đến tháng 12 của năm hiện tại
       const currentYear = new Date().getFullYear();
       
@@ -193,6 +194,7 @@ export interface GitHubRepoData {
       }
 
       // Group by weeks
+
       const weeks: ContributionWeek[] = [];
       for (let i = 0; i < contributionDays.length; i += 7) {
         weeks.push({
@@ -211,6 +213,7 @@ export interface GitHubRepoData {
      * Convert commitsPerDayLastYear thành ContributionData
      */
     static convertDailyCommitsToContributionData(commitsPerDay: Record<string, number>): ContributionData {
+
       // Luôn luôn tạo khung cố định từ tháng 1 đến tháng 12 của năm hiện tại
       const currentYear = new Date().getFullYear();
       
@@ -250,6 +253,7 @@ export interface GitHubRepoData {
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
+
       // Group by weeks
       const weeks: ContributionWeek[] = [];
       for (let i = 0; i < contributionDays.length; i += 7) {
@@ -266,7 +270,7 @@ export interface GitHubRepoData {
     }
 
     /**
-     * Tạo month labels cố định từ tháng 1 đến tháng 12
+
      */
     static createContributionChartWithLabels(contributionData: ContributionData): {
       chartData: ContributionData;
@@ -274,6 +278,7 @@ export interface GitHubRepoData {
       startDate: Date;
       endDate: Date;
     } {
+
       const currentYear = new Date().getFullYear();
       const startDate = new Date(currentYear, 0, 1);
       const endDate = new Date(currentYear, 11, 31);
@@ -333,6 +338,7 @@ export interface GitHubRepoData {
 
       return {
         calendar: contributionData.contributionCalendar,
+
         monthLabels,
         startDate,
         endDate

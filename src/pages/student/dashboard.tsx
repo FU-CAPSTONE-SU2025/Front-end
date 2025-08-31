@@ -98,6 +98,7 @@ const Dashboard = () => {
   // Fetch transcript data
   const { data: transcriptData, isLoading: transcriptLoading } = usePersonalAcademicTranscript();
 
+
   // Group subjects by semester
   const semesterSubjects: SemesterSubjects = useMemo(() => {
     if (!joinedSubjects) return {};
