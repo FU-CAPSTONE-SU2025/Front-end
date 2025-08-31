@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { Spin, Modal, Segmented, Button, Tag, Progress } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import HistoryCalendarView from './historyCalendarView';
@@ -95,9 +95,12 @@ const StudentHistoryCalendar: React.FC<StudentHistoryCalendarProps> = ({
   const goToNextWeek = () => setSelectedDate(selectedDate.startOf('week').add(1, 'week'));
   const weekRange = `${selectedDate.startOf('week').format('DD MMM YYYY')} - ${selectedDate.endOf('week').format('DD MMM YYYY')}`;
 
-  // Sort all bookings by date (newest first)
-  const sortedBookings = bookingsList.sort((a, b) => dayjs(b.startDateTime).valueOf() - dayjs(a.startDateTime).valueOf());
-  console.log("asdsad",sortedBookings)
+  // Sort bookings by date (most recent first)
+  const sortedBookings = useMemo(() => {
+    if (!bookingsList) return [];
+    return [...bookingsList].sort((a, b) => dayjs(b.startDateTime).valueOf() - dayjs(a.startDateTime).valueOf());
+  }, [bookingsList]);
+
   // Get displayed bookings
   const displayedSortedBookings = sortedBookings.slice(0, displayedBookings);
   const hasMoreBookings = displayedBookings < sortedBookings.length;

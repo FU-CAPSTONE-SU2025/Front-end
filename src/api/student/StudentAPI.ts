@@ -946,6 +946,70 @@ export const postCommentReaction = async (commentId: number, reactionType: numbe
     }
 }
 
+export const deleteSubjectComment = async (commentId: number): Promise<any> => {
+    const props = {
+        data: null,
+        url: baseUrl + `/SubjectComment/${commentId}`,
+        headers: GetHeader()
+    }
+    const result = await axiosDelete(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        throwApiError(result);
+        return null as never;
+    }
+}
+
+export const getSyllabusByJoinedSubject = async (joinedSubjectId: number): Promise<any> => {
+    const props = {
+        data: null,
+        url: baseUrl + `/JoinedSubject/${joinedSubjectId}/syllabus`,
+        headers: GetHeader()
+    }
+    const result = await axiosRead(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        throwApiError(result);
+        return null as never;
+    }
+}
+
+export const getCheckpointCompletionPercentage = async (studentProfileId: number): Promise<any> => {
+    const props = {
+        data: null,
+        url: baseUrl + `/JoinedSubject/map-complete-checkpoint-percentage/${studentProfileId}`,
+        headers: GetHeader()
+    }
+    const result = await axiosRead(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        throwApiError(result);
+        return null as never;
+    }
+}
+
+export const getJoinedSubjectStatusMapping = async (studentProfileId: number): Promise<any> => {
+    const props = {
+        data: null,
+        url: baseUrl + `/JoinedSubject/map-status/${studentProfileId}`,
+        headers: GetHeader()
+    }
+    const result = await axiosRead(props)
+    if (result.success) {
+        return result.data
+    }
+    else {
+        throwApiError(result);
+        return null as never;
+    }
+}
+
 // Get GitHub repository data
 export const getGitHubRepoData = async (owner: string, repoName: string): Promise<any> => {
     const props = {

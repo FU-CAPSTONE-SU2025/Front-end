@@ -149,16 +149,28 @@ export interface GitHubRepoData {
     static convertToContributionData(commitActivity: CommitActivityWeek[]): ContributionData {
       const contributionDays: ContributionDay[] = [];
       let totalContributions = 0;
-  
+
       commitActivity.forEach(week => {
-        const weekStart = new Date(week.week * 1000); // Convert Unix timestamp
+        // Convert Unix timestamp to Date object
+        const weekStart = new Date(week.week * 1000);
+        
+        // Ensure we're working with UTC dates to avoid timezone issues
+        const utcWeekStart = new Date(Date.UTC(
+          weekStart.getUTCFullYear(),
+          weekStart.getUTCMonth(),
+          weekStart.getUTCDate()
+        ));
         
         week.days.forEach((commits, dayIndex) => {
-          const date = new Date(weekStart);
-          date.setDate(date.getDate() + dayIndex);
+          // Calculate the date for each day of the week
+          const dayDate = new Date(utcWeekStart);
+          dayDate.setUTCDate(utcWeekStart.getUTCDate() + dayIndex);
+          
+          // Format as YYYY-MM-DD
+          const dateString = dayDate.toISOString().split('T')[0];
           
           contributionDays.push({
-            date: date.toISOString().split('T')[0], // "YYYY-MM-DD"
+            date: dateString,
             count: commits,
             weekday: dayIndex
           });
@@ -166,7 +178,10 @@ export interface GitHubRepoData {
           totalContributions += commits;
         });
       });
-  
+
+      // Sort by date to ensure chronological order
+      contributionDays.sort((a, b) => a.date.localeCompare(b.date));
+
       // Group by weeks for display
       const weeks: ContributionWeek[] = [];
       for (let i = 0; i < contributionDays.length; i += 7) {
@@ -174,14 +189,14 @@ export interface GitHubRepoData {
           days: contributionDays.slice(i, i + 7)
         });
       }
-  
+
       return {
         totalContributions,
         weeks,
         contributionCalendar: contributionDays
       };
     }
-  
+
     /**
      * Convert commitsPerDayLastYear thành ContributionData (alternative approach)
      */
@@ -193,9 +208,9 @@ export interface GitHubRepoData {
           weekday: new Date(date).getDay()
         }))
         .sort((a, b) => a.date.localeCompare(b.date));
-  
+
       const totalContributions = contributionDays.reduce((sum, day) => sum + day.count, 0);
-  
+
       // Group by weeks
       const weeks: ContributionWeek[] = [];
       for (let i = 0; i < contributionDays.length; i += 7) {
@@ -203,11 +218,74 @@ export interface GitHubRepoData {
           days: contributionDays.slice(i, i + 7)
         });
       }
-  
+
       return {
         totalContributions,
         weeks,
         contributionCalendar: contributionDays
+      };
+    }
+
+    /**
+     * Create a proper contribution chart with correct month labels
+     */
+    static createContributionChartWithLabels(contributionData: ContributionData): {
+      chartData: ContributionData;
+      monthLabels: Array<{ month: string; weekIndex: number; hasData: boolean }>;
+      startDate: Date;
+      endDate: Date;
+    } {
+      if (!contributionData.contributionCalendar.length) {
+        return {
+          chartData: contributionData,
+          monthLabels: [],
+          startDate: new Date(),
+          endDate: new Date()
+        };
+      }
+
+      // Get the date range
+      const dates = contributionData.contributionCalendar.map(day => new Date(day.date));
+      const startDate = new Date(Math.min(...dates.map(d => d.getTime())));
+      const endDate = new Date(Math.max(...dates.map(d => d.getTime())));
+
+      // Create month labels based on actual data and week positions
+      const monthLabels: Array<{ month: string; weekIndex: number; hasData: boolean }> = [];
+      
+      // Group days by weeks and check which weeks have data
+      const weeksWithData = new Set<number>();
+      contributionData.contributionCalendar.forEach((day, index) => {
+        const weekIndex = Math.floor(index / 7);
+        if (day.count > 0) {
+          weeksWithData.add(weekIndex);
+        }
+      });
+
+      // Create month labels for weeks that have data
+      let currentMonth = '';
+      let currentWeekIndex = 0;
+      
+      for (let weekIndex = 0; weekIndex < Math.ceil(contributionData.contributionCalendar.length / 7); weekIndex++) {
+        const weekStartIndex = weekIndex * 7;
+        const weekStartDate = new Date(contributionData.contributionCalendar[weekStartIndex].date);
+        const monthName = weekStartDate.toLocaleDateString('en-US', { month: 'short' });
+        
+        // Only add month label if it's a new month and the week has data
+        if (monthName !== currentMonth && weeksWithData.has(weekIndex)) {
+          monthLabels.push({
+            month: monthName,
+            weekIndex: weekIndex,
+            hasData: true
+          });
+          currentMonth = monthName;
+        }
+      }
+
+      return {
+        chartData: contributionData,
+        monthLabels,
+        startDate,
+        endDate
       };
     }
   }

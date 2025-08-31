@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
 import { Tabs } from 'antd';
 import SemesterSelect from '../../components/student/selectSemester';
-import { useJoinedSubjects } from '../../hooks/useStudentFeature';
+import { useJoinedSubjects, useCheckpointCompletionPercentage, useJoinedSubjectStatusMapping } from '../../hooks/useStudentFeature';
 import { JoinedSubject, SemesterSubjects } from '../../interfaces/IStudent';
 import { groupSubjectsBySemester, getSemesterOptions, getSubjectsStats } from '../../utils/subjectUtils';
 import { GetCurrentStudentUser } from '../../api/Account/UserAPI';
@@ -80,12 +80,18 @@ const Dashboard = () => {
   const [curriculumSubjects, setCurriculumSubjects] = useState<Array<{ subjectCode: string; subjectName: string; credits: number; semesterNumber: number }>>([]);
   const [comboSubjects, setComboSubjects] = useState<Array<{ subjectCode: string; subjectName: string; credits: number; semesterNumber: number }>>([]);
   const [isLoadingPersonal, setIsLoadingPersonal] = useState<boolean>(false);
+  const [studentProfileId, setStudentProfileId] = useState<number | null>(null);
+  
   const combinedPersonalSubjects = useMemo(() => {
     return [...(curriculumSubjects || []), ...(comboSubjects || [])];
   }, [curriculumSubjects, comboSubjects]);
   
   // Fetch joined subjects
   const { data: joinedSubjects, isLoading, error } = useJoinedSubjects();
+
+  // Fetch checkpoint completion percentage and status mapping using actual studentProfileId
+  const { data: completionData, isLoading: completionLoading } = useCheckpointCompletionPercentage(studentProfileId);
+  const { data: statusData, isLoading: statusLoading } = useJoinedSubjectStatusMapping(studentProfileId);
 
   // Group subjects by semester
   const semesterSubjects: SemesterSubjects = useMemo(() => {
@@ -124,6 +130,9 @@ const Dashboard = () => {
       try {
         const res = await GetCurrentStudentUser(studentId);
         setStudentDetail(res);
+        // Set studentProfileId from studentDataDetailResponse.id
+        const profileId = res?.studentDataDetailResponse?.id;
+        setStudentProfileId(profileId);
       } catch (e) {
         // keep silent UI fallback
         setStudentDetail(null);
@@ -133,6 +142,30 @@ const Dashboard = () => {
     };
     fetchDetail();
   }, [studentId]);
+
+  // Helper functions to get data from API
+  const getCompletionPercentage = (subjectId: number): number => {
+    if (!completionData) return 0;
+    const subject = completionData.find((item: any) => item.joinedSubjectId === subjectId);
+    return subject?.completedPercentage || 0;
+  };
+
+  const getSubjectStatus = (subjectId: number): string => {
+    if (!statusData) return 'In Progress';
+    const subject = statusData.find((item: any) => item.joinedSubjectId === subjectId);
+    return subject?.status || 'In Progress';
+  };
+
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'Completed':
+        return { color: 'bg-green-500', text: 'Completed' };
+      case 'Passed':
+        return { color: 'bg-blue-500', text: 'Passed' };
+      default:
+        return { color: 'bg-orange-500', text: 'In Progress' };
+    }
+  };
 
   // Fetch personal curriculum/combo subjects
   useEffect(() => {
@@ -283,7 +316,7 @@ const Dashboard = () => {
                           id={subject.id}
                           code={subject.subjectCode}
                           name={subject.name}
-                          progress={subject.isCompleted ? 100 : subject.isPassed ? 80 : 30}
+                          completedPercentage={getCompletionPercentage(subject.id)}
                           credits={subject.credits}
                           isPassed={subject.isPassed}
                           isCompleted={subject.isCompleted}

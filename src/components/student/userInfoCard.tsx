@@ -74,19 +74,17 @@ const UserInfoCard: React.FC<{ user: UserInfo; userInfor: ApiUserInfo | any }> =
     try { return new Date(userInfor.dateOfBirth).toLocaleDateString(); } catch { return null; }
   }, [userInfor]);
 
-  // Log user data for debugging
-  useEffect(() => {
-    console.log('=== UserInfoCard Debug Data ===');
-    console.log('user prop:', user);
-    console.log('userInfor prop:', userInfor);
-    console.log('hasApiData:', hasApiData);
-    console.log('displayName:', displayName);
-    console.log('displayQuote:', displayQuote);
-    console.log('displayDob:', displayDob);
-    console.log('gitAccountUsername:', userInfor?.studentDataDetailResponse?.gitAccountUsername);
-    console.log('studentDataDetailResponse:', userInfor?.studentDataDetailResponse);
-    console.log('================================');
-  }, [user, userInfor, hasApiData, displayName, displayQuote, displayDob]);
+  // Debug logging - removed for production
+  // console.log('=== UserInfoCard Debug Data ===');
+  // console.log('user prop:', user);
+  // console.log('userInfor prop:', userInfor);
+  // console.log('hasApiData:', hasApiData);
+  // console.log('displayName:', displayName);
+  // console.log('displayQuote:', displayQuote);
+  // console.log('displayDob:', displayDob);
+  // console.log('gitAccountUsername:', userInfor?.studentDataDetailResponse?.gitAccountUsername);
+  // console.log('studentDataDetailResponse:', userInfor?.studentDataDetailResponse);
+  // console.log('================================');
 
   useEffect(() => {
     if (userInfor && 'avatarUrl' in userInfor) {

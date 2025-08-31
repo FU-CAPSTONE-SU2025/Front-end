@@ -163,7 +163,7 @@ const VersionInfo: React.FC<{ version: any }> = ({ version }) => (
   </motion.div>
 );
 
-const Sidebar: React.FC<SidebarProps> = ({ syllabus }) => {
+const   Sidebar: React.FC<SidebarProps> = ({ syllabus }) => {
   if (!syllabus) return null;
   const subj = syllabus.subjectVersion?.subject || {};
   const version = syllabus.subjectVersion;

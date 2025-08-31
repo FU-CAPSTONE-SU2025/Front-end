@@ -64,9 +64,9 @@ export function useBookingAvailability(pageSize: number = 100) {
   const getBookingAvailabilityQuery = useQuery<BookingAvailability[], Error>({
     queryKey: ['bookingAvailability', pageSize],
     queryFn: async () => {
-      console.log('useBookingAvailability - Fetching data with pageSize:', pageSize);
+      // console.log('useBookingAvailability - Fetching data with pageSize:', pageSize); - removed for production
       const data = await FetchBookingAvailability();
-      console.log('useBookingAvailability - Data fetched:', data.length, 'items');
+      // console.log('useBookingAvailability - Data fetched:', data.length, 'items'); - removed for production
       return data;
     },
   });

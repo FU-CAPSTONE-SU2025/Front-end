@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Tabs, Spin, Row, Col, Input, Button, Avatar, Space, Divider } from 'antd';
+import { Card, Tabs, Spin, Row, Col, Input, Button, Avatar, Space, Divider, Dropdown, Modal } from 'antd';
 import type { TabsProps } from 'antd';
-import { FileTextOutlined, BookOutlined, CheckCircleOutlined, ClockCircleOutlined, BulbOutlined, MessageOutlined, LikeOutlined, DislikeOutlined, SendOutlined, UserOutlined } from '@ant-design/icons';
+import { FileTextOutlined, BookOutlined, CheckCircleOutlined, ClockCircleOutlined, BulbOutlined, MessageOutlined, LikeOutlined, DislikeOutlined, SendOutlined, UserOutlined, MoreOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useSyllabusApi } from '../../hooks/useSyllabusApi';
-import { usePostSubjectComment, useSubjectComments, usePostCommentReaction } from '../../hooks/useStudentFeature';
+import { usePostSubjectComment, useSubjectComments, usePostCommentReaction, useDeleteSubjectComment } from '../../hooks/useStudentFeature';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 import Header from '../../components/student/syllabusDetail/header';
 import Sidebar from '../../components/student/syllabusDetail/sidebar';
@@ -47,9 +47,14 @@ const SyllabusDetail: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
   
+  // Delete confirmation modal state
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState<number | null>(null);
+  
   // Comment API hooks
   const postCommentMutation = usePostSubjectComment();
   const postReactionMutation = usePostCommentReaction();
+  const deleteCommentMutation = useDeleteSubjectComment();
   const { data: commentsData, isLoading: commentsLoading, refetch: refetchComments } = useSubjectComments(syllabus?.subjectId ? Number(syllabus.subjectId) : null, currentPage, pageSize);
   
   // Message popup context
@@ -93,6 +98,32 @@ const SyllabusDetail: React.FC = () => {
       showError('Failed to add reaction. Please try again.');
       console.error('Error adding dislike reaction:', error);
     }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    setCommentToDelete(commentId);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDeleteComment = async () => {
+    if (!commentToDelete) return;
+    
+    try {
+      await deleteCommentMutation.mutateAsync(commentToDelete);
+      showSuccess('Comment deleted successfully!');
+      setDeleteModalVisible(false);
+      setCommentToDelete(null);
+      // Refetch comments to get the updated list
+      refetchComments();
+    } catch (error) {
+      showError('Failed to delete comment. Please try again.');
+      console.error('Error deleting comment:', error);
+    }
+  };
+
+  const cancelDeleteComment = () => {
+    setDeleteModalVisible(false);
+    setCommentToDelete(null);
   };
 
   const handleSubmitComment = async () => {
@@ -324,9 +355,35 @@ const SyllabusDetail: React.FC = () => {
                           className="bg-gradient-to-br from-blue-400 to-blue-600 shadow-sm"
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="font-semibold !text-white truncate">{comment.fullName}</span>
-                            <span className="text-xs !text-white/60 flex-shrink-0">{formatDate(comment.createdAt)}</span>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold !text-white truncate">{comment.fullName}</span>
+                              <span className="text-xs !text-white/60 flex-shrink-0">{formatDate(comment.createdAt)}</span>
+                            </div>
+                            <Dropdown
+                              menu={{
+                                items: [
+                                  {
+                                    key: 'delete',
+                                    label: deleteCommentMutation.isPending && commentToDelete === comment.id ? 'Deleting...' : 'Delete comment',
+                                    icon: deleteCommentMutation.isPending && commentToDelete === comment.id ? <Spin size="small" /> : <DislikeOutlined />,
+                                    onClick: () => handleDeleteComment(comment.id),
+                                    danger: true,
+                                    disabled: deleteCommentMutation.isPending,
+                                  },
+                                ],
+                              }}
+                              trigger={['click']}
+                              placement="bottomRight"
+                            >
+                              <button 
+                                className="p-1 hover:bg-white/20 rounded-full transition-colors duration-200 group"
+                                disabled={deleteCommentMutation.isPending}
+                                title="More options"
+                              >
+                                <MoreOutlined className="!text-white/60 group-hover:!text-white text-lg transition-colors duration-200" />
+                              </button>
+                            </Dropdown>
                           </div>
                           <p className="!text-white/80 mb-3 leading-relaxed break-words">{comment.content}</p>
                           
@@ -464,6 +521,21 @@ const SyllabusDetail: React.FC = () => {
         </Row>
       </div>
       
+      {/* Delete Comment Confirmation Modal */}
+      <Modal
+        title="Delete Comment"
+        open={deleteModalVisible}
+        onOk={confirmDeleteComment}
+        onCancel={cancelDeleteComment}
+        okText="Delete"
+        cancelText="Cancel"
+        okButtonProps={{ danger: true }}
+        className="delete-comment-modal"
+        centered
+      >
+        <p>Are you sure you want to delete this comment? This action cannot be undone.</p>
+      </Modal>
+      
       <style>{`
         .minimal-table .ant-table-thead > tr > th {
          
@@ -510,6 +582,48 @@ const SyllabusDetail: React.FC = () => {
         .minimal-tabs .ant-tabs-ink-bar {
           background:rgb(254, 143, 25) !important;
         }
+        
+        /* Facebook-style dropdown menu */
+        .ant-dropdown-menu {
+          background: rgba(0, 0, 0, 0.9) !important;
+          backdrop-filter: blur(10px) !important;
+          border: 1px solid rgba(255, 255, 255, 0.2) !important;
+          border-radius: 8px !important;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+          animation: dropdownFadeIn 0.2s ease-out !important;
+        }
+        
+        @keyframes dropdownFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-8px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        
+        .ant-dropdown-menu-item {
+          color: white !important;
+          padding: 8px 16px !important;
+          border-radius: 4px !important;
+          margin: 2px 8px !important;
+          transition: all 0.2s ease !important;
+        }
+        
+        .ant-dropdown-menu-item:hover {
+          background: rgba(255, 255, 255, 0.1) !important;
+        }
+        
+        .ant-dropdown-menu-item.ant-dropdown-menu-item-danger {
+          color: #ff4d4f !important;
+        }
+        
+        .ant-dropdown-menu-item.ant-dropdown-menu-item-danger:hover {
+          background: rgba(255, 77, 79, 0.1) !important;
+        }
+        
       `}</style>
     </motion.div>
   );
