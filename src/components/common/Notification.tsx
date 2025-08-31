@@ -48,7 +48,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
         seenIdsRef.current.add(Number(n.id));
       }
     }
-    console.log(notifications)
+    console.log("Getting latest notifications:",notifications)
   }, [notifications]);
 
   // Calculate actual unread count considering localRead state

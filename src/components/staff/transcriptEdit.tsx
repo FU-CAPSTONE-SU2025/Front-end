@@ -1,22 +1,22 @@
 import  { useState, useEffect } from 'react';
 import { Card, Typography, Row, Col, Button, Table, Tag, InputNumber, Spin } from 'antd';
-import { CloseOutlined, SaveOutlined, EditOutlined } from '@ant-design/icons';
+import { SaveOutlined, EditOutlined } from '@ant-design/icons';
 import styles from '../../css/staff/transcriptEditDialog.module.css';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useSubjectMarkReport, useSubjectMarkReportTemplate } from '../../hooks/useSubjectMarkReport';
 import { useSchoolApi } from '../../hooks/useSchoolApi';
-import { JoinedSubject } from '../../interfaces/ISchoolProgram';
 import { ICreateSubjectMarkReport, JoinedSubjectAssessment } from '../../interfaces/ISubjectMarkReport';
 import { calculateFinalGrade } from '../../utils/subjectUtils';
 
 const { Title, Text } = Typography;
 interface Props {
   joinedSubjectId: number; // Pass ID instead of full object to avoid stale data
+  subjectStatus: string; // Pass status instead of calculating it
   onClose: () => void;
   onDataUpdate?: () => void; // Optional callback for data updates
 }
 
-export default function TranscriptEdit({ joinedSubjectId, onClose, onDataUpdate }: Props) {
+export default function TranscriptEdit({ joinedSubjectId, subjectStatus, onClose, onDataUpdate }: Props) {
   const { handleSuccess, handleError } = useApiErrorHandler();
   const [assessments, setAssessments] = useState<JoinedSubjectAssessment[]>([]);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);

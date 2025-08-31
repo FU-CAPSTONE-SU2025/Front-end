@@ -66,7 +66,6 @@ export function useNotificationHub() {
         }
     }
   };
-
   // Add Notification
   const addNotification = useCallback((notification: NotificationItem) => {
     setNotifications((prev) => {
@@ -77,7 +76,6 @@ export function useNotificationHub() {
       return [notification, ...prev];
     });
   }, []);
-
   const fetchNotifications = useCallback(async () => {
     const connection = connectionRef.current;
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
@@ -100,7 +98,6 @@ export function useNotificationHub() {
       setLoading(false);
     }
   }, [loading, invokeWithAuthRetry]);
-
 
   //Mark ONE as read
   const markAsRead = async (notificationId: number) => {
@@ -136,7 +133,7 @@ export function useNotificationHub() {
         const batch = unreadNotifications.slice(i, i + batchSize);
         await Promise.all(batch.map(async (notification) => {
           try {
-            await invokeWithAuthRetry(SIGNALR_CONFIG.HUB_METHODS.MARK_AS_READ, Number(notification.id));
+            await invokeWithAuthRetry(SIGNALR_CONFIG.HUB_METHODS.MARK_AS_READ, notification.id);
           } catch (err) {
             console.error(`Failed to mark notification ${notification.id} as read:`, err);
             throw err;
@@ -217,7 +214,6 @@ export function useNotificationHub() {
               notificationType: item.notificationType
             } as NotificationItem;
           });
-          const unreadCount = mappedNotifications.filter(n => !n.isRead).length;
         
           setNotifications(mappedNotifications);
         } else if ('id' in data) {
@@ -241,23 +237,20 @@ export function useNotificationHub() {
       }
     };
 
-    const handleNotificationRead = (notificationId: number | string) => {
+    const handleNotificationRead = (notificationId: number) => {
       if (!isUnmountedRef.current) {
-        const idNum = Number(notificationId);
-
-        
         // Remove from pending set
-        pendingMarkAsReadRef.current.delete(idNum);
-        
-        // Update state to reflect server confirmation
-        setNotifications((prev) => 
-          prev.map(n => n.id === idNum ? { ...n, isRead: true } : n)
-        );
+        pendingMarkAsReadRef.current.delete(notificationId);
+        // Update state to reflect server confirmation. 
+        //This is optimistic as best as we are using the Backend response to change the status, 
+        // not the backend actual data
+        console.log("This is notification before update to isRead", notifications)
+          const newNotifications = notifications.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
+         setNotifications(newNotifications)
+        console.log("This is notification after update to isRead", notifications)
       }
     };
-
     connection.on(SIGNALR_CONFIG.HUB_METHODS.NOTIFICATION_RECEIVED, (data) => {
-  
       handleNotificationEvent('NotificationReceived', data);
     });
 
@@ -267,27 +260,15 @@ export function useNotificationHub() {
     });
 
     connection.on(SIGNALR_CONFIG.HUB_METHODS.NOTIFICATION_READ, (notificationId: number) => {
-      handleNotificationRead(Number(notificationId));
+      //console.log("SIGNALR_CONFIG.HUB_METHODS.NOTIFICATION_READ", notificationId)
+      handleNotificationRead(notificationId);
     });
   }, [addNotification, fetchNotifications]);
 
-  const getUserIdFromToken = useCallback(() => {
-    if (!accessToken) return null;
-    try {
-      const payload = JSON.parse(atob(accessToken.split('.')[1]));
-      const userId = payload.userId || payload.user_id || payload.UserId || payload.USERID ||
-                    payload.sub || payload.Sub || payload.SUB ||
-                    payload.id || payload.Id || payload.ID;
-      return userId ? parseInt(userId) : null;
-    } catch (error) {
-      console.error('🔔 Error parsing token:', error);
-      return null;
-    }
-  }, [accessToken]);
+
 
   useEffect(() => {
     if (!connectionRef.current || connectionState !== ConnectionState.Connected) return;
-
     const healthCheckInterval = setInterval(() => {
       if (connectionRef.current && connectionRef.current.state === signalR.HubConnectionState.Connected) {
       } else {
@@ -309,7 +290,6 @@ export function useNotificationHub() {
         }
       }
     }, 30000);
-
     return () => clearInterval(healthCheckInterval);
   }, [connectionState, accessToken, setupEventListeners]);
 
@@ -330,12 +310,9 @@ export function useNotificationHub() {
       setError(null);
       return;
     }
-
     isUnmountedRef.current = false;
-
     const startConnection = async () => {
       if (isUnmountedRef.current) return;
-
       try {
         const connection = await signalRManager.getConnection(SIGNALR_CONFIG.NOTIFICATION_HUB_URL, accessToken);
         connectionRef.current = connection;

@@ -371,6 +371,12 @@ export interface JoinedSubject{
   credits: number | null;
   studentProfileId: number;
   semesterStudyBlockType: number;
+  status?: "IN-PROGRESS" | "PASSED" | "NOT PASSED"
+}
+
+export interface JoinedSubjectMapStatus{
+    joinedSubjectId: number,
+    status: "IN-PROGRESS" | "PASSED" | "NOT PASSED"
 }
 
 // Creation interfaces for syllabus-related objects

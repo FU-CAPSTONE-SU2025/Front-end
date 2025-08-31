@@ -1,7 +1,7 @@
 import { axiosCreate, axiosDelete, axiosRead, axiosUpdate, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 
-import { BulkCreateJoinedSubjectMultipleStudents, BulkCreateJoinedSubjects, CreateJoinedSubject, PagedSemester, JoinedSubject, PagedJoinedSubject, PagedSemesterBlock } from '../../interfaces/ISchoolProgram';
+import { BulkCreateJoinedSubjectMultipleStudents, BulkCreateJoinedSubjects, CreateJoinedSubject, PagedSemester, JoinedSubject, PagedJoinedSubject, PagedSemesterBlock, JoinedSubjectMapStatus } from '../../interfaces/ISchoolProgram';
 
 const joinedSubjectURL = baseUrl + "/JoinedSubject";
 const semesterURL = baseUrl + "/SemesterRefer";
@@ -20,6 +20,8 @@ export const RegisterStudentToSubject = async (data: CreateJoinedSubject): Promi
     throwApiError(result);
   }
 };
+
+
 
 export const RegisterOneStudentsToMultipleSubjects = async (data: BulkCreateJoinedSubjects): Promise<any> => {
   const props = {
@@ -86,6 +88,20 @@ export const FetchJoinedSubjectListById = async (joinedSubjectId: number): Promi
     throwApiError(result);
   }
 }
+export const FetchJoinedSubjectMapStatus = async (studentProfileID:number): Promise<JoinedSubjectMapStatus[]> => {
+  const props = {
+    data: null,
+    url: joinedSubjectURL + `/map-status/`+studentProfileID,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+  }
+};
+
 export const DeleteJoinedSubject = async (joinedSubjectId: number): Promise<any> => {
   const props = {
     data: null,

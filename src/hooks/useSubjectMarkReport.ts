@@ -29,6 +29,8 @@ export const useSubjectMarkReport = () => {
       queryClient.invalidateQueries({ queryKey: ['selfSubjectMarkReport'] });
       // Also invalidate joined subject by ID to refresh isPassed status
       queryClient.invalidateQueries({ queryKey: ['joinedSubjectById'] });
+      // Invalidate status data to refresh subject status
+      queryClient.invalidateQueries({ queryKey: ['joinedSubjectMapStatus'] });
     },
     onError: (err) => handleError(err, 'Failed to add subject mark report'),
   });
@@ -60,6 +62,8 @@ export const useSubjectMarkReport = () => {
       queryClient.invalidateQueries({ queryKey: ['selfSubjectMarkReport'] });
       // Also invalidate joined subject by ID to refresh isPassed status
       queryClient.invalidateQueries({ queryKey: ['joinedSubjectById'] });
+      // Invalidate status data to refresh subject status
+      queryClient.invalidateQueries({ queryKey: ['joinedSubjectMapStatus'] });
     },
     onError: (err) => handleError(err, 'Failed to update subject mark report'),
   });
@@ -75,6 +79,8 @@ export const useSubjectMarkReport = () => {
       queryClient.invalidateQueries({ queryKey: ['selfSubjectMarkReport'] });
       // Also invalidate joined subject by ID to refresh isPassed status
       queryClient.invalidateQueries({ queryKey: ['joinedSubjectById'] });
+      // Invalidate status data to refresh subject status
+      queryClient.invalidateQueries({ queryKey: ['joinedSubjectMapStatus'] });
     },
     onError: (err) => handleError(err, 'Failed to delete subject mark report'),
   });
