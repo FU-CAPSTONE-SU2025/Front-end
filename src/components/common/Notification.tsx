@@ -34,9 +34,8 @@ interface NotificationProps {
 const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { notifications, loading, markAsRead, refreshNotifications } = useNotificationHub();
+  const { notifications, loading, markAsRead, refreshNotifications,markAllAsRead } = useNotificationHub();
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
-  const [localRead, setLocalRead] = useState<{ [id: number]: boolean }>({});
   const { handleError, handleSuccess } = useApiErrorHandler();
   const shownErrorIdsRef = useRef<Set<number>>(new Set());
   const shownSuccessIdsRef = useRef<Set<number>>(new Set());
@@ -49,35 +48,41 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
         seenIdsRef.current.add(Number(n.id));
       }
     }
+    console.log(notifications)
   }, [notifications]);
 
   // Calculate actual unread count considering localRead state
-  const actualUnreadCount = notifications.filter(n => !n.isRead && !localRead[n.id]).length;
+  const actualUnreadCount = notifications.filter(n => !n.isRead).length;
   const badgeCount = actualUnreadCount > 10 ? '10+' : actualUnreadCount;
 
-  // Helper to optimistically mark all as read locally
-  const optimisticallyMarkAllLocal = useCallback(() => {
-    const mapping: { [id: number]: boolean } = {};
-    for (const n of notifications) {
-      if (!n.isRead) mapping[n.id] = true;
-    }
-    setLocalRead(mapping);
-  }, [notifications]);
+  // // Helper to optimistically mark all as read locally
+  // const optimisticallyMarkAllLocal = useCallback(() => {
+  //   const mapping: { [id: number]: boolean } = {};
+  //   for (const n of notifications) {
+  //     if (!n.isRead) mapping[n.id] = true;
+  //   }
+  //   setLocalRead(mapping);
+  // }, [notifications]);
 
-  // Helper to mark all unread on server using per-item MarkAsRead in small batches
-  const backgroundMarkAllPerItem = useCallback(async () => {
-    const unread = notifications.filter(n => !n.isRead);
-    if (unread.length === 0) return;
+  // // Helper to mark all unread on server using per-item MarkAsRead in small batches
+  // const backgroundMarkAllPerItem = useCallback(async () => {
+  //   const unread = notifications.filter(n => !n.isRead);
+  //   if (unread.length === 0) return;
 
-    const batchSize = 5;
-    for (let i = 0; i < unread.length; i += batchSize) {
-      const batch = unread.slice(i, i + batchSize);
-      await Promise.all(batch.map(n => markAsRead(n.id).catch(() => {})));
-      if (i + batchSize < unread.length) {
-        await new Promise(res => setTimeout(res, 100));
-      }
-    }
-  }, [notifications, markAsRead]);
+  //   const batchSize = 5;
+  //   for (let i = 0; i < unread.length; i += batchSize) {
+  //     const batch = unread.slice(i, i + batchSize);
+  //     await Promise.all(batch.map(n => markAsRead(n.id).catch(() => {})));
+  //     if (i + batchSize < unread.length) {
+  //       await new Promise(res => setTimeout(res, 100));
+  //     }
+  //   }
+  // }, [notifications, markAsRead]);
+
+  const handleReadNotification = async(n:NotificationItem)=>{
+    console.log("Reading Notification:",n)
+    await markAsRead(n.id).catch((error) => {console.log("Can't read Nofication:",error)});
+  }
 
   // Auto-surface new error/success notifications even when panel is closed
   useEffect(() => {
@@ -101,24 +106,6 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
     }
   }, [notifications, handleError, handleSuccess]);
 
-  // Surface error-like notifications whenever list updates and panel is open
-  useEffect(() => {
-    if (!open) return;
-    for (const n of notifications) {
-      const idNum = Number(n.id);
-      if (!shownErrorIdsRef.current.has(idNum) && extractNotificationErrorContent(n.title)) {
-        shownErrorIdsRef.current.add(idNum);
-        handleError(n.content);
-        break;
-      }
-      if (!shownSuccessIdsRef.current.has(idNum) && extractNotificationSuccessContent(n.title)) {
-        shownSuccessIdsRef.current.add(idNum);
-        handleSuccess(n.content);
-        break;
-      }
-    }
-  }, [notifications, open, handleError, handleSuccess]);
-
   // ALL FUNCTIONS DEFINED WITH useCallback TO AVOID HOISTING ISSUES
   const handleNotificationClick = useCallback(async (n: NotificationItem, e?: React.MouseEvent) => {
     if (e) {
@@ -136,14 +123,13 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
       return;
     }
     // Optimistically mark all as read locally for immediate UI change
-    optimisticallyMarkAllLocal();
+
     // Background per-item mark-as-read calls then refresh from server
     void (async () => {
-      await backgroundMarkAllPerItem();
       await refreshNotifications();
     })();
     setSelectedNotification(n);
-  }, [optimisticallyMarkAllLocal, backgroundMarkAllPerItem, refreshNotifications, handleError, handleSuccess]);
+  }, [ refreshNotifications, handleError, handleSuccess]);
 
   const handleModalClose = useCallback(() => {
     setSelectedNotification(null);
@@ -152,22 +138,22 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
   const handleBellClick = useCallback(async () => {
     const newOpen = !open;
     setOpen(newOpen);
-    if (newOpen) {
-      try {
-        await refreshNotifications();
-        // Do not early-return; a notifications-change effect will surface any error/success content
-        // Optimistically mark UI as read immediately
-        optimisticallyMarkAllLocal();
-        // Background mark-as-read per item after ensuring latest list, then refresh again
-        void (async () => {
-          await backgroundMarkAllPerItem();
-          await refreshNotifications();
-        })();
-      } catch {
-        // silent
-      }
-    }
-  }, [open, refreshNotifications, optimisticallyMarkAllLocal, backgroundMarkAllPerItem]);
+    // if (newOpen) {
+    //   try {
+    //     await refreshNotifications();
+    //     // Do not early-return; a notifications-change effect will surface any error/success content
+    //     // Optimistically mark UI as read immediately
+    //     optimisticallyMarkAllLocal();
+    //     // Background mark-as-read per item after ensuring latest list, then refresh again
+    //     void (async () => {
+    //       await backgroundMarkAllPerItem();
+    //       await refreshNotifications();
+    //     })();
+    //   } catch {
+    //     // silent
+    //   }
+    // }
+  }, [open, refreshNotifications]);
 
   const getUnreadStyle = useCallback(() => {
     switch (variant) {
@@ -206,28 +192,21 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
     }
   }, [open]);
 
-  // CLICK OUTSIDE HANDLER  
-  const handleClickOutside = useCallback((event: MouseEvent) => {
-    if (ref.current && !ref.current.contains(event.target as Node)) {
-      setOpen(false);
-    }
-  }, []);
-
   // EFFECT FOR EVENT LISTENERS - PLACED AFTER ALL FUNCTION DEFINITIONS
   useEffect(() => {
     if (open) {
-      document.addEventListener('mousedown', handleClickOutside);
+
       document.addEventListener('keydown', handleKeyDown);
     } else {
-      document.removeEventListener('mousedown', handleClickOutside);
+
       document.removeEventListener('keydown', handleKeyDown);
     }
     
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open, handleClickOutside, handleKeyDown]);
+  }, [open, handleKeyDown]);
 
   return (
     <div className="relative" ref={ref}>
@@ -263,8 +242,8 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                     {loading ? 'Loading notifications...' : 'No notifications'}
                   </div>
                 ) : (
-                  notifications.map((n) => {
-                    const isRead = n.isRead || localRead[n.id];
+                  notifications.map((n:NotificationItem) => {
+                    const isRead = n.isRead 
                     return (
                       <motion.div
                         key={n.id}
@@ -277,7 +256,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                         <Avatar  src="/Logo.svg" size={40} className="mt-1" />
                         <div 
                           className="flex-1 cursor-pointer"
-                          onClick={(e) => handleNotificationClick(n, e)}
+                          onClick={() => handleReadNotification(n)}
                         >
                           <div className="flex justify-between items-center">
                             <span className={`font-semibold ${!isRead ? 'text-gray-800' : 'text-gray-600'}`}>

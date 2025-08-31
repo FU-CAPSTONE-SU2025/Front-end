@@ -259,20 +259,20 @@ const StaffTranscript: React.FC = () => {
       dataIndex: 'status', 
       key: 'status', 
       align: 'center' as 'center', 
-      render: (status: number) => (
+      render: (status: "ACTIVE" | "INACTIVE") => (
         <span style={{ 
-          color: status === 0 ? '#10b981' : '#ef4444',
+          color: status === "ACTIVE" ? '#10b981' : '#ef4444',
           fontWeight: 600,
           padding: '4px 12px',
           borderRadius: '8px',
-          backgroundColor: status === 0 ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-          border: `1.5px solid ${status === 0 ? '#10b981' : '#ef4444'}`,
+          backgroundColor: status === "ACTIVE" ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+          border: `1.5px solid ${status === "ACTIVE"? '#10b981' : '#ef4444'}`,
           fontSize: '13px',
           minWidth: 70,
           display: 'inline-block',
           textAlign: 'center',
         }}>
-          {status === 0 ? 'Active' : 'Inactive'}
+          {status}
         </span>
       ) 
     },
@@ -335,21 +335,19 @@ const StaffTranscript: React.FC = () => {
       <div className={styles.sttContainer}
       style={{height:"auto"}}
       >
-
         {/* Toolbar */}
-        <Affix offsetTop={80} style={{zIndex: 10}}>
+        <Affix offsetTop={70} style={{zIndex: 10}}>
           <Card 
             className={glassStyles.appleGlassCard}
             style={{ 
               marginBottom: 24,
-              padding: '1.5rem 2rem',
               background: 'rgba(255, 255, 255, 0.25)',
               backdropFilter: 'blur(30px) saturate(180%)',
               border: '1px solid rgba(255, 255, 255, 0.2)'
             }}
           >
             {/* First Row: Search and Import */}
-            <Row gutter={[10, 10]} align="middle" style={{ marginBottom: 12 }}>
+            <Row gutter={[10, 10]} align="middle" style={{ marginBottom: 10 }}>
               <Col xs={24} sm={18}>
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <Text style={{color:"black"}} strong>Search Students</Text>
@@ -372,7 +370,6 @@ const StaffTranscript: React.FC = () => {
                 </ExcelImportButton>
               </Col>
             </Row>
-            {/* Filters: Now stacked vertically for better alignment */}
             <Row gutter={[10, 10]} align="middle" style={{ marginBottom: 0 }}>
               <Col xs={24} sm={24}>
                 <Space direction="vertical" size="middle" style={{ width: '100%' }}>
