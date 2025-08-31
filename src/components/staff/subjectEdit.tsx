@@ -91,7 +91,7 @@ const SubjectEdit: React.FC<SubjectEditProps> = ({ id, onDelete }) => {
             credits: subjectData.credits as number,
             description: subjectData.description as string,
             createdBy: '',
-            approvalStatus: 0,
+            approvalStatus: subjectData.approvalStatus as "APPROVED" | "PENDING" | "REJECTED",
             approvedBy: '',
             approvedAt: '',
             rejectionReason: ''

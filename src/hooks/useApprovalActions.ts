@@ -14,7 +14,7 @@ import { ApproveSyllabus } from '../api/SchoolAPI/syllabusAPI';
 import { ApproveCombo } from '../api/SchoolAPI/comboAPI';
 
 interface UseApprovalActionsReturn {
-  handleApproval: (type: ApprovalType, id: number, approvalStatus: number, rejectionReason?: string) => Promise<void>;
+  handleApproval: (type: ApprovalType, id: number, approvalStatus: "APPROVED" | "PENDING" | "REJECTED", rejectionReason?: string) => Promise<void>;
   isApproving: boolean;
 }
 
@@ -24,7 +24,7 @@ export const useApprovalActions = (): UseApprovalActionsReturn => {
   const handleApproval = async (
     type: ApprovalType, 
     id: number, 
-    approvalStatus: number, 
+    approvalStatus: "APPROVED" | "PENDING" | "REJECTED", 
     rejectionReason?: string
   ): Promise<void> => {
     setIsApproving(true);
@@ -52,7 +52,7 @@ export const useApprovalActions = (): UseApprovalActionsReturn => {
           throw new Error(`Unknown approval type: ${type}`);
       }
 
-      const action = approvalStatus === 2 ? 'approved' : 'rejected';
+      const action = approvalStatus;
       const typeName = type.charAt(0).toUpperCase() + type.slice(1);
       message.success(`${typeName} ${action} successfully!`);
       

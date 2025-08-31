@@ -15,8 +15,8 @@ import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 
 const SubjectPage: React.FC = () => {
   const [search, setSearch] = useState('');
-  const [curriculumFilter, setCurriculumFilter] = useState<number | undefined>();
-  const [comboFilter, setComboFilter] = useState<number | undefined>();
+  const [curriculumFilter, setCurriculumFilter] = useState<string | undefined>(undefined);
+  const [comboFilter, setComboFilter] = useState<string | undefined>(undefined);
   const [programForCurriculum] = useState<number | undefined>(undefined);
   // API-backed lists for filters
   const { useInfiniteComboList, useInfiniteCurriculumList } = useSchoolApi();
@@ -118,7 +118,7 @@ const SubjectPage: React.FC = () => {
 
   useEffect(() => {
     // In future, pass filters to API when supported; for now reuse search
-    getAllSubjects({ pageNumber: page, pageSize, search: search });
+    getAllSubjects({ pageNumber: page, pageSize, search: search,curriculumCode:curriculumFilter,comboName:comboFilter });
   }, [page, pageSize, search, comboFilter, curriculumFilter]);
 
   useEffect(() => {
@@ -196,12 +196,11 @@ const SubjectPage: React.FC = () => {
   };
 
   // Helper function to render approval status
-  const renderApprovalStatus = (record: any) => {
+  const renderApprovalStatus = (record: Subject) => {
     const approvalStatus = record.approvalStatus;
-    const isApproved = approvalStatus === 2;
-    const isRejected = approvalStatus === 3;
-    const isPending = approvalStatus === 1 || approvalStatus === undefined;
-
+    const isApproved = approvalStatus === "APPROVED";
+    const isRejected = approvalStatus === "REJECTED";
+    const isPending = approvalStatus === "PENDING" || approvalStatus === undefined;
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {isApproved && (
@@ -224,10 +223,8 @@ const SubjectPage: React.FC = () => {
   };
 
   // Helper function to render approval details
-  const renderApprovalDetails = (record: any) => {
+  const renderApprovalDetails = (record: Subject) => {
     const approvalStatus = record.approvalStatus;
-    const isApproved = approvalStatus === 1;
-    const isRejected = approvalStatus === 0;
     const isPending = approvalStatus === null || approvalStatus === undefined;
 
     if (isPending) {
@@ -366,7 +363,7 @@ const SubjectPage: React.FC = () => {
               }
             }}
             onChange={(val) => setCurriculumFilter(val)}
-            options={curriculumOptions.map((c: any) => ({ value: c.id, label: `${c.curriculumName} (${c.curriculumCode})` }))}
+            options={curriculumOptions.map((c: any) => ({ value: c.curriculumCode, label: `${c.curriculumName} (${c.curriculumCode})` }))}
           />
           <Select
             allowClear
@@ -385,7 +382,7 @@ const SubjectPage: React.FC = () => {
               }
             }}
             onChange={(val) => setComboFilter(val)}
-            options={comboOptions.map((cb: any) => ({ value: cb.id, label: cb.comboName }))}
+            options={comboOptions.map((cb: any) => ({ value: cb.comboName, label: cb.comboName }))}
           />
           <Button 
             type="primary" 

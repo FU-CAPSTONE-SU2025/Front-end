@@ -37,16 +37,16 @@ const SubjectOverview: React.FC<{ subj: any }> = ({ subj }) => (
         
         <div className="!flex !flex-wrap !gap-2">
           <Tag 
-            color={subj.approvalStatus === 1 ? 'success' : 'warning'} 
+            color={subj.approvalStatus === 'APPROVED' ? 'success' : 'warning'} 
             className="!text-sm !font-semibold !uppercase"
             style={{
-              backgroundColor: subj.approvalStatus === 1 ? '#52c41a' : '#faad14',
+              backgroundColor: subj.approvalStatus === "APPROVED" ? '#52c41a' : '#faad14',
               color: 'white',
               border: 'none',
               padding: '4px 12px'
             }}
           >
-            {subj.approvalStatus === 1 ? 'Approved' : 'Pending'}
+            {subj.approvalStatus}
           </Tag>
           {subj.approvedBy && (
             <Tag 

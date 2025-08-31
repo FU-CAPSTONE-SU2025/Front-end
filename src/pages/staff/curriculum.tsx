@@ -265,7 +265,6 @@ const CurriculumPage: React.FC = () => {
           items={curriculumList && curriculumList.length > 0 ? curriculumList.map((curriculum: Curriculum) => {
             const subjectVersions = curriculumSubjectVersionsMap[curriculum.id] || [];
             const isLoadingSubjectVersions = expandedCurriculum === curriculum.id && fetchCurriculumSubjectVersionsMutation.isPending;
-            
             return {
               key: curriculum.id,
               label: (
@@ -319,11 +318,29 @@ const CurriculumPage: React.FC = () => {
                       </div>
                     </div>
                     <div>
+                      <strong style={{ color: '#64748b' }}>Status:</strong>
+                      <div
+                        style={{
+                          fontWeight: '600',
+                          color:
+                            curriculum.approvalStatus === 'APPROVED'
+                              ? '#22c55e'
+                              : curriculum.approvalStatus === 'PENDING'
+                              ? '#f59e42'
+                              : curriculum.approvalStatus === 'REJECTED'
+                              ? '#ef4444'
+                              : '#1E40AF'
+                        }}
+                      >
+                        {curriculum.approvalStatus}
+                      </div>
+                    </div>
+                    <div>
                       <strong style={{ color: '#64748b' }}>Total Subject Versions:</strong>
                       <div style={{ color: '#1E40AF', fontWeight: '600' }}>{subjectVersions.length}</div>
                     </div>
                   </div>
-
+                  
                   {/* Subject Versions Table */}
                   <div>
                     <div style={{ 

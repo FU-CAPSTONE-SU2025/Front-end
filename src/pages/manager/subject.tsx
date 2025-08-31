@@ -8,9 +8,10 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
 import ApprovalModal from '../../components/manager/approvalModal';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
+import { Subject } from '../../interfaces/ISchoolProgram';
 
 const { Option } = Select;
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 const SubjectManagerPage: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -49,7 +50,7 @@ const SubjectManagerPage: React.FC = () => {
     setApprovalModalVisible(true);
   };
 
-  const handleApprovalConfirm = async (approvalStatus: number, rejectionReason?: string) => {
+  const handleApprovalConfirm = async (approvalStatus: 'APPROVED' | 'PENDING' | 'REJECTED', rejectionReason?: string) => {
     if (!selectedItem) return;
     
     try {
@@ -74,15 +75,15 @@ const SubjectManagerPage: React.FC = () => {
       key: 'approvalInfo',
       align: 'left' as 'left',
       width: 200,
-      render: (_: any, record: any) => {
-        if (record.approvalStatus === 2) {
+      render: (_: any, record: Subject) => {
+        if (record.approvalStatus === "APPROVED") {
           return (
             <div style={{ fontSize: 12, color: '#52c41a' }}>
               <div>Approved by: {record.approvedBy || 'Unknown'}</div>
               <div>Date: {record.approvedAt ? new Date(record.approvedAt).toLocaleDateString() : 'Unknown'}</div>
             </div>
           );
-        } else if (record.approvalStatus === 3) {
+        } else if (record.approvalStatus === "REJECTED") {
           return (
             <div style={{ fontSize: 12, color: '#ff4d4f' }}>
               <div>Rejected</div>
@@ -103,13 +104,13 @@ const SubjectManagerPage: React.FC = () => {
       key: 'actions',
       align: 'center' as 'center',
       width: 280,
-      render: (_: any, record: any) => {
-        const isApproved = record.approvalStatus === 2;
+      render: (_: any, record: Subject) => {
+        const isApproved = record.approvalStatus === "APPROVED";
         return (
           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
             {/* Approved Status Display */}
-            <Tag color={isApproved ? 'green' : record.approvalStatus === 3 ? 'red' : 'orange'} style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6, marginBottom: 0 }}>
-              {isApproved ? 'Approved' : record.approvalStatus === 3 ? 'Rejected' : 'Pending'}
+            <Tag color={isApproved ? 'green' : record.approvalStatus === "REJECTED" ? 'red' : 'orange'} style={{ fontWeight: 500, fontSize: 12, padding: '2px 8px', borderRadius: 6, marginBottom: 0 }}>
+              {isApproved ? 'Approved' : record.approvalStatus === "REJECTED" ? 'Rejected' : 'Pending'}
             </Tag>
             
             {/* Edit Status Button */}
@@ -119,7 +120,7 @@ const SubjectManagerPage: React.FC = () => {
               size="small"
               onClick={async () => {
                 if (isApproved) {
-                  await handleApproval('subject', record.id, 1, null); // Set back to pending
+                  await handleApproval('subject', record.id, "PENDING", null); // Set back to pending
                 } else {
                   handleApprove(record.id, record.subjectName);
                 }

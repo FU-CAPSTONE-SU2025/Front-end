@@ -5,7 +5,7 @@ export interface Program {
   programCode: string; // varchar(50)
   effectiveDate?: Date; // datetime2(0)
   createdBy?: string | null;
-  approvalStatus?: number;
+  approvalStatus?:'APPROVED' | 'PENDING' | 'REJECTED';
   approvedBy?: string | null;
   approvedAt?: Date | null;
   rejectionReason?: string | null;
@@ -25,7 +25,7 @@ export interface Curriculum {
   curriculumName: string; // varchar(255)
   effectiveDate: Date; // datetime2(0)
   createdBy: string | null;
-  approvalStatus: number;
+  approvalStatus: "APPROVED" | "PENDING" | "REJECTED";
   approvedBy: string | null;
   approvedAt: Date | null;
   rejectionReason: string | null;
@@ -39,7 +39,7 @@ export interface Subject {
   credits: number; // int
   description: string; // text
   createdBy: string | null;
-  approvalStatus: number | 1 | 0;
+  approvalStatus: 'APPROVED' | 'PENDING' | 'REJECTED';
   approvedBy: string | null;
   approvedAt: string | null;
   rejectionReason: string | null;
@@ -77,7 +77,7 @@ export interface Combo {
   createdAt: string;
   updatedAt: string;
   createdBy: string | null;
-  approvalStatus: number | 1 | 0;
+  approvalStatus: 'APPROVED' | 'PENDING' | 'REJECTED';
   approvedBy: string | null;
   approvedAt: string | null;
   rejectionReason: string | null;
@@ -249,22 +249,22 @@ export interface UpdateSubjectVersion {
 }
 
 export interface SubjectApproval{
-  approvalStatus: number | 1 | 0
+  approvalStatus: "APPROVED" | "PENDING" | "REJECTED"
   rejectionReason: string | null
 }
 
 export interface CurriculumApproval{
-  approvalStatus: number | 1 | 0
+  approvalStatus: "APPROVED" | "PENDING" | "REJECTED"
   rejectionReason: string | null
 }
 
 export interface SyllabusApproval{
-  approvalStatus: number | 1 | 0
+  approvalStatus: "APPROVED" | "PENDING" | "REJECTED"
   rejectionReason: string | null
 }
 
 export interface ComboApproval{
-  approvalStatus: number | 1 | 0
+  approvalStatus: "APPROVED" | "PENDING" | "REJECTED"
   rejectionReason: string | null
 }
 

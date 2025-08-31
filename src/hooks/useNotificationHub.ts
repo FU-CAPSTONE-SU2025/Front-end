@@ -124,11 +124,6 @@ export function useNotificationHub() {
   };
   // Mark aLL as read
   const markAllAsRead = async () => {
-    const connection = connectionRef.current;
-    if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-      setError('Connection not available');
-      throw new Error('Connection not available');
-    }
     const unreadNotifications = notifications.filter(n => !n.isRead);
     if (unreadNotifications.length === 0) {
       return;
@@ -142,7 +137,6 @@ export function useNotificationHub() {
         await Promise.all(batch.map(async (notification) => {
           try {
             await invokeWithAuthRetry(SIGNALR_CONFIG.HUB_METHODS.MARK_AS_READ, Number(notification.id));
-      
           } catch (err) {
             console.error(`Failed to mark notification ${notification.id} as read:`, err);
             throw err;
@@ -152,18 +146,10 @@ export function useNotificationHub() {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
-
-     
-      setError(null);
-      
       // Clear pending set after successful operation
       unreadNotifications.forEach(n => pendingMarkAsReadRef.current.delete(Number(n.id)));
-      
       // Fetch fresh notifications from server to ensure UI reflects actual DB state
       // This is more reliable than waiting for server broadcasts
-
-      await fetchNotifications();
-      
     } catch (err) {
       console.error('Failed to mark all notifications as read:', err);
       //setNotifications(originalNotifications);

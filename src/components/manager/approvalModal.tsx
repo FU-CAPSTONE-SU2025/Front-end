@@ -10,7 +10,7 @@ export type ApprovalType = 'subject' | 'curriculum' | 'syllabus' | 'combo';
 interface ApprovalModalProps {
   visible: boolean;
   onCancel: () => void;
-  onConfirm: (approvalStatus: number, rejectionReason?: string) => Promise<void>;
+  onConfirm: (approvalStatus: "APPROVED" | "PENDING" | "REJECTED", rejectionReason?: string) => Promise<void>;
   type: ApprovalType;
   itemId: number;
   itemName: string;
@@ -26,14 +26,14 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
   itemName,
   loading = false
 }) => {
-  const [approvalStatus, setApprovalStatus] = useState<number>(2); // 2 for approve, 3 for reject
+  const [approvalStatus, setApprovalStatus] = useState<"APPROVED" | "PENDING" | "REJECTED">("PENDING");
   const [rejectionReason, setRejectionReason] = useState<string>('');
 
   const handleConfirm = async () => {
     try {
-      await onConfirm(approvalStatus, approvalStatus === 3 ? rejectionReason : undefined);
+      await onConfirm(approvalStatus, approvalStatus === "REJECTED" ? rejectionReason : undefined);
       // Reset form
-      setApprovalStatus(2);
+      setApprovalStatus("PENDING");
       setRejectionReason('');
     } catch (error) {
       // Error handling is done in the parent component
@@ -42,7 +42,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
 
   const handleCancel = () => {
     // Reset form
-    setApprovalStatus(2);
+    setApprovalStatus(undefined);
     setRejectionReason('');
     onCancel();
   };
@@ -76,12 +76,13 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
           </Button>
           <Button
             type="primary"
-            icon={approvalStatus === 2 ? <CheckOutlined /> : <CloseOutlined />}
+            icon={approvalStatus === "APPROVED" ? <CheckOutlined /> : <CloseOutlined />}
             onClick={handleConfirm}
             loading={loading}
-            danger={approvalStatus === 3}
+            danger={approvalStatus === "REJECTED"}
+            disabled={approvalStatus === undefined}
           >
-            {approvalStatus === 2 ? 'Approve' : 'Reject'}
+            {approvalStatus}
           </Button>
         </div>
       }
@@ -102,27 +103,27 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
         <Text strong>Action: </Text>
         <Radio.Group
           value={approvalStatus}
-          onChange={(e) => setApprovalStatus(e.target.value)}
+          onChange={(e) => setApprovalStatus(e.target.value as "APPROVED" | "PENDING" | "REJECTED")}
           style={{ marginTop: 8 }}
         >
           <Space direction="vertical">
-            <Radio value={2}>
+            <Radio value="APPROVED">
               <Space>
                 <CheckOutlined style={{ color: '#52c41a' }} />
-                Approve this {getTypeDisplayName(type).toLowerCase()}
+                Approve this{getTypeDisplayName(type).toUpperCase()}
               </Space>
             </Radio>
-            <Radio value={3}>
+            <Radio value="REJECTED">
               <Space>
                 <CloseOutlined style={{ color: '#ff4d4f' }} />
-                Reject this {getTypeDisplayName(type).toLowerCase()}
+                Reject this{getTypeDisplayName(type).toUpperCase()}
               </Space>
             </Radio>
           </Space>
         </Radio.Group>
       </div>
 
-      {approvalStatus === 3 && (
+      {approvalStatus === "REJECTED" && (
         <div style={{ marginBottom: 16 }}>
           <Text strong>Rejection Reason: </Text>
           <TextArea
@@ -131,8 +132,6 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
             style={{ marginTop: 8 }}
-            maxLength={500}
-            showCount
           />
         </div>
       )}
@@ -145,7 +144,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
       }}>
         <Text type="secondary" style={{ fontSize: 12 }}>
           <strong>Note:</strong> This action will update the approval status of this {getTypeDisplayName(type).toLowerCase()}. 
-          {approvalStatus === 3 && ' Rejection requires a reason.'}
+          {approvalStatus === "REJECTED" && ' Rejection requires a reason.'}
         </Text>
       </div>
     </Modal>

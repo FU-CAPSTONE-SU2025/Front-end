@@ -232,7 +232,22 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                 <span>Notifications</span>
               </div>
               <div className="flex items-center gap-2">
-                
+                {notifications.length > 0 && (
+                  <Button
+                    type="text"
+                    size="small"
+                    onClick={() => markAllAsRead()}
+                    style={{ 
+                      color: '#f97316', 
+                      fontSize: '12px',
+                      padding: '4px 8px',
+                      height: 'auto'
+                    }}
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    Mark All as Read
+                  </Button>
+                )}
               </div>
             </div>
             <div className="max-h-80 overflow-y-auto">
