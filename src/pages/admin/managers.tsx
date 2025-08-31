@@ -40,15 +40,25 @@ const ManagerList: React.FC = () => {
     loadManagerData();
   }, []);
 
-  // Load data when pagination or filters change (search is now client-side)
+  // Load data when pagination or filters change (search is now handled separately)
   useEffect(() => {
     loadManagerData();
   }, [currentPage, pageSize, filterType, filterValue]);
+
+  // Debounced search effect to avoid too many API calls
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadManagerData();
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   const loadManagerData = () => {
     getAllManager({
       pageNumber: currentPage,
       pageSize: pageSize,
+      search: searchQuery || undefined,
       filterType: filterType || undefined,
       filterValue: filterValue || undefined
     });
@@ -135,10 +145,10 @@ const ManagerList: React.FC = () => {
     setCurrentPage(1); // Reset to first page when filter value changes
   };
 
-  // Handle search change (client-side, no need to reset page or reload data)
+  // Handle search change (server-side, triggers API call with debounce)
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page for client-side pagination
+    setCurrentPage(1); // Reset to first page when search changes
   };
 
   const handlePageChange = (page: number, size: number) => {
@@ -355,7 +365,7 @@ const ManagerList: React.FC = () => {
                 </ExcelImportButton>
               </div>
             </div>
-            {/* External Table display with server-side pagination and client-side search */}
+            {/* External Table display with server-side pagination and server-side search */}
             <DataTable
               columns={columns}
               data={managerList}
@@ -366,8 +376,6 @@ const ManagerList: React.FC = () => {
                 onClick: () => handleRowClick(record),
               })}
               loading={isLoading}
-              search={searchQuery}
-              searchFields={['id', 'firstName', 'lastName', 'email', 'department', 'position']}
             />
             {isDeleteMode && (
               <motion.div

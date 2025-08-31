@@ -44,10 +44,24 @@ const StudentList: React.FC = () => {
     loadStudentData();
   }, []);
 
-  // Load data when pagination or filters change (search is now client-side)
+  // Handle search via backend
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page when search changes
+  };
+
+  // Debounced search effect to avoid too many API calls
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadStudentData();
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
   useEffect(() => {
     loadStudentData();
-  }, [currentPage, pageSize, filterType, filterValue,searchQuery]);
+  }, [currentPage, pageSize, filterType, filterValue]);
 
   const loadStudentData = () => {
     getAllStudent({
@@ -196,11 +210,7 @@ const StudentList: React.FC = () => {
     setCurrentPage(1); // Reset to first page when filter value changes
   };
 
-  // Handle search change (client-side, no need to reset page or reload data)
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page for client-side pagination
-  };
+  // Handle search change (server-side, triggers API call with debounce)
 
   const handlePageChange = (page: number, size: number) => {
     setCurrentPage(page);
@@ -537,7 +547,7 @@ const StudentList: React.FC = () => {
                 </ExcelImportButton>
               </div>
             </div>
-            {/* External Table display with server-side pagination and client-side search */}
+            {/* External Table display with server-side pagination and server-side search */}
             <DataTable
               columns={columns}
               data={studentList}
@@ -548,8 +558,6 @@ const StudentList: React.FC = () => {
                 onClick: (event: React.MouseEvent) => handleRowClick(record, event),
               })}
               loading={isLoading}
-              search={searchQuery}
-              searchFields={['id', 'username', 'firstName', 'lastName', 'email']}
             />
             {isDeleteMode && (
               <motion.div

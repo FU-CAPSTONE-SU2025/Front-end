@@ -63,10 +63,19 @@ const AdvisorList: React.FC = () => {
     loadAdvisorData();
   }, []);
 
-  // Load data when pagination or filters change (search is now client-side)
+  // Load data when pagination or filters change (search is now handled separately)
   useEffect(() => {
     loadAdvisorData();
   }, [currentPage, pageSize, filterType, filterValue]);
+
+  // Debounced search effect to avoid too many API calls
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadAdvisorData();
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   // Fetch meeting records using hook
   const { data: meetingRecordsData, isLoading: meetingLoading } = useAllMeetingRecordPaged(meetingPage, meetingPageSize);
@@ -102,6 +111,7 @@ const AdvisorList: React.FC = () => {
     getAllAdvisor({
       pageNumber: currentPage,
       pageSize: pageSize,
+      search: searchQuery || undefined,
       filterType: filterType || undefined,
       filterValue: filterValue || undefined
     });
@@ -187,10 +197,10 @@ const AdvisorList: React.FC = () => {
     setCurrentPage(1); // Reset to first page when filter value changes
   };
 
-  // Handle search change (client-side, no need to reset page or reload data)
+  // Handle search change (server-side, triggers API call with debounce)
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page for client-side pagination
+    setCurrentPage(1); // Reset to first page when search changes
   };
 
   const handlePageChange = (page: number, size: number) => {
@@ -515,8 +525,6 @@ const AdvisorList: React.FC = () => {
                 onClick: () => handleRowClick(record),
               })}
               loading={isLoading}
-              search={searchQuery}
-              searchFields={['id', 'firstName', 'lastName', 'email', 'specialization']}
             />
             {isDeleteMode && (
               <motion.div

@@ -77,7 +77,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       <motion.div
         whileHover={{ scale: disabled ? 1 : 1.05 }}
         transition={{ duration: 0.3 }}
-        style={{ position: 'relative', padding: '1rem' }}
+        style={{ position: 'relative' }}
       >
         {localAvatarUrl ? (
           <OptimizedImage
@@ -95,7 +95,6 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
             }}
             lazy={false}
             priority={true}
-            onClick={handleEditAvatar}
           />
         ) : (
           <Avatar
