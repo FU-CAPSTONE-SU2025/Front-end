@@ -6,6 +6,9 @@ import { groupSubjectsBySemester, getSemesterOptions } from '../../utils/subject
 import { GetCurrentStudentUser } from '../../api/Account/UserAPI';
 import { getAuthState } from '../../hooks/useAuthState';
 import { jwtDecode } from 'jwt-decode';
+import SearchBar from '../../components/student/searchBar';
+import ResourceTable from '../../components/student/resourceTable';
+import { useStudentFeature } from '../../hooks/useStudentFeature';
 
 const ResourceExplorer: React.FC = () => {
   const navigate = useNavigate();
@@ -14,6 +17,12 @@ const ResourceExplorer: React.FC = () => {
   const [studentProfileId, setStudentProfileId] = useState<number | null>(null);
   const [studentDetail, setStudentDetail] = useState<any | null>(null);
   const [isLoadingStudent, setIsLoadingStudent] = useState<boolean>(false);
+
+  // Search and pagination state
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
 
   // Get studentProfileId from studentDataDetailResponse.id
   useEffect(() => {
@@ -44,16 +53,22 @@ const ResourceExplorer: React.FC = () => {
     fetchStudentDetail();
   }, []);
 
-  // Fetch joined subjects for current semester display
+
   const { data: joinedSubjects, isLoading: subjectsLoading } = useJoinedSubjects();
 
   // Fetch syllabus by joined subject ID to get syllabusId
   const { data: syllabusIdData, isLoading: syllabusIdLoading } = useSyllabusByJoinedSubject(selectedJoinedSubjectId);
-
   // Fetch checkpoint completion percentage and status mapping using actual studentProfileId from studentDataDetailResponse.id
   const { data: completionData, isLoading: completionLoading } = useCheckpointCompletionPercentage(studentProfileId);
   const { data: statusData, isLoading: statusLoading } = useJoinedSubjectStatusMapping(studentProfileId);
 
+  // Only fetch syllabus data when hasSearched is true
+  const { data: syllabusData, isLoading: syllabusLoading } = useStudentFeature({
+    search: hasSearched ? searchTerm : '', // Only search when hasSearched is true
+    page,
+    pageSize,
+  });
+  console.log(syllabusData);
   // Group subjects by semester
   const semesterSubjects = React.useMemo(() => {
     if (!joinedSubjects) return {};
@@ -112,6 +127,25 @@ const ResourceExplorer: React.FC = () => {
 
   const handleSubjectSelect = (subject: any) => {
     setSelectedJoinedSubjectId(subject.id);
+  };
+
+  const handleSearch = () => {
+    setHasSearched(true);
+    setPage(1); // Reset to first page when searching
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setPage(1); // Reset to first page when changing page size
+  };
+
+  const handleSyllabusSelect = (syllabus: any) => {
+    // Navigate to syllabus detail page
+    navigate(`/student/syllabus/${syllabus.id}`);
   };
 
   return (
@@ -185,6 +219,45 @@ const ResourceExplorer: React.FC = () => {
           )}
         </div>
       </motion.div>
+
+      {/* Search Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="mb-6 w-full max-w-7xl mx-auto"
+      >
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          onEnter={handleSearch}
+          placeholder="Search by Subject Code (e.g., CS101, MATH201)..."
+          className="mb-4"
+        />
+      </motion.div>
+
+      {/* Syllabus Table Section - Always show when hasSearched, but data is always fetched */}
+      {hasSearched && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="w-full max-w-7xl mx-auto"
+        >
+          <ResourceTable
+            data={syllabusData?.items || []}
+            isLoading={syllabusLoading}
+            page={page}
+            pageSize={pageSize}
+            total={syllabusData?.totalCount || 0}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            searchTerm={searchTerm}
+            hasSearched={hasSearched}
+            onSubjectSelect={handleSyllabusSelect}
+          />
+        </motion.div>
+      )}
     </div>
   );
 };

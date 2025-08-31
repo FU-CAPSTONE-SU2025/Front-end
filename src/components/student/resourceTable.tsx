@@ -88,7 +88,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5 }}
-      className="bg-gray-900/40 backdrop-blur-sm rounded-xl p-4 shadow-2xl shadow-black/20 w-full max-w-7xl mx-auto border border-white/20"
+      className="bg-gray-900/40 backdrop-blur-sm rounded-xl p-4 shadow-2xl shadow-black/20 w-full max-w-7xl mx-auto border border-white/20 !mb-8"
     >
       <div className="mb-4 px-2">
         <h3 className="text-xl font-semibold text-white">
@@ -107,6 +107,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
             columns={columns}
             dataSource={data}
             loading={isLoading}
+            rowKey="id"
             pagination={{
               current: page,
               pageSize: pageSize,
