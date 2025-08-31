@@ -37,3 +37,12 @@ export interface JoinedSubjectAssessment {
     maxScore: number;
     isExisting: boolean;
   }
+
+export interface IPersonalAcademicTranscript {
+  subjectCode: string;
+  subjectVersionCode: string;
+  name: string;
+  isPassed: boolean;
+  credits: number;
+  avgScore: number;
+}

@@ -157,12 +157,6 @@ const UserInfoCard: React.FC<{ user: UserInfo; userInfor: ApiUserInfo | any }> =
                 <span className="text-white font-medium text-sm">{new Date(userInfor.studentDataDetailResponse.enrolledAt).toLocaleDateString()}</span>
               </div>
             )}
-            <div className="px-5 py-3 flex items-center justify-between">
-              <span className="text-gray-300 text-sm">Github</span>
-              <span className="text-white font-medium text-sm">
-                {userInfor?.studentDataDetailResponse?.gitAccountUsername || 'No data'}
-              </span>
-            </div>
           </div>
         </div>
 

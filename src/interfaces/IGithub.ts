@@ -147,42 +147,54 @@ export interface GitHubRepoData {
      * Convert CommitActivityWeek[] thành ContributionData cho chart
      */
     static convertToContributionData(commitActivity: CommitActivityWeek[]): ContributionData {
-      const contributionDays: ContributionDay[] = [];
-      let totalContributions = 0;
 
+      // Luôn luôn tạo khung cố định từ tháng 1 đến tháng 12 của năm hiện tại
+      const currentYear = new Date().getFullYear();
+      
+      // Tạo map của data từ backend
+      const contributionMap = new Map<string, number>();
       commitActivity.forEach(week => {
-        // Convert Unix timestamp to Date object
         const weekStart = new Date(week.week * 1000);
-        
-        // Ensure we're working with UTC dates to avoid timezone issues
-        const utcWeekStart = new Date(Date.UTC(
-          weekStart.getUTCFullYear(),
-          weekStart.getUTCMonth(),
-          weekStart.getUTCDate()
-        ));
-        
         week.days.forEach((commits, dayIndex) => {
-          // Calculate the date for each day of the week
-          const dayDate = new Date(utcWeekStart);
-          dayDate.setUTCDate(utcWeekStart.getUTCDate() + dayIndex);
-          
-          // Format as YYYY-MM-DD
+          const dayDate = new Date(weekStart);
+          dayDate.setDate(weekStart.getDate() + dayIndex);
           const dateString = dayDate.toISOString().split('T')[0];
-          
-          contributionDays.push({
-            date: dateString,
-            count: commits,
-            weekday: dayIndex
-          });
-          
-          totalContributions += commits;
+          contributionMap.set(dateString, commits);
         });
       });
 
-      // Sort by date to ensure chronological order
-      contributionDays.sort((a, b) => a.date.localeCompare(b.date));
+      // Tạo lịch cho cả năm từ 1/1 đến 31/12
+      const contributionDays: ContributionDay[] = [];
+      let totalContributions = 0;
+      
+      // Bắt đầu từ Chủ nhật đầu tiên của năm (có thể là năm trước)
+      const yearStart = new Date(currentYear, 0, 1);
+      const firstSunday = new Date(yearStart);
+      firstSunday.setDate(yearStart.getDate() - yearStart.getDay());
+      
+      // Kết thúc ở Thủ bảy cuối cùng của năm (có thể là năm sau)
+      const yearEnd = new Date(currentYear, 11, 31);
+      const lastSaturday = new Date(yearEnd);
+      lastSaturday.setDate(yearEnd.getDate() + (6 - yearEnd.getDay()));
+      
+      // Tạo calendar theo thứ tự GitHub: mỗi cột = 1 tuần, mỗi hàng = 1 ngày trong tuần
+      const currentDate = new Date(firstSunday);
+      while (currentDate <= lastSaturday) {
+        const dateString = currentDate.toISOString().split('T')[0];
+        const count = contributionMap.get(dateString) || 0;
+        
+        contributionDays.push({
+          date: dateString,
+          count: count,
+          weekday: currentDate.getDay()
+        });
+        
+        totalContributions += count;
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
 
-      // Group by weeks for display
+      // Group by weeks
+
       const weeks: ContributionWeek[] = [];
       for (let i = 0; i < contributionDays.length; i += 7) {
         weeks.push({
@@ -198,18 +210,49 @@ export interface GitHubRepoData {
     }
 
     /**
-     * Convert commitsPerDayLastYear thành ContributionData (alternative approach)
+     * Convert commitsPerDayLastYear thành ContributionData
      */
     static convertDailyCommitsToContributionData(commitsPerDay: Record<string, number>): ContributionData {
-      const contributionDays: ContributionDay[] = Object.entries(commitsPerDay)
-        .map(([date, count]) => ({
-          date,
-          count,
-          weekday: new Date(date).getDay()
-        }))
-        .sort((a, b) => a.date.localeCompare(b.date));
 
-      const totalContributions = contributionDays.reduce((sum, day) => sum + day.count, 0);
+      // Luôn luôn tạo khung cố định từ tháng 1 đến tháng 12 của năm hiện tại
+      const currentYear = new Date().getFullYear();
+      
+      // Tạo map của data từ backend
+      const contributionMap = new Map<string, number>();
+      Object.entries(commitsPerDay).forEach(([date, count]) => {
+        contributionMap.set(date, count);
+      });
+
+      // Tạo lịch cho cả năm từ 1/1 đến 31/12
+      const contributionDays: ContributionDay[] = [];
+      let totalContributions = 0;
+      
+      // Bắt đầu từ Chủ nhật đầu tiên của năm
+      const yearStart = new Date(currentYear, 0, 1);
+      const firstSunday = new Date(yearStart);
+      firstSunday.setDate(yearStart.getDate() - yearStart.getDay());
+      
+      // Kết thúc ở Thủ bảy cuối cùng của năm
+      const yearEnd = new Date(currentYear, 11, 31);
+      const lastSaturday = new Date(yearEnd);
+      lastSaturday.setDate(yearEnd.getDate() + (6 - yearEnd.getDay()));
+      
+      // Tạo calendar theo thứ tự GitHub: mỗi cột = 1 tuần, mỗi hàng = 1 ngày trong tuần
+      const currentDate = new Date(firstSunday);
+      while (currentDate <= lastSaturday) {
+        const dateString = currentDate.toISOString().split('T')[0];
+        const count = contributionMap.get(dateString) || 0;
+        
+        contributionDays.push({
+          date: dateString,
+          count: count,
+          weekday: currentDate.getDay()
+        });
+        
+        totalContributions += count;
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
 
       // Group by weeks
       const weeks: ContributionWeek[] = [];
@@ -227,7 +270,7 @@ export interface GitHubRepoData {
     }
 
     /**
-     * Create a proper contribution chart with correct month labels
+
      */
     static createContributionChartWithLabels(contributionData: ContributionData): {
       chartData: ContributionData;
@@ -235,54 +278,67 @@ export interface GitHubRepoData {
       startDate: Date;
       endDate: Date;
     } {
-      if (!contributionData.contributionCalendar.length) {
-        return {
-          chartData: contributionData,
-          monthLabels: [],
-          startDate: new Date(),
-          endDate: new Date()
-        };
-      }
 
-      // Get the date range
-      const dates = contributionData.contributionCalendar.map(day => new Date(day.date));
-      const startDate = new Date(Math.min(...dates.map(d => d.getTime())));
-      const endDate = new Date(Math.max(...dates.map(d => d.getTime())));
-
-      // Create month labels based on actual data and week positions
-      const monthLabels: Array<{ month: string; weekIndex: number; hasData: boolean }> = [];
+      const currentYear = new Date().getFullYear();
+      const startDate = new Date(currentYear, 0, 1);
+      const endDate = new Date(currentYear, 11, 31);
       
-      // Group days by weeks and check which weeks have data
-      const weeksWithData = new Set<number>();
-      contributionData.contributionCalendar.forEach((day, index) => {
-        const weekIndex = Math.floor(index / 7);
-        if (day.count > 0) {
-          weeksWithData.add(weekIndex);
-        }
-      });
-
-      // Create month labels for weeks that have data
-      let currentMonth = '';
-      let currentWeekIndex = 0;
-      
-      for (let weekIndex = 0; weekIndex < Math.ceil(contributionData.contributionCalendar.length / 7); weekIndex++) {
-        const weekStartIndex = weekIndex * 7;
-        const weekStartDate = new Date(contributionData.contributionCalendar[weekStartIndex].date);
-        const monthName = weekStartDate.toLocaleDateString('en-US', { month: 'short' });
-        
-        // Only add month label if it's a new month and the week has data
-        if (monthName !== currentMonth && weeksWithData.has(weekIndex)) {
-          monthLabels.push({
-            month: monthName,
-            weekIndex: weekIndex,
-            hasData: true
-          });
-          currentMonth = monthName;
-        }
-      }
+      // Tạo month labels cố định
+      const monthLabels: Array<{ month: string; weekIndex: number; hasData: boolean }> = [
+        { month: 'Jan', weekIndex: 0, hasData: true },
+        { month: 'Feb', weekIndex: 4, hasData: true },
+        { month: 'Mar', weekIndex: 8, hasData: true },
+        { month: 'Apr', weekIndex: 13, hasData: true },
+        { month: 'May', weekIndex: 17, hasData: true },
+        { month: 'Jun', weekIndex: 22, hasData: true },
+        { month: 'Jul', weekIndex: 26, hasData: true },
+        { month: 'Aug', weekIndex: 31, hasData: true },
+        { month: 'Sep', weekIndex: 35, hasData: true },
+        { month: 'Oct', weekIndex: 39, hasData: true },
+        { month: 'Nov', weekIndex: 44, hasData: true },
+        { month: 'Dec', weekIndex: 48, hasData: true }
+      ];
 
       return {
         chartData: contributionData,
+        monthLabels,
+        startDate,
+        endDate
+      };
+    }
+
+    /**
+     * Generate contribution calendar với month labels cố định
+     */
+    static generateContributionCalendar(contributionData: ContributionData): {
+      calendar: ContributionDay[];
+      monthLabels: Array<{ month: string; weekIndex: number; hasData: boolean }>;
+      startDate: Date;
+      endDate: Date;
+    } {
+      const currentYear = new Date().getFullYear();
+      const startDate = new Date(currentYear, 0, 1);
+      const endDate = new Date(currentYear, 11, 31);
+      
+      // Tạo month labels cố định cho 12 tháng
+      const monthLabels: Array<{ month: string; weekIndex: number; hasData: boolean }> = [
+        { month: 'Jan', weekIndex: 0, hasData: true },
+        { month: 'Feb', weekIndex: 4, hasData: true },
+        { month: 'Mar', weekIndex: 8, hasData: true },
+        { month: 'Apr', weekIndex: 13, hasData: true },
+        { month: 'May', weekIndex: 17, hasData: true },
+        { month: 'Jun', weekIndex: 22, hasData: true },
+        { month: 'Jul', weekIndex: 26, hasData: true },
+        { month: 'Aug', weekIndex: 31, hasData: true },
+        { month: 'Sep', weekIndex: 35, hasData: true },
+        { month: 'Oct', weekIndex: 39, hasData: true },
+        { month: 'Nov', weekIndex: 44, hasData: true },
+        { month: 'Dec', weekIndex: 48, hasData: true }
+      ];
+
+      return {
+        calendar: contributionData.contributionCalendar,
+
         monthLabels,
         startDate,
         endDate

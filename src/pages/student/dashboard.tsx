@@ -12,6 +12,8 @@ import { getAuthState } from '../../hooks/useAuthState';
 import { jwtDecode } from 'jwt-decode';
 import { getPersonalCurriculumSubjects, getPersonalComboSubjects } from '../../api/student/StudentAPI';
 import AcademicCharts from '../../components/student/academicCharts';
+import { usePersonalAcademicTranscript } from '../../hooks/useSubjectMarkReport';
+import TranscriptTable from '../../components/student/transcriptTable';
 
 // Note: UserInfoCard will receive userInfor from API; no mock user passed
 
@@ -92,6 +94,10 @@ const Dashboard = () => {
   // Fetch checkpoint completion percentage and status mapping using actual studentProfileId
   const { data: completionData, isLoading: completionLoading } = useCheckpointCompletionPercentage(studentProfileId);
   const { data: statusData, isLoading: statusLoading } = useJoinedSubjectStatusMapping(studentProfileId);
+
+  // Fetch transcript data
+  const { data: transcriptData, isLoading: transcriptLoading } = usePersonalAcademicTranscript();
+
 
   // Group subjects by semester
   const semesterSubjects: SemesterSubjects = useMemo(() => {
@@ -248,6 +254,21 @@ const Dashboard = () => {
     return getSubjectsStats(currentSemesterSubjects);
   }, [currentSemesterSubjects]);
 
+  // Get transcript statistics
+  const transcriptStats = useMemo(() => {
+    if (!transcriptData) return { total: 0, passed: 0, totalCredits: 0, avgScore: 0 };
+    
+    const total = transcriptData.length;
+    const passed = transcriptData.filter(subject => subject.isPassed).length;
+    const totalCredits = transcriptData.reduce((sum, subject) => sum + subject.credits, 0);
+    const avgScore = transcriptData
+      .filter(subject => subject.avgScore > 0)
+      .reduce((sum, subject) => sum + subject.avgScore, 0) / 
+      transcriptData.filter(subject => subject.avgScore > 0).length || 0;
+    
+    return { total, passed, totalCredits, avgScore: Number(avgScore.toFixed(2)) };
+  }, [transcriptData]);
+
   // Right content tabs renderer
   const renderRightTabs = () => (
     <Tabs
@@ -351,6 +372,42 @@ const Dashboard = () => {
                 <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Personal Subjects</h2>
               </div>
               {renderSubjectList(combinedPersonalSubjects)}
+            </div>
+          ),
+        },
+        {
+          key: 'transcript',
+          label: <span className="text-white text-lg">Transcript</span>,
+          children: (
+            <div className="mt-2">
+              <div className="mb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Academic Transcript</h2>
+                <p className="text-gray-200 opacity-80 mb-4">View your complete academic record and performance</p>
+              </div>
+              
+              {/* Transcript Statistics */}
+              {transcriptData && transcriptData.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-white">{transcriptStats.total}</div>
+                    <div className="text-gray-200 text-sm">Total Subjects</div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-green-400">{transcriptStats.passed}</div>
+                    <div className="text-gray-200 text-sm">Passed</div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-400">{transcriptStats.totalCredits}</div>
+                    <div className="text-gray-200 text-sm">Total Credits</div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-yellow-400">{transcriptStats.avgScore}</div>
+                    <div className="text-gray-200 text-sm">Avg Score</div>
+                  </div>
+                </div>
+              )}
+              
+              <TranscriptTable data={transcriptData || []} isLoading={transcriptLoading} />
             </div>
           ),
         },

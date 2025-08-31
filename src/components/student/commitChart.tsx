@@ -102,7 +102,17 @@ const CommitChart: React.FC<CommitChartProps> = ({
   
   // Get chart info with proper month labels
   const chartInfo = contributionData ? 
-    ContributionHelper.createContributionChartWithLabels(contributionData) : null;
+
+    ContributionHelper.generateContributionCalendar(contributionData) : null;
+
+  // Sử dụng grid cố định 53 cột cho cả năm
+  const gridCols = 53;
+  const gridStyle = { 
+    gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
+    gridTemplateRows: 'repeat(7, minmax(0, 1fr))',
+    gridAutoFlow: 'column' // Fill theo cột trước, hàng sau (theo chiều dọc)
+  };
+
 
   // Render contribution chart placeholder when no data
   const renderContributionChartPlaceholder = () => (
@@ -116,8 +126,10 @@ const CommitChart: React.FC<CommitChartProps> = ({
       </div>
       
       {/* Chart grid placeholder - same dimensions as real chart */}
-      <div className="grid grid-cols-52 grid-rows-7 gap-1">
-        {Array.from({ length: 364 }).map((_, idx) => (
+
+      <div className="grid grid-rows-7 gap-1" style={gridStyle}>
+        {Array.from({ length: 371 }).map((_, idx) => (
+
           <div
             key={idx}
             className="w-3 h-3 rounded-sm bg-white/10 animate-pulse"
@@ -127,29 +139,20 @@ const CommitChart: React.FC<CommitChartProps> = ({
       
       {/* Month labels placeholder - show actual months from data if available */}
       <div className="flex justify-between text-xs mt-3 text-gray-300 font-medium">
-        {chartInfo && chartInfo.monthLabels.length > 0 ? (
-          chartInfo.monthLabels.map((monthInfo, idx) => (
-            <span key={idx} className="flex-1 text-center truncate">
-              {monthInfo.month}
-            </span>
-          ))
-        ) : (
-          // Fallback to standard months if no data
-          <>
-            <span>Jan</span>
-            <span>Feb</span>
-            <span>Mar</span>
-            <span>Apr</span>
-            <span>May</span>
-            <span>Jun</span>
-            <span>Jul</span>
-            <span>Aug</span>
-            <span>Sep</span>
-            <span>Oct</span>
-            <span>Nov</span>
-            <span>Dec</span>
-          </>
-        )}
+
+        <span>Jan</span>
+        <span>Feb</span>
+        <span>Mar</span>
+        <span>Apr</span>
+        <span>May</span>
+        <span>Jun</span>
+        <span>Jul</span>
+        <span>Aug</span>
+        <span>Sep</span>
+        <span>Oct</span>
+        <span>Nov</span>
+        <span>Dec</span>
+
       </div>
     </div>
   );
@@ -491,8 +494,8 @@ const CommitChart: React.FC<CommitChartProps> = ({
           </div>
         </div>
         
-        <div className="grid grid-cols-52 grid-rows-7 gap-1">
-          {contributionData.contributionCalendar.map((day, idx) => (
+        <div className="grid grid-rows-7 gap-1" style={gridStyle}>
+          {chartInfo && chartInfo.calendar.map((day, idx) => (
             <motion.div
               key={idx}
               className={`w-3 h-3 rounded-sm transition-colors duration-300 ${

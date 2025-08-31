@@ -3,6 +3,7 @@ import {
   AddSubjectMarkReport,
   FetchSubjectMarkReport,
   FetchSelfSubjectMarkReport,
+  FetchPersonalAcademicTranscript,
   UpdateSubjectMarkReport,
   DeleteSubjectMarkReport,
   FetchViewSubjectMarkReportTemplate,
@@ -11,7 +12,8 @@ import {
   ISubjectMarkReport, 
   ICreateSubjectMarkReport, 
   IUpdateSubjectMarkReport,
-  IViewSubjectAssessment
+  IViewSubjectAssessment,
+  IPersonalAcademicTranscript
 } from '../interfaces/ISubjectMarkReport';
 import { useApiErrorHandler } from './useApiErrorHandler';
 export const useSubjectMarkReport = () => {
@@ -120,6 +122,24 @@ export const useSubjectMarkReportTemplate = (subjectCode: string, subjectVersion
       }
     },
     enabled: !!subjectCode && !!subjectVersionCode,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
+};
+
+export const usePersonalAcademicTranscript = () => {
+  const { handleError } = useApiErrorHandler();
+
+  return useQuery<IPersonalAcademicTranscript[] | null>({
+    queryKey: ['personalAcademicTranscript'],
+    queryFn: async () => {
+      try {
+        return await FetchPersonalAcademicTranscript();
+      } catch (error) {
+        handleError(error, 'Failed to fetch personal academic transcript');
+        return null;
+      }
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
   });
