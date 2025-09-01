@@ -193,7 +193,7 @@ export const routes = createBrowserRouter([
         ),
       },
       {
-        path: "semesterPlanner/:roadmap",
+        path: "semesterPlanner/:roadmapId",
         element: (
           <Suspense fallback={<PageLoader />}>
             <SemesterPlannerDetail />
