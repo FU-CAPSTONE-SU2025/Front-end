@@ -1056,7 +1056,7 @@ const SubjectVersionPage: React.FC = () => {
       handleSuccess('Outcome added successfully!');
     } catch (error) {
       console.error('Error adding outcome:', error);
-      handleError('Failed to add outcome');
+      handleError(error,'Failed to add outcome');
       throw error;
     }
   };
@@ -1083,7 +1083,7 @@ const SubjectVersionPage: React.FC = () => {
       handleSuccess('Outcome deleted successfully!');
     } catch (error) {
       console.error('Error deleting outcome:', error);
-      handleError('Failed to delete outcome');
+      handleError(error,'Failed to delete outcome');
     }
   };
 
@@ -1109,7 +1109,7 @@ const SubjectVersionPage: React.FC = () => {
       handleSuccess('Outcome updated successfully!');
     } catch (error) {
       console.error('Error updating outcome:', error);
-      handleError('Failed to update outcome');
+      handleError(error,'Failed to update outcome');
     }
   };
 
@@ -1118,7 +1118,7 @@ const SubjectVersionPage: React.FC = () => {
     try {
       const syllabus = syllabusMap[versionId];
       if (!syllabus) {
-        handleError('Syllabus not found for this version');
+        handleError(error,'Syllabus not found for this version');
         return;
       }
 
@@ -1145,7 +1145,7 @@ const SubjectVersionPage: React.FC = () => {
       handleSuccess('Session added successfully!');
     } catch (error) {
       console.error('Error adding session:', error);
-      handleError('Failed to add session');
+      handleError(error,'Failed to add session');
       throw error;
     }
   };
@@ -1172,7 +1172,7 @@ const SubjectVersionPage: React.FC = () => {
       handleSuccess('Session deleted successfully!');
     } catch (error) {
       console.error('Error deleting session:', error);
-      handleError('Failed to delete session');
+      handleError(error,'Failed to delete session');
     }
   };
 
@@ -1198,7 +1198,7 @@ const SubjectVersionPage: React.FC = () => {
       handleSuccess('Session updated successfully!');
     } catch (error) {
       console.error('Error updating session:', error);
-      handleError('Failed to update session');
+      handleError(error,'Failed to update session');
     }
   };
 
@@ -1227,7 +1227,7 @@ const SubjectVersionPage: React.FC = () => {
       handleSuccess('Outcome added to session successfully!');
     } catch (error) {
       console.error('Error adding outcome to session:', error);
-      handleError('Failed to add outcome to session');
+      handleError(error,'Failed to add outcome to session');
     }
   };
 
@@ -1280,7 +1280,7 @@ const SubjectVersionPage: React.FC = () => {
       handleSuccess('Prerequisites copied successfully!');
     } catch (error) {
       console.error('Failed to copy prerequisites:', error);
-      handleError('Failed to copy prerequisites');
+      handleError(error,'Failed to copy prerequisites');
     }
   };
 
@@ -1748,7 +1748,7 @@ const SubjectVersionPage: React.FC = () => {
                             await fetchAllPrerequisites();
                           } catch (error) {
                             console.error('Failed to add prerequisite:', error);
-                            handleError('Failed to add prerequisite');
+                            handleError(error,'Failed to add prerequisite');
                           }
                         }}
                         currentSubjectVersionId={version.id}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Space, Typography, Select, Tag, Card, Popconfirm } from 'antd';
+import { Form, Input, Button, Space, Typography, Select, Tag, Card, Popconfirm, message } from 'antd';
 import { SaveOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
 import { Combo, CreateCombo, Subject } from '../../interfaces/ISchoolProgram';
 import { useCRUDCombo, useCRUDSubject } from '../../hooks/useCRUDSchoolMaterial';
@@ -207,8 +207,8 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
       handleSuccess('Subject added to combo!');
       await loadComboSubjects();
       setAddSubjectId(null);
-    } catch {
-      handleError('Failed to add subject.');
+    } catch(err) {
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -223,8 +223,8 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
       await removeSubjectFromComboMutation.mutateAsync({ comboId: id, subjectId });
       handleSuccess('Subject removed from combo!');
       await loadComboSubjects();
-    } catch {
-      handleError('Failed to remove subject.');
+    } catch(err) {
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -237,23 +237,8 @@ const ComboEdit: React.FC<ComboEditProps> = ({ id }) => {
       await disableComboMutation.mutateAsync(id);
       handleSuccess('Combo disabled successfully!');
       navigate('/staff/combo-list'); // Redirect to combo list after disabling
-    } catch {
-      handleError('Failed to disable combo.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEnableCombo = async () => {
-    if (!id) return;
-    setLoading(true);
-    try {
-      // The enableComboMutation was removed, so this function is now a no-op
-      // or needs to be re-added if enabling functionality is still desired.
-      // For now, we'll just navigate back to the list.
-      navigate('/staff/combo-list');
-    } catch {
-      handleError('Failed to enable combo.');
+    } catch(err) {
+      handleError(err);
     } finally {
       setLoading(false);
     }

@@ -149,6 +149,9 @@ const ComboDetail: React.FC = () => {
   const combo = combos.find(c => String(c.id) === String(id));
   const subjects = comboSubjects[Number(id)] || [];
 
+  // Watch status field to show live color-coded chip in modal
+  const watchedStatus = Form.useWatch('status', form);
+
   if (!combo) {
     return (
       <div className="p-6 mx-auto">
@@ -437,7 +440,17 @@ const ComboDetail: React.FC = () => {
           </Form.Item>
           <Form.Item
             name="status"
-            label="Status"
+            label={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>Status</span>
+                <Tag
+                  color={getStatusColor(String(watchedStatus ?? combo.status))}
+                  className="text-xs font-medium"
+                >
+                  {String(watchedStatus ?? combo.status).toUpperCase()}
+                </Tag>
+              </div>
+            }
             rules={[{ required: true, message: 'Please select status!' }]}
           >
             <Select className="!rounded-lg">
