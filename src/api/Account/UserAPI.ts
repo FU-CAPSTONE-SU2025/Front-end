@@ -27,22 +27,19 @@ export const GetActiveUser = async ():Promise<ActiveAccountProps|null> => {
 export const GetPagedActiveStudent = async (
   pageNumber: number,
   pageSize: number,
-  search?: string,
-  programId?: number,
-  filterType?:string,  
-  filterValue?:string
+  searchQuery?: string,
+  programId?: number
 ): Promise<PagedData<StudentBase>> => {
   // Build query parameters
   const params = new URLSearchParams({
     pageNumber: pageNumber.toString(),
     pageSize: pageSize.toString(),
-    search: search || "",
+    search: searchQuery || "",
     programId: programId?.toString() || ""
-
   });
   const props = {
     data: null,
-    url: userURL + `/students/active/paged?${params.toString()}&${filterType}=${filterValue}`,
+    url: userURL + `/students/active/paged?${params.toString()}`,
   };
   const result = await axiosRead(props);
   if (result.success) {
