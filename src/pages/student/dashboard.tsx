@@ -173,31 +173,26 @@ const Dashboard = () => {
     }
   };
 
-  // Fetch personal curriculum/combo subjects
+  // Fetch personal curriculum and combo subjects
   useEffect(() => {
-    let mounted = true;
-    const run = async () => {
+    const fetchPersonalSubjects = async () => {
       setIsLoadingPersonal(true);
       try {
-        const [cur, combo] = await Promise.all([
+        const [curriculumRes, comboRes] = await Promise.all([
           getPersonalCurriculumSubjects(),
-          getPersonalComboSubjects(),
+          getPersonalComboSubjects()
         ]);
-        if (mounted) {
-          setCurriculumSubjects(cur || []);
-          setComboSubjects(combo || []);
-        }
-      } catch {
-        if (mounted) {
-          setCurriculumSubjects([]);
-          setComboSubjects([]);
-        }
+        
+        setCurriculumSubjects(curriculumRes || []);
+        setComboSubjects(comboRes || []);
+      } catch (error) {
+        console.error('Failed to fetch personal subjects:', error);
       } finally {
-        if (mounted) setIsLoadingPersonal(false);
+        setIsLoadingPersonal(false);
       }
     };
-    run();
-    return () => { mounted = false; };
+
+    fetchPersonalSubjects();
   }, []);
 
   const renderSubjectList = (items: Array<{ subjectCode: string; subjectName: string; credits: number; semesterNumber: number }>) => {
