@@ -458,7 +458,7 @@ const StaffTranscript: React.FC = () => {
                         >
                           {curriculumData?.items?.map((curriculum: Curriculum) => (
                             <Select.Option key={curriculum.id} value={curriculum.curriculumCode}>
-                              {curriculum.curriculumCode} - {curriculum.curriculumName}
+                              {curriculum.curriculumCode}
                             </Select.Option>
                           ))}
                         </Select>
