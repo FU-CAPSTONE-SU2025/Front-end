@@ -214,10 +214,10 @@ const ManagerList: React.FC = () => {
         padding: '0 12px',
         borderRadius: '12px',
         color: '#fff',
-        background: record.status === 0 ? '#22c55e' : '#ef4444',
+        background: record.status === "ACTIVE" ? '#22c55e' : '#ef4444',
         fontWeight: 500
       }}>
-        {record.status === 0 ? 'Active' : 'Inactive'}
+        {record.status}
       </span>
     ) },
   ];
