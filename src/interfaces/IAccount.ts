@@ -43,7 +43,7 @@ export interface AccountProps{
     registeredComboCode: string | "";
     curriculumCode: string | "";
   } | null
-  status: "ACTIVE" | "INACTIVE"
+  status: number | boolean
 }
 export interface UpdateAccountProps{
   username: string,
