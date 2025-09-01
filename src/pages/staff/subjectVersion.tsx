@@ -43,7 +43,7 @@ const createDefaultVersion = async (
       return Array.isArray(newVersion) ? newVersion : [newVersion];
     }
   } catch (err: any) {
-    handleError(err, 'Failed to create default version');
+    console.log(err, 'Failed to create default version');
   }
   return [];
 };

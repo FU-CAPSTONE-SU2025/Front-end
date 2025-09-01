@@ -45,7 +45,7 @@ const createDefaultVersion = async (
     }
   } catch (err: any) {
     const errorMessage = err.message || 'Failed to create default version.';
-    handleError('Failed to create default version: ' + errorMessage);
+    console.log('Failed to create default version: ' + errorMessage);
   }
   return [];
 };
@@ -73,7 +73,7 @@ const createDefaultSyllabus = async (
     }
   } catch (err: any) {
     const errorMessage = err.message || 'Failed to create default syllabus.';
-    handleError('Failed to create default syllabus: ' + errorMessage);
+    console.log('Failed to create default syllabus: ' + errorMessage);
   }
   return null;
 };
