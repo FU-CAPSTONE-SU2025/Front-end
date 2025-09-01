@@ -270,7 +270,7 @@ const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ open, onClose, 
               </Button>
             </div>
           )}
-          {canAddReasonForOverdue && (
+          {canAddReasonForOverdue && !detail?.note && (
             <div className="flex gap-4 justify-end mt-4">
               <Button 
                 danger

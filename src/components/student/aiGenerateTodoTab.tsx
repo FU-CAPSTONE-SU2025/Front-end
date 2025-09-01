@@ -10,6 +10,8 @@ const { Title, Text } = Typography;
 interface AIGenerateTodoTabProps {
   joinedSubjectId: number;
   onSuccess?: () => void;
+  ownerGitRepo?: string | null;
+  gitRepoName?: string | null;
 }
 
 interface GeneratedCheckpoint {
@@ -26,7 +28,9 @@ interface GeneratedCheckpoint {
 
 const AIGenerateTodoTab: React.FC<AIGenerateTodoTabProps> = ({
   joinedSubjectId,
-  onSuccess
+  onSuccess,
+  ownerGitRepo,
+  gitRepoName
 }) => {
   const [form] = Form.useForm();
   const [studentMessage, setStudentMessage] = useState('');
@@ -53,7 +57,9 @@ const AIGenerateTodoTab: React.FC<AIGenerateTodoTabProps> = ({
     try {
       const result = await generateCheckpointsMutation.mutateAsync({
         joinedSubjectId,
-        studentMessage: studentMessage.trim()
+        studentMessage: studentMessage.trim(),
+        ownerGitRepo: ownerGitRepo ?? '',
+        gitRepoName: gitRepoName ?? ''
       });
 
       if (result && result.length > 0) {

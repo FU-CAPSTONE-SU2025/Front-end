@@ -348,8 +348,9 @@ export const useCompleteCheckpoint = () => {
 // Hook for AI generating checkpoints
 export const useGenerateCheckpoints = () => {
   const queryClient = useQueryClient();
-  return useMutation<any[], Error, { joinedSubjectId: number; studentMessage: string }>({
-    mutationFn: ({ joinedSubjectId, studentMessage }) => generateCheckpoints(joinedSubjectId, studentMessage),
+  return useMutation<any[], Error, { joinedSubjectId: number; studentMessage: string; ownerGitRepo?: string | null; gitRepoName?: string | null }>({
+    mutationFn: ({ joinedSubjectId, studentMessage, ownerGitRepo, gitRepoName }) => 
+      generateCheckpoints(joinedSubjectId, studentMessage, ownerGitRepo ?? '', gitRepoName ?? ''),
     onSuccess: (data) => {
       // console.log('Checkpoints generated successfully:', data); - removed for production
       queryClient.invalidateQueries({ queryKey: ['subjectCheckpoints'] });

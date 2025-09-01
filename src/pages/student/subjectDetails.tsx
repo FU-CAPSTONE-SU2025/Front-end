@@ -228,6 +228,8 @@ const SubjectDetails = () => {
                         <AIGenerateTodoTab 
                             joinedSubjectId={joinedSubjectId}
                             onSuccess={handleAISuccess}
+                            ownerGitRepo={gitHubInfo?.owner || ''}
+                            gitRepoName={gitHubInfo?.repoName || ''}
                         />
                     ) : (
                         <div className="text-center py-12 text-gray-300">

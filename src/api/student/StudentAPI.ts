@@ -560,15 +560,25 @@ export const completeCheckpoint = async (checkpointId: number): Promise<boolean>
 };
 
 // AI Generate checkpoints
-export const generateCheckpoints = async (joinedSubjectId: number, studentMessage: string): Promise<any[]> => {
+export const generateCheckpoints = async (
+  joinedSubjectId: number,
+  studentMessage: string,
+  ownerGitRepo?: string | null,
+  gitRepoName?: string | null
+): Promise<any[]> => {
   const props = {
-    data: { studentMessage },
+    data: {
+      studentMessage,
+      ownerGitRepo: ownerGitRepo ?? '',
+      gitRepoName: gitRepoName ?? ''
+    },
     url: baseUrl + `/JoinedSubjectCheckPoint/gen/${joinedSubjectId}`,
     headers: GetHeader(),
   };
-  
+
+  // Use GET so parameters are sent as query params
   const result = await axiosRead(props);
-  
+
   if (result.success) {
     return result.data;
   } else {
