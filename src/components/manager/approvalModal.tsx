@@ -80,7 +80,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
             onClick={handleConfirm}
             loading={loading}
             danger={approvalStatus === "REJECTED"}
-            disabled={approvalStatus === undefined}
+            disabled={approvalStatus === undefined || approvalStatus === "PENDING"}
           >
             {approvalStatus}
           </Button>
@@ -89,22 +89,22 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
       width={500}
       destroyOnHidden
     >
-      <div style={{ marginBottom: 16 }}>
-        <Text strong>Item: </Text>
+      <div style={{ marginBottom: 10 }}>
+        <Text strong>Material: </Text>
         <Text>{itemName}</Text>
       </div>
       
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 10 }}>
         <Text strong>ID: </Text>
         <Text code>{itemId}</Text>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 10 }}>
         <Text strong>Action: </Text>
         <Radio.Group
           value={approvalStatus}
           onChange={(e) => setApprovalStatus(e.target.value as "APPROVED" | "PENDING" | "REJECTED")}
-          style={{ marginTop: 8 }}
+          style={{ marginTop: 5 }}
         >
           <Space direction="vertical">
             <Radio value="APPROVED">
@@ -124,7 +124,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
       </div>
 
       {approvalStatus === "REJECTED" && (
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 10 }}>
           <Text strong>Rejection Reason: </Text>
           <TextArea
             rows={3}
