@@ -32,8 +32,10 @@ export const LoginAccount = async (data: LoginProps) => {
         data: data,
         url: accountUrl+`/login`,
     }
+   
     const result = await axiosCreate(props)
     if (result.success) {
+        console.log("LoginAccount",result.data)
         return result.data
     }
     else {
@@ -77,9 +79,7 @@ export const RefreshToken = async () => {
     const newAccessToken = await axiosCreate(props)
     if (newAccessToken.success) {
         const {setAccessToken,setRefreshToken} = getAuthState()
-  
         const tokens:TokenProps = newAccessToken.data
-
           setAccessToken(tokens.accessToken);
           setRefreshToken(tokens.refreshToken);
         return true
@@ -89,7 +89,6 @@ export const RefreshToken = async () => {
         return false
     }
 }
-
 //send email
 export const SendEmail = async (data:any) => {
       const props = {
