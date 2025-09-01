@@ -9,6 +9,14 @@ export type ActiveCategoriesProp = {
   student: ActiveAccountProps[];
 };
 
+//Acvitve notation
+// 0 - ACTIVE,
+// 1 - INACTIVE,
+// 2 - SUSPENDED,
+// 3 - PENDING,
+// 4 - DELETED,
+// 5 - LOCKED
+
 export interface ActiveAccountProps{
   id: number
   username :string
@@ -43,7 +51,7 @@ export interface AccountProps{
     registeredComboCode: string | "";
     curriculumCode: string | "";
   } | null
-  status: number | boolean
+  status: 0 | 1 |2 | 3| 4| 5
 }
 export interface UpdateAccountProps{
   username: string,
@@ -53,7 +61,7 @@ export interface UpdateAccountProps{
   dateOfBirth: string | Date,
   avatarUrl: string,
   roleId: number,
-  status: number | boolean,
+  status: 0 | 1 |2 | 3| 4| 5
   staffDataUpdateRequest: StaffDataUpdateRequest | null,
   studentDataUpdateRequest: StudentDataUpdateRequest | null
 }

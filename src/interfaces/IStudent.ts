@@ -8,7 +8,7 @@ export interface StudentBase extends AccountProps {
       dateOfBirth: string
       avatarUrl: string,
       roleName: string
-      status: number,
+      status: 0 | 1 |2 | 3| 4| 5
       studentDataListResponse: StudentDataListResponse
 }
 

@@ -27,12 +27,8 @@ export const GetAllStudent = async (pageNumber: number = 1, pageSize: number = 1
     const params = new URLSearchParams({
         pageNumber: pageNumber.toString(),
         pageSize: pageSize.toString(),
+        search: search || "",
     });
-    
-    // Only add search parameter if it has a value
-    if (search && search.trim() !== '') {
-        params.append('search', search.trim());
-    }
     
     if (filterType && filterValue) {
         params.append('filterType', filterType);

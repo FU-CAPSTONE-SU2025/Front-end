@@ -469,56 +469,6 @@ const StudentList: React.FC = () => {
                   onChange={handleSearchChange}
                   style={{ width: 200 }}
                 />
-                <Select
-                  value={filterType}
-                  onChange={handleFilterChange}
-                  style={{ width: 120 }}
-                  placeholder="Filter"
-                >
-                  <Option value="">Filter</Option>
-                  <Option value="major">By Major</Option>
-                  <Option value="campus">By Campus</Option>
-                  <Option value="date">By Date</Option>
-                </Select>
-                {filterType === 'major' && (
-                  <Select
-                    value={filterValue}
-                    onChange={handleFilterValueChange}
-                    style={{ width: 120 }}
-                    placeholder="Select Major"
-                  >
-                    <Option value="">Select Major</Option>
-                    <Option value="SE">SE</Option>
-                    <Option value="SS">SS</Option>
-                    <Option value="CE">CE</Option>
-                  </Select>
-                )}
-                {filterType === 'campus' && (
-                  <Select
-                    value={filterValue}
-                    onChange={handleFilterValueChange}
-                    style={{ width: 120 }}
-                    placeholder="Select Campus"
-                  >
-                    <Option value="">Select Campus</Option>
-                    <Option value="HCMC Campus">HCMC Campus</Option>
-                    <Option value="Ha Noi Campus">Ha Noi Campus</Option>
-                    <Option value="Da Nang Campus">Da Nang Campus</Option>
-                  </Select>
-                )}
-                {filterType === 'date' && (
-                  <Select
-                    value={filterValue}
-                    onChange={handleFilterValueChange}
-                    style={{ width: 120 }}
-                    placeholder="Select Date"
-                  >
-                    <Option value="">Select Date</Option>
-                    {/* This would need to be populated with actual dates from the backend */}
-                    <Option value="2024-01-01">2024-01-01</Option>
-                    <Option value="2024-02-01">2024-02-01</Option>
-                  </Select>
-                )}
               </div>
               <div className={styles.actions}>
                 {['Add New Account', 'Delete Account'].map((action, index) => (

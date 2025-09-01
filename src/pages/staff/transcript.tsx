@@ -259,20 +259,20 @@ const StaffTranscript: React.FC = () => {
       dataIndex: 'status', 
       key: 'status', 
       align: 'center' as 'center', 
-      render: (status: "ACTIVE" | "INACTIVE") => (
+      render: (status: number) => (
         <span style={{ 
-          color: status === "ACTIVE" ? '#10b981' : '#ef4444',
+          color: status === 0 ? '#10b981' : '#ef4444',
           fontWeight: 600,
           padding: '4px 12px',
           borderRadius: '8px',
-          backgroundColor: status === "ACTIVE" ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-          border: `1.5px solid ${status === "ACTIVE"? '#10b981' : '#ef4444'}`,
+          backgroundColor: status === 0 ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+          border: `1.5px solid ${status === 0? '#10b981' : '#ef4444'}`,
           fontSize: '13px',
           minWidth: 70,
           display: 'inline-block',
           textAlign: 'center',
         }}>
-          {status}
+          {status === 0 ? 'Active' : 'Inactive'}
         </span>
       ) 
     },
