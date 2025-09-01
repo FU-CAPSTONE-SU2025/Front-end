@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Modal, Button, Radio, Input, message, Space, Typography } from 'antd';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import styles from '../../css/manager/approvalModal.module.css';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -59,19 +61,30 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
 
   return (
     <Modal
+       className={styles.glassModal}
+      classNames={{
+        content: styles.glassContainer,
+        header: styles.glassHeader,
+        body: styles.glassBody,
+        footer: styles.glassFooter
+      }}
       title={
         <Space>
-          <CheckOutlined style={{ color: '#52c41a' }} />
-          <Title level={4} style={{ margin: 0 }}>
+          <Title level={4} className={styles.gradientTitle}>
             {getTypeDisplayName(type)} Approval
           </Title>
         </Space>
       }
       open={visible}
+
       onCancel={handleCancel}
       footer={
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button onClick={handleCancel} disabled={loading}>
+          <Button 
+            onClick={handleCancel} 
+            disabled={loading}
+            className={styles.glassButton}
+          >
             Cancel
           </Button>
           <Button
@@ -80,43 +93,48 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
             onClick={handleConfirm}
             loading={loading}
             danger={approvalStatus === "REJECTED"}
-            disabled={approvalStatus === undefined}
+            disabled={approvalStatus === undefined || approvalStatus === "PENDING"}
+            className={approvalStatus === "APPROVED" ? styles.approveButton : approvalStatus === "REJECTED"? styles.rejectButton: styles.pendingButton}
           >
             {approvalStatus}
           </Button>
         </div>
       }
-      width={500}
+      width={550}
       destroyOnHidden
+      
     >
-      <div style={{ marginBottom: 16 }}>
-        <Text strong>Item: </Text>
-        <Text>{itemName}</Text>
+      <div className={styles.infoCard }>
+        <Text className={styles.infoLabel}>Material: </Text>
+        <Text className={styles.infoValue}>{itemName}</Text>
       </div>
       
-      <div style={{ marginBottom: 16 }}>
-        <Text strong>ID: </Text>
-        <Text code>{itemId}</Text>
+      <div className={styles.infoCard}>
+        <Text className={styles.infoLabel}>ID: </Text>
+        <Text className={styles.infoCode}>{itemId}</Text>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <Text strong>Action: </Text>
+      <div style={{ marginBottom: 20 }}>
         <Radio.Group
           value={approvalStatus}
           onChange={(e) => setApprovalStatus(e.target.value as "APPROVED" | "PENDING" | "REJECTED")}
-          style={{ marginTop: 8 }}
+          style={{ width: '100%' }}
         >
-          <Space direction="vertical">
-            <Radio value="APPROVED">
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Radio value="APPROVED" className={styles.radioContainer}>
               <Space>
-                <CheckOutlined style={{ color: '#52c41a' }} />
-                Approve this{getTypeDisplayName(type).toUpperCase()}
+                <div className={styles.radioIcon}>
+                  <CheckOutlined style={{ color: '#52c41a', fontSize: 12 }} />
+                </div>
+                <span className={styles.radioText}>Approve this {getTypeDisplayName(type).toLowerCase()}</span>
               </Space>
             </Radio>
-            <Radio value="REJECTED">
+            <Radio value="REJECTED" className={styles.radioContainerReject}>
               <Space>
-                <CloseOutlined style={{ color: '#ff4d4f' }} />
-                Reject this{getTypeDisplayName(type).toUpperCase()}
+                <div className={styles.radioIconReject}>
+                  <CloseOutlined style={{ color: '#ff4d4f', fontSize: 12 }} />
+                </div>
+                <span className={styles.radioTextReject}>Reject this {getTypeDisplayName(type).toLowerCase()}</span>
               </Space>
             </Radio>
           </Space>
@@ -124,28 +142,29 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
       </div>
 
       {approvalStatus === "REJECTED" && (
-        <div style={{ marginBottom: 16 }}>
-          <Text strong>Rejection Reason: </Text>
+        <div style={{ marginBottom: 20 }}>
+          <Text className={styles.infoLabel} style={{ color: '#ff4d4f', display: 'block', marginBottom: 8 }}>Rejection Reason: </Text>
           <TextArea
-            rows={3}
-            placeholder="Please provide a reason for rejection..."
+            rows={4}
+            placeholder="Please provide a detailed reason for rejection..."
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
-            style={{ marginTop: 8 }}
+            className={styles.rejectionTextArea}
           />
         </div>
       )}
 
-      <div style={{ 
-        padding: 12, 
-        backgroundColor: '#f6f8fa', 
-        borderRadius: 6,
-        border: '1px solid #e1e4e8'
-      }}>
-        <Text type="secondary" style={{ fontSize: 12 }}>
-          <strong>Note:</strong> This action will update the approval status of this {getTypeDisplayName(type).toLowerCase()}. 
-          {approvalStatus === "REJECTED" && ' Rejection requires a reason.'}
-        </Text>
+      <div className={styles.noteContainer}>
+        <div className={styles.noteTopBorder} />
+        <div className={styles.noteContent}>
+          <span className={styles.noteIcon}>
+            <span className={styles.noteIconText}>ℹ</span>
+          </span>
+          <span className={styles.noteText}>
+            <strong>Note:</strong> This action will update the approval status of this {getTypeDisplayName(type).toLowerCase()}. 
+            {approvalStatus === "REJECTED" && ' Rejection requires a detailed reason to help improve the submission.'}
+          </span>
+        </div>
       </div>
     </Modal>
   );

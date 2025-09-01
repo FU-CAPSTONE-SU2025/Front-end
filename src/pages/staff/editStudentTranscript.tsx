@@ -5,7 +5,7 @@ import { ArrowLeftOutlined, BookOutlined, UserOutlined, CalendarOutlined, MailOu
 import { motion } from 'framer-motion';
 import styles from '../../css/staff/staffEditTranscript.module.css';
 import TranscriptEdit from '../../components/staff/transcriptEdit';
-import { SubjectVersionWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
+import { Combo, SubjectVersionWithCurriculumInfo } from '../../interfaces/ISchoolProgram';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { CreateJoinedSubject, BulkCreateJoinedSubjects, JoinedSubject } from '../../interfaces/ISchoolProgram';
 import BulkDataImport from '../../components/common/bulkDataImport';
@@ -1252,7 +1252,7 @@ const EditStudentTranscript: React.FC = () => {
               >
                 <List
                   dataSource={comboItems}
-                  renderItem={(combo) => (
+                  renderItem={(combo:Combo) => (
                     <List.Item
                       className={styles.subjectVersionItem}
                       style={{
@@ -1278,8 +1278,8 @@ const EditStudentTranscript: React.FC = () => {
                           </div>
                           <div style={{ textAlign: 'right' }}>
                             <Tag color="blue">{combo.subjectCount} subjects</Tag>
-                            <Tag color={combo.approvalStatus === 1 ? 'green' : 'orange'}>
-                              {combo.approvalStatus === 1 ? 'Approved' : 'Pending'}
+                            <Tag color={combo.approvalStatus === "APPROVED" ? 'green' : 'orange'}>
+                              {combo.approvalStatus === "APPROVED" ? 'Approved' : 'Pending'}
                             </Tag>
                           </div>
                         </div>

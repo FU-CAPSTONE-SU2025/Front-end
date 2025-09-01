@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ConfigProvider, Input, Select, Modal, Button, Popconfirm } from 'antd';
+import { ConfigProvider, Input, Select, Modal, message, Button, Popconfirm } from 'antd';
 import styles from '../../css/admin/students.module.css';
 import BulkDataImport from '../../components/common/bulkDataImport';
 import AccountCounter from '../../components/admin/accountCounter';
@@ -280,11 +280,12 @@ const StudentList: React.FC = () => {
     { title: 'Date of Birth', dataIndex: 'dateOfBirth', key: 'dateOfBirth', width: 120,
       render: (date: Date) => date ? new Date(date).toLocaleDateString() : '' },
     { title: 'Status', dataIndex: 'status', key: 'status', width: 100,
-      render: (status: string) => {
+      render: (status: number | boolean) => {
+        const isActive = typeof status === 'boolean' ? status : status === 0;
         return (
           <span
             style={{
-              backgroundColor: status==="ACTIVE" ? '#10B981' : '#EF4444',
+              backgroundColor: isActive ? '#10B981' : '#EF4444',
               color: 'white',
               padding: '4px 12px',
               borderRadius: '12px',
@@ -297,7 +298,7 @@ const StudentList: React.FC = () => {
               textAlign: 'center'
             }}
           >
-            {status}
+            {isActive ? 'Active' : 'Inactive'}
           </span>
         );
       }},

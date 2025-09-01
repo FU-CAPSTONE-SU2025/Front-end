@@ -256,6 +256,16 @@ const SubjectPage: React.FC = () => {
     );
   };
 
+  // Helper function to render combo approval chip
+  const renderComboApprovalTag = (combo: any) => {
+    const status = combo?.approvalStatus;
+    const isApproved = status === 'APPROVED';
+    const isRejected = status === 'REJECTED';
+    const color = isApproved ? 'green' : isRejected ? 'red' : 'orange';
+    const text = isApproved ? 'Approved' : isRejected ? 'Rejected' : 'Pending';
+    return <Tag color={color} style={{ marginLeft: 8 }}>{text}</Tag>;
+  };
+
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', align: 'left' as 'left', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
     { title: 'Subject Name', dataIndex: 'subjectName', key: 'subjectName', align: 'left' as 'left', render: (text: any) => <div style={{whiteSpace: 'normal', wordBreak: 'break-word'}}>{text}</div> },
@@ -363,7 +373,7 @@ const SubjectPage: React.FC = () => {
               }
             }}
             onChange={(val) => setCurriculumFilter(val)}
-            options={curriculumOptions.map((c: any) => ({ value: c.curriculumCode, label: `${c.curriculumName} (${c.curriculumCode})` }))}
+            options={curriculumOptions.map((c: any) => ({ value: c.curriculumCode, label: `(${c.curriculumCode})` }))}
           />
           <Select
             allowClear
@@ -473,7 +483,7 @@ const SubjectPage: React.FC = () => {
           onChange={handleComboPanelChange}
           items={comboList.map(combo => ({
             key: combo.id,
-            label: <span style={{fontWeight: 700, fontSize: '1.1rem', color: '#1E40AF'}}>Combo: {combo.comboName}</span>,
+            label: <span style={{fontWeight: 700, fontSize: '1.1rem', color: '#1E40AF'}}>Combo: {combo.comboName}{renderComboApprovalTag(combo)}</span>,
             children: (
               loadingComboSubjects && expandedCombo === combo.id ? (
                 <div style={{ textAlign: 'center', padding: 24 }}><Spin /> Loading subjects...</div>

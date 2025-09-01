@@ -241,7 +241,7 @@ const SubjectManagerPage: React.FC = () => {
               }
             }}
             onChange={(val) => setCurriculumFilter(val)}
-            options={curriculumOptions.map((c: any) => ({ value: c.curriculumCode, label: `${c.curriculumName} (${c.curriculumCode})` }))}
+            options={curriculumOptions.map((c: any) => ({ value: c.curriculumCode, label: ` (${c.curriculumCode})` }))}
           />
           <Select
             allowClear

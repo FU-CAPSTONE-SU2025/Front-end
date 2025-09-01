@@ -31,6 +31,7 @@ export const GetPagedActiveStudent = async (
   programId?: number,
   filterType?:string,  
   filterValue?:string
+
 ): Promise<PagedData<StudentBase>> => {
   // Build query parameters
   const params = new URLSearchParams({
@@ -38,7 +39,6 @@ export const GetPagedActiveStudent = async (
     pageSize: pageSize.toString(),
     search: search || "",
     programId: programId?.toString() || ""
-
   });
   const props = {
     data: null,
