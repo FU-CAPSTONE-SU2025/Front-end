@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Button, Radio, Input, message, Space, Typography } from 'antd';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import styles from '../../css/manager/approvalModal.module.css';
-import glassStyles from '../../css/manager/appleGlassEffect.module.css';
+
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;

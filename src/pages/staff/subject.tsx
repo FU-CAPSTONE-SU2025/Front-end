@@ -322,7 +322,6 @@ const SubjectPage: React.FC = () => {
   useEffect(() => {
     getAllCombos({ pageNumber: comboPage, pageSize: comboPageSize, search: debouncedComboSearch });
   }, [comboPage, comboPageSize, debouncedComboSearch]);
-
   return (
     <ConfigProvider
     theme={{
@@ -448,8 +447,7 @@ const SubjectPage: React.FC = () => {
         )}
       </Spin>
       {/* Combo List Toolbar + Table */}
-      <div style={{ marginTop: 48 }}>
-        {/* Combo Toolbar */}
+      <div style={{ marginTop: 48,marginBottom:48 }}>
         <div style={{
           display: 'flex',
           gap: 12,
@@ -475,11 +473,12 @@ const SubjectPage: React.FC = () => {
             size="large"
           />
         </div>
+      
         <Collapse 
           accordion 
           bordered={false} 
           className={styles.sttFreshTable} 
-          style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}} 
+          style={{padding:32,background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)',marginBottom: "5%"}} 
           onChange={handleComboPanelChange}
           items={comboList.map(combo => ({
             key: combo.id,
@@ -507,6 +506,7 @@ const SubjectPage: React.FC = () => {
             style: {background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF'}
           }))}
         />
+      
       </div>
       
       {/* Data Import Modal */}

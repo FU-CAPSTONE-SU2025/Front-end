@@ -202,7 +202,7 @@ const CurriculumPageManager: React.FC = () => {
               }}
               style={{borderRadius: 6, height: 22, padding: '0 6px', fontSize: 12, marginBottom: 0}}
             >
-              {isApproved ? 'Edit status' : 'Approve'}
+              {isApproved ? 'Remove Approval' : 'Approve'}
             </Button>
           </div>
         );
