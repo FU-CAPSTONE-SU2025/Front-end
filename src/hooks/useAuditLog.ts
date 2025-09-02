@@ -31,41 +31,71 @@ export const useAuditLog = () => {
     }
   };
 
+  // Normalize helper
+  const normalizeLogs = (logs: any[]): AuditLog[] =>
+    logs.map((log: any) => ({
+      id: log.id ?? 0,
+      tag: log.tag ?? 'Unknown',
+      description: log.description ?? '',
+      createdAt: log.createdAt ?? new Date().toISOString(),
+    }));
+
+  // Fallback: fetch all pages from paginated endpoint
+  const fetchAllPages = async (): Promise<AuditLog[]> => {
+    const collected: AuditLog[] = [];
+    let page = 1;
+    const size = 100; 
+    // First page to get total
+    const firstPage: PagedData<AuditLog> = await GetAuditLogPaged(page, size);
+    collected.push(...normalizeLogs(firstPage.items));
+    const totalCount = firstPage.totalCount ?? collected.length;
+    const totalPages = Math.ceil(totalCount / size);
+
+    // Fetch remaining pages if any
+    for (page = 2; page <= totalPages; page++) {
+      const res: PagedData<AuditLog> = await GetAuditLogPaged(page, size);
+      collected.push(...normalizeLogs(res.items));
+    }
+    return collected;
+  };
+
   // Download all audit logs
   const downloadAllAuditLogs = async () => {
     showForExport('Downloading audit logs...');
     try {
-      const allLogsObject = await GetAllAuditLog();
-      hideLoading();
-      
-      // Handle the object structure where each property contains an array of logs
-      // Flatten all log arrays into a single array
-      const flattenedLogs: AuditLog[] = [];
-      
-      if (allLogsObject && typeof allLogsObject === 'object') {
-        Object.keys(allLogsObject).forEach((logType:any) => {
-          const logArray = allLogsObject[logType];
+      const allLogsResult = await GetAllAuditLog();
+      // If API already returns an array of logs, normalize and return
+      if (Array.isArray(allLogsResult) && allLogsResult.length > 0) {
+        hideLoading();
+        return normalizeLogs(allLogsResult);
+      }
+
+      // Otherwise, handle object-of-arrays shape and flatten
+      if (allLogsResult && typeof allLogsResult === 'object') {
+        const flattened: AuditLog[] = [];
+        Object.keys(allLogsResult).forEach((logType: any) => {
+          const logArray = (allLogsResult as any)[logType];
           if (Array.isArray(logArray)) {
-            // Add each log entry with the log type as a tag if not already present
-            logArray.forEach((log: any) => {
-              if (log && typeof log === 'object') {
-                flattenedLogs.push({
-                  id: log.id || 0,
-                  tag: log.tag || logType,
-                  description: log.description || `${logType} event`,
-                  createdAt: log.createdAt || new Date().toISOString()
-                });
-              }
-            });
+            flattened.push(
+              ...normalizeLogs(
+                logArray.map((log: any) => ({ ...log, tag: log.tag ?? logType }))
+              )
+            );
           }
         });
+        if (flattened.length > 0) {
+          hideLoading();
+          return flattened;
+        }
       }
-      
-      return flattenedLogs;
+
+      // Fallback: if /all returned empty, fetch via paginated endpoint
+      const pagedAll = await fetchAllPages();
+      hideLoading();
+      return pagedAll;
     } catch (err) {
       hideLoading();
       setError(err instanceof Error ? err.message : 'Failed to download audit logs');
-      debugLog('Error downloading audit logs:', err);
       throw err;
     }
   };

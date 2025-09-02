@@ -560,7 +560,7 @@ const EditStudentTranscript: React.FC = () => {
               </div>
 
               <div className={styles.academicInfo}>
-                <Title level={4}>Academic Information</Title>
+                <Title className={styles.centerTitle} level={4}>Academic Information</Title>
                 <div className={styles.academicGrid}>
                   <div className={styles.academicItem}>
                     <Text strong>Program</Text>
@@ -624,81 +624,57 @@ const EditStudentTranscript: React.FC = () => {
                     <Text type="secondary">Total Subjects</Text>
                   </div>
                 </Col>
-                                 <Col span={6}>
+                <Col span={6}>
                    <div 
-                     style={{ 
-                       textAlign: 'center', 
-                       padding: '16px', 
-                       cursor: 'pointer',
-                       transition: 'all 0.2s ease',
-                       borderRadius: '8px'
-                     }}
+                     className={`${styles.statTile} ${styles.tileOrange}`}
                      onMouseEnter={(e) => {
-                       e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
-                       e.currentTarget.style.transform = 'scale(1.02)';
+                       // hover handled in CSS
                      }}
                      onMouseLeave={(e) => {
-                       e.currentTarget.style.backgroundColor = 'transparent';
-                       e.currentTarget.style.transform = 'scale(1)';
+                       // hover handled in CSS
                      }}
                      onClick={() => inProgressRef.current?.scrollIntoView({ behavior: 'smooth' })}
                    >
-                     <Title level={2} style={{ color: '#f59e0b', margin: 0 }}>
+                    <Title level={2} className={styles.numberOrange}>
                        {inProgressSubjects.length}
-                     </Title>
-                     <Text type="secondary">In Progress</Text>
-                   </div>
-                 </Col>
-                                 <Col span={6}>
-                   <div 
-                     style={{ 
-                       textAlign: 'center', 
-                       padding: '16px', 
-                       cursor: 'pointer',
-                       transition: 'all 0.2s ease',
-                       borderRadius: '8px'
-                     }}
-                     onMouseEnter={(e) => {
-                       e.currentTarget.style.backgroundColor = 'rgba(34, 197, 94, 0.1)';
-                       e.currentTarget.style.transform = 'scale(1.02)';
-                     }}
-                     onMouseLeave={(e) => {
-                       e.currentTarget.style.backgroundColor = 'transparent';
-                       e.currentTarget.style.transform = 'scale(1)';
-                     }}
-                     onClick={() => passedRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                   >
-                     <Title level={2} style={{ color: '#22c55e', margin: 0 }}>
-                       {completedSubjects.length}
-                     </Title>
-                     <Text type="secondary">Passed</Text>
-                   </div>
-                 </Col>
-                                 <Col span={6}>
-                   <div 
-                     style={{ 
-                       textAlign: 'center', 
-                       padding: '16px', 
-                       cursor: 'pointer',
-                       transition: 'all 0.2s ease',
-                       borderRadius: '8px'
-                     }}
-                     onMouseEnter={(e) => {
-                       e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-                       e.currentTarget.style.transform = 'scale(1.02)';
-                     }}
-                     onMouseLeave={(e) => {
-                       e.currentTarget.style.backgroundColor = 'transparent';
-                       e.currentTarget.style.transform = 'scale(1)';
-                     }}
-                     onClick={() => failedRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                   >
-                     <Title level={2} style={{ color: '#ef4444', margin: 0 }}>
-                       {notPassedSubjects.length}
-                     </Title>
-                     <Text type="secondary">Not Passed</Text>
-                   </div>
-                 </Col>
+                    </Title>
+                    <Text type="secondary">In Progress</Text>
+                  </div>
+                </Col>
+                <Col span={6}>
+                  <div 
+                    className={`${styles.statTile} ${styles.tileGreen}`}
+                    onMouseEnter={(e) => {
+                      // hover handled in CSS
+                    }}
+                    onMouseLeave={(e) => {
+                      // hover handled in CSS
+                    }}
+                    onClick={() => passedRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    <Title level={2} className={styles.numberGreen}>
+                      {completedSubjects.length}
+                    </Title>
+                    <Text type="secondary">Passed</Text>
+                  </div>
+                </Col>
+                <Col span={6}>
+                  <div 
+                    className={`${styles.statTile} ${styles.tileRed}`}
+                    onMouseEnter={(e) => {
+                      // hover handled in CSS
+                    }}
+                    onMouseLeave={(e) => {
+                      // hover handled in CSS
+                    }}
+                    onClick={() => failedRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    <Title level={2} className={styles.numberRed}>
+                      {notPassedSubjects.length}
+                    </Title>
+                    <Text type="secondary">Not Passed</Text>
+                  </div>
+                </Col>
               </Row>
             </Card>
             
