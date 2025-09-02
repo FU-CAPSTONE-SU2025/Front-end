@@ -35,6 +35,20 @@ const CommitChart: React.FC<CommitChartProps> = ({
     }
   }, [repoData, isWaitingForData]);
 
+  // Force refresh when repoData changes (new URL)
+  useEffect(() => {
+    if (repoData && isWaitingForData) {
+      setIsWaitingForData(false);
+    }
+  }, [repoData, isWaitingForData]);
+
+  // Reset states when URL changes
+  useEffect(() => {
+    if (gitHubURL.trim()) {
+      setIsWaitingForData(false);
+    }
+  }, [gitHubURL]);
+
   const handleConnect = async () => {
     if (!gitHubURL.trim()) {
       return;
@@ -49,18 +63,27 @@ const CommitChart: React.FC<CommitChartProps> = ({
     }
 
     setIsConnecting(true);
-    setIsWaitingForData(true); // Start waiting for data
+    setIsWaitingForData(true);
+    
     try {
       await onUpdateGitHubURL(joinedSubjectId, gitHubURL.trim());
       setGitHubURL(''); // Clear input after success
-      // Keep waiting for data to load
+      
+      // Force reset connection state to trigger fresh data fetch
+      setIsWaitingForData(true);
+      
+      // Wait a bit for the backend to process the new URL
+      setTimeout(() => {
+        // Trigger a manual retry to fetch new data
+      }, 3000);
+      
     } catch (error) {
-      setIsWaitingForData(false); // Stop waiting on error
+      setIsWaitingForData(false);
+      console.error('Failed to connect GitHub:', error);
     } finally {
       setIsConnecting(false);
     }
   };
-
 
 
   // Generate contribution chart data
@@ -198,9 +221,11 @@ const CommitChart: React.FC<CommitChartProps> = ({
              'Loading GitHub data...'}
           </p>
           {isWaitingForData && (
-            <p className="text-gray-300 text-sm mt-2">
-              Please wait while we fetch your repository information...
-            </p>
+            <div className="mt-4">
+              <p className="text-gray-300 text-sm mb-3">
+                Please wait while we fetch your repository information...
+              </p>
+            </div>
           )}
         </div>
       </div>
@@ -278,7 +303,14 @@ const CommitChart: React.FC<CommitChartProps> = ({
         
         <Alert
           message="Error loading GitHub data"
-          description={error.message}
+          description={
+            <div>
+              <p className="mb-3">{error.message}</p>
+              <p className="text-sm text-gray-300 mb-3">
+                This might be due to GitHub API rate limiting or temporary data generation delay.
+              </p>
+            </div>
+          }
           type="error"
           showIcon
           className="bg-red-500/20 border-red-500/30"
@@ -288,6 +320,27 @@ const CommitChart: React.FC<CommitChartProps> = ({
   }
 
   if (!repoData || !contributionData) {
+    // Chỉ hiển thị "No data" khi không loading và thực sự không có data
+    if (isLoading || isWaitingForData) {
+      return (
+        <div className="overflow-x-auto p-6 bg-white/18 backdrop-blur-16 border border-white/30 rounded-2xl shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <Skeleton.Input active size="small" className="!w-32 !h-6 !bg-white/10" />
+            <Skeleton.Input active size="small" className="!w-40 !h-5 !bg-white/10" />
+          </div>
+          
+          {renderRepositoryInfoPlaceholder()}
+          {renderContributionChartPlaceholder()}
+          
+          <div className="text-center mt-6">
+            <Spin size="large" />
+            <p className="text-white mt-4">Loading GitHub data...</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Chỉ hiển thị "No data" khi thực sự không có data và không loading
     return (
       <div className="overflow-x-auto p-6 bg-white/18 backdrop-blur-16 border border-white/30 rounded-2xl shadow-lg">
         <div className="flex items-center justify-between mb-4">
@@ -314,8 +367,8 @@ const CommitChart: React.FC<CommitChartProps> = ({
             <Button
               type="primary"
               onClick={handleConnect}
-              loading={isConnecting}
-              disabled={!gitHubURL.trim() || isConnecting}
+              loading={isConnecting || isUpdating}
+              disabled={!gitHubURL.trim() || isConnecting || isUpdating}
               className="w-full bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700 h-12 text-base font-medium !mt-3"
               size="large"
             >
@@ -538,9 +591,17 @@ const CommitChart: React.FC<CommitChartProps> = ({
               disabled={!gitHubURL.trim() || isConnecting || isUpdating}
               className="bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700"
             >
-              Update
+              {isConnecting || isUpdating ? 'Updating...' : 'Update'}
             </Button>
           </div>
+          
+          {/* Show status when updating */}
+          {(isConnecting || isUpdating) && (
+            <div className="mt-3 text-sm text-gray-400">
+              <p>Updating repository URL...</p>
+              <p className="text-xs">This may take a few moments to fetch new data</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
