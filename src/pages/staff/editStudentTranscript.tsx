@@ -105,7 +105,7 @@ const EditStudentTranscript: React.FC = () => {
   );
   
   // Use the hook to get joined subject status
-  const { data: joinedSubjectStatusData, isLoading: statusLoading, refetch: refetchStatus } = useJoinedSubjectMapStatus(
+  const { data: joinedSubjectStatusData, isLoading: statusLoading } = useJoinedSubjectMapStatus(
     studentAccount?.studentDataDetailResponse?.id || 0
   );
   
@@ -479,23 +479,6 @@ const EditStudentTranscript: React.FC = () => {
     }
   };
 
-  // Loading state for data refresh
-  const isDataRefreshing = joinedLoading || statusLoading;
-  
-  // Success message state for data refresh
-  const [refreshSuccess, setRefreshSuccess] = useState(false);
-  
-  // Show success message when data refresh is complete
-  useEffect(() => {
-    if (!isDataRefreshing && (joinedSubjectsData || joinedSubjectStatusData)) {
-      setRefreshSuccess(true);
-      // Hide success message after 3 seconds
-      const timer = setTimeout(() => setRefreshSuccess(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isDataRefreshing, joinedSubjectsData, joinedSubjectStatusData]);
-
-
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -751,10 +734,9 @@ const EditStudentTranscript: React.FC = () => {
                       transition={{ duration: 0.4, delay: index * 0.1 }}
                     >
                       <Card 
-                        className={styles.subjectCard}
+                        className={`${styles.subjectCard} ${styles.cardInProgress}`}
                         hoverable
                         onClick={() => handleSubjectClick(subject)}
-                        style={{ border: '2px solid #3b82f6' }}
                       >
                         <div className={styles.subjectHeader}>
                           <Text strong className={styles.subjectTitle}>{subject.name || subject.subjectName}</Text>
@@ -793,14 +775,9 @@ const EditStudentTranscript: React.FC = () => {
                       transition={{ duration: 0.4, delay: index * 0.1 }}
                     >
                       <Card 
-                        className={styles.subjectCard}
+                        className={`${styles.subjectCard} ${getSubjectStatus(subject.id) === "PASSED" ? styles.cardPassed : styles.subjectCard}`}
                         hoverable
                         onClick={() => handleSubjectClick(subject)}
-                        style={{ 
-                          cursor: 'pointer',
-                          border: getSubjectStatus(subject.id) === "PASSED" ? '2px solid #22c55e' : 
-                                  '1px solid #e5e7eb'
-                        }}
                       >
                         <div className={styles.subjectHeader}>
                           <Text strong className={styles.subjectTitle}>{subject.name || subject.subjectName}</Text>
@@ -839,10 +816,9 @@ const EditStudentTranscript: React.FC = () => {
                       transition={{ duration: 0.4, delay: index * 0.1 }}
                     >
                       <Card 
-                        className={styles.subjectCard}
+                        className={`${styles.subjectCard} ${styles.cardFailed}`}
                         hoverable
                         onClick={() => handleSubjectClick(subject)}
-                        style={{ border: '2px solid #ef4444' }}
                       >
                         <div className={styles.subjectHeader}>
                           <Text strong className={styles.subjectTitle}>{subject.name || subject.subjectName}</Text>
@@ -910,14 +886,9 @@ const EditStudentTranscript: React.FC = () => {
                       transition={{ duration: 0.25 }}
                     >
                       <Card 
-                        className={styles.subjectListItem}
+                        className={`${styles.subjectListItem} ${getSubjectStatus(js.id) === "PASSED" ? styles.cardPassed : getSubjectStatus(js.id) === "IN-PROGRESS" ? styles.cardInProgress : styles.cardFailed}`}
                         hoverable
                         onClick={() => handleSubjectClick(js)}
-                        style={{ 
-                          cursor: 'pointer',
-                          border: js.isPassed === true ? '2px solid #22c55e' : 
-                                  '1px solid #e5e7eb'
-                        }}
                       >
                         <div className={styles.subjectHeader}>
                           <Text strong className={styles.subjectTitle}>{js.name || js.subjectName}</Text>

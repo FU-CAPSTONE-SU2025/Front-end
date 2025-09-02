@@ -25,7 +25,6 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [studentId, setStudentId] = useState<number | null>(null);
   const [studentDetail, setStudentDetail] = useState<any | null>(null);
-  const [isLoadingStudent, setIsLoadingStudent] = useState<boolean>(false);
   const navigate = useNavigate();
   const location = useLocation();
   const logout = useAuths((state) => state.logout);
@@ -46,7 +45,6 @@ const Header: React.FC = () => {
   useEffect(() => {
     const fetchDetail = async () => {
       if (!studentId) return;
-      setIsLoadingStudent(true);
       try {
         const res = await GetCurrentStudentUser(studentId);
         setStudentDetail(res);
@@ -54,7 +52,7 @@ const Header: React.FC = () => {
         // keep silent UI fallback
         setStudentDetail(null);
       } finally {
-        setIsLoadingStudent(false);
+        // carry on
       }
     };
     fetchDetail();
@@ -110,11 +108,6 @@ const Header: React.FC = () => {
       key: 'my-meeting',
       label: 'My Meetings',
       onClick: () => handleDropdownClick('/student/myMeetings'),
-    },
-    {
-      key: 'change-password',
-      label: 'Change Password',
-      onClick: () => handleDropdownClick('/student/change-password'),
     },
     {
       key: 'logout',

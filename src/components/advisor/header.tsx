@@ -55,17 +55,11 @@ const Header: React.FC = () => {
       ),
     },
     {
-      key: 'change-password',
-      label: (
-        <span onClick={() => navigate('/advisor/change-password')}>Change Password</span>
-      ),
-    },
-    {
       key: 'logout',
       label: (
         <span
-          onClick={async () => {
-            await logout();
+          onClick={ () => {
+            logout();
             navigate('/');
           }}
         >

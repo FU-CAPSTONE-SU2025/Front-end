@@ -55,30 +55,6 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
   const actualUnreadCount = notifications.filter(n => !n.isRead).length;
   const badgeCount = actualUnreadCount > 10 ? '10+' : actualUnreadCount;
 
-  // // Helper to optimistically mark all as read locally
-  // const optimisticallyMarkAllLocal = useCallback(() => {
-  //   const mapping: { [id: number]: boolean } = {};
-  //   for (const n of notifications) {
-  //     if (!n.isRead) mapping[n.id] = true;
-  //   }
-  //   setLocalRead(mapping);
-  // }, [notifications]);
-
-  // // Helper to mark all unread on server using per-item MarkAsRead in small batches
-  // const backgroundMarkAllPerItem = useCallback(async () => {
-  //   const unread = notifications.filter(n => !n.isRead);
-  //   if (unread.length === 0) return;
-
-  //   const batchSize = 5;
-  //   for (let i = 0; i < unread.length; i += batchSize) {
-  //     const batch = unread.slice(i, i + batchSize);
-  //     await Promise.all(batch.map(n => markAsRead(n.id).catch(() => {})));
-  //     if (i + batchSize < unread.length) {
-  //       await new Promise(res => setTimeout(res, 100));
-  //     }
-  //   }
-  // }, [notifications, markAsRead]);
-
   const handleReadNotification = async(n:NotificationItem)=>{
     console.log("Reading Notification:",n)
     await markAsRead(n.id).catch((error) => {console.log("Can't read Nofication:",error)});
@@ -138,21 +114,6 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
   const handleBellClick = useCallback(async () => {
     const newOpen = !open;
     setOpen(newOpen);
-    // if (newOpen) {
-    //   try {
-    //     await refreshNotifications();
-    //     // Do not early-return; a notifications-change effect will surface any error/success content
-    //     // Optimistically mark UI as read immediately
-    //     optimisticallyMarkAllLocal();
-    //     // Background mark-as-read per item after ensuring latest list, then refresh again
-    //     void (async () => {
-    //       await backgroundMarkAllPerItem();
-    //       await refreshNotifications();
-    //     })();
-    //   } catch {
-    //     // silent
-    //   }
-    // }
   }, [open, refreshNotifications]);
 
   const getUnreadStyle = useCallback(() => {
@@ -225,9 +186,9 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-96 rounded-xl shadow-xl border z-50 overflow-hidden bg-white border-gray-100"
+            className=" absolute right-0 mt-2 w-96 rounded-xl shadow-xl border z-50 overflow-hidden glass-effect border-gray-100 bg-white/90 backdrop-blur-3xl"
           >
-            <div className="p-4 border-b border-gray-100 font-bold text-gray-800 flex items-center justify-between">
+            <div className="p-4 border-b border-white font-bold text-gray-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span>Notifications</span>
               </div>
@@ -250,7 +211,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                 )}
               </div>
             </div>
-            <div className="max-h-80 overflow-y-auto">
+            <div className="max-h-80 overflow-y-auto" >
               <AnimatePresence>
                 {notifications.length === 0 ? (
                   <div className="p-4 text-center text-gray-400">
@@ -266,7 +227,7 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 30 }}
                         transition={{ duration: 0.2 }}
-                        className={`flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-white/90 transition-all duration-200 group ${!isRead ? getUnreadStyle() : 'border-l-4 border-transparent'}`}
+                        className={`flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-white transition-all duration-200 group ${!isRead ? getUnreadStyle() : 'border-l-4 border-transparent'}`}
                       >
                         <Avatar  src="/Logo.svg" size={40} className="mt-1" />
                         <div 

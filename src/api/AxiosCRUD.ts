@@ -179,8 +179,7 @@ export const makeRequest = async (
                     const refreshedToken: boolean = await ensureTokenRefreshed();
                     if (refreshedToken) {
                         // Retry the original request with preserved args and merged fresh auth headers
-                        const mergedHeaders = { ...(header ?? {}), ...(GetHeader() ?? {}) };
-                        return await makeRequest(method, url, data, mergedHeaders);
+                        return await makeRequest(method, url, data, GetHeader());
                     }
                 }
                 else{

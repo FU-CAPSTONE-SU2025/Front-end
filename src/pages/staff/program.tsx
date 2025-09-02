@@ -160,7 +160,7 @@ const ProgramPage: React.FC = () => {
           accordion 
           bordered={false} 
           className={styles.sttFreshTable} 
-          style={{background: 'rgba(255, 255, 255, 0.10)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}
+          style={{padding:16, borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}
           items={programList.map(program => ({
             key: program.id,
             label: (
