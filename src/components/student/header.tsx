@@ -80,9 +80,8 @@ const Header: React.FC = () => {
     // Use navigate instead of window.location.href for better SPA navigation
     navigate(path);
   };
-
-  const handleLogout = async () => {
-    await logout();
+  const handleLogout = () => {
+    logout();
     navigate('/');
   };
 
