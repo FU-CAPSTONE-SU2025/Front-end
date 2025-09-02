@@ -58,12 +58,13 @@ export const useStudentFeature = ({ search, page, pageSize }: UseStudentFeatureP
 interface UseAdvisorsParams {
   page?: number;
   pageSize?: number;
+  search?: string;
 }
 
-export const useAdvisors = ({ page = 1, pageSize = 10 }: UseAdvisorsParams = {}) => {
+export const useAdvisors = ({ page = 1, pageSize = 10, search = '' }: UseAdvisorsParams = {}) => {
   return useQuery<PagedAdvisorData | null, Error>({
-    queryKey: ['advisors', page, pageSize],
-    queryFn: () => GetActiveAdvisors(page, pageSize),
+    queryKey: ['advisors', page, pageSize, search],
+    queryFn: () => GetActiveAdvisors(page, pageSize, search),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes (formerly cacheTime)
