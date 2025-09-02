@@ -134,11 +134,14 @@ export const DisableUser = async (userId:number):Promise<AccountProps> => {
 
 
 
-export const GetActiveAdvisors = async (pageNumber: number = 1, pageSize: number = 10): Promise<PagedAdvisorData> => {
+export const GetActiveAdvisors = async (pageNumber: number = 1, pageSize: number = 10, search?: string): Promise<PagedAdvisorData> => {
     const params = new URLSearchParams({
         pageNumber: pageNumber.toString(),
-        pageSize: pageSize.toString()
+        pageSize: pageSize.toString(),
     });
+    if (typeof search === 'string') {
+        params.append('search', search);
+    }
     
     const props = {
         data: null,

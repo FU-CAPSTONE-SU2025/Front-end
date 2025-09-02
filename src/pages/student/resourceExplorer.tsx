@@ -3,9 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useJoinedSubjects, useSyllabusByJoinedSubject, useCheckpointCompletionPercentage, useJoinedSubjectStatusMapping } from '../../hooks/useStudentFeature';
 import { groupSubjectsBySemester, getSemesterOptions } from '../../utils/subjectUtils';
-import { GetCurrentStudentUser } from '../../api/Account/UserAPI';
-import { getAuthState } from '../../hooks/useAuthState';
-import { jwtDecode } from 'jwt-decode';
+import { useCurrentStudentProfile } from '../../hooks/useCurrentStudentProfile';
 
 import SearchBar from '../../components/student/searchBar';
 import ResourceTable from '../../components/student/resourceTable';
@@ -16,9 +14,7 @@ const ResourceExplorer: React.FC = () => {
   const navigate = useNavigate();
   const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
   const [selectedJoinedSubjectId, setSelectedJoinedSubjectId] = useState<number | null>(null);
-  const [studentProfileId, setStudentProfileId] = useState<number | null>(null);
-  const [studentDetail, setStudentDetail] = useState<any | null>(null);
-  const [isLoadingStudent, setIsLoadingStudent] = useState<boolean>(false);
+  const { studentDetail, studentProfileId, isLoading: isLoadingStudent } = useCurrentStudentProfile();
 
 
   // Search and pagination state
@@ -28,35 +24,7 @@ const ResourceExplorer: React.FC = () => {
   const [hasSearched, setHasSearched] = useState<boolean>(false);
 
 
-  // Get studentProfileId from studentDataDetailResponse.id
-  useEffect(() => {
-    const fetchStudentDetail = async () => {
-      try {
-        const { accessToken } = getAuthState();
-        if (accessToken) {
-          const payload: any = jwtDecode(accessToken);
-          const userId = payload?.UserId ?? null;
-          
-          if (userId) {
-            setIsLoadingStudent(true);
-            const res = await GetCurrentStudentUser(userId);
-            setStudentDetail(res);
-            // Set studentProfileId from studentDataDetailResponse.id
-            const profileId = res?.studentDataDetailResponse?.id;
-            setStudentProfileId(profileId);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch student detail:', error);
-        setStudentProfileId(null);
-      } finally {
-        setIsLoadingStudent(false);
-      }
-    };
-
-    fetchStudentDetail();
-  }, []);
-
+  // studentProfileId and studentDetail are resolved by the hook
 
 
   const { data: joinedSubjects, isLoading: subjectsLoading } = useJoinedSubjects();
