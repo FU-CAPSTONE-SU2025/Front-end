@@ -84,8 +84,8 @@ export const useAuditLog = () => {
                   tag: log.tag || logType,
                   createdAt: log.createdAt || new Date().toISOString(),
                   isSuccessAction: false,
-                  userName: '',
-                  userAgent: ''
+                  userName: log.userName,
+                  userAgent: log.userAgent,
                 });
               }
             });

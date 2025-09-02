@@ -230,7 +230,7 @@ const LogsPage: React.FC = () => {
             ) : (
               <div style={{ marginTop: 0 }}>
                 <div style={{ fontSize: '0.9rem', color: 'black', marginBottom: '0.5rem' }}>Most API used</div>
-                <div style={{ width: '100%', height: 300 }}>
+                <div style={{ width: '100%', height: 320, background: 'rgba(255,255,255,0.6)', borderRadius: 12, padding: '12px 16px' }}>
                   <ResponsiveContainer>
                     <BarChart data={tagDistributionData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -241,23 +241,31 @@ const LogsPage: React.FC = () => {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
+                <div style={{ fontSize: '0.85rem', color: '#1E293B', marginTop: 8 }}>
+                  This chart shows the 10 most frequently used API.
+                </div>
               </div>
             )}
 
             {/* Top users table */}
             {analytics && (
-              <Table
-                style={{ marginTop: 16 }}
-                columns={[
-                  { title: 'User', dataIndex: 'userName', key: 'userName' },
-                  { title: 'First Name', dataIndex: 'firstName', key: 'firstName' },
-                  { title: 'Last Name', dataIndex: 'lastName', key: 'lastName' },
-                  { title: 'Log Count', dataIndex: 'logCount', key: 'logCount', sorter: (a: any, b: any) => a.logCount - b.logCount },
-                ]}
-                dataSource={analytics.topActiveUsers}
-                rowKey={(r) => `${r.userId}`}
-                pagination={false}
-              />
+              <>
+                <div style={{ fontSize: '0.9rem', color: '#1E293B', marginTop: 20, marginBottom: 8 }}>
+                  Most active users in the selected period. "Log Count" is the number of audit entries recorded for the user.
+                </div>
+                <Table
+                  style={{ marginTop: 0 }}
+                  columns={[
+                    { title: 'User', dataIndex: 'userName', key: 'userName' },
+                    { title: 'First Name', dataIndex: 'firstName', key: 'firstName' },
+                    { title: 'Last Name', dataIndex: 'lastName', key: 'lastName' },
+                    { title: 'Log Count', dataIndex: 'logCount', key: 'logCount', sorter: (a: any, b: any) => a.logCount - b.logCount },
+                  ]}
+                  dataSource={analytics.topActiveUsers}
+                  rowKey={(r) => `${r.userId}`}
+                  pagination={false}
+                />
+              </>
             )}
           </motion.div>
 

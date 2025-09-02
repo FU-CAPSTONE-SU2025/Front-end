@@ -15,8 +15,7 @@ import { AccountProps } from '../../interfaces/IAccount';
 import { useJoinedSubjectMapStatus, useSchoolApi } from '../../hooks/useSchoolApi';
 import { useStudentApi } from '../../hooks/useStudentApi';
 import useCRUDStudent from '../../hooks/useCRUDStudent';
-
-
+import { useJoinedSubjectActions } from '../../hooks/useJoinedSubjectActions';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -51,6 +50,9 @@ const EditStudentTranscript: React.FC = () => {
   const [subjectVersions, setSubjectVersions] = useState<SubjectVersionWithCurriculumInfo[]>([]);
   const [searchSubjectVersion, setSearchSubjectVersion] = useState('');
   const [selectedSubjectVersion, setSelectedSubjectVersion] = useState<SubjectVersionWithCurriculumInfo | null>(null);
+
+  // Delete action hook
+  const { deleteJoinedSubject, deleting } = useJoinedSubjectActions();
 
   // Semester states
   const [semesters, setSemesters] = useState<any[]>([]);
@@ -105,12 +107,13 @@ const EditStudentTranscript: React.FC = () => {
   );
   
   // Use the hook to get joined subject status
-  const { data: joinedSubjectStatusData, isLoading: statusLoading } = useJoinedSubjectMapStatus(
+  const { data: joinedSubjectStatusData, refetch: refetchJoinedSubjectStatus } = useJoinedSubjectMapStatus(
     studentAccount?.studentDataDetailResponse?.id || 0
   );
-  
+
   // Update joined subjects when data is loaded
   useEffect(() => {
+    refetchJoinedSubjectStatus(); // refresh all the data status too, to sort the lastest subject into it status. GG
     console.log('Joined subjects data:', joinedSubjectsData);
     console.log('Student account ID:', studentAccount?.studentDataDetailResponse?.id);
     if (joinedSubjectsData && Array.isArray(joinedSubjectsData)) {
@@ -131,6 +134,26 @@ const EditStudentTranscript: React.FC = () => {
     }
   }, [joinedSubjectsData]);
 
+  // Delete handler for in-progress card
+  const handleDeleteInProgress = async (subject: JoinedSubject, e: React.MouseEvent) => {
+    e.stopPropagation();
+    Modal.confirm({
+      title: 'Remove this subject from student transcript?',
+      content: `${subject.name || subject.subjectName} (${subject.subjectCode} • v${subject.subjectVersionCode})`,
+      okText: 'Remove',
+      okButtonProps: { danger: true, loading: deleting },
+      cancelText: 'Cancel',
+      onOk: async () => {
+        const response = await deleteJoinedSubject(subject.id);
+        if (response) {
+          showInfo('Removing subject from transcript...');
+          await refetchJoinedSubjects();
+        } else {
+          handleError('Failed to remove subject');
+        }
+      }
+    });
+  };
 
   // Use the hook to get semesters
   const { data: semestersData, isLoading: loadingSemesters } = usePagedSemesterList(semesterPage);
@@ -272,10 +295,11 @@ const EditStudentTranscript: React.FC = () => {
     setIsAddSubjectModalVisible(true);
   };
 
-  const handleAddSubjectModalClose = () => {
+  const handleAddSubjectModalClose =() => {
     setIsAddSubjectModalVisible(false);
     setSearchSubjectVersion('');
     setSelectedSubjectVersion(null);
+    refetchJoinedSubjects();
   };
   const handleSubjectVersionSelect = (subjectVersion: SubjectVersionWithCurriculumInfo) => setSelectedSubjectVersion(subjectVersion);
   const handleAddStudentToSubjectVersion = async () => {
@@ -293,13 +317,8 @@ const EditStudentTranscript: React.FC = () => {
         semesterId: selectedSemester.id,
         semesterStudyBlockType: selectedBlockType.id
       };
-      const result = await registerStudentToSubject(joinedSubjectData);
-      if (result) {
-        //handleSuccess(`Successfully added ${selectedSubjectVersion.subjectName} to student's transcript`);
-        // Refresh joined subjects data
-        await refetchJoinedSubjects();
-        // Reset all previous modal query (or it will be bugged)
-        setIsAddSubjectModalVisible(false);
+      const response = await registerStudentToSubject(joinedSubjectData);
+      if (response) {
         setSelectedSubjectVersion(null);
         setSelectedSemester(null);
         setSelectedBlockType(null);
@@ -571,7 +590,7 @@ const EditStudentTranscript: React.FC = () => {
                     <Text className={styles.gpa}>{studentAccount?.studentDataDetailResponse.gpa !== undefined ? studentAccount?.studentDataDetailResponse.gpa.toFixed(2) : '-'}</Text>
                   </div> */}
                   
-   
+                  
                   <div className={styles.academicItem}>
                     <Text strong>Career Goal</Text>
                     <Text>{studentAccount?.studentDataDetailResponse.careerGoal || '-'}</Text>
@@ -624,81 +643,81 @@ const EditStudentTranscript: React.FC = () => {
                     <Text type="secondary">Total Subjects</Text>
                   </div>
                 </Col>
-                                 <Col span={6}>
-                   <div 
-                     style={{ 
-                       textAlign: 'center', 
-                       padding: '16px', 
-                       cursor: 'pointer',
-                       transition: 'all 0.2s ease',
-                       borderRadius: '8px'
-                     }}
-                     onMouseEnter={(e) => {
-                       e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
-                       e.currentTarget.style.transform = 'scale(1.02)';
-                     }}
-                     onMouseLeave={(e) => {
-                       e.currentTarget.style.backgroundColor = 'transparent';
-                       e.currentTarget.style.transform = 'scale(1)';
-                     }}
-                     onClick={() => inProgressRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                   >
-                     <Title level={2} style={{ color: '#f59e0b', margin: 0 }}>
-                       {inProgressSubjects.length}
-                     </Title>
-                     <Text type="secondary">In Progress</Text>
-                   </div>
-                 </Col>
-                                 <Col span={6}>
-                   <div 
-                     style={{ 
-                       textAlign: 'center', 
-                       padding: '16px', 
-                       cursor: 'pointer',
-                       transition: 'all 0.2s ease',
-                       borderRadius: '8px'
-                     }}
-                     onMouseEnter={(e) => {
-                       e.currentTarget.style.backgroundColor = 'rgba(34, 197, 94, 0.1)';
-                       e.currentTarget.style.transform = 'scale(1.02)';
-                     }}
-                     onMouseLeave={(e) => {
-                       e.currentTarget.style.backgroundColor = 'transparent';
-                       e.currentTarget.style.transform = 'scale(1)';
-                     }}
-                     onClick={() => passedRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                   >
-                     <Title level={2} style={{ color: '#22c55e', margin: 0 }}>
-                       {completedSubjects.length}
-                     </Title>
-                     <Text type="secondary">Passed</Text>
-                   </div>
-                 </Col>
-                                 <Col span={6}>
-                   <div 
-                     style={{ 
-                       textAlign: 'center', 
-                       padding: '16px', 
-                       cursor: 'pointer',
-                       transition: 'all 0.2s ease',
-                       borderRadius: '8px'
-                     }}
-                     onMouseEnter={(e) => {
-                       e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-                       e.currentTarget.style.transform = 'scale(1.02)';
-                     }}
-                     onMouseLeave={(e) => {
-                       e.currentTarget.style.backgroundColor = 'transparent';
-                       e.currentTarget.style.transform = 'scale(1)';
-                     }}
-                     onClick={() => failedRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                   >
-                     <Title level={2} style={{ color: '#ef4444', margin: 0 }}>
-                       {notPassedSubjects.length}
-                     </Title>
-                     <Text type="secondary">Not Passed</Text>
-                   </div>
-                 </Col>
+                                <Col span={6}>
+                  <div 
+                    style={{ 
+                      textAlign: 'center', 
+                      padding: '16px', 
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      borderRadius: '8px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
+                      e.currentTarget.style.transform = 'scale(1.02)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    onClick={() => inProgressRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    <Title level={2} style={{ color: '#f59e0b', margin: 0 }}>
+                      {inProgressSubjects.length}
+                    </Title>
+                    <Text type="secondary">In Progress</Text>
+                  </div>
+                </Col>
+                                <Col span={6}>
+                  <div 
+                    style={{ 
+                      textAlign: 'center', 
+                      padding: '16px', 
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      borderRadius: '8px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(34, 197, 94, 0.1)';
+                      e.currentTarget.style.transform = 'scale(1.02)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    onClick={() => passedRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    <Title level={2} style={{ color: '#22c55e', margin: 0 }}>
+                      {completedSubjects.length}
+                    </Title>
+                    <Text type="secondary">Passed</Text>
+                  </div>
+                </Col>
+                                <Col span={6}>
+                  <div 
+                    style={{ 
+                      textAlign: 'center', 
+                      padding: '16px', 
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      borderRadius: '8px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                      e.currentTarget.style.transform = 'scale(1.02)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    onClick={() => failedRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    <Title level={2} style={{ color: '#ef4444', margin: 0 }}>
+                      {notPassedSubjects.length}
+                    </Title>
+                    <Text type="secondary">Not Passed</Text>
+                  </div>
+                </Col>
               </Row>
             </Card>
             
@@ -745,6 +764,30 @@ const EditStudentTranscript: React.FC = () => {
                         <Text className={styles.subjectDescription} style={{ whiteSpace: 'pre-line' }}>
                           Block: {subject.semesterStudyBlockType} • Semester: {subject.semesterName || 'N/A'}
                         </Text>
+                        <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+                          <Button 
+                            danger 
+                            size="small"
+                            style={{
+                              border: '1px solid #ff4d4f',
+                              borderRadius: '6px',
+                              fontWeight: '500',
+                              boxShadow: '0 2px 4px rgba(255, 77, 79, 0.2)',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                              e.currentTarget.style.boxShadow = '0 4px 8px rgba(255, 77, 79, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.boxShadow = '0 2px 4px rgba(255, 77, 79, 0.2)';
+                            }}
+                            onClick={(e) => handleDeleteInProgress(subject, e)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
                       </Card>
                     </motion.div>
                   </Col>
@@ -938,7 +981,7 @@ const EditStudentTranscript: React.FC = () => {
         {selectedSubject && (
           <TranscriptEdit
             subjectStatus={getSubjectStatus(selectedSubject.id) || "IN-PROGRESS"}
-            key={`${modalKey}-${selectedSubject.id}`} // Force recreation with fresh data
+            key={`${modalKey}-${selectedSubject.id}`}
             joinedSubjectId={selectedSubject.id}
             onClose={handleModalClose}
             onDataUpdate={() => {
