@@ -1,0 +1,33 @@
+/* Scoped overrides for student academic charts */
+.charts-scope .ant-card,
+.charts-scope .ant-card-bordered {
+  background: transparent !important;
+  border-color: rgba(184, 94, 35, 0.3) !important; /* orange-ish border */
+}
+
+.charts-scope .ant-card-head,
+.charts-scope .ant-card-body {
+  background: transparent !important;
+}
+
+.charts-scope .ant-card-head-title {
+  color: #ffffff !important;
+}
+
+.charts-scope .ant-typography,
+.charts-scope .ant-typography, 
+.charts-scope .ant-card-head-title span {
+  color: #ffffff !important;
+}
+
+/* Centered empty-state text inside chart cards (fallback) */
+.charts-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 220px;
+  text-align: center;
+  color: rgba(229, 231, 235, 0.8) !important; /* gray-200/80 */
+}
+
+

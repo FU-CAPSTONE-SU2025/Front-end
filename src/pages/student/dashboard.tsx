@@ -14,64 +14,14 @@ import { getPersonalCurriculumSubjects, getPersonalComboSubjects } from '../../a
 import AcademicCharts from '../../components/student/academicCharts';
 import { usePersonalAcademicTranscript } from '../../hooks/useSubjectMarkReport';
 import TranscriptTable from '../../components/student/transcriptTable';
+import { useStudentSemesterPerformance, useStudentCategoryPerformance, useStudentCheckpointTimeline } from '../../hooks/useStudentDashboard';
 
 // Note: UserInfoCard will receive userInfor from API; no mock user passed
 
 // Student info (fetched)
 type JwtPayload = { UserId?: number };
 
-const semestersAcademicData = [
-  {
-    semester: 'Fall 23',
-    attendance: [
-      { subject: 'PRO192', attendance: 95 },
-      { subject: 'DBI202', attendance: 90 },
-      { subject: 'LAB211', attendance: 100 },
-      { subject: 'CSD201', attendance: 88 },
-      { subject: 'JPD113', attendance: 93 },
-    ],
-    scores: [
-      { category: 'Final Exam', score: 7.5 },
-      { category: 'Assignments', score: 8 },
-      { category: 'Practical', score: 9 },
-      { category: 'Midterm', score: 7 },
-      { category: 'Presentation', score: 8.5 },
-    ]
-  },
-  {
-    semester: 'Spring 24',
-    attendance: [
-      { subject: 'PRN221', attendance: 98 },
-      { subject: 'SWP391', attendance: 92 },
-      { subject: 'SWT301', attendance: 100 },
-      { subject: 'SWR302', attendance: 85 },
-      { subject: 'JPD123', attendance: 91 },
-    ],
-    scores: [
-      { category: 'Final Exam', score: 8.0 },
-      { category: 'Assignments', score: 8.5 },
-      { category: 'Practical', score: 7.5 },
-      { category: 'Midterm', score: 9.0 },
-      { category: 'Presentation', score: 8.0 },
-    ]
-  },
-  {
-    semester: 'Summer 24',
-    attendance: [
-      { subject: 'WED201c', attendance: 94 },
-      { subject: 'IOT102', attendance: 96 },
-      { subject: 'KMS201', attendance: 89 },
-      { subject: 'VNR202', attendance: 99 },
-    ],
-    scores: [
-      { category: 'Final Exam', score: 9.0 },
-      { category: 'Assignments', score: 7.0 },
-      { category: 'Practical', score: 8.0 },
-      { category: 'Midterm', score: 8.5 },
-      { category: 'Presentation', score: 9.5 },
-    ]
-  },
-];
+// Removed mock semestersAcademicData
 
 const Dashboard = () => {
   const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
@@ -98,6 +48,19 @@ const Dashboard = () => {
   // Fetch transcript data
   const { data: transcriptData, isLoading: transcriptLoading } = usePersonalAcademicTranscript();
 
+  // Fetch dashboard chart datasets (API-driven)
+  const { data: semesterPerformance } = useStudentSemesterPerformance(studentProfileId);
+  const { data: categoryPerformance } = useStudentCategoryPerformance(studentProfileId);
+  const { data: checkpointTimeline } = useStudentCheckpointTimeline(studentProfileId);
+
+  // Debug logging for chart data
+  console.log('=== CHART DATA DEBUG ===');
+  console.log('studentProfileId:', studentProfileId);
+  console.log('semesterPerformance:', semesterPerformance);
+  console.log('categoryPerformance:', categoryPerformance);
+  console.log('checkpointTimeline:', checkpointTimeline);
+  console.log('hasApiData:', !!(semesterPerformance || categoryPerformance || checkpointTimeline));
+  console.log('========================');
 
   // Group subjects by semester
   const semesterSubjects: SemesterSubjects = useMemo(() => {
@@ -353,7 +316,11 @@ const Dashboard = () => {
                   <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Academic Analytics</h2>
                   <p className="text-gray-200 opacity-80">Visualize your performance and track your achievements</p>
                 </div>
-                <AcademicCharts semesters={semestersAcademicData} selectedSemester={selectedSemester?.toString() || 'Summer 24'} />
+                <AcademicCharts
+                  semesterPerformance={semesterPerformance || []}
+                  categoryPerformance={categoryPerformance || []}
+                  checkpointTimeline={checkpointTimeline || []}
+                />
               </div>
             </div>
           ),
