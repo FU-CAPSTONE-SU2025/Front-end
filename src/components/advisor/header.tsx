@@ -48,7 +48,6 @@ const Header: React.FC = () => {
 
   // Dropdown menu for avatar
   const avatarMenuItems = [
-  
     {
       key: 'logout',
       label: (

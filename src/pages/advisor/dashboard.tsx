@@ -141,8 +141,6 @@ const AdvisorDashboard: React.FC = () => {
             </div>
             {/* Performance Summary */}
             <div className="flex flex-col items-end gap-4">
-           
-              {/* Roles */}
               <div className="flex flex-wrap items-center justify-end gap-2">
               {(advisor.roles || []).map((r, idx) => (
                   <span key={`${r}-${idx}`} className="px-3 py-1.5 rounded-full text-sm font-medium bg-orange-50 text-orange-700 border border-orange-200">
