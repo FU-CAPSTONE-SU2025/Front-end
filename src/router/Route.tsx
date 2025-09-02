@@ -38,7 +38,6 @@ const StaffTranscript = lazy(() => import("../pages/staff/transcript"));
 const CurriculumPage = lazy(() => import("../pages/staff/curriculum"));
 const ProgramPage = lazy(() => import("../pages/staff/program"));
 const EditData = lazy(() => import("../pages/staff/editData"));
-const CurriculumDetail = lazy(() => import('../pages/manager/curriculumDetail'));
 const ComboDetail = lazy(() => import('../pages/manager/comboDetail'));
 const ManagerSubjectPage = lazy(() => import('../pages/manager/subject'));
 const ManagerSubjectDetail = lazy(() => import('../pages/manager/subjectDetail'));
@@ -389,14 +388,6 @@ export const routes = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <ComboPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: "curriculum/:id",
-        element: (
-          <Suspense fallback={<PageLoader />}>
-            <CurriculumDetail />
           </Suspense>
         ),
       },
