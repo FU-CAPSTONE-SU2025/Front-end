@@ -363,3 +363,49 @@ button:focus-visible {
 .student-messenger-tabs .ant-tabs-ink-bar {
   display: none !important;
 } 
+
+/* AI Generated Roadmap Tabs Styling */
+.ai-roadmap-tabs .ant-tabs-tab {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-weight: 500;
+  padding: 12px 24px;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.3s ease;
+}
+
+.ai-roadmap-tabs .ant-tabs-tab:hover {
+  color: rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ai-roadmap-tabs .ant-tabs-tab.ant-tabs-tab-active {
+  color: white !important;
+  background: rgba(255, 255, 255, 0.15);
+  border-bottom: 2px solid #f97316;
+}
+
+.ai-roadmap-tabs .ant-tabs-ink-bar {
+  background: #f97316 !important;
+  height: 2px;
+}
+
+.ai-roadmap-tabs .ant-tabs-content-holder {
+  padding: 24px 0;
+}
+
+/* Tab content spacing */
+.ai-roadmap-tabs .ant-tabs-tabpane {
+  min-height: 400px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ai-roadmap-tabs .ant-tabs-tab {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+  
+  .ai-roadmap-tabs .ant-tabs-content-holder {
+    padding: 16px 0;
+  }
+} 
