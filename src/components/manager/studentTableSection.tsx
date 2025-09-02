@@ -276,12 +276,9 @@ const StudentTableSection: React.FC = () => {
                 <Space>
                   <BookOutlined className={styles.bookIcon} />
                   <Text strong>Student Enrollment Data</Text>
-                  <Text type="secondary" style={{ fontSize: '14px' }}>
-                    ({studentList.length} students)
-                  </Text>
                 </Space>
                 <Text type="secondary" style={{ fontSize: '12px', marginLeft: 24 }}>
-                  💡 Click on any student row to view their academic performance dashboard
+                  Click on student row to view their performance dashboard
                 </Text>
               </Space>
             }
