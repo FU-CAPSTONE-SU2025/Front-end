@@ -2,8 +2,15 @@ import React from 'react';
 import { Card, Row, Col, Statistic, Button } from 'antd';
 import { UserOutlined, CalendarOutlined, FileTextOutlined, SettingOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import { useCurrentAdvisor } from '../../hooks/useCurrentAdvisor';
 
 const AdvisorDashboard: React.FC = () => {
+  const advisor = useCurrentAdvisor();
+  const initials = React.useMemo(() => {
+    const a = [advisor.firstName, advisor.lastName].filter(Boolean);
+    if (a.length === 0 && advisor.username) return advisor.username[0]?.toUpperCase() || 'A';
+    return a.map(s => (s as string)[0]?.toUpperCase()).join('') || 'A';
+  }, [advisor.firstName, advisor.lastName, advisor.username]);
   const stats = [
     {
       title: 'Total Students',
@@ -81,16 +88,47 @@ const AdvisorDashboard: React.FC = () => {
     <div className="space-y-6 mt-12 pt-5 px-6 bg-white">
       {/* Welcome Section */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.45 }}
       >
-        <h1 className="text-3xl font-bold  text-gray-800 mb-2">
-          Welcome back, Advisor!
-        </h1>
-        <p className="text-gray-600">
-          You have {stats[1].value} appointments and {stats[2].value} reports to process today.
-        </p>
+        <div className="w-full rounded-2xl border border-gray-100 bg-gradient-to-r from-gray-50 to-white p-5 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr,auto] items-center gap-4">
+            {/* Title + subtitle */}
+            <div className="min-w-0">
+              <h1 className="text-[22px] sm:text-2xl font-semibold text-gray-900 truncate">
+                {(() => {
+                  const fullName = [advisor.firstName, advisor.lastName].filter(Boolean).join(' ');
+                  if (fullName) return `Welcome back, ${fullName}`;
+                  if (advisor.username) return `Welcome back, ${advisor.username}`;
+                  return 'Welcome back, Advisor';
+                })()}
+              </h1>
+              <p className="text-gray-600 text-sm sm:text-[15px] truncate">
+                You have {stats[1].value} appointments and {stats[2].value} reports today.
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs sm:text-[12px]">
+                {advisor.email && (
+                  <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200">{advisor.email}</span>
+                )}
+                {advisor.userId && (
+                  <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200">ID {advisor.userId}</span>
+                )}
+                {advisor.username && (
+                  <span className="px-2 py-0.5 rounded-md bg-gray-50 text-gray-600 border border-gray-200">@{advisor.username}</span>
+                )}
+              </div>
+            </div>
+            {/* Roles right-aligned */}
+            <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2">
+              {(advisor.roles || []).map((r, idx) => (
+                <span key={`${r}-${idx}`} className="px-3 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
+                  {r}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
       </motion.div>
 
       {/* Statistics Cards */}
