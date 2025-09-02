@@ -163,7 +163,7 @@ const ComboManagerPage: React.FC = () => {
                   : { background: 'linear-gradient(135deg, #52c41a 0%, #389e0d 100%)', border: 'none' })
               }}
             >
-              {isApproved ? 'Edit Status' : 'Approve'}
+              {isApproved ? 'Remove Approval' : 'Approve'}
             </Button>
           </div>
         );

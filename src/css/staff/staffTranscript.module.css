@@ -1,7 +1,8 @@
 .sttContainer {
-  width: 100vw;
+  width: auto;
+  max-height: 200vh;
+  min-height: 80vh;
   height: auto;
-  min-height: calc(50vh);
   flex-direction: column;
   align-items: center;
   margin-top: 40px;
@@ -220,7 +221,7 @@
 }
 
 .searchBar {
-  border-radius: 8px !important;
+  border-radius: 999px !important;
 }
 
 .subjectsList {

@@ -37,13 +37,13 @@ const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data,
   // Table columns for curricula by program
   const curriculaByProgramColumns = [
     {
-      title: 'Rank',
+      title: '#',
       dataIndex: 'rank',
       key: 'rank',
       width: 80,
       render: (rank: number) => (
         <Tag color={rank <= 3 ? '#f50' : '#108ee9'} style={{ fontWeight: 'bold' }}>
-          #{rank}
+          {rank}
         </Tag>
       ),
     },
@@ -149,7 +149,6 @@ const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data,
           <Col span={24}>
             <div style={{ marginTop: 16 }}>
               <Space style={{ marginBottom: 16 }}>
-                <TrophyOutlined style={{ color: '#f50' }} />
                 <Text strong>Curricula by Program</Text>
               </Space>
               <Table

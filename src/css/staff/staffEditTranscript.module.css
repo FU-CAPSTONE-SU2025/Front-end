@@ -11,7 +11,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
   padding: 1.5rem 2rem;
   border-radius: 16px;
@@ -46,7 +46,7 @@
 
 /* Profile Card Styles */
 .profileCard {
-  background: rgba(255, 255, 255, 0.90) !important;
+  background: rgba(255, 255, 255, 0.8);
   border: none !important;
   border-radius: 16px !important;
   box-shadow: 0 8px 32px rgba(30, 64, 175, 0.12) !important;
@@ -138,7 +138,7 @@
 
 /* Subjects Card Styles */
 .subjectsCard {
-  background: rgba(255, 255, 255, 0.90) !important;
+  background: rgba(255, 255, 255, 0.8);
   border: none !important;
   border-radius: 16px !important;
   box-shadow: 0 8px 32px rgba(30, 64, 175, 0.12) !important;
@@ -146,7 +146,7 @@
 }
 
 .allSubjectsCard {
-  background: rgba(255, 255, 255, 0.90) !important;
+  background: rgba(255, 255, 255, 0.8);
   border: none !important;
   border-radius: 16px !important;
   box-shadow: 0 8px 32px rgba(30, 64, 175, 0.12) !important;

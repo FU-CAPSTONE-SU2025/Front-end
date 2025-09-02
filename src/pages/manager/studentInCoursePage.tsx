@@ -15,25 +15,6 @@ const StudentInCoursePage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {/* Header Section */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className={styles.header}
-      >
-        <div className={styles.headerContent}>
-          <div>
-            <Title level={2} className={styles.headerTitle}>
-              FLM Dashboard & Student Monitoring
-            </Title>
-            <Text type="secondary" className={styles.headerSubtitle}>
-              Comprehensive overview of school materials and student enrollment data
-            </Text>
-          </div>
-        </div>
-      </motion.div>
-
       {/* Overview Dashboard Card - Full Width */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
