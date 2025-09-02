@@ -6,18 +6,19 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 import DeleteRoadmapModal from '../../components/student/deleteRoadmapModal';
 import CreateNodeModal from '../../components/student/createNodeModal';
 import CreateBulkNodesModal from '../../components/student/createBulkNodesModal';
-import RoadmapFlow from '../../components/student/roadmapFlow';
+import AIGeneratedRoadmap from '../../components/student/aiGeneratedRoadmap';
+import CurrentRoadmap from '../../components/student/currentRoadmap';
 import { DeleteRoadMap, GetRoadmapGraph } from '../../api/student/RoadMapAPI';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 import { useRoadmap } from '../../hooks/useRoadmap';
-import { IRoadmapGraph, ICreateRoadmapNodeRequest } from '../../interfaces/IRoadMap';
+import { IRoadmapGraph, ICreateRoadmapNodeRequest, IAIGeneratedLink } from '../../interfaces/IRoadMap';
 
 const SemesterPlannerDetail = () => {
   const { roadmapId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { showSuccess, showError } = useMessagePopupContext();
-  const { createNode, createLink, deleteLink, createBulkNodes, isLoading: isCreatingNode } = useRoadmap();
+  const { createNode, createLink, deleteLink, createBulkNodes, getAIGeneratedNodes, getAIGeneratedLinks, createBulkLinks, isLoading: isCreatingNode } = useRoadmap();
   
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -116,9 +117,6 @@ const SemesterPlannerDetail = () => {
         // Invalidate and refetch roadmap graph to show new nodes
         await queryClient.invalidateQueries({ queryKey: ['roadmap-graph', roadmapId] });
         setIsCreateBulkNodesModalVisible(false);
-        
-        // Refresh the entire page as requested
-        window.location.reload();
       }
     } catch (error) {
       // Error is already handled by the mutation
@@ -151,6 +149,48 @@ const SemesterPlannerDetail = () => {
     } catch (error) {
       // Error is already handled by the mutation
       console.error('Error deleting link:', error);
+    }
+  };
+
+  // Function to handle saving AI-generated nodes
+  const handleSaveAIGeneratedNodes = async (nodes: ICreateRoadmapNodeRequest[]): Promise<boolean> => {
+    if (!roadmapId) return false;
+
+    try {
+      const result = await createBulkNodes(parseInt(roadmapId), nodes);
+
+      if (result) {
+        showSuccess('Nodes Saved', `Successfully saved ${nodes.length} nodes to your roadmap.`);
+        
+        // Invalidate and refetch roadmap graph to show new nodes
+        await queryClient.invalidateQueries({ queryKey: ['roadmap-graph', roadmapId] });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      // Error is already handled by the mutation
+      console.error('Error saving generated nodes:', error);
+      return false;
+    }
+  };
+
+  // Function to handle saving AI-generated links
+  const handleSaveAIGeneratedLinks = async (links: IAIGeneratedLink[]): Promise<boolean> => {
+    try {
+      const result = await createBulkLinks(links);
+
+      if (result) {
+        showSuccess('Links Saved', `Successfully saved ${links.length} connections to your roadmap.`);
+        
+        // Invalidate and refetch roadmap graph to show new links
+        await queryClient.invalidateQueries({ queryKey: ['roadmap-graph', roadmapId] });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      // Error is already handled by the mutation
+      console.error('Error saving generated links:', error);
+      return false;
     }
   };
 
@@ -232,7 +272,7 @@ const SemesterPlannerDetail = () => {
                 size="large"
                 icon={<PlusOutlined />}
                 onClick={handleCreateNodeClick}
-                className="border-white/30 text-white bg-white/10 hover:bg-white/20 h-12 px-6"
+                className="!bg-orange-500 !border-orange-500 hover:!bg-orange-600 hover:!border-orange-600 !text-white h-12 px-6"
               >
                 Add Subject
               </Button>
@@ -241,7 +281,7 @@ const SemesterPlannerDetail = () => {
                 size="large"
                 icon={<PlusOutlined />}
                 onClick={handleCreateBulkNodesClick}
-                className="border-white/30 text-white bg-white/10 hover:bg-white/20 h-12 px-6"
+                className="!bg-orange-500 !border-orange-500 hover:!bg-orange-600 hover:!border-orange-600 !text-white h-12 px-6"
               >
                 Bulk Add Subjects
               </Button>
@@ -259,7 +299,7 @@ const SemesterPlannerDetail = () => {
             
             <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center">
               <div className="text-3xl font-bold text-white mb-1">
-                {Math.max(...roadmap.nodes.map(node => node.semesterNumber))}
+                {roadmap.nodes.length ? Math.max(...roadmap.nodes.map(node => node.semesterNumber)) : 0}
               </div>
               <div className="text-white/70 text-sm">Total Semesters</div>
             </div>
@@ -271,32 +311,29 @@ const SemesterPlannerDetail = () => {
               <div className="text-white/70 text-sm">Dependencies</div>
             </div>
           </div>
-
-          {/* Roadmap Description - Minimal */}
-          <div className="mt-6 bg-white/5 border border-white/10 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-3">About This Roadmap</h3>
-            <p className="text-white/80 leading-relaxed">
-              This roadmap is designed to guide you through the essential skills and knowledge areas 
-              needed for modern software development. It covers fundamental concepts, practical skills, 
-              and industry best practices. Each milestone represents a significant learning objective 
-              that builds upon previous knowledge, ensuring a structured and comprehensive learning experience.
-            </p>
-          </div>
         </div>
       </div>
 
-      {/* Roadmap Content - React Flow Graph */}
-      <div className="w-full max-w-7xl px-4 mt-8">
-        <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-8 shadow-2xl">
-          <h2 className="text-2xl font-semibold text-white mb-6 text-center">Roadmap Content</h2>
-          
-          {/* React Flow Component */}
-          <RoadmapFlow 
-            roadmap={roadmap} 
-            onLinkCreate={handleLinkCreate} 
-            onLinkDelete={handleLinkDelete} 
-          />
-        </div>
+      {/* Roadmap Content - Separated into distinct sections */}
+      <div className="w-full max-w-7xl px-4 mt-8 space-y-8">
+        {/* AI-Generated Roadmap Component */}
+        <AIGeneratedRoadmap 
+          onSaveNodes={handleSaveAIGeneratedNodes}
+          onSaveLinks={handleSaveAIGeneratedLinks}
+          roadmapId={parseInt(roadmapId)}
+          isLoading={isCreatingNode}
+        />
+
+        {/* Current Roadmap Component */}
+        <CurrentRoadmap 
+          roadmap={roadmap}
+          onLinkCreate={handleLinkCreate}
+          onLinkDelete={handleLinkDelete}
+          onNodeDeleted={() => {
+            // Refresh roadmap data when a node is deleted
+            queryClient.invalidateQueries({ queryKey: ['roadmap-graph', roadmapId] });
+          }}
+        />
       </div>
 
       {/* Modal Components */}

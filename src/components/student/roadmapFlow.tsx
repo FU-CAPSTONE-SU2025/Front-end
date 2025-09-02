@@ -17,49 +17,9 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { Card, Tag, Modal, Button } from 'antd';
 import { IRoadmapNode } from '../../interfaces/IRoadMap';
-
-// Custom Node Component for Subject Cards
-const SubjectNode = ({ data }: { data: IRoadmapNode }) => {
-  return (
-    <div className="bg-white/10 backdrop-blur-lg border border-white/30 rounded-xl p-4 shadow-lg min-w-[280px]">
-      <div className="space-y-3">
-        {/* Subject Code */}
-        <div className="flex items-center justify-between">
-          <Tag color="orange" className="font-semibold">
-            {data.subjectCode}
-          </Tag>
-          <span className="text-xs text-white/60">Semester {data.semesterNumber}</span>
-        </div>
-        
-        {/* Subject Name */}
-        <h4 className="font-semibold text-white text-base leading-tight">
-          {data.subjectName}
-        </h4>
-        
-        {/* Description */}
-        <p className="text-white/80 text-sm leading-relaxed">
-          {data.description}
-        </p>
-        
-        {/* Prerequisites */}
-        {data.prerequisiteIds.length > 0 && (
-          <div className="text-xs text-white/60">
-            Prerequisites: {data.prerequisiteIds.join(', ')}
-          </div>
-        )}
-      </div>
-      
-      {/* React Flow Handles */}
-      <Handle type="target" position={Position.Top} className="w-3 h-3 bg-orange-400" />
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3 bg-orange-400" />
-    </div>
-  );
-};
-
-// Node types configuration
-const nodeTypes: NodeTypes = {
-  subject: SubjectNode,
-};
+import NodeDetailsDrawer from './nodeDetailsDrawer';
+import LinkConfirmationModal from './linkConfirmationModal';
+import DeleteLinkConfirmationModal from './deleteLinkConfirmationModal';
 
 interface RoadmapFlowProps {
   roadmap: {
@@ -68,13 +28,87 @@ interface RoadmapFlowProps {
   };
   onLinkCreate?: (fromNodeId: number, toNodeId: number) => void;
   onLinkDelete?: (linkId: number) => void;
+  onNodeDeleted?: () => void; // Callback khi node bị xóa
 }
 
-const RoadmapFlowInner: React.FC<RoadmapFlowProps> = ({ roadmap, onLinkCreate, onLinkDelete }) => {
+// Custom Node Component for Subject Cards - Move outside to avoid re-creation
+const SubjectNode = ({ data, id, onNodeDeleted }: { data: IRoadmapNode; id: string; onNodeDeleted?: () => void }) => {
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+
+  const handleNodeClick = () => {
+    console.log('Node clicked:', id); // Debug log
+    setIsDrawerVisible(true);
+  };
+
+  const handleDrawerClose = () => {
+    setIsDrawerVisible(false);
+  };
+
+  return (
+    <>
+      <div 
+        className="bg-white/10 backdrop-blur-lg border border-white/30 rounded-xl p-4 shadow-lg min-w-[280px] cursor-pointer hover:bg-white/15 transition-all duration-200"
+        onClick={handleNodeClick}
+      >
+        <div className="space-y-3">
+          {/* Subject Code */}
+          <div className="flex items-center justify-between">
+            <Tag color="orange" className="font-semibold">
+              {data.subjectCode}
+            </Tag>
+            <span className="text-xs text-white/60">Semester {data.semesterNumber}</span>
+          </div>
+          
+          {/* Subject Name */}
+          <h4 className="font-semibold text-white text-base leading-tight">
+            {data.subjectName}
+          </h4>
+          
+          {/* Prerequisites */}
+          {data.prerequisiteIds.length > 0 && (
+            <div className="text-xs text-white/60">
+              Prerequisites: {data.prerequisiteIds.join(', ')}
+            </div>
+          )}
+        </div>
+        
+        {/* React Flow Handles */}
+        <Handle type="target" position={Position.Top} className="w-3 h-3 bg-orange-400" />
+        <Handle type="source" position={Position.Bottom} className="w-3 h-3 bg-orange-400" />
+      </div>
+
+      {/* Node Details Drawer */}
+      <NodeDetailsDrawer
+        isVisible={isDrawerVisible}
+        onClose={handleDrawerClose}
+        nodeId={id}
+        onNodeDeleted={() => {
+          // Trigger roadmap refresh instead of page reload
+          if (onNodeDeleted) {
+            onNodeDeleted();
+          }
+        }}
+        onNodeUpdated={() => {
+          // Trigger roadmap refresh when node is updated
+          if (onNodeDeleted) {
+            onNodeDeleted();
+          }
+        }}
+      />
+    </>
+  );
+};
+
+const RoadmapFlowInner: React.FC<RoadmapFlowProps> = ({ roadmap, onLinkCreate, onLinkDelete, onNodeDeleted }) => {
   const [isLinkModalVisible, setIsLinkModalVisible] = useState(false);
   const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
   const [isDeleteLinkModalVisible, setIsDeleteLinkModalVisible] = useState(false);
   const [pendingDeleteLink, setPendingDeleteLink] = useState<Edge | null>(null);
+
+  // Node types configuration - Pass onNodeDeleted to SubjectNode
+  const nodeTypes: NodeTypes = useMemo(() => ({
+    subject: (props: any) => <SubjectNode {...props} onNodeDeleted={onNodeDeleted} />,
+  }), [onNodeDeleted]);
 
   // Transform roadmap data to React Flow format
   const { nodes, edges } = useMemo(() => {
@@ -264,74 +298,22 @@ const RoadmapFlowInner: React.FC<RoadmapFlowProps> = ({ roadmap, onLinkCreate, o
       </div>
 
       {/* Link Confirmation Modal */}
-      <Modal
-        title="Confirm Connection"
-        open={isLinkModalVisible}
+      <LinkConfirmationModal
+        isVisible={isLinkModalVisible}
         onCancel={handleLinkCancel}
-        footer={[
-          <Button key="cancel" onClick={handleLinkCancel}>
-            Cancel
-          </Button>,
-          <Button key="confirm" type="primary" onClick={handleLinkConfirm} className="bg-orange-500 border-none hover:bg-orange-600">
-            Confirm Connection
-          </Button>,
-        ]}
-        className="bg-white/95 backdrop-blur-lg"
-      >
-        <div className="py-4">
-          <p className="text-gray-700 mb-4">
-            Are you sure you want to create a connection between these subjects?
-          </p>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold text-gray-700">From:</span>
-              <span className="text-gray-600">{fromName}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-700">To:</span>
-              <span className="text-gray-600">{toName}</span>
-            </div>
-          </div>
-          <p className="text-sm text-gray-500 mt-3">
-            This will establish a prerequisite relationship between the subjects.
-          </p>
-        </div>
-      </Modal>
+        onConfirm={handleLinkConfirm}
+        fromName={fromName}
+        toName={toName}
+      />
 
       {/* Delete Link Confirmation Modal */}
-      <Modal
-        title="Delete Connection"
-        open={isDeleteLinkModalVisible}
+      <DeleteLinkConfirmationModal
+        isVisible={isDeleteLinkModalVisible}
         onCancel={handleDeleteLinkCancel}
-        footer={[
-          <Button key="cancel" onClick={handleDeleteLinkCancel}>
-            Cancel
-          </Button>,
-          <Button key="confirm" danger type="primary" onClick={handleDeleteLinkConfirm}>
-            Delete Connection
-          </Button>,
-        ]}
-        className="bg-white/95 backdrop-blur-lg"
-      >
-        <div className="py-4">
-          <p className="text-gray-700 mb-4">
-            Are you sure you want to delete the connection between these subjects?
-          </p>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold text-gray-700">From:</span>
-              <span className="text-gray-600">{deleteFromName}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-700">To:</span>
-              <span className="text-gray-600">{deleteToName}</span>
-            </div>
-          </div>
-          <p className="text-sm text-gray-500 mt-3">
-            This will remove the prerequisite relationship between the subjects.
-          </p>
-        </div>
-      </Modal>
+        onConfirm={handleDeleteLinkConfirm}
+        fromName={deleteFromName}
+        toName={deleteToName}
+      />
     </>
   );
 };

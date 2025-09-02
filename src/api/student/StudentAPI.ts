@@ -18,6 +18,7 @@ import {
     SubjectMark
 } from "../../interfaces/IStudent";
 import { ChatSessionRequest, ChatSessionResponse } from "../../interfaces/IChat";
+import { IJoinedSubjectByCode } from "../../interfaces/IJoinedSubject";
 
 
 const userURL = baseUrl+"/User/student"
@@ -1053,3 +1054,13 @@ export const updateGitHubRepoURL = async (joinedSubjectId: number, publicRepoURL
         return null as never;
     }
 }
+
+export const GetJoinedSubjectsByCode = async (studentProfileId: number, subjectCode: string): Promise<IJoinedSubjectByCode[]> => {
+  const url = `${baseUrl}/JoinedSubject/node-to-joined-subject/${studentProfileId}?subjectCode=${encodeURIComponent(subjectCode)}`;
+  const props = { data: null as any, url, headers: GetHeader() };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return (result.data || []) as IJoinedSubjectByCode[];
+  }
+  throw new Error('Failed to fetch');
+};

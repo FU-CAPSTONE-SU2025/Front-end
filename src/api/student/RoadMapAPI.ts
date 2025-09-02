@@ -1,6 +1,6 @@
-import { axiosCreate, axiosRead, throwApiError, axiosDelete } from "../AxiosCRUD";
+import { axiosCreate, axiosRead, throwApiError, axiosDelete, axiosUpdate } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
-import { IRoadMap, ICreateRoadMapRequest, IRoadmapGraph, ICreateRoadmapNodeRequest, IRoadmapNode, IRoadmapLink } from "../../interfaces/IRoadMap";
+import { IRoadMap, ICreateRoadMapRequest, IRoadmapGraph, ICreateRoadmapNodeRequest, IRoadmapNode, IRoadmapLink, IAIGeneratedNode, IAIGeneratedLink } from "../../interfaces/IRoadMap";
 
 const roadMapURL = baseUrl + "/RoadMap";
 
@@ -142,6 +142,114 @@ export const CreateBulkRoadmapNodes = async (roadmapId: number, nodes: ICreateRo
   };
   
   const result = await axiosCreate(props);
+  
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+export const GetAIGeneratedNodes = async (studentMessage: string): Promise<IAIGeneratedNode[]> => {
+  const queryParams = new URLSearchParams({ studentMessage });
+  const url = `${roadMapURL}/ai-gen-node?${queryParams.toString()}`;
+  
+  const props = {
+    data: null,
+    url: url,
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosRead(props);
+  
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+export const GetAIGeneratedLinks = async (roadmapId: number): Promise<IAIGeneratedLink[]> => {
+  // First get the roadmap graph data
+  const roadmapGraph = await GetRoadmapGraph(roadmapId);
+  
+  const props = {
+    data: roadmapGraph, // Send the roadmap graph data in the body
+    url: `${roadMapURL}/ai-gen-link`,
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosCreate(props); // Use POST instead of GET since we're sending data
+  
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+export const CreateBulkRoadmapLinks = async (links: IAIGeneratedLink[]): Promise<IRoadmapLink[]> => {
+  const props = {
+    data: links,
+    url: `${roadMapURL}/links/bulk`,
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosCreate(props);
+  
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+export const GetRoadmapNode = async (nodeId: number): Promise<IRoadmapNode> => {
+  const props = {
+    data: null,
+    url: `${roadMapURL}/node/${nodeId}`,
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosRead(props);
+  
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+};
+
+export const DeleteRoadmapNode = async (nodeId: number): Promise<boolean> => {
+  const props = {
+    data: null,
+    url: `${roadMapURL}/node/${nodeId}`,
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosDelete(props);
+  
+  if (result.success) {
+    return true;
+  } else {
+    throwApiError(result);
+    return false;
+  }
+};
+
+export const UpdateRoadmapNode = async (nodeId: number, data: ICreateRoadmapNodeRequest): Promise<IRoadmapNode> => {
+  const props = {
+    data: data,
+    url: `${roadMapURL}/node/${nodeId}`,
+    headers: GetHeader(),
+  };
+  
+  const result = await axiosUpdate(props); // Use PUT method for update
   
   if (result.success) {
     return result.data;

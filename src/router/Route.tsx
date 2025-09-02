@@ -45,6 +45,7 @@ const ManagerSubjectDetail = lazy(() => import('../pages/manager/subjectDetail')
 const EditStudentTranscript = lazy(() => import("../pages/staff/editStudentTranscript"));
 const SubjectPage = lazy(() => import("../pages/staff/subject"));
 const ChatAI = lazy(() => import("../pages/student/chatAI"));
+const JoinedSubjectsByCodePage = lazy(() => import("../pages/student/joinedSubjectsByCode"));
 const AdvisorDashboard = lazy(() => import("../pages/advisor/dashboard"));
 const WorkSchedule = lazy(() => import("../pages/advisor/workSchedule"));
 const LeaveSchedulePage = lazy(() => import("../pages/advisor/leaveschedule"));
@@ -205,6 +206,14 @@ export const routes = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <ChatAI />
+          </Suspense>
+        ),
+      },
+      {
+        path: "joined-subjects-by-code",
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <JoinedSubjectsByCodePage />
           </Suspense>
         ),
       },

@@ -25,7 +25,7 @@ export interface IRoadmapNode {
   prerequisiteIds: number[];
   dependentIds: number[];
   outgoingLinks: IRoadmapLink[];
-  isInternalSubjectData?: boolean; // Optional for existing nodes
+  isInternalSubjectData: boolean; 
 }
 
 export interface ICreateRoadmapNodeRequest {
@@ -42,4 +42,18 @@ export interface IRoadmapGraph {
   studentProfileId: number;
   nodes: IRoadmapNode[];
   links: IRoadmapLink[];
+}
+
+export interface IAIGeneratedNode {
+  subjectCode: string;
+  semesterNumber: number;
+  subjectName: string;
+  description: string;
+  isInternalSubjectData: boolean;
+}
+
+export interface IAIGeneratedLink {
+  id: number;
+  fromNodeId: number;
+  toNodeId: number;
 }
