@@ -60,12 +60,6 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     }
   };
 
-  const handleDeleteAvatar = async () => {
-    if (!disabled && !isAvatarUploading) {
-      await handleAvatarDelete();
-    }
-  };
-
   const getPlaceholderAvatar = () => {
     return `https://ui-avatars.com/api/?name=${userRole}&background=1E40AF&color=ffffff&size=${typeof size === 'number' ? size : 120}`;
   };
@@ -91,9 +85,10 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
               border: '4px solid rgba(255, 255, 255, 0.3)',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
               opacity: disabled ? 0.6 : 1,
-              cursor: disabled ? 'default' : 'pointer'
+              cursor: disabled ? 'default' : 'pointer',
+              overflow: 'hidden',
             }}
-            lazy={false}
+            lazy={true}
             priority={true}
           />
         ) : (
@@ -105,7 +100,8 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
               border: '4px solid rgba(255, 255, 255, 0.3)',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
               opacity: disabled ? 0.6 : 1,
-              cursor: disabled ? 'default' : 'pointer'
+              cursor: disabled ? 'default' : 'pointer',
+              borderRadius: '50%',
             }}
             onClick={handleEditAvatar}
           />

@@ -62,7 +62,7 @@ const Profile: React.FC = () => {
 
   // Get the user query using the current userId
   const userQuery = getCurrentUserQuery(userId);
-  const { data: currentUserData, isLoading: isLoadingCurrentUser, error: currentUserError, refetch: refetchUser } = userQuery;
+  const { data: currentUserData, isLoading: isLoadingCurrentUser, refetch: refetchUser } = userQuery;
   //console.log('currentUserData: ',currentUserData)
   const handleLogout = () => {
     logout();

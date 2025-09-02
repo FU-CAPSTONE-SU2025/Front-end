@@ -113,11 +113,11 @@ export interface IStudentSubjectActivityOverview {
   creditsAttempted: number;
   creditsEarned: number;
   averageFinalScore: number;
+  subjectCount: number; // For chart display
 }
 
 export interface IStudentPerformanceOverview {
     category: string;
     averageScore: number;
     totalWeight: number;
-  
 }

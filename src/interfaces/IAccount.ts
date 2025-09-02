@@ -61,7 +61,7 @@ export interface UpdateAccountProps{
   dateOfBirth: string | Date,
   avatarUrl: string,
   roleId: number,
-  status: 0 | 1 |2 | 3| 4| 5
+  status: 0 | 1 |2 | 3| 4| 5 | number
   staffDataUpdateRequest: StaffDataUpdateRequest | null,
   studentDataUpdateRequest: StudentDataUpdateRequest | null
 }
