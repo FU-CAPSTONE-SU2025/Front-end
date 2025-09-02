@@ -48,6 +48,7 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
           </Space>
         }
         className={styles.chartCard}
+        style={{marginTop:"75px"}}
       >
         <Row gutter={[24, 24]}>
           {/* Left Side: Quick Stats + Approval Status by Category */}
@@ -89,83 +90,83 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
             </Row>
 
             {/* Approval Status by Category */}
-            <div>
-              <Text strong style={{ fontSize: '16px', marginBottom: '16px', display: 'block' }}>Approval Status by Category</Text>
+                               <div>
+                     <Text strong style={{ fontSize: '16px', marginBottom: '8px', display: 'block' }}>Approval Status by Category</Text>
               
-              {/* Subjects Approval */}
-              <div style={{ marginBottom: '16px' }}>
-                <Text strong style={{ color: '#1890ff', fontSize: '14px' }}>📚 Subjects</Text>
-                <Row gutter={[8, 8]} style={{ marginTop: '8px' }}>
-                  <Col span={8}>
-                    <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#faad14', borderRadius: '6px', color: 'white' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{data.approvalDistribution?.subjects?.pending || 0}</div>
-                      <div style={{ fontSize: '12px' }}>Pending</div>
-                    </div>
-                  </Col>
-                  <Col span={8}>
-                    <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#52c41a', borderRadius: '6px', color: 'white' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{data.approvalDistribution?.subjects?.approved || 0}</div>
-                      <div style={{ fontSize: '12px' }}>Approved</div>
-                    </div>
-                  </Col>
-                  <Col span={8}>
-                    <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#ff4d4f', borderRadius: '6px', color: 'white' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{data.approvalDistribution?.subjects?.rejected || 0}</div>
-                      <div style={{ fontSize: '12px' }}>Rejected</div>
-                    </div>
-                  </Col>
-                </Row>
-              </div>
+                                   {/* Subjects Approval */}
+                     <div style={{ marginBottom: '8px' }}>
+                       <Text strong style={{ color: '#1890ff', fontSize: '14px' }}>📚 Subjects</Text>
+                       <Row gutter={[4, 8]} style={{ marginTop: '4px' }}>
+                         <Col span={8}>
+                           <div style={{ textAlign: 'left', padding: '8px' }}>
+                             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>{data.approvalDistribution?.subjects?.approved || 0}</div>
+                             <div style={{ fontSize: '14px', color: '#52c41a' }}>Approved</div>
+                           </div>
+                         </Col>
+                         <Col span={8}>
+                           <div style={{ textAlign: 'left', padding: '8px' }}>
+                             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#faad14' }}>{data.approvalDistribution?.subjects?.pending || 0}</div>
+                             <div style={{ fontSize: '14px', color: '#faad14' }}>Pending</div>
+                           </div>
+                         </Col>
+                         <Col span={8}>
+                           <div style={{ textAlign: 'left', padding: '8px' }}>
+                             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>{data.approvalDistribution?.subjects?.rejected || 0}</div>
+                             <div style={{ fontSize: '14px', color: '#ff4d4f' }}>Rejected</div>
+                           </div>
+                         </Col>
+                       </Row>
+                     </div>
 
-              {/* Curricula Approval */}
-              <div style={{ marginBottom: '16px' }}>
-                <Text strong style={{ color: '#722ed1', fontSize: '14px' }}>🎓 Curricula</Text>
-                <Row gutter={[8, 8]} style={{ marginTop: '8px' }}>
-                  <Col span={8}>
-                    <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#faad14', borderRadius: '6px', color: 'white' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{data.approvalDistribution?.curricula?.pending || 0}</div>
-                      <div style={{ fontSize: '12px' }}>Pending</div>
-                    </div>
-                  </Col>
-                  <Col span={8}>
-                    <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#52c41a', borderRadius: '6px', color: 'white' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{data.approvalDistribution?.curricula?.approved || 0}</div>
-                      <div style={{ fontSize: '12px' }}>Approved</div>
-                    </div>
-                  </Col>
-                  <Col span={8}>
-                    <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#ff4d4f', borderRadius: '6px', color: 'white' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{data.approvalDistribution?.curricula?.rejected || 0}</div>
-                      <div style={{ fontSize: '12px' }}>Rejected</div>
-                    </div>
-                  </Col>
-                </Row>
-              </div>
+                     {/* Curricula Approval */}
+                     <div style={{ marginBottom: '8px' }}>
+                       <Text strong style={{ color: '#722ed1', fontSize: '14px' }}>🎓 Curricula</Text>
+                       <Row gutter={[4, 8]} style={{ marginTop: '4px' }}>
+                         <Col span={8}>
+                           <div style={{ textAlign: 'left', padding: '8px' }}>
+                             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>{data.approvalDistribution?.curricula?.approved || 0}</div>
+                             <div style={{ fontSize: '14px', color: '#52c41a' }}>Approved</div>
+                           </div>
+                         </Col>
+                         <Col span={8}>
+                           <div style={{ textAlign: 'left', padding: '8px' }}>
+                             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#faad14' }}>{data.approvalDistribution?.curricula?.pending || 0}</div>
+                             <div style={{ fontSize: '14px', color: '#faad14' }}>Pending</div>
+                           </div>
+                         </Col>
+                         <Col span={8}>
+                           <div style={{ textAlign: 'left', padding: '8px' }}>
+                             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>{data.approvalDistribution?.curricula?.rejected || 0}</div>
+                             <div style={{ fontSize: '14px', color: '#ff4d4f' }}>Rejected</div>
+                           </div>
+                         </Col>
+                       </Row>
+                     </div>
 
-              {/* Syllabi Approval */}
-              <div>
-                <Text strong style={{ color: '#13c2c2', fontSize: '14px' }}>📖 Syllabi</Text>
-                <Row gutter={[8, 8]} style={{ marginTop: '8px' }}>
-                  <Col span={8}>
-                    <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#faad14', borderRadius: '6px', color: 'white' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{data.approvalDistribution?.syllabi?.pending || 0}</div>
-                      <div style={{ fontSize: '12px' }}>Pending</div>
-                    </div>
-                  </Col>
-                  <Col span={8}>
-                    <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#52c41a', borderRadius: '6px', color: 'white' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{data.approvalDistribution?.syllabi?.approved || 0}</div>
-                      <div style={{ fontSize: '12px' }}>Approved</div>
-                    </div>
-                  </Col>
-                  <Col span={8}>
-                    <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#ff4d4f', borderRadius: '6px', color: 'white' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{data.approvalDistribution?.syllabi?.rejected || 0}</div>
-                      <div style={{ fontSize: '12px' }}>Rejected</div>
-                    </div>
-                  </Col>
-                </Row>
-              </div>
+                     {/* Syllabi Approval */}
+                     <div>
+                       <Text strong style={{ color: '#13c2c2', fontSize: '14px' }}>📖 Syllabi</Text>
+                       <Row gutter={[4, 8]} style={{ marginTop: '4px' }}>
+                         <Col span={8}>
+                           <div style={{ textAlign: 'left', padding: '8px' }}>
+                             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>{data.approvalDistribution?.syllabi?.approved || 0}</div>
+                             <div style={{ fontSize: '14px', color: '#52c41a' }}>Approved</div>
+                           </div>
+                         </Col>
+                         <Col span={8}>
+                           <div style={{ textAlign: 'left', padding: '8px' }}>
+                             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#faad14' }}>{data.approvalDistribution?.syllabi?.pending || 0}</div>
+                             <div style={{ fontSize: '14px', color: '#faad14' }}>Pending</div>
+                           </div>
+                         </Col>
+                         <Col span={8}>
+                           <div style={{ textAlign: 'left', padding: '8px' }}>
+                             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>{data.approvalDistribution?.syllabi?.rejected || 0}</div>
+                             <div style={{ fontSize: '14px', color: '#ff4d4f' }}>Rejected</div>
+                           </div>
+                         </Col>
+                       </Row>
+                     </div>
             </div>
           </Col>
           

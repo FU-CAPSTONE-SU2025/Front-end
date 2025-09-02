@@ -1,25 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Select, Typography, Space, Table, Button, Pagination, Empty, Affix } from 'antd';
+import { Card, Row, Col, Select, Typography, Space, Table, Button, Pagination, Empty, Affix, ConfigProvider } from 'antd';
 import { BookOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router';
 import styles from '../../css/manager/studentInCoursePage.module.css';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
-import { StudentBase } from '../../interfaces/IStudent';
-import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useActiveStudentApi } from '../../hooks/useActiveStudentApi';
 import { useSchoolApi } from '../../hooks/useSchoolApi';
 import { Combo, Curriculum, Program } from '../../interfaces/ISchoolProgram';
 
 const { Text } = Typography;
-const { Option } = Select;
+
 
 const StudentTableSection: React.FC = () => {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const navigate = useNavigate();
-  const { handleError, handleSuccess } = useApiErrorHandler();
   
   // Filter states - these are exclusive
   const [selectedCombo, setSelectedCombo] = useState<string | null>(null);
@@ -169,12 +164,6 @@ const StudentTableSection: React.FC = () => {
     setCurriculumSearch(value);
     setCurriculumPage(1);
   };
-
-  // Handle edit action
-  const handleEdit = (studentId: number) => {
-    navigate(`/staff/editStudentTranscript/${studentId}`);
-  };
-
   // Table columns
   const columns = [
     { 
@@ -227,23 +216,26 @@ const StudentTableSection: React.FC = () => {
         </span>
       ) 
     },
-    { 
-      title: 'Actions', 
-      key: 'actions', 
-      align: 'center' as 'center', 
-      render: (_: any, record: StudentBase) => (
-        <Button 
-          type="link" 
-          icon={<EditOutlined style={{ color: '#f97316' }} />} 
-          onClick={() => handleEdit(record.id)} 
-          title="Edit Student" 
-          style={{ color: '#f97316' }} 
-        />
-      )
-    },
   ];
 
   return (
+    <ConfigProvider
+    theme={{
+      components: {
+        Table: {
+          headerBg: '#1E40AF',
+          headerColor: '#fff',
+          borderColor: 'rgba(30, 64, 175, 0.08)',
+          colorText: '#1E293B',
+          colorBgContainer: 'rgba(255,255,255,0.95)',
+          colorBgElevated: 'rgba(255,255,255,0.95)',
+          rowHoverBg: 'rgba(249, 115, 22, 0.05)',
+          colorPrimary: '#f97316',
+          colorPrimaryHover: '#1E40AF',
+        },
+      },
+    }}
+  >
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -423,6 +415,7 @@ const StudentTableSection: React.FC = () => {
         )}
       </Card>
     </motion.div>
+    </ConfigProvider>
   );
 };
 
