@@ -9,6 +9,7 @@ import { AuditLog } from '../../interfaces/IAuditLog';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import useActiveUserData from '../../hooks/useActiveUserData';
 import glassStyles from '../../css/manager/appleGlassEffect.module.css';
+import { useAuditAnalytics } from '../../hooks/useAuditAnalytics';
 
 const LogsPage: React.FC = () => {
   const { handleError, handleSuccess } = useApiErrorHandler();
@@ -23,6 +24,7 @@ const LogsPage: React.FC = () => {
     downloadAllAuditLogs 
   } = useAuditLog();
   const { chartData, isPending: userDataLoading, refetch: refetchUserData } = useActiveUserData();
+  const { analytics, loading: analyticsLoading } = useAuditAnalytics();
 
   // Fetch user data on component mount
   useEffect(() => {
@@ -38,6 +40,23 @@ const LogsPage: React.FC = () => {
     return chartData;
   }, [chartData]);
 
+  // Prepare tag distribution (top 10 by count)
+  const tagDistributionData = useMemo(() => {
+    const td = (analytics as any)?.tagDistribution as Record<string, number> | undefined;
+    if (!td) return [] as { tag: string; count: number }[];
+    return Object.entries(td)
+      .map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  }, [analytics]);
+
+  // Display-friendly success rate (handle 0-1 vs 0-100 inputs)
+  const successRateDisplay = useMemo(() => {
+    if (!analytics) return '—';
+    const val = analytics.successRate;
+    const pct = val > 1 ? val : val * 100;
+    return `${pct.toFixed(1)}%`;
+  }, [analytics]);
 
 
   // Table columns for audit logs
@@ -57,9 +76,24 @@ const LogsPage: React.FC = () => {
       sorter: (a: AuditLog, b: AuditLog) => a.tag.localeCompare(b.tag) 
     },
     { 
-      title: 'Description', 
-      dataIndex: 'description', 
-      key: 'description',
+      title: 'Success', 
+      dataIndex: 'isSuccessAction', 
+      key: 'isSuccessAction',
+      width: 120,
+      render: (value: boolean) => value ? 'Yes' : 'No',
+      sorter: (a: AuditLog, b: AuditLog) => Number(a.isSuccessAction) - Number(b.isSuccessAction)
+    },
+    { 
+      title: 'User', 
+      dataIndex: 'userName', 
+      key: 'userName', 
+      width: 180,
+      sorter: (a: AuditLog, b: AuditLog) => a.userName.localeCompare(b.userName)
+    },
+    { 
+      title: 'User Agent', 
+      dataIndex: 'userAgent', 
+      key: 'userAgent',
       ellipsis: true,
       render: (text: string | null) => text || '-'
     },
@@ -82,7 +116,9 @@ const LogsPage: React.FC = () => {
       const worksheet = XLSX.utils.json_to_sheet(allLogs.map((log: AuditLog) => ({
         'ID': log.id,
         'Tag': log.tag,
-        'Description': log.description || '',
+        'Success': log.isSuccessAction ? 'Yes' : 'No',
+        'User': log.userName,
+        'User Agent': log.userAgent,
         'Created At': new Date(log.createdAt).toLocaleString(),
       })));
       const workbook = XLSX.utils.book_new();
@@ -172,6 +208,59 @@ const LogsPage: React.FC = () => {
               )}
             </div>
           </motion.div >
+
+          {/* Analytics section: show most used APIs and top users; removed total logs chart */}
+          <motion.div className={`${styles.tableSection} ${glassStyles.appleGlassCard}`} initial="hidden" animate="visible">
+            <div className={styles.tableHeader}>
+              <h2>Audit Analytics</h2>
+              <div style={{ fontSize: '0.9rem', color: 'black', marginTop: '0.5rem' }}>
+                Total logs: {analytics?.totalLogs ?? 0} | Success rate: {successRateDisplay}
+              </div>
+            </div>
+
+            {/* Most used APIs (tag distribution) */}
+            {analyticsLoading || !analytics ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
+                <div>Loading analytics...</div>
+              </div>
+            ) : tagDistributionData.length === 0 ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
+                <div>No analytics data available</div>
+              </div>
+            ) : (
+              <div style={{ marginTop: 0 }}>
+                <div style={{ fontSize: '0.9rem', color: 'black', marginBottom: '0.5rem' }}>Most API used</div>
+                <div style={{ width: '100%', height: 300 }}>
+                  <ResponsiveContainer>
+                    <BarChart data={tagDistributionData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="tag" interval={0} angle={-35} textAnchor="end" height={80} stroke="#64748b" tick={{fontSize: 11}} />
+                      <YAxis stroke="#64748b" tick={{fontSize: 13}} label={{ value: 'Count', angle: -90, position: 'insideLeft', fill: '#64748b', fontSize: 13 }} axisLine={{stroke:'#e5e7eb'}} tickLine={{stroke:'#e5e7eb'}} />
+                      <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.98)', border: '1px solid #e5e7eb', color: '#1E293B' }} labelStyle={{ color: '#1E293B' }} />
+                      <Bar dataKey="count" fill="#1E40AF" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Top users table */}
+            {analytics && (
+              <Table
+                style={{ marginTop: 16 }}
+                columns={[
+                  { title: 'User', dataIndex: 'userName', key: 'userName' },
+                  { title: 'First Name', dataIndex: 'firstName', key: 'firstName' },
+                  { title: 'Last Name', dataIndex: 'lastName', key: 'lastName' },
+                  { title: 'Log Count', dataIndex: 'logCount', key: 'logCount', sorter: (a: any, b: any) => a.logCount - b.logCount },
+                ]}
+                dataSource={analytics.topActiveUsers}
+                rowKey={(r) => `${r.userId}`}
+                pagination={false}
+              />
+            )}
+          </motion.div>
+
           <motion.div className={`${styles.tableSection} ${glassStyles.appleGlassCard}`} initial="hidden" animate="visible">
             <div className={styles.tableHeader}>
               <h2>Audit Logs</h2>

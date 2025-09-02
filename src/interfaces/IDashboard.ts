@@ -103,3 +103,21 @@ export interface ICurriculumOverview {
  pendingSubjects: (pendingSubjects & { daysPending?: number })[];
  generatedAt: string;
 }
+
+
+export interface IStudentSubjectActivityOverview {
+  semesterId: number;
+  semesterName: string;
+  subjectsAttempted: number;
+  subjectsPassed: number;
+  creditsAttempted: number;
+  creditsEarned: number;
+  averageFinalScore: number;
+}
+
+export interface IStudentPerformanceOverview {
+    category: string;
+    averageScore: number;
+    totalWeight: number;
+  
+}

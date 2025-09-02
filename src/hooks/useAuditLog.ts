@@ -31,6 +31,36 @@ export const useAuditLog = () => {
     }
   };
 
+  // Normalize helper using the full AuditLog interface, ensuring all required fields are present
+  const normalizeLogs = (logs: any[]): AuditLog[] =>
+    logs.map((log: any) => ({
+      id: log.id ?? 0,
+      tag: log.tag ?? 'Unknown',
+      isSuccessAction: log.isSuccessAction ?? false,
+      createdAt: log.createdAt ?? new Date().toISOString(),
+      userName: log.userName ?? '',
+      userAgent: log.userAgent ?? '',
+    }));
+
+  // Fallback: fetch all pages from paginated endpoint
+  const fetchAllPages = async (): Promise<AuditLog[]> => {
+    const collected: AuditLog[] = [];
+    let page = 1;
+    const size = 100; 
+    // First page to get total
+    const firstPage: PagedData<AuditLog> = await GetAuditLogPaged(page, size);
+    collected.push(...normalizeLogs(firstPage.items));
+    const totalCount = firstPage.totalCount ?? collected.length;
+    const totalPages = Math.ceil(totalCount / size);
+
+    // Fetch remaining pages if any
+    for (page = 2; page <= totalPages; page++) {
+      const res: PagedData<AuditLog> = await GetAuditLogPaged(page, size);
+      collected.push(...normalizeLogs(res.items));
+    }
+    return collected;
+  };
+
   // Download all audit logs
   const downloadAllAuditLogs = async () => {
     showForExport('Downloading audit logs...');
@@ -52,8 +82,10 @@ export const useAuditLog = () => {
                 flattenedLogs.push({
                   id: log.id || 0,
                   tag: log.tag || logType,
-                  description: log.description || `${logType} event`,
-                  createdAt: log.createdAt || new Date().toISOString()
+                  createdAt: log.createdAt || new Date().toISOString(),
+                  isSuccessAction: false,
+                  userName: '',
+                  userAgent: ''
                 });
               }
             });

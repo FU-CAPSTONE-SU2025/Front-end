@@ -1,7 +1,7 @@
-import { AuditLog } from "../../interfaces/IAuditLog";
+import { AuditLog, GetAnalyticsAuditLogProps } from "../../interfaces/IAuditLog";
 import { AdminViewBooking } from "../../interfaces/IBookingAvailability";
 import { PagedData } from "../../interfaces/ISchoolProgram";
-import { axiosDelete, axiosRead, extractErrorMessage, throwApiError } from "../AxiosCRUD";
+import { axiosDelete, axiosRead, throwApiError } from "../AxiosCRUD";
 import { baseUrl, GetHeader } from "../template";
 import { debugLog } from "../../utils/performanceOptimization";
 
@@ -23,6 +23,21 @@ export const GetAllAuditLog = async (): Promise<AuditLog[]> => {
     return null as never;
   }
 };
+
+export const GetAnalyticsLog = async (startDate:string,endDate:string): Promise<GetAnalyticsAuditLogProps> => {
+  const props = {
+    data: null,
+    url: auditlogURL+`/analytics?startDate=${startDate}&endDate=${endDate}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return result.data;
+  } else {
+    throwApiError(result);
+    return null as never;
+  }
+}
 
 export const GetAuditLogPaged= async (pageNumber: number = 1, pageSize: number = 10): Promise<PagedData<AuditLog>> => {
   const props = {
