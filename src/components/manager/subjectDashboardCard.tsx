@@ -37,13 +37,13 @@ const SubjectDashboardCard: React.FC<SubjectDashboardCardProps> = ({ data, loadi
   // Table columns for top subjects
   const topSubjectsColumns = [
     {
-      title: 'Rank',
+      title: '#',
       dataIndex: 'rank',
       key: 'rank',
       width: 80,
       render: (rank: number) => (
         <Tag color={rank <= 3 ? '#f50' : '#108ee9'} style={{ fontWeight: 'bold' }}>
-          #{rank}
+          {rank}
         </Tag>
       ),
     },
@@ -149,8 +149,7 @@ const SubjectDashboardCard: React.FC<SubjectDashboardCardProps> = ({ data, loadi
           <Col span={24}>
             <div style={{ marginTop: 16 }}>
               <Space style={{ marginBottom: 16 }}>
-                <TrophyOutlined style={{ color: '#f50' }} />
-                <Text strong>Top Subjects with Most Versions</Text>
+                <Text strong>Subjects with Most Versions</Text>
               </Space>
               <Table
                 columns={topSubjectsColumns}
