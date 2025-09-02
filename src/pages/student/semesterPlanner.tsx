@@ -1,58 +1,98 @@
-import React from 'react';
-import { Divider } from 'antd';
+
 import { motion } from 'framer-motion';
-import RoadmapButtons from '../../components/student/roadmapButtons';
-
-const roadmapButtons = [
-  'Frontend', 'Backend', 'GPA 8 graduate', 'Graduation eligible', 'Devops',
-  'Fullstack', 'Ai Engineer', 'Data Analyst', 'Android', 'iOS',
-  'UX Design', 'Game Developer', 'Blockchain', 'QA', 'Software Architect',
-];
-
-
+import { Button } from 'antd';
+import { BookOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import { useRoadmap } from '../../hooks/useRoadmap';
+import { useStudentProfile } from '../../hooks/useStudentProfile';
 
 const SemesterPlanner = () => {
+  const navigate = useNavigate();
+  const { studentProfileId, isLoading: isStudentLoading } = useStudentProfile();
+  const { createRoadmap, useRoadmapExists, isLoading } = useRoadmap();
+
+  // Silently check if roadmap exists when page loads (no loading state shown)
+  // existingRoadmapId will be:
+  // - null: when API returns -1 (no roadmap exists)
+  // - number > 0: when roadmap exists
+  const { data: existingRoadmapId } = useRoadmapExists(studentProfileId);
+
+  const handleRoadmapAction = async () => {
+    if (!studentProfileId) {
+      console.log('No studentProfileId available');
+      return;
+    }
+
+    console.log('Roadmap action triggered:', { studentProfileId, existingRoadmapId });
+
+    // Check if existingRoadmapId is a valid number (not null, not -1)
+    if (existingRoadmapId && existingRoadmapId > 0) {
+      // If roadmap exists, navigate directly to it
+      console.log('Navigating to existing roadmap:', existingRoadmapId);
+      try {
+        navigate(`/student/semesterPlanner/${existingRoadmapId}`);
+      } catch (error) {
+        console.error('Navigation error:', error);
+      }
+    } else {
+      // If no roadmap exists (existingRoadmapId is null or <= 0), create a new one
+      console.log('Creating new roadmap...');
+      const result = await createRoadmap(studentProfileId, "My Roadmaps");
+      
+      if (result) {
+        console.log('Roadmap created, navigating to:', result.id);
+        // Navigate to the newly created roadmap
+        navigate(`/student/semesterPlanner/${result.id}`);
+      } else {
+        console.error('Failed to create roadmap');
+      }
+    }
+  };
+
+  // Only show loading when actually creating roadmap, not when checking existence
+  const isButtonLoading = isLoading || isStudentLoading;
+  const buttonText = isLoading ? 'Creating...' : 'My Roadmaps';
+
   return (
-    <div className="flex flex-col min-h-screen items-center justify-center bg-gradient-to-br from-orange-500 to-blue-900 py-12">
+    <div className="flex flex-col min-h-screen items-center justify-center bg-gradient-to-br from-orange-500 to-blue-900">
       <motion.h1
-        className="text-4xl md:text-5xl font-extrabold text-white text-center mb-4 drop-shadow-lg"
+        className="text-4xl md:text-5xl font-extrabold text-white text-center drop-shadow-lg mb-8"
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
       >
         Your Path to Becoming a Software Engineer
       </motion.h1>
+      
       <motion.p
-        className="text-lg md:text-xl text-white/90 text-center max-w-3xl mb-8"
+        className="text-lg md:text-xl text-white/90 text-center max-w-3xl mb-12"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.7 }}
       >
         The roadmap below is generated based on your learning data. Using AI-powered analysis, we've crafted a personalized plan tailored to your journey. Here are our suggestions to guide your future path in software engineering.
       </motion.p>
-      <div className="w-full max-w-4xl flex flex-col items-center">
-        <motion.div
-          className="flex flex-row items-center gap-2 "
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <div
-            className="px-8 py-2 rounded-full text-lg font-bold text-white shadow-md border border-white/30 bg-white/20 backdrop-blur-sm tracking-wide mb-8 select-none"
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.18)',
-              color: '#fff',
-              borderColor: 'rgba(255,255,255,0.3)',
-              boxShadow: '0 2px 12px 0 rgba(255,186,73,0.10), 0 1.5px 6px rgba(49,130,206,0.08)',
-              letterSpacing: 1.2,
-            }}
+
+      <motion.div
+        className="w-full max-w-md"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.7 }}
+      >
+        <div className="space-y-4">
+          <Button
+            type="primary"
+            size="large"
+            icon={<BookOutlined />}
+            onClick={handleRoadmapAction}
+            loading={isButtonLoading}
+            disabled={!studentProfileId}
+            className="w-full !bg-white/10 !backdrop-blur-xl transition-all duration-300 rounded-lg h-12 text-white font-semibold shadow-lg hover:!bg-orange-600 hover:!border-orange-600"
           >
-            <span className="drop-shadow-md">Roadmaps</span>
-          </div>
-        </motion.div>
-        <Divider className="bg-white/30" />
-        <RoadmapButtons roadmapButtons={roadmapButtons} />
-      </div>
+            {buttonText}
+          </Button>
+        </div>
+      </motion.div>
     </div>
   );
 };
