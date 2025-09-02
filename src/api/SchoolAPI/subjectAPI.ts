@@ -131,10 +131,10 @@ export const ApproveSubject = async (subjectId: number, data: SubjectApproval): 
   }
 };
 
-export const FetchSubjectTips = async (subjectId: number): Promise<any> => {
+export const FetchSubjectTips = async (sylaid: number): Promise<any> => {
   const props = {
     data: null,
-    url: subjectURL + `/gen-tip/${subjectId}`,
+    url: subjectURL + `/gen-tip/${sylaid}`,
     headers: GetHeader(),
   };
   const result = await axiosRead(props);

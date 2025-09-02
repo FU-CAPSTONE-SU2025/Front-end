@@ -48,12 +48,7 @@ const Header: React.FC = () => {
 
   // Dropdown menu for avatar
   const avatarMenuItems = [
-    {
-      key: 'profile',
-      label: (
-        <span onClick={() => navigate('/advisor/profile')}>Profile</span>
-      ),
-    },
+  
     {
       key: 'logout',
       label: (

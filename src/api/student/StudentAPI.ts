@@ -18,6 +18,7 @@ import {
     SubjectMark
 } from "../../interfaces/IStudent";
 import { ChatSessionRequest, ChatSessionResponse } from "../../interfaces/IChat";
+import { IJoinedSubjectByCode } from "../../interfaces/IJoinedSubject";
 
 
 const userURL = baseUrl+"/User/student"
@@ -133,11 +134,14 @@ export const DisableUser = async (userId:number):Promise<AccountProps> => {
 
 
 
-export const GetActiveAdvisors = async (pageNumber: number = 1, pageSize: number = 10): Promise<PagedAdvisorData> => {
+export const GetActiveAdvisors = async (pageNumber: number = 1, pageSize: number = 10, search?: string): Promise<PagedAdvisorData> => {
     const params = new URLSearchParams({
         pageNumber: pageNumber.toString(),
-        pageSize: pageSize.toString()
+        pageSize: pageSize.toString(),
     });
+    if (typeof search === 'string') {
+        params.append('search', search);
+    }
     
     const props = {
         data: null,
@@ -1053,3 +1057,59 @@ export const updateGitHubRepoURL = async (joinedSubjectId: number, publicRepoURL
         return null as never;
     }
 }
+
+export const GetJoinedSubjectsByCode = async (studentProfileId: number, subjectCode: string): Promise<IJoinedSubjectByCode[]> => {
+  const url = `${baseUrl}/JoinedSubject/node-to-joined-subject/${studentProfileId}?subjectCode=${encodeURIComponent(subjectCode)}`;
+  const props = { data: null as any, url, headers: GetHeader() };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return (result.data || []) as IJoinedSubjectByCode[];
+  }
+  throw new Error('Failed to fetch');
+};
+
+// Dashboard API functions
+export const getStudentSemesterPerformance = async (studentProfileId: number): Promise<any[]> => {
+  const props = {
+    data: null,
+    url: baseUrl + `/Dashboard/subjects/student-semester-performance?studentProfileId=${studentProfileId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return Array.isArray(result.data) ? result.data : [];
+  } else {
+    throwApiError(result);
+    return [] as never;
+  }
+};
+
+export const getStudentCategoryPerformance = async (studentProfileId: number): Promise<any[]> => {
+  const props = {
+    data: null,
+    url: baseUrl + `/Dashboard/subjects/student-category-performance?studentProfileId=${studentProfileId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return Array.isArray(result.data) ? result.data : [];
+  } else {
+    throwApiError(result);
+    return [] as never;
+  }
+};
+
+export const getStudentCheckpointTimeline = async (studentProfileId: number): Promise<any[]> => {
+  const props = {
+    data: null,
+    url: baseUrl + `/Dashboard/subjects/student-checkpoint-timeline?studentProfileId=${studentProfileId}`,
+    headers: GetHeader(),
+  };
+  const result = await axiosRead(props);
+  if (result.success) {
+    return Array.isArray(result.data) ? result.data : [];
+  } else {
+    throwApiError(result);
+    return [] as never;
+  }
+};

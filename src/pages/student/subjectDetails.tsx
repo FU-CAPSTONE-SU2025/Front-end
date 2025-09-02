@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Progress, Button, InputNumber, Tag, Tabs, Tooltip } from 'antd';
 import { CalculatorOutlined, InfoCircleOutlined, ArrowLeftOutlined, RobotOutlined, CheckSquareOutlined, BarChartOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router';
+import { useSyllabusNavigate } from '../../hooks/useSyllabusNavigate';
 import GradeCalculator from '../../components/student/gradeCalculator';
 import TodoList from '../../components/student/todoList';
 import AIGenerateTodoTab from '../../components/student/aiGenerateTodoTab';
@@ -51,6 +52,9 @@ const SubjectDetails = () => {
 
     // Use joinedSubjectId (which is the subject.id) for fetching checkpoints
     const joinedSubjectId = useMemo(() => subject?.id || null, [subject?.id]);
+
+    // Hook to navigate to syllabus detail by joinedSubjectId when clicking subject code
+    const { onSubjectCodeClick, isLoading: isNavigatingToSyllabus } = useSyllabusNavigate(joinedSubjectId);
 
     // Fetch subject checkpoints/todo list
     const { data: checkpoints, isLoading: checkpointsLoading, error: checkpointsError, refetch: refetchCheckpoints } = useSubjectCheckpoints(joinedSubjectId);
@@ -360,7 +364,17 @@ const SubjectDetails = () => {
                     </Button>
                 </div>
 
-                <h1 className="text-4xl md:text-5xl font-bold">{subject.subjectCode}</h1>
+                
+                    <h1
+                        className="text-4xl md:text-5xl font-bold hover:text-orange-300 transition-colors cursor-pointer"
+                        onClick={onSubjectCodeClick}
+                        onKeyDown={(e) => { if (e.key === 'Enter') onSubjectCodeClick(); }}
+                        tabIndex={0}
+                        aria-label="View syllabus detail"
+                    >
+                        {subject.subjectCode}
+                    </h1>
+           
                 <p className="text-lg text-gray-300">{subject.name}</p>
                 
                 {/* Subject Status and Info */}
