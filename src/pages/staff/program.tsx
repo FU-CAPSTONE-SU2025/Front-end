@@ -153,14 +153,14 @@ const ProgramPage: React.FC = () => {
           <p style={{ marginTop: 16, color: '#1E40AF' }}>Loading programs...</p>
         </div>
       )}
-
+      <div className={glassStyles.appleGlassCard}>
       {/* Program Cards */}
       {!isLoading && (
         <Collapse 
           accordion 
           bordered={false} 
           className={styles.sttFreshTable} 
-          style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}
+          style={{background: 'rgba(255, 255, 255, 0.10)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}
           items={programList.map(program => ({
             key: program.id,
             label: (
@@ -223,7 +223,7 @@ const ProgramPage: React.FC = () => {
           )}
         </div>
       )}
-      
+      </div>
       {/* Data Import Modal */}
       {isImportOpen && (
         <BulkDataImport 

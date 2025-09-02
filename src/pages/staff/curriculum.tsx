@@ -27,7 +27,7 @@ const CurriculumPage: React.FC = () => {
   
   // Pagination state
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
 
   const { useProgramList } = useSchoolApi();
   const { data: programsData } = useProgramList();
@@ -255,12 +255,13 @@ const CurriculumPage: React.FC = () => {
       </Affix>
       
       {/* Curriculum Cards */}
+      <div className={glassStyles.appleGlassCard}>
       <Spin spinning={isLoading} tip="Loading curricula...">
         <Collapse 
           accordion 
           bordered={false} 
           className={styles.sttFreshTable} 
-          style={{background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}
+          style={{background: 'rgba(255, 255, 255, 0.10)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}
           onChange={handlePanelChange}
           items={curriculumList && curriculumList.length > 0 ? curriculumList.map((curriculum: Curriculum) => {
             const subjectVersions = curriculumSubjectVersionsMap[curriculum.id] || [];
@@ -397,27 +398,26 @@ const CurriculumPage: React.FC = () => {
                   </div>
                 </div>
               ),
-              style: {background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}
+              style: {background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginTop: 5, color: '#1E40AF', boxShadow: '0 2px 12px rgba(30,64,175,0.13)'}
             };
           }) : []}
         />
       </Spin>
-        
         {/* Pagination */}
         {paginationCurriculum && paginationCurriculum.total > 0 && (
-          <div style={{marginTop: 32, display: 'flex', justifyContent: 'center'}}>
+          <div style={{ marginTop: 16,marginBottom: 16, display: 'flex', justifyContent: 'center'}}>
             <Pagination
               current={paginationCurriculum.current}
               pageSize={paginationCurriculum.pageSize}
               total={paginationCurriculum.total}
               showSizeChanger
-              pageSizeOptions={[5, 10, 20, 50]}
+              pageSizeOptions={[10, 20, 50]}
               onChange={(p, ps) => { setPage(p); setPageSize(ps); }}
               style={{borderRadius: 8}}
             />
           </div>
         )}
-      
+       </div>
       {/* Data Import Modal */}
       {isImportOpen && (
         <BulkDataImport 

@@ -9,6 +9,7 @@ import { jwtDecode } from 'jwt-decode';
 import { JWTAccountProps } from '../../interfaces/IAccount';
 import useUserProfile from '../../hooks/useUserProfile';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 
 // Animation variants
 const containerVariants = {

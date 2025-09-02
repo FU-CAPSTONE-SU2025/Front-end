@@ -308,27 +308,6 @@ const StaffTranscript: React.FC = () => {
             colorPrimary: '#f97316',
             colorPrimaryHover: '#1E40AF',
           },
-          Input: {
-            colorBgBase:"rgba(255,255,255,0.8)",
-            colorText: '#1E293B',
-            colorPrimary: '#f97316',
-            colorPrimaryHover: '#1E40AF',
-            colorBorder:"black"
-          },
-          Select: {
-            colorBgContainer: 'rgba(255,255,255,0.8)',
-            colorBorder: 'none',
-            colorText: '#1E293B',
-            colorPrimary: '#f97316',
-            colorPrimaryHover: '#1E40AF',
-          },
-          Button: {
-            colorPrimary: '#f97316',
-            colorPrimaryHover: '#1E40AF',
-            colorText: '#fff',
-            colorTextLightSolid: '#fff',
-            colorTextDisabled: '#bdbdbd',
-          },
         },
       }}
     >
@@ -356,7 +335,7 @@ const StaffTranscript: React.FC = () => {
                     prefix={<SearchOutlined />}
                     value={search}
                     onChange={e => handleSearchChange(e.target.value)}
-                    style={{borderRadius: 12, width: '90%',backgroundColor:"rgba(255,255,255,0.8)"}}
+                    style={{borderRadius: "999px", width: '90%',backgroundColor:"rgba(255,255,255,0.8)"}}
                     size="large"
                     className={glassStyles.appleGlassInput}
                   />
@@ -364,7 +343,7 @@ const StaffTranscript: React.FC = () => {
               </Col>
               <Col xs={24} sm={6} style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', minHeight: 66 }}>
                 <ExcelImportButton
-                  style={{borderRadius: 10}}
+                  style={{borderRadius: "999px"}}
                   onClick={handleBulkImport} size="middle">
                   Import many students to many subjects
                 </ExcelImportButton>
@@ -470,7 +449,7 @@ const StaffTranscript: React.FC = () => {
             </Row>
           </Card>
         </Affix>
-
+        <div className={glassStyles.appleGlassCard}>
         {/* Student Table Container */}
           <Table
             columns={columns}
@@ -490,7 +469,7 @@ const StaffTranscript: React.FC = () => {
           
           {/* Pagination */}
           {pagination && pagination.total > 0 && (
-            <div style={{marginTop: 32, display: 'flex', justifyContent: 'center'}}>
+            <div style={{marginTop: 16,marginBottom: 16, display: 'flex', justifyContent: 'center'}}>
               <Pagination
                 current={pagination.current}
                 pageSize={pagination.pageSize}
@@ -502,7 +481,7 @@ const StaffTranscript: React.FC = () => {
               />
             </div>
           )}
-          
+          </div>
           {/* Bulk Import Modal */}
           {isBulkImportVisible && (
             <BulkDataImport

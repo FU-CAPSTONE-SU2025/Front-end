@@ -340,7 +340,7 @@ const SubjectPage: React.FC = () => {
       },
     }}
   >
-    <div className={styles.sttContainer}
+    <div className={styles.sttContainer }
       style={{height:"210vh"}}
       // only for this page to combat the dynamic rendering of the combo list
     >
@@ -420,6 +420,7 @@ const SubjectPage: React.FC = () => {
         </div>
       </Affix>
       {/* Subject Table */}
+      <div className={glassStyles.appleGlassCard}> 
       <Spin spinning={isLoading} tip="Loading subjects...">
         <Table
           columns={columns}
@@ -429,11 +430,11 @@ const SubjectPage: React.FC = () => {
           locale={{ emptyText: <Empty description="No records available." /> }}
           scroll={{ x: 'max-content' }}
           pagination={false}
-          style={{marginBottom: 48}}
+          style={{marginBottom: 16}}
         />
         {/* Pagination */}
         {paginationSubject && paginationSubject.total > 0 && (
-          <div style={{marginTop: 32, display: 'flex', justifyContent: 'center'}}>
+          <div style={{marginBottom: 32, display: 'flex', justifyContent: 'center'}}>
             <Pagination
               current={paginationSubject.current}
               pageSize={paginationSubject.pageSize}
@@ -446,6 +447,7 @@ const SubjectPage: React.FC = () => {
           </div>
         )}
       </Spin>
+      </div>
       {/* Combo List Toolbar + Table */}
       <div style={{ marginTop: 48,marginBottom:48 }}>
         <div style={{
@@ -477,8 +479,8 @@ const SubjectPage: React.FC = () => {
         <Collapse 
           accordion 
           bordered={false} 
-          className={styles.sttFreshTable} 
-          style={{padding:32,background: 'rgba(255, 255, 255, 0.90)', borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)',marginBottom: "5%"}} 
+          className={styles.sttFreshTable && glassStyles.appleGlassCard} 
+          style={{padding:16,marginBottom: "5%"}} 
           onChange={handleComboPanelChange}
           items={comboList.map(combo => ({
             key: combo.id,
@@ -503,7 +505,7 @@ const SubjectPage: React.FC = () => {
               )
             ),
             extra: <Button icon={<EditOutlined />} size="small" style={{borderRadius: 999, background: '#f97316', color: '#fff', border: 'none'}} onClick={(e) => { e.stopPropagation(); handleEditCombo(combo.id); }}>{'Edit'}</Button>,
-            style: {background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 12, color: '#1E40AF'}
+            style: {background: 'rgba(255, 255, 255, 0.90)', borderRadius: 16, marginBottom: 2, color: '#1E40AF'}
           }))}
         />
       

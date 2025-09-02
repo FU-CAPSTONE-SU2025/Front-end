@@ -1,5 +1,5 @@
 .sttContainer {
-  width: 100vw;
+  width: auto;
   max-height: 200vh;
   min-height: 80vh;
   height: auto;
@@ -221,7 +221,7 @@
 }
 
 .searchBar {
-  border-radius: 8px !important;
+  border-radius: 999px !important;
 }
 
 .subjectsList {

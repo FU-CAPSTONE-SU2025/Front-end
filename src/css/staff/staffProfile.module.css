@@ -23,18 +23,16 @@
 
 .card, .actionCard {
   padding: 2.2rem 2.5rem 1.5rem 2.5rem;
-  background: rgba(255, 255, 255, 0.90);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   box-shadow: 0 12px 40px rgba(30, 64, 175, 0.13);
-  backdrop-filter: blur(36px) saturate(200%);
-  -webkit-backdrop-filter: blur(36px) saturate(200%);
   border: 1.5px solid rgba(255,255,255,0.25);
   position: relative;
   overflow: visible;
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #1E293B;
+  color: #ffffff !important;
 }
 
 .rightColumn {
@@ -45,7 +43,7 @@
 }
 
 .title {
-  color: #1E293B;
+  color: #ffffff;
   font-family: 'Inter', 'Geist', 'Segoe UI', Arial, sans-serif;
   font-size: 2rem;
   font-weight: 900;
@@ -70,20 +68,18 @@
 }
 
 .description :global(.ant-descriptions-item-label) {
-
-  color: #1E293B !important;
+  color: #2a2a2a !important;
   font-family: 'Inter', 'Geist', sans-serif;
-  font-weight: 800;
+  font-weight: 600;
   padding: 0.5rem 1.3rem;
   font-size: 1.08rem;
-  
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .description :global(.ant-descriptions-item-content) {
-  background: rgba(255, 255, 255, 0.90);
-  color: #1E293B;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
   font-family: 'Geist', 'Inter', sans-serif;
-  border-radius: 0 0 8px 8px;
   padding: 0.7rem 1.2rem;
   font-size: 1.08rem;
 }
@@ -96,9 +92,9 @@
 }
 
 .actionButton {
-  background: rgba(255, 255, 255, 0.90);
+  background: rgba(255, 255, 255, 0.10);
   border: 1.5px solid rgba(255,255,255,0.25);
-  color: #1E293B;
+  color: #ffffff;
   border-radius: 999px;
   font-weight: 700;
   font-size: 1.1rem;
@@ -110,18 +106,10 @@
   justify-content: center;
   gap: 0.7rem;
 }
-
-.actionButton:hover {
-  background: linear-gradient(90deg, #f97316 0%, #1E40AF 100%);
-  color: #fff;
-  box-shadow: 0 4px 18px rgba(30, 64, 175, 0.13);
-  border: 1.5px solid rgba(255,255,255,0.35);
-}
-
 .logoutButton{
-  background: rgba(255, 255, 255, 0.90);
+  background: rgba(255, 0, 0, 0.5);
   border: 1.5px solid rgba(255,255,255,0.25);
-  color: red !important;
+  color: rgb(255, 255, 255) !important;
   border-radius: 999px;
   font-weight: 700;
   font-size: 1.1rem;
