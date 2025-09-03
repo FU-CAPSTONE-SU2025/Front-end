@@ -582,14 +582,15 @@ export const useGitHubRepoData = (owner: string | null, repoName: string | null)
       const data = await getGitHubRepoData(owner, repoName);
       return data;
     },
-    enabled: !!(owner && repoName),
-    staleTime: 1000 * 60 * 30, // 30 minutes
-    gcTime: 1000 * 60 * 60, // 1 hour
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    retry: 2,
-    retryDelay: 1000,
+    enabled: !!(owner && repoName), // Chỉ query khi có owner và repoName
+    staleTime: 0, // Luôn luôn stale để force refetch khi cần
+    gcTime: 1000 * 60 * 5, // Giảm cache time xuống 5 phút
+    refetchOnWindowFocus: true, // Refetch khi focus window
+    refetchOnMount: true, // Refetch khi mount component
+    refetchOnReconnect: true, // Refetch khi reconnect
+    retry: 3, // Tăng retry lên 3 lần
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    retryOnMount: true, // Retry khi mount component
   });
 };
 
@@ -600,13 +601,27 @@ export const useUpdateGitHubRepoURL = () => {
   return useMutation<any, Error, { joinedSubjectId: number; publicRepoURL: string }>({
     mutationFn: ({ joinedSubjectId, publicRepoURL }) => updateGitHubRepoURL(joinedSubjectId, publicRepoURL),
     onSuccess: (data, variables) => {
-      // Invalidate and refetch subject data to get updated githubRepositoryURL
+      // Invalidate và refetch subject data để lấy updated githubRepositoryURL
       queryClient.invalidateQueries({ queryKey: ['joinedSubject'] });
       
-      // Invalidate GitHub repo data to refresh
+      // Invalidate GitHub repo data để refresh
       queryClient.invalidateQueries({ queryKey: ['gitHubRepoData'] });
       
-              // console.log('GitHub repository URL updated successfully:', data); - removed for production
+      // Clear cache của GitHub data để đảm bảo fresh data
+      queryClient.removeQueries({ queryKey: ['gitHubRepoData'] });
+      
+      // Thêm delay nhỏ để đảm bảo DB đã được update
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['gitHubRepoData'] });
+        queryClient.invalidateQueries({ queryKey: ['joinedSubject'] });
+      }, 1000);
+      
+      // Thêm delay thứ 2 để đảm bảo data được refresh hoàn toàn
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['gitHubRepoData'] });
+      }, 3000);
+      
+      console.log('GitHub repository URL updated successfully:', data);
     },
     onError: (error) => {
       console.error('Failed to update GitHub repository URL:', error);
