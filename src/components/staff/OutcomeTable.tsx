@@ -22,6 +22,7 @@ import { useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
 const { TextArea } = Input;
 
 interface OutcomeTableProps {
+  syllabusId:number;
   outcomes: SyllabusOutcome[];
   isEditing: boolean;
   onAddOutcome: (outcome: CreateSyllabusOutcome) => Promise<void>;
@@ -34,7 +35,8 @@ const OutcomeTable: React.FC<OutcomeTableProps> = ({
   isEditing,
   onAddOutcome,
   onDeleteOutcome,
-  onUpdateOutcome
+  onUpdateOutcome,
+  syllabusId
 }) => {
   const [outcomeForm] = Form.useForm();
   const [outcomeModalVisible, setOutcomeModalVisible] = useState(false);
@@ -81,7 +83,7 @@ const OutcomeTable: React.FC<OutcomeTableProps> = ({
       // Extract outcome data from the imported data
       const outcomeData = importedData['OUTCOME'] || [];
       const outcomes = outcomeData.map(row => ({
-        syllabusId: parseInt(row.syllabusId),
+        syllabusId: syllabusId,
         outcomeCode: row.outcomeCode || '',
         description: row.description || ''
       }));

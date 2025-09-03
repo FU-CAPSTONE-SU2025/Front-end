@@ -29,7 +29,7 @@ interface BulkDataImportProps {
 const BulkDataImport: React.FC<BulkDataImportProps> = ({
   onClose,
   onDataImported,
-  supportedTypes = ['STUDENT', 'STAFF', 'SUBJECT', 'PROGRAM', 'COMBO', 'CURRICULUM'],
+  supportedTypes,
   uploadStatus = 'idle',
   uploadMessage
 }) => {

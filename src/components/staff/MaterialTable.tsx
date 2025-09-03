@@ -24,6 +24,7 @@ import { useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
 const { TextArea } = Input;
 
 interface MaterialTableProps {
+  syllabusId:number;
   materials: SyllabusMaterial[];
   isEditing: boolean;
   onAddMaterial: (material: CreateSyllabusMaterial) => Promise<void>;
@@ -36,7 +37,8 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
   isEditing,
   onAddMaterial,
   onDeleteMaterial,
-  onUpdateMaterial
+  onUpdateMaterial,
+  syllabusId
 }) => {
   const [materialForm] = Form.useForm();
   const [materialModalVisible, setMaterialModalVisible] = useState(false);
@@ -83,7 +85,7 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
       // Extract material data from the imported data
       const materialData = importedData['MATERIAL'] || [];
       const materials = materialData.map(row => ({
-        syllabusId: parseInt(row.syllabusId),
+        syllabusId: syllabusId,
         materialName: row.materialName || 'Untitled',
         authorName: row.authorName || 'Unknown',
         publishedDate: new Date(row.publishedDate || Date.now()),

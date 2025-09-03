@@ -24,6 +24,7 @@ const { Option } = Select;
 const { TextArea } = Input;
 
 interface AssessmentTableProps {
+  syllabusId:number;
   assessments: SyllabusAssessment[];
   isEditing: boolean;
   onAddAssessment: (assessment: CreateSyllabusAssessment) => Promise<void>;
@@ -36,14 +37,15 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
   isEditing,
   onAddAssessment,
   onDeleteAssessment,
-  onUpdateAssessment
+  onUpdateAssessment,
+  syllabusId
 }) => {
   const [assessmentForm] = Form.useForm();
   const [assessmentModalVisible, setAssessmentModalVisible] = useState(false);
   const [assessmentImportVisible, setAssessmentImportVisible] = useState(false);
   const [editingAssessmentId, setEditingAssessmentId] = useState<number | null>(null);
   const [assessmentEdit, setAssessmentEdit] = useState<Partial<SyllabusAssessment>>({});
-
+  //console.log("Assessment Table", assessments);
   const handleAddAssessment = async (values: any) => {
     try {
       await onAddAssessment(values);
@@ -81,10 +83,9 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
     try {
       // Extract assessment data from the imported data
       const assessmentData = importedData['ASSESSMENT'] || [];
-      
       for (const row of assessmentData) {
         const assessment: CreateSyllabusAssessment = {
-          syllabusId: parseInt(row.syllabusId),
+          syllabusId: syllabusId,
           category: row.category || 'Assignment',
           quantity: parseInt(row.quantity) || 1,
           weight: parseFloat(row.weight) || 0,

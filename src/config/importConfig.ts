@@ -86,7 +86,6 @@ export const findFieldMapping = (excelHeader: string, fieldMap: { readonly [key:
   if (fieldMap[excelHeader]) {
     return fieldMap[excelHeader];
   }
-  
   // Then try normalized matching
   const normalizedExcelHeader = normalizeHeader(excelHeader);
   const matchingEntry = Object.entries(fieldMap).find(([key]) => 
@@ -187,9 +186,8 @@ export const HEADER_CONFIGS = {
     })
   },
   ASSESSMENT: {
-    headers: ['syllabusId', 'category', 'quantity', 'weight', 'completionCriteria', 'duration', 'questionType'],
+    headers: ['category', 'quantity', 'weight', 'completionCriteria', 'duration', 'questionType'],
     fieldMap: createFlexibleFieldMap({
-      'syllabusId': 'syllabusId',
       'category': 'category',
       'quantity': 'quantity',
       'weight': 'weight',
@@ -199,9 +197,8 @@ export const HEADER_CONFIGS = {
     })
   },
   MATERIAL: {
-    headers: ['syllabusId', 'materialName', 'authorName', 'publishedDate', 'description', 'filepathOrUrl'],
+    headers: [ 'materialName', 'authorName', 'publishedDate', 'description', 'filepathOrUrl'],
     fieldMap: createFlexibleFieldMap({
-      'syllabusId': 'syllabusId',
       'materialName': 'materialName',
       'authorName': 'authorName',
       'publishedDate': 'publishedDate',
@@ -229,17 +226,15 @@ export const HEADER_CONFIGS = {
     })
   },
   OUTCOME: {
-    headers: ['syllabusId', 'outcomeCode', 'description'],
+    headers: ['outcomeCode', 'description'],
     fieldMap: createFlexibleFieldMap({
-      'syllabusId': 'syllabusId',
       'outcomeCode': 'outcomeCode',
       'description': 'description'
     })
   },
   SESSION: {
-    headers: ['syllabusId', 'sessionNumber', 'topic', 'mission'],
+    headers: ['sessionNumber', 'topic', 'mission'],
     fieldMap: createFlexibleFieldMap({
-      'syllabusId': 'syllabusId',
       'sessionNumber': 'sessionNumber',
       'topic': 'topic',
       'mission': 'mission'

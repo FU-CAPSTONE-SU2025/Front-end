@@ -146,6 +146,7 @@ const SubjectVersionPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [initLoading, setInitLoading] = useState<string | null>(null);
+  const [currentSyllabus,setCurrentSyllabus] = useState<Syllabus | null>(null);
 
   // Function to fetch prerequisites for a specific version
   const fetchPrerequisitesForVersion = useCallback(async (versionId: number) => {
@@ -358,7 +359,7 @@ const SubjectVersionPage: React.FC = () => {
           [versionId]: syllabusData
         }));
         console.log('[Syllabus] Using existing for version', versionId, 'assessments:', assessments.length, 'materials:', materials.length, 'outcomes:', outcomes.length, 'sessions:', sessions.length);
-        
+        setCurrentSyllabus(syllabusData);
         // Update the maps with existing syllabus data
         setAssessmentMap(prev => ({
           ...prev,
@@ -1762,6 +1763,7 @@ const SubjectVersionPage: React.FC = () => {
           
                       </div>
                       <AssessmentTable
+                        syllabusId={currentSyllabus?.id}
                         assessments={assessmentMap[version.id] || []}
                         isEditing={isEditing}
                         onAddAssessment={a => handleAddAssessment(version.id, a)}
@@ -1776,6 +1778,7 @@ const SubjectVersionPage: React.FC = () => {
 
                       </div>
                       <MaterialTable
+                        syllabusId={currentSyllabus?.id}
                         materials={materialMap[version.id] || []}
                         isEditing={isEditing}
                         onAddMaterial={m => handleAddMaterial(version.id, m)}
@@ -1790,6 +1793,7 @@ const SubjectVersionPage: React.FC = () => {
        
                       </div>
                       <OutcomeTable
+                        syllabusId={currentSyllabus?.id}
                         outcomes={outcomeMap[version.id] || []}
                         isEditing={isEditing}
                         onAddOutcome={o => handleAddOutcome(version.id, o)}
@@ -1803,6 +1807,7 @@ const SubjectVersionPage: React.FC = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                       </div>
                       <SessionTable
+                        syllabusId={currentSyllabus?.id}
                         sessions={sessionMap[version.id] || []}
                         outcomes={outcomeMap[version.id] || []}
                         isEditing={isEditing}
@@ -1812,30 +1817,12 @@ const SubjectVersionPage: React.FC = () => {
                         onAddOutcomeToSession={(sessionId, outcomeId) => handleAddOutcomeToSession(version.id, sessionId, outcomeId)}
                       />
                     </div>
-
-                    {/* Bulk Import Modal */}
-                    <Modal
-                      open={!!bulkModal && bulkModal.versionId === version.id}
-                      onCancel={handleBulkModalClose}
-                      footer={null}
-                      title={`Bulk Import ${bulkModal?.type || ''}`}
-                    >
-                      <BulkDataImport
-                        onClose={handleBulkModalClose}
-                        onDataImported={data => {
-                          const imported = data[bulkModal?.type || ''] || [];
-                          handleBulkDataImported(bulkModal?.type || '', version.id, imported);
-                        }}
-                        supportedTypes={[bulkModal?.type as any]}
-                      />
-                    </Modal>
                   </div>
                 ),
               };
             }).filter(Boolean)}
           />
         </div>
-
         <AddVersionModal
           visible={modalVisible}
           onCancel={() => setModalVisible(false)}

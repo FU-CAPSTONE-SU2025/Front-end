@@ -26,6 +26,7 @@ const { Option } = Select;
 const { TextArea } = Input;
 
 interface SessionTableProps {
+  syllabusId:number;
   sessions: SyllabusSession[];
   outcomes: SyllabusOutcome[];
   isEditing: boolean;
@@ -42,7 +43,8 @@ const SessionTable: React.FC<SessionTableProps> = ({
   onAddSession,
   onDeleteSession,
   onUpdateSession,
-  onAddOutcomeToSession
+  onAddOutcomeToSession,
+  syllabusId,
 }) => {
   const [sessionForm] = Form.useForm();
   const [sessionModalVisible, setSessionModalVisible] = useState(false);
@@ -116,7 +118,7 @@ const SessionTable: React.FC<SessionTableProps> = ({
       // Extract session data from the imported data
       const sessionData = importedData['SESSION'] || [];
       const sessions = sessionData.map(row => ({
-        syllabusId: parseInt(row.syllabusId),
+        syllabusId: syllabusId,
         sessionNumber: parseInt(row.sessionNumber) || 1,
         topic: row.topic || '',
         mission: row.mission || ''
