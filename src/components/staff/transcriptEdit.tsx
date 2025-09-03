@@ -16,7 +16,7 @@ interface Props {
   onDataUpdate?: () => void; // Optional callback for data updates
 }
 
-export default function TranscriptEdit({ joinedSubjectId, subjectStatus, onClose, onDataUpdate }: Props) {
+export default function TranscriptEdit({ joinedSubjectId, onDataUpdate }: Props) {
   const { handleSuccess, handleError } = useApiErrorHandler();
   const [assessments, setAssessments] = useState<JoinedSubjectAssessment[]>([]);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
@@ -47,7 +47,7 @@ export default function TranscriptEdit({ joinedSubjectId, subjectStatus, onClose
   // Reset all state when component mounts or joinedSubject changes
   useEffect(() => {
     if (!joinedSubject) return;
-    
+    console.log("joinedSubject",joinedSubject);
     // Reset all state
     setAssessments([]);
     setExistingMarks([]);
@@ -85,30 +85,29 @@ export default function TranscriptEdit({ joinedSubjectId, subjectStatus, onClose
           setExistingMarks([]);
         }
       } finally {
+        console.log("templateData",templateData);
         setMarksLoading(false);
       }
     };
-
     fetchExistingMarks();
   }, [joinedSubject?.id]); 
-
   // Merge template data with existing marks
   useEffect(() => {
     if (!templateData || !Array.isArray(templateData)) return;
-
     const mergedAssessments: JoinedSubjectAssessment[] = templateData.map(template => {
       const existingMark = existingMarks.find(mark => mark.category === template.category);
-      
+      console.log("existingMark",existingMark);
+      console.log("template",template);
       return {
         category: template.category,
         weight: template.weight,
         minScore: template.minScore,
         score: existingMark?.score,
-        maxScore: 10, // Assuming max score is 10, adjust if needed
+        maxScore: 10, // Assuming max score is 10
         isExisting: !!existingMark
       };
     });
-
+    console.log("mergedAssessments",mergedAssessments);
     setAssessments(mergedAssessments);
   }, [templateData, existingMarks]);
 
@@ -249,16 +248,6 @@ export default function TranscriptEdit({ joinedSubjectId, subjectStatus, onClose
     } catch (error) {
       handleError('Failed to save score');
     }
-  };
-
-  const cancelEditing = () => {
-    setEditingCategory(null);
-    setTempScore(0);
-  };
-
-  // Simple close handler
-  const handleClose = () => {
-    onClose();
   };
 
   // Table columns for assessments

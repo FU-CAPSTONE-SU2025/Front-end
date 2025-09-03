@@ -27,17 +27,6 @@ export const mockSyllabus: Syllabus = {
     { id: 3, syllabusId: 1, outcomeCode: 'LO3', description: 'Apply problem-solving techniques to simple computational problems.' },
   ],
   sessions: [
-    { id: 1, syllabusId: 1, sessionNumber: 1, topic: 'Introduction & History of Computing', mission: 'Lecture, Discussion' },
-    { id: 2, syllabusId: 1, sessionNumber: 2, topic: 'Algorithms & Flowcharts', mission: 'Lecture, Lab' },
-    { id: 3, syllabusId: 1, sessionNumber: 3, topic: 'Programming Basics', mission: 'Lecture, Coding Practice' },
-    { id: 4, syllabusId: 1, sessionNumber: 4, topic: 'Data Types & Variables', mission: 'Lecture, Lab' },
-    { id: 5, syllabusId: 1, sessionNumber: 5, topic: 'Control Structures', mission: 'Lecture, Coding Practice' },
-    { id: 6, syllabusId: 1, sessionNumber: 6, topic: 'Functions & Procedures', mission: 'Lecture, Lab' },
-    { id: 7, syllabusId: 1, sessionNumber: 7, topic: 'Midterm Review', mission: 'Review Session' },
-    { id: 8, syllabusId: 1, sessionNumber: 8, topic: 'Computer Systems Overview', mission: 'Lecture, Discussion' },
-    { id: 9, syllabusId: 1, sessionNumber: 9, topic: 'Operating Systems', mission: 'Lecture, Lab' },
-    { id: 10, syllabusId: 1, sessionNumber: 10, topic: 'Networks & The Internet', mission: 'Lecture, Coding Practice' },
-    { id: 11, syllabusId: 1, sessionNumber: 11, topic: 'Databases', mission: 'Lecture, Lab' },
-    { id: 12, syllabusId: 1, sessionNumber: 12, topic: 'Project Presentations', mission: 'Student Presentations' },
+
   ],
 }; 
