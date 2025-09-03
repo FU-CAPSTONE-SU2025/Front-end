@@ -367,28 +367,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
     setEditingVersionId(versionId);
   };
 
-  const handlePrereqModalOk = async () => {
-    if (selectedPrereqSubject && editingVersionId) {
-      try {
-        // Use the real API to add prerequisite
-        await addPrerequisiteToSubjectVersionMutation.mutateAsync({
-          subjectVersionId: editingVersionId,
-          prerequisiteId: selectedPrereqSubject.id
-        });
-        
-        // Refetch prerequisites for this version to ensure UI reflects server state
-        await fetchPrerequisitesForVersion(editingVersionId);
-        
-        handleSuccess('Prerequisite added successfully!');
-      } catch (error) {
-        console.error('Failed to add prerequisite:', error);
-        handleError('Failed to add prerequisite');
-      }
-    }
-    setSelectedPrereqSubject(null);
-    setEditingVersionId(null);
-  };
-
   // Handlers for AssessmentTable
   const handleAddAssessment = async (versionId: number, assessment: any): Promise<void> => {
     setAssessmentMap(prev => ({ 

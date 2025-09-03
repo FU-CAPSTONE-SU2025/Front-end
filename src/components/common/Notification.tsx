@@ -61,26 +61,26 @@ const Notification: React.FC<NotificationProps> = ({ variant = 'student' }) => {
   }
 
   // Auto-surface new error/success notifications even when panel is closed
-  useEffect(() => {
-    if (!notifications || notifications.length === 0) return;
-    for (const n of notifications) {
-      const idNum = Number(n.id);
-      if (!seenIdsRef.current.has(idNum)) {
-        seenIdsRef.current.add(idNum);
-        // Prioritize error over success to avoid double popups
-        if (!shownErrorIdsRef.current.has(idNum) && extractNotificationErrorContent(n.title)) {
-          shownErrorIdsRef.current.add(idNum);
-          handleError(n.content);
-          break;
-        }
-        if (!shownSuccessIdsRef.current.has(idNum) && extractNotificationSuccessContent(n.title)) {
-          shownSuccessIdsRef.current.add(idNum);
-          handleSuccess(n.content);
-          break;
-        }
-      }
-    }
-  }, [notifications, handleError, handleSuccess]);
+  // useEffect(() => {
+  //   if (!notifications || notifications.length === 0) return;
+  //   for (const n of notifications) {
+  //     const idNum = Number(n.id);
+  //     if (!seenIdsRef.current.has(idNum)) {
+  //       seenIdsRef.current.add(idNum);
+  //       // Prioritize error over success to avoid double popups
+  //       if (!shownErrorIdsRef.current.has(idNum) && extractNotificationErrorContent(n.title)) {
+  //         shownErrorIdsRef.current.add(idNum);
+  //         handleError(n.content);
+  //         break;
+  //       }
+  //       if (!shownSuccessIdsRef.current.has(idNum) && extractNotificationSuccessContent(n.title)) {
+  //         shownSuccessIdsRef.current.add(idNum);
+  //         handleSuccess(n.content);
+  //         break;
+  //       }
+  //     }
+  //   }
+  // }, [notifications, handleError, handleSuccess]);
 
   // ALL FUNCTIONS DEFINED WITH useCallback TO AVOID HOISTING ISSUES
   const handleNotificationClick = useCallback(async (n: NotificationItem, e?: React.MouseEvent) => {
