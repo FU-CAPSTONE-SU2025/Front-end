@@ -112,6 +112,10 @@ const RoadmapFlowInner: React.FC<RoadmapFlowProps> = ({ roadmap, onLinkCreate, o
 
   // Transform roadmap data to React Flow format
   const { nodes, edges } = useMemo(() => {
+    console.log('RoadmapFlow: Recalculating nodes and edges', {
+      nodesCount: roadmap?.nodes?.length || 0,
+      linksCount: roadmap?.links?.length || 0
+    });
     if (!roadmap) return { nodes: [], edges: [] };
 
     // Sort all nodes by ID to ensure consistent ordering
@@ -165,7 +169,7 @@ const RoadmapFlowInner: React.FC<RoadmapFlowProps> = ({ roadmap, onLinkCreate, o
     );
 
     return { nodes: flowNodes, edges: flowEdges };
-  }, [roadmap]);
+  }, [roadmap.nodes, roadmap.links]); // Add explicit dependencies
 
   // React Flow state
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState(nodes);
@@ -173,15 +177,13 @@ const RoadmapFlowInner: React.FC<RoadmapFlowProps> = ({ roadmap, onLinkCreate, o
 
   // Update flow data when roadmap changes
   React.useEffect(() => {
-    if (nodes.length > 0) {
-      setFlowNodes(nodes);
-    }
+    console.log('RoadmapFlow: Updating nodes', nodes.length);
+    setFlowNodes(nodes);
   }, [nodes, setFlowNodes]);
 
   React.useEffect(() => {
-    if (edges.length > 0) {
-      setFlowEdges(edges);
-    }
+    console.log('RoadmapFlow: Updating edges', edges.length);
+    setFlowEdges(edges);
   }, [edges, setFlowEdges]);
 
   // Handle connections
@@ -202,7 +204,12 @@ const RoadmapFlowInner: React.FC<RoadmapFlowProps> = ({ roadmap, onLinkCreate, o
     if (pendingConnection && onLinkCreate) {
       const fromNodeId = parseInt(pendingConnection.source!);
       const toNodeId = parseInt(pendingConnection.target!);
+      
+      // Call the parent callback to create the link
       onLinkCreate(fromNodeId, toNodeId);
+      
+      // Note: We can't immediately add the edge here because we don't have the link ID yet
+      // The edge will be added when the roadmap prop updates
     }
     setIsLinkModalVisible(false);
     setPendingConnection(null);
@@ -217,7 +224,12 @@ const RoadmapFlowInner: React.FC<RoadmapFlowProps> = ({ roadmap, onLinkCreate, o
     if (pendingDeleteLink && onLinkDelete) {
       const linkId = pendingDeleteLink.data?.linkId;
       if (linkId) {
+        // Call the parent callback to delete the link
         onLinkDelete(linkId);
+        
+        // Immediately remove the edge from local state for better UX
+        const updatedEdges = flowEdges.filter(edge => edge.data?.linkId !== linkId);
+        setFlowEdges(updatedEdges);
       }
     }
     setIsDeleteLinkModalVisible(false);
@@ -319,9 +331,12 @@ const RoadmapFlowInner: React.FC<RoadmapFlowProps> = ({ roadmap, onLinkCreate, o
 };
 
 const RoadmapFlow: React.FC<RoadmapFlowProps> = (props) => {
+  // Force re-render when roadmap data changes by using a key
+  const roadmapKey = `${props.roadmap?.id || 'no-id'}-${props.roadmap?.nodes?.length || 0}-${props.roadmap?.links?.length || 0}`;
+  
   return (
     <ReactFlowProvider>
-      <RoadmapFlowInner {...props} />
+      <RoadmapFlowInner key={roadmapKey} {...props} />
     </ReactFlowProvider>
   );
 };
