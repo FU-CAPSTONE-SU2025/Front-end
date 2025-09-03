@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { GetAllAuditLog, GetAuditLogPaged } from '../api/admin/auditlogAPI';
+import { GetAuditLogPaged } from '../api/admin/auditlogAPI';
 import { AuditLog } from '../interfaces/IAuditLog';
 import { PagedData } from '../interfaces/ISchoolProgram';
 import { showForExport, hideLoading } from './useLoading';
@@ -42,27 +42,8 @@ export const useAuditLog = () => {
       userAgent: log.userAgent ?? '',
     }));
 
-  // Fallback: fetch all pages from paginated endpoint
-  const fetchAllPages = async (): Promise<AuditLog[]> => {
-    const collected: AuditLog[] = [];
-    let page = 1;
-    const size = 100; 
-    // First page to get total
-    const firstPage: PagedData<AuditLog> = await GetAuditLogPaged(page, size);
-    collected.push(...normalizeLogs(firstPage.items));
-    const totalCount = firstPage.totalCount ?? collected.length;
-    const totalPages = Math.ceil(totalCount / size);
-
-    // Fetch remaining pages if any
-    for (page = 2; page <= totalPages; page++) {
-      const res: PagedData<AuditLog> = await GetAuditLogPaged(page, size);
-      collected.push(...normalizeLogs(res.items));
-    }
-    return collected;
-  };
-
   // Download all audit logs
-  const downloadAllAuditLogs = async () => {
+  const downloadAuditLogs = async () => {
     showForExport('Downloading audit logs...');
     try {
       const allLogsObject = await GetAuditLogPaged(1, 100); // pageNum: 1 - pageSize: 100
@@ -90,7 +71,6 @@ export const useAuditLog = () => {
           }
         });
       }
-      
       return flattenedLogs;
     } catch (err) {
       hideLoading();
@@ -113,6 +93,6 @@ export const useAuditLog = () => {
     total,
     error,
     fetchAuditLogs,
-    downloadAllAuditLogs,
+    downloadAuditLogs,
   };
 }; 

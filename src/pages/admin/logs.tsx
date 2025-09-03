@@ -21,7 +21,7 @@ const LogsPage: React.FC = () => {
     total, 
     error, 
     fetchAuditLogs, 
-    downloadAllAuditLogs 
+    downloadAuditLogs 
   } = useAuditLog();
   const { chartData, isPending: userDataLoading, refetch: refetchUserData } = useActiveUserData();
   const { analytics, loading: analyticsLoading } = useAuditAnalytics();
@@ -112,7 +112,7 @@ const LogsPage: React.FC = () => {
   // Export to XLSX
   const exportToXlsx = async () => {
     try {
-      const allLogs = await downloadAllAuditLogs();
+      const allLogs = await downloadAuditLogs();
       const worksheet = XLSX.utils.json_to_sheet(allLogs.map((log: AuditLog) => ({
         'ID': log.id,
         'Tag': log.tag,

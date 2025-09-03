@@ -6,6 +6,51 @@ import { GetRoadmapNode } from '../../api/student/RoadMapAPI';
 import { useRoadmap } from '../../hooks/useRoadmap';
 import { useNavigate } from 'react-router';
 
+// Minimal markdown to HTML converter (safe-ish, no external deps)
+function simpleMarkdownToHtml(markdown: string): string {
+  if (!markdown) return '';
+  // Escape HTML first
+  let text = markdown
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Code blocks ```code```
+  text = text.replace(/```([\s\S]*?)```/g, (_m, code) => {
+    const safe = code.replace(/\n/g, '\n');
+    return `<pre style="background: #0f172a0d; padding: 12px; border-radius: 8px; overflow:auto"><code>${safe}</code></pre>`;
+  });
+
+  // Headings #, ##, ###
+  text = text
+    .replace(/^###\s+(.*)$/gm, '<h3 style="margin:8px 0 6px; color:#111827">$1</h3>')
+    .replace(/^##\s+(.*)$/gm, '<h2 style="margin:10px 0 6px; color:#111827">$1</h2>')
+    .replace(/^#\s+(.*)$/gm, '<h1 style="margin:12px 0 6px; color:#111827">$1</h1>');
+
+  // Bold and italics (order matters)
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+  // Inline code `code`
+  text = text.replace(/`([^`]+)`/g, '<code style="background:#0f172a0d; padding:2px 6px; border-radius:6px">$1</code>');
+
+  // Links [text](url)
+  text = text.replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#2563eb">$1</a>');
+
+  // Simple unordered lists - each line starting with - or * becomes a list item
+  text = text.replace(/^(?:-|\*)\s+(.*)$/gm, '<li>$1</li>');
+  // Wrap isolated li with ul
+  text = text.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul style="margin:6px 0 6px 18px; list-style:disc">$1</ul>');
+
+  // Paragraphs: split by double newline and wrap if not already block elements
+  const blocks = text.split(/\n\n+/).map(b => {
+    if (/^\s*<(h\d|ul|pre|blockquote)/.test(b)) return b;
+    return `<p style="margin:6px 0; color:#374151">${b.replace(/\n/g, '<br/>')}</p>`;
+  });
+
+  return blocks.join('\n');
+}
+
 interface NodeDetailsDrawerProps {
   isVisible: boolean;
   onClose: () => void;
@@ -307,9 +352,10 @@ const NodeDetailsDrawer: React.FC<NodeDetailsDrawerProps> = ({
                     />
                   </Form.Item>
                 ) : (
-                  <p className="text-gray-600 leading-relaxed">
-                    {nodeDetails.description}
-                  </p>
+                  <div
+                    className="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: simpleMarkdownToHtml(nodeDetails.description || '') }}
+                  />
                 )}
               </div>
 

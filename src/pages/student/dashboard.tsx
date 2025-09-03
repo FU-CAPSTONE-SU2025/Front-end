@@ -2,10 +2,11 @@ import SubjectCard from '../../components/student/subjectCard';
 import UserInfoCard from '../../components/student/userInfoCard';
 import { motion } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
-import { Tabs } from 'antd';
+import { Tabs, Tooltip, Button } from 'antd';
+import { BookOutlined } from '@ant-design/icons';
 import SemesterSelect from '../../components/student/selectSemester';
 import { useJoinedSubjects, useCheckpointCompletionPercentage, useJoinedSubjectStatusMapping } from '../../hooks/useStudentFeature';
-import { JoinedSubject, SemesterSubjects } from '../../interfaces/IStudent';
+import { SemesterSubjects, StudentBase } from '../../interfaces/IStudent';
 import { groupSubjectsBySemester, getSemesterOptions, getSubjectsStats } from '../../utils/subjectUtils';
 import { GetCurrentStudentUser } from '../../api/Account/UserAPI';
 import { getAuthState } from '../../hooks/useAuthState';
@@ -15,7 +16,10 @@ import AcademicCharts from '../../components/student/academicCharts';
 import { usePersonalAcademicTranscript } from '../../hooks/useSubjectMarkReport';
 import TranscriptTable from '../../components/student/transcriptTable';
 import { useStudentSemesterPerformance, useStudentCategoryPerformance, useStudentCheckpointTimeline } from '../../hooks/useStudentDashboard';
-
+import * as XLSX from 'xlsx';
+import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
+import { IPersonalAcademicTranscript } from '../../interfaces/ISubjectMarkReport';
+import { AccountProps } from '../../interfaces/IAccount';
 // Note: UserInfoCard will receive userInfor from API; no mock user passed
 
 // Student info (fetched)
@@ -27,12 +31,14 @@ const Dashboard = () => {
   const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
   const { accessToken } = getAuthState();
   const [studentId, setStudentId] = useState<number | null>(null);
-  const [studentDetail, setStudentDetail] = useState<any | null>(null);
+  const [studentDetail, setStudentDetail] = useState<AccountProps | null>(null);
   const [isLoadingStudent, setIsLoadingStudent] = useState<boolean>(false);
   const [curriculumSubjects, setCurriculumSubjects] = useState<Array<{ subjectCode: string; subjectName: string; credits: number; semesterNumber: number }>>([]);
   const [comboSubjects, setComboSubjects] = useState<Array<{ subjectCode: string; subjectName: string; credits: number; semesterNumber: number }>>([]);
   const [isLoadingPersonal, setIsLoadingPersonal] = useState<boolean>(false);
   const [studentProfileId, setStudentProfileId] = useState<number | null>(null);
+  const { handleError, handleSuccess } = useApiErrorHandler();
+  const [isDownloadHover, setIsDownloadHover] = useState(false);
   
   const combinedPersonalSubjects = useMemo(() => {
     return [...(curriculumSubjects || []), ...(comboSubjects || [])];
@@ -119,23 +125,6 @@ const Dashboard = () => {
     return subject?.completedPercentage || 0;
   };
 
-  const getSubjectStatus = (subjectId: number): string => {
-    if (!statusData) return 'In Progress';
-    const subject = statusData.find((item: any) => item.joinedSubjectId === subjectId);
-    return subject?.status || 'In Progress';
-  };
-
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'Completed':
-        return { color: 'bg-green-500', text: 'Completed' };
-      case 'Passed':
-        return { color: 'bg-blue-500', text: 'Passed' };
-      default:
-        return { color: 'bg-orange-500', text: 'In Progress' };
-    }
-  };
-
   // Fetch personal curriculum and combo subjects
   useEffect(() => {
     const fetchPersonalSubjects = async () => {
@@ -157,6 +146,31 @@ const Dashboard = () => {
 
     fetchPersonalSubjects();
   }, []);
+
+
+
+  // Export to XLSX
+  const exportToXlsx = () => {
+    try {
+      const allLogs = transcriptData;
+      const worksheet = XLSX.utils.json_to_sheet(allLogs.map((log: IPersonalAcademicTranscript) => ({
+        'Subject Code': log.subjectCode,
+        'Subject Version Code': log.subjectVersionCode,
+        'Name': log.name,
+        'Is Passed': log.isPassed,
+        'Credits': log.credits,
+        'Avg Score': log.avgScore,
+      })));
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, `${studentDetail?.username} Transcript`);
+      XLSX.writeFile(workbook, `${studentDetail?.username}_Transcript.xlsx`);
+      handleSuccess('Transcript exported successfully!');
+    } catch (err) {
+      handleError(err, 'Failed to export Transcript');
+      console.error('Export error:', err);
+    }
+  };
+
 
   const renderSubjectList = (items: Array<{ subjectCode: string; subjectName: string; credits: number; semesterNumber: number }>) => {
     if (isLoadingPersonal) {
@@ -342,10 +356,38 @@ const Dashboard = () => {
           label: <span className="text-white text-lg">Transcript</span>,
           children: (
             <div className="mt-2">
-              <div className="mb-3">
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Academic Transcript</h2>
-                <p className="text-gray-200 opacity-80 mb-4">View your complete academic record and performance</p>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Academic Transcript</h2>
+                  <p className="text-gray-200 opacity-80">View your complete academic record and performance</p>
+                </div>
               </div>
+
+              <Tooltip title="Download Transcript">
+                <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 2000 }}>
+                  <Button
+                    shape="circle"
+                    size="large"
+                    icon={<BookOutlined style={{ color: '#fff', fontSize: 20 }} />}
+                    onClick={exportToXlsx}
+                    style={{
+                      width: 56,
+                      height: 56,
+                      background: '#f97316',
+                      borderColor: '#f97316',
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: isDownloadHover ? '0 14px 28px rgba(249, 115, 22, 0.35)' : '0 10px 20px rgba(0,0,0,0.25)',
+                      transform: isDownloadHover ? 'translateY(-3px) scale(1.06)' : 'translateY(0) scale(1)',
+                      transition: 'all .25s ease'
+                    }}
+                    onMouseEnter={() => setIsDownloadHover(true)}
+                    onMouseLeave={() => setIsDownloadHover(false)}
+                  />
+                </div>
+              </Tooltip>
               
               {/* Transcript Statistics */}
               {transcriptData && transcriptData.length > 0 && (
@@ -457,3 +499,7 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+function downloadAuditLogs() {
+  throw new Error('Function not implemented.');
+}

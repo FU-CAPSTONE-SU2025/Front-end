@@ -8,22 +8,6 @@ import { debugLog } from "../../utils/performanceOptimization";
 const auditlogURL = baseUrl + "/AuditLog";
 const meetingURL = baseUrl + "/Meeting";
 
-export const GetAllAuditLog = async (): Promise<AuditLog[]> => {
-  const props = {
-    data: null,
-    url: auditlogURL+"/all",
-    headers: GetHeader(),
-  };
-  const result = await axiosRead(props);
-  if (result.success) {
-    debugLog(result.data)
-    return result.data;
-  } else {
-    throwApiError(result);
-    return null as never;
-  }
-};
-
 export const GetAnalyticsLog = async (startDate:string,endDate:string): Promise<GetAnalyticsAuditLogProps> => {
   const props = {
     data: null,
