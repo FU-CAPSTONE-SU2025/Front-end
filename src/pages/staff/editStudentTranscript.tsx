@@ -50,6 +50,7 @@ const EditStudentTranscript: React.FC = () => {
   const [subjectVersions, setSubjectVersions] = useState<SubjectVersionWithCurriculumInfo[]>([]);
   const [searchSubjectVersion, setSearchSubjectVersion] = useState('');
   const [selectedSubjectVersion, setSelectedSubjectVersion] = useState<SubjectVersionWithCurriculumInfo | null>(null);
+  const [isDeleteing,setIsDeleting] = useState(false);
 
   // Delete action hook
   const { deleteJoinedSubject, deleting } = useJoinedSubjectActions();
@@ -144,6 +145,7 @@ const EditStudentTranscript: React.FC = () => {
       okButtonProps: { danger: true, loading: deleting },
       cancelText: 'Cancel',
       onOk: async () => {
+        setIsDeleting(true);
         const response = await deleteJoinedSubject(subject.id);
         if (response) {
           showInfo('Removing subject from transcript...');
@@ -151,6 +153,7 @@ const EditStudentTranscript: React.FC = () => {
         } else {
           handleError('Failed to remove subject');
         }
+        setIsDeleting(false);
       }
     });
   };
@@ -422,7 +425,7 @@ const EditStudentTranscript: React.FC = () => {
         setUploadStatus('success');
         setUploadMessage(`Successfully imported ${rows.length} subject assignments!`);
         // Refresh joined subjects data
-        await refetchJoinedSubjects();
+        refetchJoinedSubjects();
       } else {
         setUploadStatus('error');
         setUploadMessage('Failed to import subject assignments.');
@@ -784,6 +787,7 @@ const EditStudentTranscript: React.FC = () => {
                               e.currentTarget.style.boxShadow = '0 2px 4px rgba(255, 77, 79, 0.2)';
                             }}
                             onClick={(e) => handleDeleteInProgress(subject, e)}
+                            loading={isDeleteing}
                           >
                             Remove
                           </Button>
