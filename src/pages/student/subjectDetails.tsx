@@ -178,17 +178,17 @@ const SubjectDetails = () => {
 
     // Calculate progress based on completed grades weight
     const getProgressPercentage = () => {
-        if (subject.isCompleted) return 100;
+     
         
         // Calculate progress based on completed grades weight
-        const completedGrades = grades.filter(grade => grade.score !== null);
+
         const totalWeight = grades.reduce((sum, grade) => sum + (grade.weight || 0), 0);
-        const completedWeight = completedGrades.reduce((sum, grade) => sum + (grade.weight || 0), 0);
+      
         
         if (totalWeight === 0) return 0;
         
         // Calculate actual progress percentage based on completed weight
-        const progressPercentage = (completedWeight / totalWeight) * 100;
+        const progressPercentage = totalWeight;
         return Math.round(progressPercentage);
     };
 
