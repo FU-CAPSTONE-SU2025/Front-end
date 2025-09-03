@@ -42,8 +42,10 @@ const WorkSchedule: React.FC = () => {
 
  
 
-  const handleAddSuccess = () => {
+  const handleAddSuccess = async () => {
     setIsAddModalVisible(false);
+    // Refresh the data to ensure calendar is updated
+    await refetchBookingAvailability();
     message.success('Work schedule added successfully!');
   };
   const filteredSchedules = safeDataToUse;
@@ -122,7 +124,18 @@ const WorkSchedule: React.FC = () => {
         isWorkSchedule={true} 
         showNavigation={false}
         onSlotClick={(slot, date) => {
-          setSelectedSlotInfo({ date, start: slot.start, end: slot.end });
+          // Calculate the correct dayInWeek for the selected date
+          const dayOfWeek = date.day() === 0 ? 1 : date.day() + 1; // Sunday = 1, Monday = 2, etc.
+          
+          // Create proper time objects from the slot
+          const startTime = dayjs(slot.start, 'HH:mm');
+          const endTime = dayjs(slot.end, 'HH:mm');
+          
+          setSelectedSlotInfo({ 
+            date, 
+            start: startTime, 
+            end: endTime 
+          });
           setIsAddModalVisible(true);
           setSelectedDate(date);
         }}
@@ -133,6 +146,8 @@ const WorkSchedule: React.FC = () => {
         onDelete={async (event) => {
           try {
             await deleteBookingAvailability.mutateAsync(Number(event.id));
+            // Refresh the data to ensure calendar is updated
+            await refetchBookingAvailability();
             message.success('Work schedule deleted successfully!');
           } catch (error) {
             message.error('Failed to delete work schedule.');
@@ -154,7 +169,13 @@ const WorkSchedule: React.FC = () => {
           setIsEditModalVisible(false);
           setSelectedScheduleId(null);
         }}
-        onSuccess={handleAddSuccess}
+        onSuccess={async () => {
+          setIsEditModalVisible(false);
+          setSelectedScheduleId(null);
+          // Refresh the data to ensure calendar is updated
+          await refetchBookingAvailability();
+          message.success('Work schedule updated successfully!');
+        }}
         scheduleId={selectedScheduleId}
       />
       <ViewWorkScheduleModal
@@ -166,9 +187,11 @@ const WorkSchedule: React.FC = () => {
           setSelectedScheduleId(id);
           setIsEditModalVisible(true);
         }}
-        onDeleted={() => {
+        onDeleted={async () => {
           setIsViewModalVisible(false);
           setViewScheduleId(null);
+          // Refresh the data to ensure calendar is updated
+          await refetchBookingAvailability();
         }}
       />
     </div>
