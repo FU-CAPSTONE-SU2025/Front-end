@@ -261,7 +261,7 @@ const CurriculumPage: React.FC = () => {
           accordion 
           bordered={false} 
           className={styles.sttFreshTable} 
-          style={{padding:16, borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}
+          style={{ minHeight: '100px',padding:16, borderRadius: 20, boxShadow: '0 10px 40px rgba(30,64,175,0.13)'}}
           onChange={handlePanelChange}
           items={curriculumList && curriculumList.length > 0 ? curriculumList.map((curriculum: Curriculum) => {
             const subjectVersions = curriculumSubjectVersionsMap[curriculum.id] || [];

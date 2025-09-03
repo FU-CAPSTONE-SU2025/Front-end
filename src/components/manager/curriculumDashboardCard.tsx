@@ -1,12 +1,13 @@
 import React from 'react';
-import { Card, Row, Col, Typography, Space, Table, Tag, Statistic } from 'antd';
-import { PieChartOutlined, BookOutlined, TrophyOutlined } from '@ant-design/icons';
+import { Row, Col, Typography, Space, Table, Tag, Statistic, ConfigProvider } from 'antd';
+import { PieChartOutlined, BookOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import styles from '../../css/manager/studentInCoursePage.module.css';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { ICurriculumOverview } from '../../interfaces/IDashboard';
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 interface CurriculumDashboardCardProps {
   data: ICurriculumOverview | null;
@@ -16,21 +17,21 @@ interface CurriculumDashboardCardProps {
 const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data, loading }) => {
   if (loading) {
     return (
-      <Card className={styles.chartCard}>
+      <div className={`${styles.chartCard} ${glassStyles.appleGlassCard} ${glassStyles.appleGlassCardPulse}`}>
         <div style={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Text type="secondary">Loading curriculum data...</Text>
         </div>
-      </Card>
+      </div>
     );
   }
 
   if (!data) {
     return (
-      <Card className={styles.chartCard}>
+      <div className={`${styles.chartCard} ${glassStyles.appleGlassCard}`}>
         <div style={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Text type="secondary">No curriculum data available</Text>
         </div>
-      </Card>
+      </div>
     );
   }
 
@@ -74,23 +75,41 @@ const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data,
   ];
 
   return (
+    <ConfigProvider
+    theme={{
+      components: {
+        Table: {
+          headerBg: '#1E40AF',
+          headerColor: '#fff',
+          borderColor: 'rgba(30, 64, 175, 0.08)',
+          colorText: '#1E293B',
+          colorBgContainer: 'rgba(255,255,255,0.95)',
+          colorBgElevated: 'rgba(255,255,255,0.95)',
+          rowHoverBg: 'rgba(249, 115, 22, 0.05)',
+          colorPrimary: '#f97316',
+          colorPrimaryHover: '#1E40AF',
+        },
+      },
+    }}
+  >
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
+      className={`${glassStyles.appleGlassCard}`}
+      style={{ padding: '24px' }}
     >
-      <Card 
-        title={
-          <Space>
-            <PieChartOutlined className={styles.pieChartIcon} />
-            <Text strong>Curriculum Statistics</Text>
-          </Space>
-        }
-        className={styles.chartCard}
-      >
-        <Row gutter={[24, 24]}>
-          {/* Curriculum Distribution Chart */}
-          <Col xs={24} lg={12}>
+      <div style={{ marginBottom: '24px' }}>
+        <Space>
+          <PieChartOutlined className={styles.pieChartIcon} style={{ fontSize: '20px' }} />
+          <Text strong style={{ fontSize: '18px' }}>Curriculum Statistics</Text>
+        </Space>
+      </div>
+
+      <Row gutter={[24, 24]}>
+        {/* Curriculum Distribution Chart */}
+        <Col xs={24} lg={12}>
+          <div className={`${glassStyles.appleGlassCard}`} style={{ padding: '20px', height: '280px' }}>
             <div style={{ height: 200 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -116,57 +135,72 @@ const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data,
                 </PieChart>
               </ResponsiveContainer>
             </div>
-          </Col>
+          </div>
+        </Col>
 
-          {/* Curriculum Stats */}
-          <Col xs={24} lg={12}>
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
-              <div>
-                <Text strong>Curriculum Overview</Text>
-                <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-                  <Col span={12}>
+        {/* Curriculum Stats */}
+        <Col xs={24} lg={12}>
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <div>
+              <Text strong>Curriculum Overview</Text>
+              <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+                <Col span={12}>
+                  <div className={glassStyles.appleGlassCard} style={{
+                    padding: '16px',
+                    background: 'rgba(255, 255, 255, 0.25)',
+                    backdropFilter: 'blur(30px) saturate(180%)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)'
+                  }}>
                     <Statistic
                       title="Total Programs"
                       value={data.curriculaByProgram?.length || 0}
                       prefix={<BookOutlined style={{ color: '#52c41a' }} />}
                       valueStyle={{ color: '#52c41a' }}
                     />
-                  </Col>
-                  <Col span={12}>
+                  </div>
+                </Col>
+                <Col span={12}>
+                  <div className={glassStyles.appleGlassCard} style={{
+                    padding: '16px',
+                    background: 'rgba(255, 255, 255, 0.25)',
+                    backdropFilter: 'blur(30px) saturate(180%)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)'
+                  }}>
                     <Statistic
                       title="Avg Subjects per Curriculum"
                       value={data.averageSubjects?.average || 0}
                       prefix={<BookOutlined style={{ color: '#1890ff' }} />}
                       valueStyle={{ color: '#1890ff' }}
                     />
-                  </Col>
-                </Row>
-              </div>
-            </Space>
-          </Col>
-
-          {/* Top Curricula Table */}
-          <Col span={24}>
-            <div style={{ marginTop: 16 }}>
-              <Space style={{ marginBottom: 16 }}>
-                <Text strong>Curricula by Program</Text>
-              </Space>
-              <Table
-                columns={curriculaByProgramColumns}
-                dataSource={data.curriculaByProgram?.map((curriculum, index) => ({
-                  ...curriculum,
-                  rank: index + 1,
-                  key: curriculum.programCode || index
-                })) || []}
-                pagination={false}
-                size="small"
-                scroll={{ x: 500 }}
-              />
+                  </div>
+                </Col>
+              </Row>
             </div>
-          </Col>
-        </Row>
-      </Card>
+          </Space>
+        </Col>
+
+        {/* Top Curricula Table */}
+        <Col span={24}>
+          <div style={{ marginTop: 16 }}>
+            <Space style={{ marginBottom: 16 }}>
+              <Text strong>Curricula by Program</Text>
+            </Space>
+            <Table
+              columns={curriculaByProgramColumns}
+              dataSource={data.curriculaByProgram?.map((curriculum, index) => ({
+                ...curriculum,
+                rank: index + 1,
+                key: curriculum.programCode || index
+              })) || []}
+              pagination={false}
+              size="small"
+              scroll={{ x: 500 }}
+            />
+          </div>
+        </Col>
+      </Row>
     </motion.div>
+    </ConfigProvider>
   );
 };
 

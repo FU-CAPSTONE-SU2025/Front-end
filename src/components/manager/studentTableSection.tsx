@@ -268,7 +268,6 @@ const StudentTableSection: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className={styles.motionContainer}
         >
           <Card 
             title={
@@ -342,12 +341,11 @@ const StudentTableSection: React.FC = () => {
                                   setComboPage(prev => prev + 1);
                                 }
                               }}
+                              options={comboData?.items?.map(combo => ({
+                                value: combo.id,
+                                label: `${combo.id} - ${combo.comboName}`
+                              })) || []}
                             >
-                              {comboData?.items?.map((combo: Combo) => (
-                                <Select.Option key={combo.id} value={combo.comboName}>
-                                  {combo.comboName}
-                                </Select.Option>
-                              ))}
                             </Select>
                           </Space>
                         </Col>
@@ -371,12 +369,11 @@ const StudentTableSection: React.FC = () => {
                                   setProgramPage(prev => prev + 1);
                                 }
                               }}
+                              options={programData?.items?.map(program => ({
+                                value: program.id,
+                                label: `${program.programCode} - ${program.programName}`
+                              })) || []}
                             >
-                              {programData?.items?.map((program: Program) => (
-                                <Select.Option key={program.id} value={program.id}>
-                                  {program.programName}
-                                </Select.Option>
-                              ))}
                             </Select>
                           </Space>
                         </Col>

@@ -8,7 +8,7 @@ import SubjectDashboardCard from '../../components/manager/subjectDashboardCard'
 import CurriculumDashboardCard from '../../components/manager/curriculumDashboardCard';
 import StudentTableSection from '../../components/manager/studentTableSection';
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 const StudentInCoursePage: React.FC = () => {
   const { overviewData, subjectData, curriculumData, loading, error } = useFlmDashboard();
@@ -20,7 +20,7 @@ const StudentInCoursePage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className={styles.motionContainer}
+      
       >
         <OverviewDashboardCard data={overviewData} loading={loading} />
       </motion.div>
@@ -30,7 +30,7 @@ const StudentInCoursePage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className={styles.motionContainer}
+        className={styles.motionLayer}
       >
         <SubjectDashboardCard data={subjectData} loading={loading} />
       </motion.div>
@@ -56,13 +56,7 @@ const StudentInCoursePage: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.5 }}
           className={styles.motionContainer}
         >
-          <div style={{ 
-            padding: '20px', 
-            backgroundColor: '#fff2f0', 
-            border: '1px solid #ffccc7', 
-            borderRadius: '8px',
-            textAlign: 'center'
-          }}>
+          <div className={styles.errorContainer}>
             <Text type="danger">Error loading dashboard data: {error}</Text>
           </div>
         </motion.div>

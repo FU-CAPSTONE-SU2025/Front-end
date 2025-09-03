@@ -4,6 +4,7 @@ import { LineChartOutlined, BookOutlined, TrophyOutlined } from '@ant-design/ico
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import styles from '../../css/manager/studentInCoursePage.module.css';
+import glassStyles from '../../css/manager/appleGlassEffect.module.css';
 import { ISubjectOverView } from '../../interfaces/IDashboard';
 
 const { Text, Title } = Typography;
@@ -16,21 +17,21 @@ interface SubjectDashboardCardProps {
 const SubjectDashboardCard: React.FC<SubjectDashboardCardProps> = ({ data, loading }) => {
   if (loading) {
     return (
-      <Card className={styles.chartCard}>
+      <div className={`${styles.chartCard} ${glassStyles.appleGlassCard} ${glassStyles.appleGlassCardPulse}`}>
         <div style={{ height: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Text type="secondary">Loading subject data...</Text>
         </div>
-      </Card>
+      </div>
     );
   }
 
   if (!data) {
     return (
-      <Card className={styles.chartCard}>
+      <div className={`${styles.chartCard} ${glassStyles.appleGlassCard}`}>
         <div style={{ height: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Text type="secondary">No subject data available</Text>
         </div>
-      </Card>
+      </div>
     );
   }
 
@@ -78,19 +79,20 @@ const SubjectDashboardCard: React.FC<SubjectDashboardCardProps> = ({ data, loadi
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
+      className={`${glassStyles.appleGlassCard} ${glassStyles.appleGlassCardShimmer}`}
+      style={{ padding: '24px' }}
     >
-      <Card
-        title={
-          <Space>
-            <LineChartOutlined className={styles.lineChartIcon} />
-            <Text strong>Subject Statistics</Text>
-          </Space>
-        }
-        className={styles.chartCard}
-      >
-        <Row gutter={[24, 24]}>
-          {/* Credit Distribution Chart */}
-          <Col xs={24} lg={12}>
+      <div style={{ marginBottom: '24px' }}>
+        <Space>
+          <LineChartOutlined className={styles.lineChartIcon} style={{ fontSize: '20px' }} />
+          <Text strong style={{ fontSize: '18px' }}>Subject Statistics</Text>
+        </Space>
+      </div>
+
+      <Row gutter={[24, 24]}>
+        {/* Credit Distribution Chart */}
+        <Col xs={24} lg={12}>
+          <div className={`${glassStyles.appleGlassCard} ${glassStyles.appleGlassCardFloating}`} style={{ padding: '20px', height: '280px' }}>
             <div style={{ height: 200 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={[
@@ -116,56 +118,56 @@ const SubjectDashboardCard: React.FC<SubjectDashboardCardProps> = ({ data, loadi
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </Col>
+          </div>
+        </Col>
 
-          {/* Syllabus Availability Stats */}
-          <Col xs={24} lg={12}>
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
-              <div>
-                <Text strong>Syllabus Availability</Text>
-                <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-                  <Col span={12}>
-                    <Statistic
-                      title="With Syllabus"
-                      value={data.syllabusAvailability?.subjectsWithSyllabus || 0}
-                      prefix={<BookOutlined style={{ color: '#52c41a' }} />}
-                      valueStyle={{ color: '#52c41a' }}
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <Statistic
-                      title="Without Syllabus"
-                      value={data.syllabusAvailability?.subjectsWithoutSyllabus || 0}
-                      prefix={<BookOutlined style={{ color: '#faad14' }} />}
-                      valueStyle={{ color: '#faad14' }}
-                    />
-                  </Col>
-                </Row>
-              </div>
-            </Space>
-          </Col>
-
-          {/* Top Subjects Table */}
-          <Col span={24}>
-            <div style={{ marginTop: 16 }}>
-              <Space style={{ marginBottom: 16 }}>
-                <Text strong>Subjects with Most Versions</Text>
-              </Space>
-              <Table
-                columns={topSubjectsColumns}
-                dataSource={data.topSubjectsWithMostVersions?.map((subject, index) => ({
-                  ...subject,
-                  rank: index + 1,
-                  key: subject.subjectCode || index
-                })) || []}
-                pagination={false}
-                size="small"
-                scroll={{ x: 400 }}
-              />
+        {/* Syllabus Availability Stats */}
+        <Col xs={24} lg={12}>
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <div>
+              <Text strong>Syllabus Availability</Text>
+              <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+                <Col span={12}>
+                  <Statistic
+                    title="With Syllabus"
+                    value={data.syllabusAvailability?.subjectsWithSyllabus || 0}
+                    prefix={<BookOutlined style={{ color: '#52c41a' }} />}
+                    valueStyle={{ color: '#52c41a' }}
+                  />
+                </Col>
+                <Col span={12}>
+                  <Statistic
+                    title="Without Syllabus"
+                    value={data.syllabusAvailability?.subjectsWithoutSyllabus || 0}
+                    prefix={<BookOutlined style={{ color: '#faad14' }} />}
+                    valueStyle={{ color: '#faad14' }}
+                  />
+                </Col>
+              </Row>
             </div>
-          </Col>
-        </Row>
-      </Card>
+          </Space>
+        </Col>
+
+        {/* Top Subjects Table */}
+        <Col span={24}>
+          <div style={{ marginTop: 16 }}>
+            <Space style={{ marginBottom: 16 }}>
+              <Text strong>Subjects with Most Versions</Text>
+            </Space>
+            <Table
+              columns={topSubjectsColumns}
+              dataSource={data.topSubjectsWithMostVersions?.map((subject, index) => ({
+                ...subject,
+                rank: index + 1,
+                key: subject.subjectCode || index
+              })) || []}
+              pagination={false}
+              size="small"
+              scroll={{ x: 400 }}
+            />
+          </div>
+        </Col>
+      </Row>
     </motion.div>
   );
 };

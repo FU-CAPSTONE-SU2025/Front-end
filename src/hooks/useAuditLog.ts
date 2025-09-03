@@ -65,13 +65,11 @@ export const useAuditLog = () => {
   const downloadAllAuditLogs = async () => {
     showForExport('Downloading audit logs...');
     try {
-      const allLogsObject = await GetAllAuditLog();
+      const allLogsObject = await GetAuditLogPaged(1, 100); // pageNum: 1 - pageSize: 100
       hideLoading();
-      
       // Handle the object structure where each property contains an array of logs
       // Flatten all log arrays into a single array
       const flattenedLogs: AuditLog[] = [];
-      
       if (allLogsObject && typeof allLogsObject === 'object') {
         Object.keys(allLogsObject).forEach((logType:any) => {
           const logArray = allLogsObject[logType];
