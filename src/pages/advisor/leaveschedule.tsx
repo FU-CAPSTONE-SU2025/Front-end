@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Typography, Space, Button, message, Tag, Segmented } from 'antd';
 import { CalendarOutlined, PlusOutlined } from '@ant-design/icons';
 import { useLeaveScheduleList, useDeleteLeaveSchedule } from '../../hooks/useCRUDLeaveSchedule';
+import { useQueryClient } from '@tanstack/react-query';
 import { LeaveSchedule } from '../../interfaces/ILeaveSchedule';
 import dayjs, { Dayjs } from 'dayjs';
 import styles from '../../css/advisor/workSchedule.module.css';
@@ -25,9 +26,10 @@ const LeaveSchedulePage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [selectedSlotInfo, setSelectedSlotInfo] = useState<{ date: Dayjs; start: Dayjs; end: Dayjs } | null>(null);
 
-  const effectivePageSize = viewMode === 'week' ? 50 : 10; // Week view = hết data, Day view = 10
-
-  const { data} = useLeaveScheduleList(currentPage, effectivePageSize);
+  const effectivePageSize = viewMode === 'week' ? 100 : 50; // Increased page sizes to handle bulk operations
+  
+  const queryClient = useQueryClient();
+  const { data, refetch } = useLeaveScheduleList(currentPage, effectivePageSize);
   const leaveList = data?.items || [];
   const totalCount = data?.totalCount || 0;
 
@@ -35,13 +37,23 @@ const LeaveSchedulePage: React.FC = () => {
   }, [viewMode]);
 
   // Modal handlers
-  const handleAddSuccess = () => {
+  const handleAddSuccess = async () => {
     setIsAddModalVisible(false);
+    // Reset to first page to see newly created items
+    setCurrentPage(1);
+    // Invalidate all leave schedule queries to ensure fresh data
+    await queryClient.invalidateQueries({ queryKey: ['leaveScheduleList'] });
+    // Also refetch current query specifically
+    await refetch();
     message.success('Leave schedule added successfully!');
   };
-  const handleEditSuccess = () => {
+  const handleEditSuccess = async () => {
     setIsEditModalVisible(false);
     setSelectedLeaveId(null);
+    // Invalidate all leave schedule queries to ensure fresh data
+    await queryClient.invalidateQueries({ queryKey: ['leaveScheduleList'] });
+    // Also refetch current query specifically
+    await refetch();
     message.success('Leave schedule updated successfully!');
   };
 
