@@ -46,7 +46,6 @@ const WorkSchedule: React.FC = () => {
     setIsAddModalVisible(false);
     // Refresh the data to ensure calendar is updated
     await refetchBookingAvailability();
-    message.success('Work schedule added successfully!');
   };
   const filteredSchedules = safeDataToUse;
   const calendarEvents = filteredSchedules.map(item => {
@@ -148,7 +147,6 @@ const WorkSchedule: React.FC = () => {
             await deleteBookingAvailability.mutateAsync(Number(event.id));
             // Refresh the data to ensure calendar is updated
             await refetchBookingAvailability();
-            message.success('Work schedule deleted successfully!');
           } catch (error) {
             message.error('Failed to delete work schedule.');
           }
@@ -174,7 +172,6 @@ const WorkSchedule: React.FC = () => {
           setSelectedScheduleId(null);
           // Refresh the data to ensure calendar is updated
           await refetchBookingAvailability();
-          message.success('Work schedule updated successfully!');
         }}
         scheduleId={selectedScheduleId}
       />
