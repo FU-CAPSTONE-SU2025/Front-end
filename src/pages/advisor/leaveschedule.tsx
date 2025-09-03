@@ -45,7 +45,6 @@ const LeaveSchedulePage: React.FC = () => {
     await queryClient.invalidateQueries({ queryKey: ['leaveScheduleList'] });
     // Also refetch current query specifically
     await refetch();
-    message.success('Leave schedule added successfully!');
   };
   const handleEditSuccess = async () => {
     setIsEditModalVisible(false);
@@ -54,14 +53,12 @@ const LeaveSchedulePage: React.FC = () => {
     await queryClient.invalidateQueries({ queryKey: ['leaveScheduleList'] });
     // Also refetch current query specifically
     await refetch();
-    message.success('Leave schedule updated successfully!');
   };
 
   const deleteLeaveSchedule = useDeleteLeaveSchedule();
   const handleDelete = async (id: number) => {
     try {
       await deleteLeaveSchedule.mutateAsync(id);
-      message.success('Leave schedule deleted successfully!');
     } catch (err) {
       message.error(err);
     }
@@ -146,7 +143,6 @@ const LeaveSchedulePage: React.FC = () => {
         onDelete={async (event) => {
           try {
             await deleteLeaveSchedule.mutateAsync(Number(event.id));
-            message.success('Leave deleted successfully!');
           } catch (error) {
             message.error('Failed to delete leave.');
           }
