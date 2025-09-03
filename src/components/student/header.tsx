@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router';
 import Messenger from './messenger';
 import Notification from '../common/Notification';
-import { useAuths } from '../../hooks/useAuthState';
 import { GetCurrentStudentUser } from '../../api/Account/UserAPI';
 import { getAuthState } from '../../hooks/useAuthState';
 import { jwtDecode } from 'jwt-decode';
@@ -27,7 +26,7 @@ const Header: React.FC = () => {
   const [studentDetail, setStudentDetail] = useState<any | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const logout = useAuths((state) => state.logout);
+  const { logout } = getAuthState();
   const { accessToken } = getAuthState();
 
   // Extract student id from JWT
