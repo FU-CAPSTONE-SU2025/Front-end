@@ -19,7 +19,7 @@ const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data,
     return (
       <div className={`${styles.chartCard} ${glassStyles.appleGlassCard} ${glassStyles.appleGlassCardPulse}`}>
         <div style={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Text type="secondary">Loading curriculum data...</Text>
+          <Text style={{ color: '#0F172A' }}>Loading curriculum data...</Text>
         </div>
       </div>
     );
@@ -29,7 +29,7 @@ const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data,
     return (
       <div className={`${styles.chartCard} ${glassStyles.appleGlassCard}`}>
         <div style={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Text type="secondary">No curriculum data available</Text>
+          <Text style={{ color: '#0F172A' }}>No curriculum data available</Text>
         </div>
       </div>
     );
@@ -43,7 +43,7 @@ const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data,
       key: 'rank',
       width: 80,
       render: (rank: number) => (
-        <Tag color={rank <= 3 ? '#f50' : '#108ee9'} style={{ fontWeight: 'bold' }}>
+        <Tag color={rank <= 3 ? '#dc2626' : '#1E40AF'} style={{ fontWeight: 'bold' }}>
           {rank}
         </Tag>
       ),
@@ -52,13 +52,13 @@ const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data,
       title: 'Program Code',
       dataIndex: 'programCode',
       key: 'programCode',
-      render: (text: string) => <Text code>{text}</Text>,
+      render: (text: string) => <Text code style={{ color: '#0F172A' }}>{text}</Text>,
     },
     {
       title: 'Program Name',
       dataIndex: 'programName',
       key: 'programName',
-      render: (text: string) => <Text strong>{text}</Text>,
+      render: (text: string) => <Text strong style={{ color: '#0F172A' }}>{text}</Text>,
     },
     {
       title: 'Curriculum Count',
@@ -82,9 +82,9 @@ const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data,
           headerBg: '#1E40AF',
           headerColor: '#fff',
           borderColor: 'rgba(30, 64, 175, 0.08)',
-          colorText: '#1E293B',
-          colorBgContainer: 'rgba(255,255,255,0.95)',
-          colorBgElevated: 'rgba(255,255,255,0.95)',
+          colorText: '#0F172A',
+          colorBgContainer: 'rgba(255,255,255,0.98)',
+          colorBgElevated: 'rgba(255,255,255,0.98)',
           rowHoverBg: 'rgba(249, 115, 22, 0.05)',
           colorPrimary: '#f97316',
           colorPrimaryHover: '#1E40AF',
@@ -102,7 +102,7 @@ const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data,
       <div style={{ marginBottom: '24px' }}>
         <Space>
           <PieChartOutlined className={styles.pieChartIcon} style={{ fontSize: '20px' }} />
-          <Text strong style={{ fontSize: '18px' }}>Curriculum Statistics</Text>
+          <Text strong style={{ fontSize: '18px', color: '#0F172A' }}>Curriculum Statistics</Text>
         </Space>
       </div>
 
@@ -127,11 +127,20 @@ const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data,
                     dataKey="value"
                   >
                     {data.curriculaByProgram?.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'][index % 5]} />
+                      <Cell key={`cell-${index}`} fill={['#1E40AF', '#059669', '#d97706', '#dc2626', '#7c3aed'][index % 5]} />
                     ))}
                   </Pie>
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip 
+                    contentStyle={{ 
+                      background: 'rgba(255,255,255,0.98)', 
+                      border: '1px solid rgba(0,0,0,0.06)', 
+                      borderRadius: 8, 
+                      boxShadow: '0 6px 20px rgba(0,0,0,0.08)' 
+                    }} 
+                    labelStyle={{ color: '#0F172A', fontWeight: 600 }} 
+                    itemStyle={{ color: '#0F172A' }} 
+                  />
+                  <Legend wrapperStyle={{ color: '#0F172A' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -142,35 +151,35 @@ const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data,
         <Col xs={24} lg={12}>
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <div>
-              <Text strong>Curriculum Overview</Text>
+              <Text strong style={{ color: '#0F172A' }}>Curriculum Overview</Text>
               <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
                 <Col span={12}>
                   <div className={glassStyles.appleGlassCard} style={{
                     padding: '16px',
-                    background: 'rgba(255, 255, 255, 0.25)',
+                    background: 'rgba(255, 255, 255, 0.35)',
                     backdropFilter: 'blur(30px) saturate(180%)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)'
+                    border: '1px solid rgba(255, 255, 255, 0.3)'
                   }}>
                     <Statistic
-                      title="Total Programs"
+                      title={<span style={{ color: '#0F172A', fontWeight: 600 }}>Total Programs</span>}
                       value={data.curriculaByProgram?.length || 0}
-                      prefix={<BookOutlined style={{ color: '#52c41a' }} />}
-                      valueStyle={{ color: '#52c41a' }}
+                      prefix={<BookOutlined style={{ color: '#059669' }} />}
+                      valueStyle={{ color: '#059669', fontWeight: 700, fontSize: '20px' }}
                     />
                   </div>
                 </Col>
                 <Col span={12}>
                   <div className={glassStyles.appleGlassCard} style={{
                     padding: '16px',
-                    background: 'rgba(255, 255, 255, 0.25)',
+                    background: 'rgba(255, 255, 255, 0.35)',
                     backdropFilter: 'blur(30px) saturate(180%)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)'
+                    border: '1px solid rgba(255, 255, 255, 0.3)'
                   }}>
                     <Statistic
-                      title="Avg Subjects per Curriculum"
+                      title={<span style={{ color: '#0F172A', fontWeight: 600 }}>Avg Subjects per Curriculum</span>}
                       value={data.averageSubjects?.average || 0}
-                      prefix={<BookOutlined style={{ color: '#1890ff' }} />}
-                      valueStyle={{ color: '#1890ff' }}
+                      prefix={<BookOutlined style={{ color: '#1E40AF' }} />}
+                      valueStyle={{ color: '#1E40AF', fontWeight: 700, fontSize: '20px' }}
                     />
                   </div>
                 </Col>
@@ -183,7 +192,7 @@ const CurriculumDashboardCard: React.FC<CurriculumDashboardCardProps> = ({ data,
         <Col span={24}>
           <div style={{ marginTop: 16 }}>
             <Space style={{ marginBottom: 16 }}>
-              <Text strong>Curricula by Program</Text>
+              <Text strong style={{ color: '#0F172A' }}>Curricula by Program</Text>
             </Space>
             <Table
               columns={curriculaByProgramColumns}

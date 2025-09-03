@@ -880,8 +880,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                           isEditing={false}
                           onAddAssessment={a => handleAddAssessment(version.id, a)}
                           onDeleteAssessment={id => handleDeleteAssessment(version.id, id)}
-                          onUpdateAssessment={(id, a) => handleUpdateAssessment(version.id, id, a)}
-                        />
+                          onUpdateAssessment={(id, a) => handleUpdateAssessment(version.id, id, a)} syllabusId={0}                        />
                       </div>
                     </div>
 
@@ -896,8 +895,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                           isEditing={false}
                           onAddMaterial={m => handleAddMaterial(version.id, m)}
                           onDeleteMaterial={id => handleDeleteMaterial(version.id, id)}
-                          onUpdateMaterial={(id, m) => handleUpdateMaterial(version.id, id, m)}
-                        />
+                          onUpdateMaterial={(id, m) => handleUpdateMaterial(version.id, id, m)} syllabusId={0}                        />
                       </div>
                     </div>
 
@@ -912,8 +910,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                           isEditing={false}
                           onAddOutcome={o => handleAddOutcome(version.id, o)}
                           onDeleteOutcome={id => handleDeleteOutcome(version.id, id)}
-                          onUpdateOutcome={(id, o) => handleUpdateOutcome(version.id, id, o)}
-                        />
+                          onUpdateOutcome={(id, o) => handleUpdateOutcome(version.id, id, o)} syllabusId={0}                        />
                       </div>
                     </div>
 
@@ -930,8 +927,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
                           onAddSession={s => handleAddSession(version.id, s)}
                           onDeleteSession={id => handleDeleteSession(version.id, id)}
                           onUpdateSession={(id, s) => handleUpdateSession(version.id, id, s)}
-                          onAddOutcomeToSession={(sessionId, outcomeId) => handleAddOutcomeToSession(version.id, sessionId, outcomeId)}
-                        />
+                          onAddOutcomeToSession={(sessionId, outcomeId) => handleAddOutcomeToSession(version.id, sessionId, outcomeId)} syllabusId={0}                        />
                       </div>
                     </div>
 

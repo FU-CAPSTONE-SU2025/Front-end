@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router';
 import Messenger from './messenger';
 import Notification from '../common/Notification';
-import { useAuths } from '../../hooks/useAuthState';
-
+import { getAuthState, useAuths } from '../../hooks/useAuthState';
+const { logout } = getAuthState();
 const navItems = [
   { name: 'Profile', path: '/advisor' },
   { name: 'Work Schedule', path: '/advisor/workSchedule' },
@@ -18,7 +18,10 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const logout = useAuths((state) => state.logout);
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const toggleMenu = () => setIsMenuOpen((open) => !open);
 
@@ -53,8 +56,7 @@ const Header: React.FC = () => {
       label: (
         <span
           onClick={ () => {
-            logout();
-            navigate('/');
+            handleLogout()
           }}
         >
           Logout

@@ -198,28 +198,28 @@ const StudentTableSection: React.FC = () => {
       dataIndex: 'email', 
       key: 'email', 
       align: 'left' as 'left', 
-      render: (text: string) => <span style={{ color: '#1E293B', fontWeight: 500 }}>{text}</span> 
+      render: (text: string) => <span style={{ color: '#0F172A', fontWeight: 500 }}>{text}</span> 
     },
     { 
       title: 'First Name', 
       dataIndex: 'firstName', 
       key: 'firstName', 
       align: 'left' as 'left', 
-      render: (text: string) => <span style={{ color: '#1E293B' }}>{text}</span> 
+      render: (text: string) => <span style={{ color: '#0F172A' }}>{text}</span> 
     },
     { 
       title: 'Last Name', 
       dataIndex: 'lastName', 
       key: 'lastName', 
       align: 'left' as 'left', 
-      render: (text: string) => <span style={{ color: '#1E293B' }}>{text}</span> 
+      render: (text: string) => <span style={{ color: '#0F172A' }}>{text}</span> 
     },
     { 
       title: 'Account Name', 
       dataIndex: 'username', 
       key: 'username', 
       align: 'left' as 'left', 
-      render: (username: string) => <span style={{ color: '#1E293B' }}>{username ? username : 'N/A'}</span> 
+      render: (username: string) => <span style={{ color: '#0F172A' }}>{username ? username : 'N/A'}</span> 
     },
     { 
       title: 'Status', 
@@ -228,12 +228,12 @@ const StudentTableSection: React.FC = () => {
       align: 'center' as 'center', 
       render: (status: number) => (
         <span style={{ 
-          color: status === 0 ? '#10b981' : '#ef4444',
+          color: status === 0 ? '#059669' : '#dc2626',
           fontWeight: 600,
           padding: '4px 12px',
           borderRadius: '8px',
-          backgroundColor: status === 0 ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-          border: `1.5px solid ${status === 0? '#10b981' : '#ef4444'}`,
+          backgroundColor: status === 0 ? 'rgba(5, 150, 105, 0.12)' : 'rgba(220, 38, 38, 0.12)',
+          border: `1.5px solid ${status === 0? '#059669' : '#dc2626'}`,
           fontSize: '13px',
           minWidth: 70,
           display: 'inline-block',
@@ -254,9 +254,9 @@ const StudentTableSection: React.FC = () => {
               headerBg: '#1E40AF',
               headerColor: '#fff',
               borderColor: 'rgba(30, 64, 175, 0.08)',
-              colorText: '#1E293B',
-              colorBgContainer: 'rgba(255,255,255,0.95)',
-              colorBgElevated: 'rgba(255,255,255,0.95)',
+              colorText: '#0F172A',
+              colorBgContainer: 'rgba(255,255,255,0.98)',
+              colorBgElevated: 'rgba(255,255,255,0.98)',
               rowHoverBg: 'rgba(249, 115, 22, 0.05)',
               colorPrimary: '#f97316',
               colorPrimaryHover: '#1E40AF',
@@ -274,9 +274,9 @@ const StudentTableSection: React.FC = () => {
               <Space direction="vertical" style={{ width: '100%' }}>
                 <Space>
                   <BookOutlined className={styles.bookIcon} />
-                  <Text strong>Student Enrollment Data</Text>
+                  <Text strong style={{ color: '#0F172A' }}>Student Enrollment Data</Text>
                 </Space>
-                <Text type="secondary" style={{ fontSize: '12px', marginLeft: 24 }}>
+                <Text type="secondary" style={{ fontSize: '12px', marginLeft: 24, color: '#6B7280' }}>
                   Click on student row to view their performance dashboard
                 </Text>
               </Space>
@@ -289,16 +289,16 @@ const StudentTableSection: React.FC = () => {
                 className={glassStyles.appleGlassCard}
                 style={{ 
                   marginBottom: 24,
-                  background: 'rgba(255, 255, 255, 0.25)',
+                  background: 'rgba(255, 255, 255, 0.35)',
                   backdropFilter: 'blur(30px) saturate(180%)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)'
+                  border: '1px solid rgba(255, 255, 255, 0.3)'
                 }}
               >
                 {/* First Row: Search */}
                 <Row gutter={[10, 10]} align="middle" style={{ marginBottom: 10 }}>
                   <Col xs={24} sm={24}>
                     <Space direction="vertical" style={{ width: '100%' }}>
-                      <Text style={{color:"black"}} strong>Search Students</Text>
+                      <Text style={{color:"#0F172A"}} strong>Search Students</Text>
                       <input
                         placeholder="Search by name, email or ID"
                         value={search}
@@ -306,10 +306,11 @@ const StudentTableSection: React.FC = () => {
                         style={{
                           borderRadius: 12, 
                           width: '90%', 
-                          backgroundColor:"rgba(255,255,255,0.8)",
+                          backgroundColor:"rgba(255,255,255,0.95)",
                           border: '1px solid #d9d9d9',
                           padding: '8px 12px',
-                          fontSize: '14px'
+                          fontSize: '14px',
+                          color: '#0F172A'
                         }}
                       />
                     </Space>
@@ -323,7 +324,7 @@ const StudentTableSection: React.FC = () => {
                       <Row gutter={[10, 10]}>
                         <Col xs={24} sm={8}>
                           <Space direction="vertical" style={{ width: '100%' }}>
-                            <Text style={{color:"black"}} strong>Filter by Combo</Text>
+                            <Text style={{color:"#0F172A"}} strong>Filter by Combo</Text>
                             <Select
                               allowClear
                               placeholder="Select Combo"
@@ -351,7 +352,7 @@ const StudentTableSection: React.FC = () => {
                         </Col>
                         <Col xs={24} sm={8}>
                           <Space direction="vertical" style={{ width: '100%' }}>
-                            <Text style={{color:"black"}} strong>Filter by Program</Text>
+                            <Text style={{color:"#0F172A"}} strong>Filter by Program</Text>
                             <Select
                               allowClear
                               placeholder="Select Program"
@@ -379,7 +380,7 @@ const StudentTableSection: React.FC = () => {
                         </Col>
                         <Col xs={24} sm={8}>
                           <Space direction="vertical" style={{ width: '100%' }}>
-                            <Text style={{color:"black"}} strong>Filter by Curriculum</Text>
+                            <Text style={{color:"#0F172A"}} strong>Filter by Curriculum</Text>
                             <Select
                               allowClear
                               placeholder="Select Curriculum"

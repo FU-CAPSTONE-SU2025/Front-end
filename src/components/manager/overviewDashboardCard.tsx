@@ -19,7 +19,7 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
     return (
       <Card className={styles.chartCard}>
         <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Text type="secondary">Loading overview data...</Text>
+          <Text style={{ color: '#0F172A' }}>Loading overview data...</Text>
         </div>
       </Card>
     );
@@ -29,7 +29,7 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
     return (
       <Card className={styles.chartCard}>
         <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Text type="secondary">No overview data available</Text>
+          <Text style={{ color: '#0F172A' }}>No overview data available</Text>
         </div>
       </Card>
     );
@@ -45,7 +45,7 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
         title={
           <Space>
             <BarChartOutlined className={styles.barChartIcon} />
-            <Text strong>Overview Dashboard</Text>
+            <Text strong style={{ color: '#0F172A' }}>Overview Dashboard</Text>
           </Space>
         }
         className={styles.chartCard}
@@ -60,16 +60,16 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
                 <div className={glassStyles.appleGlassCard} style={{ 
                   padding: '16px', 
                   textAlign: 'center',
-                  background: 'rgba(255, 255, 255, 0.25)',
+                  background: 'rgba(255, 255, 255, 0.35)',
                   backdropFilter: 'blur(30px) saturate(180%)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)'
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04)'
                 }}>
                   <Statistic
-                    title="Total Subjects in Database"
+                    title={<span style={{ color: '#0F172A', fontWeight: 600 }}>Total Subjects in Database</span>}
                     value={data.summary?.totalSubjects || 0}
-                    prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                    valueStyle={{ color: '#52c41a' }}
+                    prefix={<CheckCircleOutlined style={{ color: '#059669' }} />}
+                    valueStyle={{ color: '#059669', fontWeight: 700, fontSize: '24px' }}
                   />
                 </div>
               </Col>
@@ -77,16 +77,16 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
                 <div className={glassStyles.appleGlassCard} style={{ 
                   padding: '16px', 
                   textAlign: 'center',
-                  background: 'rgba(255, 255, 255, 0.25)',
+                  background: 'rgba(255, 255, 255, 0.35)',
                   backdropFilter: 'blur(30px) saturate(180%)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)'
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04)'
                 }}>
                   <Statistic
-                    title="Total Curricula"
+                    title={<span style={{ color: '#0F172A', fontWeight: 600 }}>Total Curricula</span>}
                     value={data.approvalDistribution?.curricula.total || 0}
-                    prefix={<CheckCircleOutlined style={{ color: '#1890ff' }} />}
-                    valueStyle={{ color: '#1890ff' }}
+                    prefix={<CheckCircleOutlined style={{ color: '#1E40AF' }} />}
+                    valueStyle={{ color: '#1E40AF', fontWeight: 700, fontSize: '24px' }}
                   />
                 </div>
               </Col>
@@ -94,16 +94,16 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
                 <div className={glassStyles.appleGlassCard} style={{ 
                   padding: '16px', 
                   textAlign: 'center',
-                  background: 'rgba(255, 255, 255, 0.25)',
+                  background: 'rgba(255, 255, 255, 0.35)',
                   backdropFilter: 'blur(30px) saturate(180%)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)'
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04)'
                 }}>
                   <Statistic
-                    title="Active Subject Versions"
+                    title={<span style={{ color: '#0F172A', fontWeight: 600 }}>Active Subject Versions</span>}
                     value={data.summary?.activeSubjectVersions || 0}
-                    prefix={<CheckCircleOutlined style={{ color: '#13c2c2' }} />}
-                    valueStyle={{ color: '#13c2c2' }}
+                    prefix={<CheckCircleOutlined style={{ color: '#0891b2' }} />}
+                    valueStyle={{ color: '#0891b2', fontWeight: 700, fontSize: '24px' }}
                   />
                 </div>
               </Col>
@@ -111,16 +111,16 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
                 <div className={glassStyles.appleGlassCard} style={{ 
                   padding: '16px', 
                   textAlign: 'center',
-                  background: 'rgba(255, 255, 255, 0.25)',
+                  background: 'rgba(255, 255, 255, 0.35)',
                   backdropFilter: 'blur(30px) saturate(180%)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)'
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04)'
                 }}>
                   <Statistic
-                    title="Total Syllabi"
+                    title={<span style={{ color: '#0F172A', fontWeight: 600 }}>Total Syllabi</span>}
                     value={data.approvalDistribution.syllabi.total || 0}
-                    prefix={<CheckCircleOutlined style={{ color: '#722ed1' }} />}
-                    valueStyle={{ color: '#722ed1' }}
+                    prefix={<CheckCircleOutlined style={{ color: '#7c3aed' }} />}
+                    valueStyle={{ color: '#7c3aed', fontWeight: 700, fontSize: '24px' }}
                   />
                 </div>
               </Col>
@@ -129,33 +129,33 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
             {/* Approval Status by Category */}
             <div className={glassStyles.appleGlassCard} style={{ 
               padding: '20px',
-              background: 'rgba(255, 255, 255, 0.25)',
+              background: 'rgba(255, 255, 255, 0.35)',
               backdropFilter: 'blur(30px) saturate(180%)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)'
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04)'
             }}>
-              <Text strong style={{ fontSize: '16px', marginBottom: '16px', display: 'block', color: '#1f2937' }}>Approval Status by Category</Text>
+              <Text strong style={{ fontSize: '16px', marginBottom: '16px', display: 'block', color: '#0F172A' }}>Approval Status by Category</Text>
               
               {/* Subjects Approval */}
               <div style={{ marginBottom: '16px' }}>
-                <Text strong style={{ color: '#1890ff', fontSize: '14px' }}>📚 Subjects</Text>
+                <Text strong style={{ color: '#1E40AF', fontSize: '14px' }}>📚 Subjects</Text>
                 <Row gutter={[4, 8]} style={{ marginTop: '8px' }}>
                   <Col span={8}>
                     <div style={{ textAlign: 'center', padding: '8px' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>{data.approvalDistribution?.subjects?.approved || 0}</div>
-                      <div style={{ fontSize: '14px', color: '#52c41a' }}>Approved</div>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#059669' }}>{data.approvalDistribution?.subjects?.approved || 0}</div>
+                      <div style={{ fontSize: '14px', color: '#059669', fontWeight: 600 }}>Approved</div>
                     </div>
                   </Col>
                   <Col span={8}>
                     <div style={{ textAlign: 'center', padding: '8px' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#faad14' }}>{data.approvalDistribution?.subjects?.pending || 0}</div>
-                      <div style={{ fontSize: '14px', color: '#faad14' }}>Pending</div>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#d97706' }}>{data.approvalDistribution?.subjects?.pending || 0}</div>
+                      <div style={{ fontSize: '14px', color: '#d97706', fontWeight: 600 }}>Pending</div>
                     </div>
                   </Col>
                   <Col span={8}>
                     <div style={{ textAlign: 'center', padding: '8px' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>{data.approvalDistribution?.subjects?.rejected || 0}</div>
-                      <div style={{ fontSize: '14px', color: '#ff4d4f' }}>Rejected</div>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#dc2626' }}>{data.approvalDistribution?.subjects?.rejected || 0}</div>
+                      <div style={{ fontSize: '14px', color: '#dc2626', fontWeight: 600 }}>Rejected</div>
                     </div>
                   </Col>
                 </Row>
@@ -163,24 +163,24 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
 
               {/* Curricula Approval */}
               <div style={{ marginBottom: '16px' }}>
-                <Text strong style={{ color: '#722ed1', fontSize: '14px' }}>🎓 Curricula</Text>
+                <Text strong style={{ color: '#7c3aed', fontSize: '14px' }}>🎓 Curricula</Text>
                 <Row gutter={[4, 8]} style={{ marginTop: '8px' }}>
                   <Col span={8}>
                     <div style={{ textAlign: 'center', padding: '8px' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>{data.approvalDistribution?.curricula?.approved || 0}</div>
-                      <div style={{ fontSize: '14px', color: '#52c41a' }}>Approved</div>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#059669' }}>{data.approvalDistribution?.curricula?.approved || 0}</div>
+                      <div style={{ fontSize: '14px', color: '#059669', fontWeight: 600 }}>Approved</div>
                     </div>
                   </Col>
                   <Col span={8}>
                     <div style={{ textAlign: 'center', padding: '8px' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#faad14' }}>{data.approvalDistribution?.curricula?.pending || 0}</div>
-                      <div style={{ fontSize: '14px', color: '#faad14' }}>Pending</div>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#d97706' }}>{data.approvalDistribution?.curricula?.pending || 0}</div>
+                      <div style={{ fontSize: '14px', color: '#d97706', fontWeight: 600 }}>Pending</div>
                     </div>
                   </Col>
                   <Col span={8}>
                     <div style={{ textAlign: 'center', padding: '8px' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>{data.approvalDistribution?.curricula?.rejected || 0}</div>
-                      <div style={{ fontSize: '14px', color: '#ff4d4f' }}>Rejected</div>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#dc2626' }}>{data.approvalDistribution?.curricula?.rejected || 0}</div>
+                      <div style={{ fontSize: '14px', color: '#dc2626', fontWeight: 600 }}>Rejected</div>
                     </div>
                   </Col>
                 </Row>
@@ -188,24 +188,24 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
 
               {/* Syllabi Approval */}
               <div>
-                <Text strong style={{ color: '#13c2c2', fontSize: '14px' }}>📖 Syllabi</Text>
+                <Text strong style={{ color: '#0891b2', fontSize: '14px' }}>📖 Syllabi</Text>
                 <Row gutter={[4, 8]} style={{ marginTop: '8px' }}>
                   <Col span={8}>
                     <div style={{ textAlign: 'center', padding: '8px' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>{data.approvalDistribution?.syllabi?.approved || 0}</div>
-                      <div style={{ fontSize: '14px', color: '#52c41a' }}>Approved</div>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#059669' }}>{data.approvalDistribution?.syllabi?.approved || 0}</div>
+                      <div style={{ fontSize: '14px', color: '#059669', fontWeight: 600 }}>Approved</div>
                     </div>
                   </Col>
                   <Col span={8}>
                     <div style={{ textAlign: 'center', padding: '8px' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#faad14' }}>{data.approvalDistribution?.syllabi?.pending || 0}</div>
-                      <div style={{ fontSize: '14px', color: '#faad14' }}>Pending</div>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#d97706' }}>{data.approvalDistribution?.syllabi?.pending || 0}</div>
+                      <div style={{ fontSize: '14px', color: '#d97706', fontWeight: 600 }}>Pending</div>
                     </div>
                   </Col>
                   <Col span={8}>
                     <div style={{ textAlign: 'center', padding: '8px' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>{data.approvalDistribution?.syllabi?.rejected || 0}</div>
-                      <div style={{ fontSize: '14px', color: '#ff4d4f' }}>Rejected</div>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#dc2626' }}>{data.approvalDistribution?.syllabi?.rejected || 0}</div>
+                      <div style={{ fontSize: '14px', color: '#dc2626', fontWeight: 600 }}>Rejected</div>
                     </div>
                   </Col>
                 </Row>
@@ -218,13 +218,13 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
             <div className={glassStyles.appleGlassCard} style={{ 
               padding: '20px', 
               height: '400px',
-              background: 'rgba(255, 255, 255, 0.25)',
+              background: 'rgba(255, 255, 255, 0.35)',
               backdropFilter: 'blur(30px) saturate(180%)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)'
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04)'
             }}>
               <div style={{ textAlign: 'center', marginBottom: '15px' }}>
-                <Text strong style={{ color: '#1f2937' }}>Approval Distribution Overview</Text>
+                <Text strong style={{ color: '#0F172A' }}>Approval Distribution Overview</Text>
               </div>
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={[
@@ -247,35 +247,35 @@ const OverviewDashboardCard: React.FC<OverviewDashboardCardProps> = ({ data, loa
                     rejected: data.approvalDistribution?.syllabi?.rejected || 0,
                   }
                 ]}>
-                  <PolarGrid stroke="rgba(0, 0, 0, 0.18)" />
-                  <PolarAngleAxis dataKey="name" tick={{ fill: '#374151', fontSize: 14 }} />
-                  <PolarRadiusAxis tick={{ fill: '#6B7280', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <PolarGrid stroke="rgba(0, 0, 0, 0.15)" />
+                  <PolarAngleAxis dataKey="name" tick={{ fill: '#0F172A', fontSize: 14, fontWeight: 600 }} />
+                  <PolarRadiusAxis tick={{ fill: '#1E293B', fontSize: 12, fontWeight: 500 }} axisLine={false} tickLine={false} />
                   <Radar
                     name="Pending"
                     dataKey="pending"
-                    stroke="#d48806"
+                    stroke="#d97706"
                     strokeWidth={2.5}
-                    fill="#d48806"
+                    fill="#d97706"
                     fillOpacity={0.5}
                   />
                   <Radar
                     name="Approved"
                     dataKey="approved"
-                    stroke="#237804"
+                    stroke="#059669"
                     strokeWidth={2.5}
-                    fill="#237804"
+                    fill="#059669"
                     fillOpacity={0.5}
                   />
                   <Radar
                     name="Rejected"
                     dataKey="rejected"
-                    stroke="#cf1322"
+                    stroke="#dc2626"
                     strokeWidth={2.5}
-                    fill="#cf1322"
+                    fill="#dc2626"
                     fillOpacity={0.5}
                   />
-                  <Tooltip wrapperStyle={{ outline: 'none' }} contentStyle={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 8, boxShadow: '0 6px 20px rgba(0,0,0,0.12)' }} labelStyle={{ color: '#111827', fontWeight: 600 }} itemStyle={{ color: '#111827' }} />
-                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: '#111827' }} />
+                  <Tooltip wrapperStyle={{ outline: 'none' }} contentStyle={{ background: 'rgba(255,255,255,0.98)', border: '1px solid rgba(0,0,0,0.06)', borderRadius: 8, boxShadow: '0 6px 20px rgba(0,0,0,0.08)' }} labelStyle={{ color: '#0F172A', fontWeight: 600 }} itemStyle={{ color: '#0F172A' }} />
+                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: '#0F172A' }} />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
