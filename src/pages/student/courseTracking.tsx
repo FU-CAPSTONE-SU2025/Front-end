@@ -59,11 +59,6 @@ const CourseTracking = () => {
     return subject?.completedPercentage || 0;
   };
 
-  const getSubjectStatus = (subjectId: number): string => {
-    if (!statusData) return 'In Progress';
-    const subject = statusData.find((item: any) => item.joinedSubjectId === subjectId);
-    return subject?.status || 'In Progress';
-  };
 
   // Group subjects by semester
   const semesterSubjects: SemesterSubjects = useMemo(() => {
