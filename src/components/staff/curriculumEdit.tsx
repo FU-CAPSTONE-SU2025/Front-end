@@ -333,10 +333,10 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
       });
       handleSuccess('Subject version added successfully');
       
-      // Reset selection and form, but keep modal open
+      // Reset selection
       setSelectedSubjectVersion(null);
       setModalSemesterNumber(1);
-      setModalIsMandatory(true);
+      setModalIsMandatory(false);
       
       // Refresh curriculum subject versions
       refreshCurriculumSubjectVersions();

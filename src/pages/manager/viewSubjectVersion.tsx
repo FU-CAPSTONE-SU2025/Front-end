@@ -1,54 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Button, Tabs, Typography, Card, Tag, Space, Tooltip} from 'antd';
-import {  ArrowLeftOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
+import {  ArrowLeftOutlined, EyeOutlined } from '@ant-design/icons';
 
-import AddVersionModal from '../../components/staff/AddVersionModal';
 import styles from '../../css/staff/staffEditSyllabus.module.css';
 
 import AssessmentTable from '../../components/staff/AssessmentTable';
 import MaterialTable from '../../components/staff/MaterialTable';
 import OutcomeTable from '../../components/staff/OutcomeTable';
 import SessionTable from '../../components/staff/SessionTable';
-import SubjectSelect from '../../components/common/SubjectSelect';
-import { Modal } from 'antd';
-import { SubjectVersion, Syllabus, CreateSubjectVersion } from '../../interfaces/ISchoolProgram';
+import { SubjectVersion, Syllabus } from '../../interfaces/ISchoolProgram';
 import { useCRUDSubject, useCRUDSubjectVersion, useCRUDSyllabus } from '../../hooks/useCRUDSchoolMaterial';
-import { generateDefaultVersionData, generateDefaultSyllabusData } from '../../datas/mockData';
+import { generateDefaultSyllabusData } from '../../datas/mockData';
 import { useApiErrorHandler } from '../../hooks/useApiErrorHandler';
 import { useMessagePopupContext } from '../../contexts/MessagePopupContext';
 import LoadingScreen from '../../components/LoadingScreen';
-
-// Function to create default version for a subject (moved outside component)
-const createDefaultVersion = async (
-  subjectData: any, 
-  addSubjectVersionMutation: any,
-  handleSuccess: (message: string) => void,
-  handleError: (message: string) => void
-) => {
-  try {
-    // Check if subject is approved before creating version
-    if (subjectData.approvalStatus !== "APPROVED") {
-      throw new Error('Cannot create versions for unapproved subjects. Please approve the subject first.');
-    }
-    
-    const defaultVersionData = generateDefaultVersionData(
-      subjectData.id,
-      subjectData.subjectCode,
-      subjectData.subjectName
-    );
-    
-    const newVersion = await addSubjectVersionMutation.mutateAsync(defaultVersionData);
-    if (newVersion) {
-      handleSuccess('Default version created successfully!');
-      return [newVersion];
-    }
-  } catch (err: any) {
-    const errorMessage = err.message || 'Failed to create default version.';
-    console.log('Failed to create default version: ' + errorMessage);
-  }
-  return [];
-};
 
 // Function to create default syllabus for a subject version (moved outside component)
 const createDefaultSyllabus = async (
@@ -81,12 +47,9 @@ const createDefaultSyllabus = async (
 const ManagerSubjectVersionPage: React.FC = () => {
   const navigate = useNavigate();
   const { subjectId } = useParams();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [adding, setAdding] = useState(false);
   const [activeKey, setActiveKey] = useState<string>('');
 
   // State for Add Prerequisite Modal
-  const [prereqModalOpen, setPrereqModalOpen] = useState(false);
   const [selectedPrereqSubject, setSelectedPrereqSubject] = useState<any>(null);
   const [editingVersionId, setEditingVersionId] = useState<number | null>(null);
   
@@ -310,7 +273,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
           // No versions exist, create default version then refetch to get real ID
           showInfo('No versions found. Creating default version...');
           setInitLoading('Creating default version...');
-          const defaultVersions = await createDefaultVersion(subjectData, addSubjectVersionMutation, handleSuccess, handleError);
           setInitLoading('Fetching newly created version...');
           let refreshed: SubjectVersion[] = [];
           try {
@@ -383,52 +345,7 @@ const ManagerSubjectVersionPage: React.FC = () => {
     }
   }, [syllabusMap, prereqMap, prereqLoading, fetchOrCreateSyllabus, fetchPrerequisitesForVersion, subject]);
 
-  // Handler for adding a new version
-  const handleAddVersion = useCallback(async (values: CreateSubjectVersion) => {
-    setAdding(true);
-    try {
-      await addSubjectVersionMutation.mutateAsync(values);
-      handleSuccess('Version added successfully!');
-      
-      // Refresh versions list
-      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
-      if (updatedVersions) {
-        setSubjectVersions(updatedVersions);
-        if (updatedVersions.length > 0) {
-          const newVersionId = updatedVersions[updatedVersions.length - 1].id;
-          setActiveKey(String(newVersionId));
-          // Fetch prerequisites for the new version
-          await fetchPrerequisitesForVersion(newVersionId);
-        }
-      }
-      
-      setModalVisible(false);
-    } catch (err: any) {
-      handleError('Failed to add version: ' + err.message);
-    } finally {
-      setAdding(false);
-    }
-  }, [addSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, fetchPrerequisitesForVersion, handleSuccess, handleError]);
-
-  // Handler to delete a version
-  const handleDeleteVersion = useCallback(async (versionId: number) => {
-    try {
-      await deleteSubjectVersionMutation.mutateAsync(versionId);
-      handleSuccess('Version deleted successfully!');
-      
-      // Refresh versions list
-      const updatedVersions = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
-      if (updatedVersions) {
-        setSubjectVersions(updatedVersions);
-        if (updatedVersions.length > 0 && activeKey === String(versionId)) {
-          setActiveKey(String(updatedVersions[0].id));
-        }
-      }
-    } catch (err: any) {
-      handleError('Failed to delete version: ' + err.message);
-    }
-  }, [deleteSubjectVersionMutation, getSubjectVersionsBySubjectId, subjectId, activeKey, handleSuccess, handleError]);
-
+ 
   // Handler to toggle active status (Manager approval)
   const handleToggleActive = useCallback(async (versionId: number) => {
     try {
@@ -448,7 +365,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
   // Handler to add a prerequisite
   const handleAddPrerequisite = (versionId: number) => {
     setEditingVersionId(versionId);
-    setPrereqModalOpen(true);
   };
 
   const handlePrereqModalOk = async () => {
@@ -469,13 +385,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
         handleError('Failed to add prerequisite');
       }
     }
-    setPrereqModalOpen(false);
-    setSelectedPrereqSubject(null);
-    setEditingVersionId(null);
-  };
-
-  const handlePrereqModalCancel = () => {
-    setPrereqModalOpen(false);
     setSelectedPrereqSubject(null);
     setEditingVersionId(null);
   };
@@ -595,7 +504,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
       </>
     );
   }
-
   if (error) {
     return (
       <div style={{ position: 'fixed', inset: 0, backdropFilter: 'blur(4px)', background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
@@ -615,72 +523,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
       </div>
     );
   }
-
-  if (subjectVersions.length === 0) {
-    return (
-      <div className={styles.syllabusContainer} style={{ width: '100%', maxWidth: 'none', minWidth: 0 }}>
-        {/* Header */}
-        <div className={styles.syllabusHeader}>
-          <div className={styles.syllabusHeaderLeft}>
-            <button className={styles.backButton} onClick={() => navigate(-1)}>
-              <ArrowLeftOutlined /> Back to Subjects
-            </button>
-            <div className={styles.syllabusTitleCard}>
-              <h2 className={styles.syllabusTitle}>
-                {subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Subject'}
-              </h2>
-              <h3 className={styles.syllabusSubtitle}>
-                <span style={{ whiteSpace: 'pre-line' }}>{subject?.description}</span>
-              </h3>
-            </div>
-          </div>
-          <div className={styles.syllabusHeaderRight}>
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />} 
-              onClick={() => setModalVisible(true)}
-            >
-              Add Version
-            </Button>
-          </div>
-        </div>
-
-        {/* No Versions Message */}
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '50vh',
-          textAlign: 'center'
-        }}>
-          <Typography.Title level={3} style={{ color: '#666', marginBottom: 16 }}>
-            No Versions Found
-          </Typography.Title>
-          <Typography.Text style={{ color: '#999', marginBottom: 24 }}>
-            This subject doesn't have any versions yet. Create the first version to get started.
-          </Typography.Text>
-          <Button 
-            type="primary" 
-            size="large"
-            icon={<PlusOutlined />} 
-            onClick={() => setModalVisible(true)}
-          >
-            Create First Version
-          </Button>
-        </div>
-
-        <AddVersionModal
-          visible={modalVisible}
-          onCancel={() => setModalVisible(false)}
-          onAdd={handleAddVersion}
-          confirmLoading={adding}
-          subjectId={Number(subjectId)}
-        />
-      </div>
-    );
-  }
-
   return (
     <>
       <style>
@@ -712,16 +554,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
                 <span style={{ whiteSpace: 'pre-line' }}>{subject?.description}</span>
               </h3>
             </div>
-          </div>
-          <div className={styles.syllabusHeaderRight}>
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />} 
-              style={{ marginLeft: 16 }} 
-              onClick={() => setModalVisible(true)}
-            >
-              Add Version
-            </Button>
           </div>
         </div>
 
@@ -931,23 +763,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Add Prerequisite Modal */}
-                    <Modal
-                      title="Add Prerequisite Subject"
-                      open={prereqModalOpen && editingVersionId === version.id}
-                      onOk={handlePrereqModalOk}
-                      onCancel={handlePrereqModalCancel}
-                      okButtonProps={{ disabled: !selectedPrereqSubject }}
-                    >
-                      <SubjectSelect
-                        value={selectedPrereqSubject ? [selectedPrereqSubject] : []}
-                        onChange={arr => Array.isArray(arr) && arr.length > 0 ? setSelectedPrereqSubject(arr[0]) : setSelectedPrereqSubject(null)}
-                        multiple={false}
-                        placeholder="Select subject..."
-                        style={{ width: '100%' }}
-                      />
-                    </Modal>
-
                     {/* Set Default Button */}
                     {!version.isDefault && (
                       <div style={{ marginBottom: 16 }}>
@@ -966,14 +781,6 @@ const ManagerSubjectVersionPage: React.FC = () => {
             })}
           />
         </div>
-
-        <AddVersionModal
-          visible={modalVisible}
-          onCancel={() => setModalVisible(false)}
-          onAdd={handleAddVersion}
-          confirmLoading={adding}
-          subjectId={Number(subjectId)}
-        />
       </div>
     </>
   );

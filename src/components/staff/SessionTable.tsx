@@ -59,8 +59,6 @@ const SessionTable: React.FC<SessionTableProps> = ({
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
   const [selectedOutcomeId, setSelectedOutcomeId] = useState<number | null>(null);
 
-  const [addOutcomeSessionId, setAddOutcomeSessionId] = useState<number | null>(null);
-
   const { addSyllabusSessionsBulkMutation } = useCRUDSyllabus();
 
   const handleAddSession = async (values: any) => {
@@ -111,10 +109,10 @@ const SessionTable: React.FC<SessionTableProps> = ({
       setSelectedOutcomeId(null);
       message.success('Outcome added to session successfully');
     } catch (error) {
-      message.error('Failed to add outcome to session');
+      message.error('Failed to add outcome to session',error);
     }
   };
-
+  
   const handleSessionDataImported = async (importedData: { [type: string]: { [key: string]: string }[] }) => {
     try {
       // Extract session data from the imported data

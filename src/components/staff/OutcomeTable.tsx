@@ -52,9 +52,8 @@ const OutcomeTable: React.FC<OutcomeTableProps> = ({
       await onAddOutcome(values);
       setOutcomeModalVisible(false);
       outcomeForm.resetFields();
-      message.success('Learning outcome added successfully');
     } catch (error) {
-      message.error('Failed to add learning outcome');
+      message.error('Failed to add learning outcome',error);
     }
   };
 
