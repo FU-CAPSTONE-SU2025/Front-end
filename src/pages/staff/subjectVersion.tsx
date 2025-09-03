@@ -1232,16 +1232,37 @@ const SubjectVersionPage: React.FC = () => {
     }
   };
 
-  const handleBulkDataImported = (type: string, versionId: number, importedData: any[]) => {
-    if (type === 'ASSESSMENT') setAssessmentMap(prev => ({ ...prev, [versionId]: importedData }));
-    if (type === 'MATERIAL') setMaterialMap(prev => ({ ...prev, [versionId]: importedData }));
-    if (type === 'OUTCOME') setOutcomeMap(prev => ({ ...prev, [versionId]: importedData }));
-    if (type === 'SESSION') setSessionMap(prev => ({ ...prev, [versionId]: importedData }));
-    setBulkModal(null);
-    handleSuccess(`${type} data imported successfully!`);
-  };
+  // Helper to refresh syllabus and fan out data to per-version maps
+  const refreshSyllabusForVersion = useCallback(async (versionId: number) => {
+    const updatedSyllabus = await fetchSyllabusBySubjectVersionMutation.mutateAsync(versionId);
+    if (!updatedSyllabus) return;
 
-  const handleBulkModalClose = () => setBulkModal(null);
+    setSyllabusMap(prev => ({
+      ...prev,
+      [versionId]: updatedSyllabus
+    }));
+    setAssessmentMap(prev => ({
+      ...prev,
+      [versionId]: updatedSyllabus.assessments || []
+    }));
+    setMaterialMap(prev => ({
+      ...prev,
+      [versionId]: updatedSyllabus.learningMaterials || []
+    }));
+    setOutcomeMap(prev => ({
+      ...prev,
+      [versionId]: updatedSyllabus.learningOutcomes || []
+    }));
+    setSessionMap(prev => ({
+      ...prev,
+      [versionId]: updatedSyllabus.sessions || []
+    }));
+
+    if (String(versionId) === activeKey) {
+      setCurrentSyllabus(updatedSyllabus);
+    }
+  }, [fetchSyllabusBySubjectVersionMutation, activeKey]);
+
 
   // Handler for tab change
   const handleTabChange = useCallback(async (key: string) => {
@@ -1769,6 +1790,7 @@ const SubjectVersionPage: React.FC = () => {
                         onAddAssessment={a => handleAddAssessment(version.id, a)}
                         onDeleteAssessment={id => handleDeleteAssessment(version.id, id)}
                         onUpdateAssessment={(id, a) => handleUpdateAssessment(version.id, id, a)}
+                        onRequestRefresh={() => refreshSyllabusForVersion(version.id)}
                       />
                     </div>
 
@@ -1784,6 +1806,7 @@ const SubjectVersionPage: React.FC = () => {
                         onAddMaterial={m => handleAddMaterial(version.id, m)}
                         onDeleteMaterial={id => handleDeleteMaterial(version.id, id)}
                         onUpdateMaterial={(id, m) => handleUpdateMaterial(version.id, id, m)}
+                        onRequestRefresh={() => refreshSyllabusForVersion(version.id)}
                       />
                     </div>
 
@@ -1799,6 +1822,7 @@ const SubjectVersionPage: React.FC = () => {
                         onAddOutcome={o => handleAddOutcome(version.id, o)}
                         onDeleteOutcome={id => handleDeleteOutcome(version.id, id)}
                         onUpdateOutcome={(id, o) => handleUpdateOutcome(version.id, id, o)}
+                        onRequestRefresh={() => refreshSyllabusForVersion(version.id)}
                       />
                     </div>
 
@@ -1815,6 +1839,7 @@ const SubjectVersionPage: React.FC = () => {
                         onDeleteSession={id => handleDeleteSession(version.id, id)}
                         onUpdateSession={(id, s) => handleUpdateSession(version.id, id, s)}
                         onAddOutcomeToSession={(sessionId, outcomeId) => handleAddOutcomeToSession(version.id, sessionId, outcomeId)}
+                        onRequestRefresh={() => refreshSyllabusForVersion(version.id)}
                       />
                     </div>
                   </div>

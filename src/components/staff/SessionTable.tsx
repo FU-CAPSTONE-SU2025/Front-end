@@ -34,6 +34,7 @@ interface SessionTableProps {
   onDeleteSession: (id: number) => void;
   onUpdateSession: (id: number, session: Partial<SyllabusSession>) => void;
   onAddOutcomeToSession: (sessionId: number, outcomeId: number) => Promise<void>;
+  onRequestRefresh?: () => Promise<void> | void;
 }
 
 const SessionTable: React.FC<SessionTableProps> = ({
@@ -45,6 +46,7 @@ const SessionTable: React.FC<SessionTableProps> = ({
   onUpdateSession,
   onAddOutcomeToSession,
   syllabusId,
+  onRequestRefresh,
 }) => {
   const [sessionForm] = Form.useForm();
   const [sessionModalVisible, setSessionModalVisible] = useState(false);
@@ -126,6 +128,7 @@ const SessionTable: React.FC<SessionTableProps> = ({
       await addSyllabusSessionsBulkMutation.mutateAsync(sessions);
       message.success(`Successfully imported ${sessions.length} session(s)`);
       setSessionImportVisible(false);
+      if (onRequestRefresh) await onRequestRefresh();
     } catch (error) {
       message.error('Failed to import session data');
     }

@@ -30,6 +30,7 @@ interface AssessmentTableProps {
   onAddAssessment: (assessment: CreateSyllabusAssessment) => Promise<void>;
   onDeleteAssessment: (id: number) => void;
   onUpdateAssessment: (id: number, assessment: Partial<SyllabusAssessment>) => void;
+  onRequestRefresh?: () => Promise<void> | void;
 }
 
 const AssessmentTable: React.FC<AssessmentTableProps> = ({
@@ -38,7 +39,8 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
   onAddAssessment,
   onDeleteAssessment,
   onUpdateAssessment,
-  syllabusId
+  syllabusId,
+  onRequestRefresh
 }) => {
   const [assessmentForm] = Form.useForm();
   const [assessmentModalVisible, setAssessmentModalVisible] = useState(false);
@@ -97,6 +99,7 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
       }
       message.success(`Successfully imported ${assessmentData.length} assessment(s)`);
       setAssessmentImportVisible(false);
+      if (onRequestRefresh) await onRequestRefresh();
     } catch (error) {
       message.error('Failed to import assessment data');
     }

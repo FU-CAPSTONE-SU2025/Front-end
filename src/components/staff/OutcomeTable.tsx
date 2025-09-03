@@ -28,6 +28,7 @@ interface OutcomeTableProps {
   onAddOutcome: (outcome: CreateSyllabusOutcome) => Promise<void>;
   onDeleteOutcome: (id: number) => void;
   onUpdateOutcome: (id: number, outcome: Partial<SyllabusOutcome>) => void;
+  onRequestRefresh?: () => Promise<void> | void;
 }
 
 const OutcomeTable: React.FC<OutcomeTableProps> = ({
@@ -36,7 +37,8 @@ const OutcomeTable: React.FC<OutcomeTableProps> = ({
   onAddOutcome,
   onDeleteOutcome,
   onUpdateOutcome,
-  syllabusId
+  syllabusId,
+  onRequestRefresh
 }) => {
   const [outcomeForm] = Form.useForm();
   const [outcomeModalVisible, setOutcomeModalVisible] = useState(false);
@@ -90,6 +92,7 @@ const OutcomeTable: React.FC<OutcomeTableProps> = ({
       await addSyllabusOutcomesBulkMutation.mutateAsync(outcomes);
       message.success(`Successfully imported ${outcomes.length} outcome(s)`);
       setOutcomeImportVisible(false);
+      if (onRequestRefresh) await onRequestRefresh();
     } catch (error) {
       message.error('Failed to import outcome data');
     }

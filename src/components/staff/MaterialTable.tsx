@@ -30,6 +30,7 @@ interface MaterialTableProps {
   onAddMaterial: (material: CreateSyllabusMaterial) => Promise<void>;
   onDeleteMaterial: (id: number) => void;
   onUpdateMaterial: (id: number, material: Partial<SyllabusMaterial>) => void;
+  onRequestRefresh?: () => Promise<void> | void;
 }
 
 const MaterialTable: React.FC<MaterialTableProps> = ({
@@ -38,7 +39,8 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
   onAddMaterial,
   onDeleteMaterial,
   onUpdateMaterial,
-  syllabusId
+  syllabusId,
+  onRequestRefresh
 }) => {
   const [materialForm] = Form.useForm();
   const [materialModalVisible, setMaterialModalVisible] = useState(false);
@@ -95,6 +97,7 @@ const MaterialTable: React.FC<MaterialTableProps> = ({
       await addSyllabusMaterialsBulkMutation.mutateAsync(materials);
       message.success(`Successfully imported ${materials.length} material(s)`);
       setMaterialImportVisible(false);
+      if (onRequestRefresh) await onRequestRefresh();
     } catch (error) {
       message.error('Failed to import material data');
     }
