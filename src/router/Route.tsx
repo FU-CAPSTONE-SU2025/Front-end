@@ -45,7 +45,7 @@ const EditStudentTranscript = lazy(() => import("../pages/staff/editStudentTrans
 const SubjectPage = lazy(() => import("../pages/staff/subject"));
 const ChatAI = lazy(() => import("../pages/student/chatAI"));
 const JoinedSubjectsByCodePage = lazy(() => import("../pages/student/joinedSubjectsByCode"));
-const AdvisorDashboard = lazy(() => import("../pages/advisor/dashboard"));
+const AdvisorProfile = lazy(() => import("../pages/advisor/dashboard"));
 const WorkSchedule = lazy(() => import("../pages/advisor/workSchedule"));
 const LeaveSchedulePage = lazy(() => import("../pages/advisor/leaveschedule"));
 const SubjectVersionPage = lazy(() => import("../pages/staff/subjectVersion"));
@@ -309,7 +309,7 @@ export const routes = createBrowserRouter([
         index: true,
         element: (
           <Suspense fallback={<PageLoader />}>
-            <AdvisorDashboard />
+            <AdvisorProfile />
           </Suspense>
         ),
       },

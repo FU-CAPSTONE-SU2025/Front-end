@@ -378,75 +378,7 @@ const NodeDetailsDrawer: React.FC<NodeDetailsDrawerProps> = ({
 
             <Divider />
 
-            {/* Prerequisites Section */}
-            <div className="space-y-3">
-              <h4 className="font-semibold text-gray-700 flex items-center gap-2">
-                <LinkOutlined className="text-green-500" />
-                Prerequisites
-              </h4>
-              {nodeDetails.prerequisiteIds.length > 0 ? (
-                <div className="space-y-2">
-                  {nodeDetails.prerequisiteIds.map((prereqId, index) => (
-                    <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <span className="text-blue-700 font-medium">Subject ID: {prereqId}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
-                  <span className="text-gray-500">No prerequisites required</span>
-                </div>
-              )}
-            </div>
-
-            {/* Dependents Section */}
-            <div className="space-y-3">
-              <h4 className="font-semibold text-gray-700 flex items-center gap-2">
-                <LinkOutlined className="text-purple-500" />
-                Dependents
-              </h4>
-              {nodeDetails.dependentIds.length > 0 ? (
-                <div className="space-y-2">
-                  {nodeDetails.dependentIds.map((depId, index) => (
-                    <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <span className="text-blue-700 font-medium">Subject ID: {depId}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
-                  <span className="text-gray-500">No dependent subjects</span>
-                </div>
-              )}
-            </div>
-
-            {/* Outgoing Links Section */}
-            <div className="space-y-3">
-              <h4 className="font-semibold text-gray-700 flex items-center gap-2">
-                <LinkOutlined className="text-orange-500" />
-                Outgoing Connections
-              </h4>
-              {nodeDetails.outgoingLinks.length > 0 ? (
-                <div className="space-y-2">
-                  {nodeDetails.outgoingLinks.map((link, index) => (
-                    <div key={index} className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-orange-700 font-medium">
-                          To Subject ID: {link.toNodeId}
-                        </span>
-                        <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">
-                          Link ID: {link.id}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
-                  <span className="text-gray-500">No outgoing connections</span>
-                </div>
-              )}
-            </div>
+     
           </div>
         </Form>
         ) : (

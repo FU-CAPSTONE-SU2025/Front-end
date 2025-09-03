@@ -7,7 +7,7 @@ import Notification from '../common/Notification';
 import { useAuths } from '../../hooks/useAuthState';
 
 const navItems = [
-  { name: 'Dashboard', path: '/advisor' },
+  { name: 'Profile', path: '/advisor' },
   { name: 'Work Schedule', path: '/advisor/workSchedule' },
   { name: 'Leave Schedule', path: '/advisor/leaveSchedule' },
   { name: 'Student Meeting', path: '/advisor/meeting' },
