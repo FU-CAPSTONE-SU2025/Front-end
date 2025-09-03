@@ -833,6 +833,29 @@ const EditStudentTranscript: React.FC = () => {
                         <Text className={styles.subjectDescription} style={{ whiteSpace: 'pre-line' }}>
                           Credits: {subject.credits ?? '-'} • Block: {subject.semesterStudyBlockType}
                         </Text>
+                        <Button 
+                            danger 
+                            size="small"
+                            style={{
+                              border: '1px solid #ff4d4f',
+                              borderRadius: '6px',
+                              fontWeight: '500',
+                              boxShadow: '0 2px 4px rgba(255, 77, 79, 0.2)',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                              e.currentTarget.style.boxShadow = '0 4px 8px rgba(255, 77, 79, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.boxShadow = '0 2px 4px rgba(255, 77, 79, 0.2)';
+                            }}
+                            onClick={(e) => handleDeleteInProgress(subject, e)}
+                            loading={isDeleteing}
+                          >
+                            Remove
+                          </Button>
                       </Card>
                     </motion.div>
                   </Col>
@@ -874,6 +897,29 @@ const EditStudentTranscript: React.FC = () => {
                         <Text className={styles.subjectDescription} style={{ whiteSpace: 'pre-line' }}>
                           Block: {subject.semesterStudyBlockType} • Semester: {subject.semesterName || 'N/A'}
                         </Text>
+                        <Button 
+                            danger 
+                            size="small"
+                            style={{
+                              border: '1px solid #ff4d4f',
+                              borderRadius: '6px',
+                              fontWeight: '500',
+                              boxShadow: '0 2px 4px rgba(255, 77, 79, 0.2)',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                              e.currentTarget.style.boxShadow = '0 4px 8px rgba(255, 77, 79, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.boxShadow = '0 2px 4px rgba(255, 77, 79, 0.2)';
+                            }}
+                            onClick={(e) => handleDeleteInProgress(subject, e)}
+                            loading={isDeleteing}
+                          >
+                            Remove
+                          </Button>
                       </Card>
                     </motion.div>
                   </Col>
