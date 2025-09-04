@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Form, Input, Select, DatePicker, Button, Space, Spin, Card, Table, Checkbox, Modal, List, Tag, Row, Col, Typography } from 'antd';
-import { SaveOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
+import { SaveOutlined, DeleteOutlined, PlusOutlined, SearchOutlined, FilterOutlined, ClearOutlined } from '@ant-design/icons';
 import { Curriculum, SubjectVersion, SubjectVersionWithCurriculumInfo, Program, CreateSubjectToCurriculum } from '../../interfaces/ISchoolProgram';
 import dayjs from 'dayjs';
 import {useCRUDCurriculum, useCRUDSubjectVersion} from '../../hooks/useCRUDSchoolMaterial';
@@ -47,6 +47,9 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
   const [curriculumSubjectVersions, setCurriculumSubjectVersions] = useState<SubjectVersionWithCurriculumInfo[]>([]);
   const [addLoading, setAddLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
+  
+  // Semester filter state
+  const [selectedSemesterFilter, setSelectedSemesterFilter] = useState<number | null>(null);
 
   // Modal state for adding subject versions
   const [isAddSubjectModalVisible, setIsAddSubjectModalVisible] = useState(false);
@@ -196,6 +199,25 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
       subjectVersion.versionName.toLowerCase().includes(searchLower)
     );
   }, [availableSubjectVersions, searchSubjectVersion]);
+
+  // Memoize filtered curriculum subject versions by semester
+  const filteredCurriculumSubjectVersions = useMemo(() => {
+    console.log('Filtering curriculum subjects:', {
+      selectedSemesterFilter,
+      curriculumSubjectVersionsLength: curriculumSubjectVersions.length,
+      curriculumSubjectVersions: curriculumSubjectVersions
+    });
+    
+    // Handle both null and undefined cases
+    if (selectedSemesterFilter === null || selectedSemesterFilter === undefined) {
+      return curriculumSubjectVersions;
+    }
+    const filtered = curriculumSubjectVersions.filter(
+      subjectVersion => subjectVersion.semesterNumber === selectedSemesterFilter
+    );
+    console.log('Filtered result:', filtered);
+    return filtered;
+  }, [curriculumSubjectVersions, selectedSemesterFilter]);
 
   // Progressive pagination: fetch next page if filtered results are empty
   const checkAndFetchNextPage = useCallback(async () => {
@@ -530,18 +552,56 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
           }}
         >
           <div className={styles.addSubjectControls}>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleAddSubjectClick}
-              className={styles.addSubjectButton}
-            >
-              Add Subject Version
-            </Button>
+            <Space size="middle" wrap>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleAddSubjectClick}
+                className={styles.addSubjectButton}
+              >
+                Add Subject Version
+              </Button>
+              
+              <Space size="small">
+                <FilterOutlined style={{ color: '#666' }} />
+                <Text strong style={{ fontSize: '14px' }}>Filter by Semester:</Text>
+                <Select
+                  placeholder="All Semesters"
+                  value={selectedSemesterFilter}
+                  onChange={(value) => setSelectedSemesterFilter(value || null)}
+                  style={{ width: 120 }}
+                  allowClear
+                  clearIcon={<ClearOutlined />}
+                >
+                  {Array.from({ length: 9 }, (_, i) => i + 1).map(semester => (
+                    <Option key={semester} value={semester}>
+                      Semester {semester}
+                    </Option>
+                  ))}
+                </Select>
+              </Space>
+            </Space>
           </div>
+          
+          {/* Filter Status */}
+          {selectedSemesterFilter !== null && selectedSemesterFilter !== undefined && (
+            <div style={{ marginBottom: 16, padding: '8px 12px', backgroundColor: '#f0f9ff', border: '1px solid #3b82f6', borderRadius: '6px' }}>
+              <Text style={{ color: '#1e40af', fontSize: '14px' }}>
+                <FilterOutlined style={{ marginRight: 4 }} />
+                Showing subjects for <strong>Semester {selectedSemesterFilter}</strong> 
+                ({filteredCurriculumSubjectVersions.length} of {curriculumSubjectVersions.length} total subjects)
+              </Text>
+            </div>
+          )}
+          
           <Table
-            dataSource={curriculumSubjectVersions || []}
+            dataSource={filteredCurriculumSubjectVersions || []}
             rowKey="subjectVersionId"
+            locale={{
+              emptyText: (selectedSemesterFilter !== null && selectedSemesterFilter !== undefined)
+                ? `No subjects found for Semester ${selectedSemesterFilter}` 
+                : 'No subjects in this curriculum'
+            }}
             columns={[
               {
                 title: 'Subject Code',
