@@ -394,7 +394,6 @@ const SubjectVersionPage: React.FC = () => {
         // Fetch subject first
         const subjectData = await getSubjectById.mutateAsync(Number(subjectId));
         setSubject(subjectData);
-        
         // Check if subject is approved before proceeding
         if (subjectData.approvalStatus !== "APPROVED") {
           handleError('Cannot create versions for unapproved subjects. Please approve the subject first.');
@@ -456,28 +455,25 @@ const SubjectVersionPage: React.FC = () => {
               console.error('[Versions] Refetch after create failed:', refErr);
             }
             
-            const validVersions = (refreshedAfterCreate || [])
-              .filter(v => v && typeof v.id === 'number' && v.id > 0);
-            const newestVersion = validVersions
-              .slice()
-              .sort((a, b) => (b.id || 0) - (a.id || 0))[0];
+            const validVersions = refreshedAfterCreate[0]
+           
             
-            if (newestVersion && newestVersion.id > 0) {
-              console.log('[Versions] Using newly created version id:', newestVersion.id, newestVersion);
-              setSubjectVersions(validVersions);
-              setActiveKey(String(newestVersion.id));
+            if (validVersions && validVersions.id > 0) {
+              console.log('[Versions] Using newly created version id:', validVersions.id, newestVersion);
+              setSubjectVersions(refreshedAfterCreate);
+              setActiveKey(String(validVersions.id));
               
               // Ensure backend has finalized creation
               setInitLoading('Preparing syllabus...');
               await new Promise(resolve => setTimeout(resolve, 800));
               
               // Create syllabus for the new version
-              await fetchOrCreateSyllabus(newestVersion.id, subjectData);
+              await fetchOrCreateSyllabus(validVersions.id, subjectData);
               
               // Fetch prerequisites for the new version
               setInitLoading('Fetching prerequisites...');
               await new Promise(resolve => setTimeout(resolve, 300));
-              await fetchPrerequisitesForVersion(newestVersion.id);
+              await fetchPrerequisitesForVersion(validVersions.id);
               setInitLoading(null);
             } else {
               console.warn('[Versions] No valid version found after creation refetch', refreshedAfterCreate);
