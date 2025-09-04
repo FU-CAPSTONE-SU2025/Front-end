@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Form, Input, Select, DatePicker, Button, Space, Spin, Card, Table, Checkbox, Modal, List, Tag, Row, Col, Typography } from 'antd';
 import { SaveOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { Curriculum, SubjectVersion, SubjectVersionWithCurriculumInfo, Program, CreateSubjectToCurriculum } from '../../interfaces/ISchoolProgram';
@@ -59,7 +59,6 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
   const [subjectVersionPage, setSubjectVersionPage] = useState(1);
   const [subjectVersionPageSize] = useState(10);
   const [hasMoreSubjectVersions, setHasMoreSubjectVersions] = useState(true);
-  const [availableSubjectVersions, setAvailableSubjectVersions] = useState<SubjectVersion[]>([]);
   const [isProgressiveFetching, setIsProgressiveFetching] = useState(false);
   const [maxPageReached, setMaxPageReached] = useState(false);
 
@@ -167,39 +166,43 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
     }
   };
 
-  // Compute available subject versions to add
-  useEffect(() => {
-    GetAvailableSubjectVersions();
-  }, [curriculumSubjectVersions, allSubjectVersions]);
-
-  const GetAvailableSubjectVersions = () => {
+  // Compute available subject versions to add using useMemo for optimization
+  const availableSubjectVersions = useMemo(() => {
     // Ensure both arrays are defined
     const safeCurriculumVersions = curriculumSubjectVersions || [];
     const safeAllVersions = allSubjectVersions || [];
     
     if (safeCurriculumVersions.length > 0) {
       // Filter out versions that are already in the curriculum
-      setAvailableSubjectVersions(safeAllVersions.filter(
+      return safeAllVersions.filter(
         version => !safeCurriculumVersions.some(csv => csv.subjectVersionId === version.id)
-      ));
+      );
     } else {
       // If no curriculum subject versions, all subject versions are available
-      setAvailableSubjectVersions(safeAllVersions);
+      return safeAllVersions;
     }
-  };
+  }, [curriculumSubjectVersions, allSubjectVersions]);
+
+  // Memoize filtered subject versions for the modal to prevent unnecessary re-filtering
+  const filteredSubjectVersions = useMemo(() => {
+    if (!searchSubjectVersion.trim()) {
+      return availableSubjectVersions;
+    }
+    
+    const searchLower = searchSubjectVersion.toLowerCase();
+    return availableSubjectVersions.filter(subjectVersion =>
+      subjectVersion.subject.subjectName.toLowerCase().includes(searchLower) ||
+      subjectVersion.subject.subjectCode.toLowerCase().includes(searchLower) ||
+      subjectVersion.versionName.toLowerCase().includes(searchLower)
+    );
+  }, [availableSubjectVersions, searchSubjectVersion]);
 
   // Progressive pagination: fetch next page if filtered results are empty
-  const checkAndFetchNextPage = async () => {
+  const checkAndFetchNextPage = useCallback(async () => {
     if (isProgressiveFetching || maxPageReached || !hasMoreSubjectVersions) return;
 
-    const filteredVersions = availableSubjectVersions.filter(subjectVersion =>
-      subjectVersion.subject.subjectName.toLowerCase().includes(searchSubjectVersion.toLowerCase()) ||
-      subjectVersion.subject.subjectCode.toLowerCase().includes(searchSubjectVersion.toLowerCase()) ||
-      subjectVersion.versionName.toLowerCase().includes(searchSubjectVersion.toLowerCase())
-    );
-
     // If filtered results are empty and we have more pages, fetch next page
-    if (filteredVersions.length === 0 && hasMoreSubjectVersions && !getSubjectVersionMutation.isPending) {
+    if (filteredSubjectVersions.length === 0 && hasMoreSubjectVersions && !getSubjectVersionMutation.isPending) {
       setIsProgressiveFetching(true);
       try {
         setSubjectVersionPage(prev => prev + 1);
@@ -210,30 +213,24 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
         setIsProgressiveFetching(false);
       }
     }
-  };
+  }, [filteredSubjectVersions.length, isProgressiveFetching, maxPageReached, hasMoreSubjectVersions, getSubjectVersionMutation.isPending]);
 
   // Check if we need to auto-load more when list doesn't fill container
-  const checkAutoLoad = () => {
+  const checkAutoLoad = useCallback(() => {
     if (!hasMoreSubjectVersions || getSubjectVersionMutation.isPending || isProgressiveFetching) return;
     
-    const filteredVersions = availableSubjectVersions.filter(subjectVersion =>
-      subjectVersion.subject.subjectName.toLowerCase().includes(searchSubjectVersion.toLowerCase()) ||
-      subjectVersion.subject.subjectCode.toLowerCase().includes(searchSubjectVersion.toLowerCase()) ||
-      subjectVersion.versionName.toLowerCase().includes(searchSubjectVersion.toLowerCase())
-    );
-
     // If we have fewer than 4 results and more pages available, auto-load
-    if (filteredVersions.length < 4 && hasMoreSubjectVersions) {
+    if (filteredSubjectVersions.length < 4 && hasMoreSubjectVersions) {
       loadMoreSubjectVersions();
     }
-  };
+  }, [filteredSubjectVersions.length, hasMoreSubjectVersions, getSubjectVersionMutation.isPending, isProgressiveFetching]);
 
   // Check for progressive fetching when available versions or search changes
   useEffect(() => {
     if (isAddSubjectModalVisible && availableSubjectVersions.length > 0) {
       checkAndFetchNextPage();
     }
-  }, [availableSubjectVersions, searchSubjectVersion, isAddSubjectModalVisible]);
+  }, [isAddSubjectModalVisible, availableSubjectVersions.length, checkAndFetchNextPage]);
 
   // Auto-load more when list doesn't have enough items to fill container
   useEffect(() => {
@@ -242,14 +239,14 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
       const timer = setTimeout(checkAutoLoad, 100);
       return () => clearTimeout(timer);
     }
-  }, [availableSubjectVersions, searchSubjectVersion, isAddSubjectModalVisible, hasMoreSubjectVersions]);
+  }, [isAddSubjectModalVisible, availableSubjectVersions.length, checkAutoLoad]);
 
   // Refresh curriculum subject versions after adding/removing
-  const refreshCurriculumSubjectVersions = () => {
+  const refreshCurriculumSubjectVersions = useCallback(() => {
     if (id) {
       fetchCurriculumSubjectVersionsMutation.mutate(id);
     }
-  };
+  }, [id, fetchCurriculumSubjectVersionsMutation]);
 
   const onFinish = async (values: any) => {
     setLoading(true);
@@ -338,16 +335,11 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
       setModalSemesterNumber(1);
       setModalIsMandatory(false);
       
-      // Refresh curriculum subject versions
+      // Only refresh curriculum subject versions - no need to refetch all subject versions
       refreshCurriculumSubjectVersions();
       
-      // Refetch available subject versions to update the list
-      getSubjectVersionMutation.mutate({ 
-        pageNumber: 1, 
-        pageSize: subjectVersionPageSize,
-        search: searchSubjectVersion
-      });
-      setSubjectVersionPage(1);
+      // Close modal after successful addition
+      handleAddSubjectModalClose();
     } catch (e) {
       handleError(e, 'Failed to add subject version');
     } finally {
@@ -659,11 +651,7 @@ const CurriculumEdit: React.FC<CurriculumEditProps> = ({ id }) => {
                 }}
               >
                 <List
-                  dataSource={availableSubjectVersions.filter(subjectVersion =>
-                    subjectVersion.subject.subjectName.toLowerCase().includes(searchSubjectVersion.toLowerCase()) ||
-                    subjectVersion.subject.subjectCode.toLowerCase().includes(searchSubjectVersion.toLowerCase()) ||
-                    subjectVersion.versionName.toLowerCase().includes(searchSubjectVersion.toLowerCase())
-                  )}
+                  dataSource={filteredSubjectVersions}
                   renderItem={(subjectVersion) => (
                     <List.Item
                       style={{
