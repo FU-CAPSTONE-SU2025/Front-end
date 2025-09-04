@@ -137,7 +137,6 @@ const SubjectVersionPage: React.FC = () => {
     updateSyllabusSessionMutation,
     deleteSyllabusSessionMutation,
     addSyllabusOutcomesToSessionMutation,
-    removeOutcomeFromSessionMutation
   } = useCRUDSyllabus();
 
   const [subject, setSubject] = useState<any | null>(null);
