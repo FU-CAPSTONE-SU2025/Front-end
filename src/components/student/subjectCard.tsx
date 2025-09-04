@@ -10,6 +10,7 @@ interface SubjectCardProps {
   credits: number;
   isPassed: boolean;
   isCompleted: boolean;
+  status?: string; // Add status prop
 }
 
 const cardVariants = {
@@ -18,18 +19,21 @@ const cardVariants = {
   hover: { scale: 1.02, boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)', transition: { duration: 0.3 } },
 };
 
-function getStatusInfo(isPassed: boolean, isCompleted: boolean) {
-  if (isCompleted) {
-    return { color: 'bg-green-500', text: 'Completed' };
-  } else if (isPassed) {
-    return { color: 'bg-blue-500', text: 'Passed' };
-  } else {
-    return { color: 'bg-orange-500', text: 'In Progress' };
+function getStatusInfo(status?: string) {
+  switch (status) {
+    case 'PASSED':
+      return { color: 'bg-green-500', text: 'Passed' };
+    case 'NOT PASSED':
+      return { color: 'bg-red-500', text: 'Not Passed' };
+    case 'IN-PROGRESS':
+      return { color: 'bg-orange-500', text: 'In Progress' };
+    default:
+      return { color: 'bg-gray-500', text: 'Unknown' };
   }
 }
 
-const SubjectCard: React.FC<SubjectCardProps> = ({ id, code, name, completedPercentage, credits, isPassed, isCompleted }) => {
-  const statusInfo = getStatusInfo(isPassed, isCompleted);
+const SubjectCard: React.FC<SubjectCardProps> = ({ id, code, name, completedPercentage, credits, isPassed, isCompleted, status }) => {
+  const statusInfo = getStatusInfo(status);
   
   return (
     <Link to={`/student/subject-details/${id}`}>
