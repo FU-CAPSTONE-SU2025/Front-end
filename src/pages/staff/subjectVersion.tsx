@@ -24,10 +24,14 @@ const createDefaultVersion = async (
   addSubjectVersionMutation: any,
   handleSuccess: (message: string) => void,
   handleError: (error: any, title?: string) => void
-): Promise<SubjectVersion[]> => {
+): Promise<boolean> => {
   try {
-    // Check if subject is approved before creating version
-    if (subjectData.approvalStatus !== 2) {
+    // Normalize approval status: accept either numeric code or string label
+    const rawStatus = subjectData?.approvalStatus;
+    const normalized = typeof rawStatus === 'string' ? rawStatus.toUpperCase() : rawStatus;
+    const isApproved = normalized === 'APPROVED' || normalized === 2 || normalized === true;
+
+    if (!isApproved) {
       throw new Error('Cannot create versions for unapproved subjects. Please approve the subject first.');
     }
     
@@ -40,12 +44,12 @@ const createDefaultVersion = async (
     const newVersion = await addSubjectVersionMutation.mutateAsync(defaultVersionData);
     if (newVersion) {
       handleSuccess('Default version created successfully!');
-      return Array.isArray(newVersion) ? newVersion : [newVersion];
+      return true;
     }
   } catch (err: any) {
     console.log(err, 'Failed to create default version');
   }
-  return [];
+  return false;
 };
 
 // Function to create default syllabus for a subject version (moved outside component)
@@ -137,7 +141,6 @@ const SubjectVersionPage: React.FC = () => {
     updateSyllabusSessionMutation,
     deleteSyllabusSessionMutation,
     addSyllabusOutcomesToSessionMutation,
-    removeOutcomeFromSessionMutation
   } = useCRUDSyllabus();
 
   const [subject, setSubject] = useState<any | null>(null);
@@ -395,7 +398,6 @@ const SubjectVersionPage: React.FC = () => {
         // Fetch subject first
         const subjectData = await getSubjectById.mutateAsync(Number(subjectId));
         setSubject(subjectData);
-        
         // Check if subject is approved before proceeding
         if (subjectData.approvalStatus !== "APPROVED") {
           handleError('Cannot create versions for unapproved subjects. Please approve the subject first.');
@@ -441,48 +443,88 @@ const SubjectVersionPage: React.FC = () => {
           setInitLoading('Creating default version...');
           
           try {
-            const defaultVersions = await createDefaultVersion(subjectData, addSubjectVersionMutation, handleSuccess, handleError);
-            console.log('[Versions] Default create returned:', defaultVersions);
-            
-            // After creation, always refetch to ensure we have a valid ID instead of a message payload
+            const created = await createDefaultVersion(subjectData, addSubjectVersionMutation, handleSuccess, handleError);
+            console.log('[Versions] Default create returned:', created);
+            if (!created) {
+              console.log('[Versions] Failed to create default subject version');
+              handleError('Failed to create default subject version');
+              setInitLoading(null);
+              setLoading(false);
+              return;
+            }
+
+            // After creation, refetch with small retries to ensure backend has finalized
             setInitLoading('Fetching newly created version...');
             let refreshedAfterCreate: SubjectVersion[] = [];
-            try {
-              const resp = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
-              if (Array.isArray(resp)) refreshedAfterCreate = resp;
-              else if (resp && typeof resp === 'object' && 'data' in (resp as any)) {
-                refreshedAfterCreate = Array.isArray((resp as any).data) ? (resp as any).data : [];
+            const maxRetries = 4;
+            const delayMs = 500;
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+              try {
+                const resp = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+                if (Array.isArray(resp) && resp.length > 0) {
+                  refreshedAfterCreate = resp;
+                  break;
+                }
+              } catch (refErr) {
+                console.error(`[Versions] Refetch attempt ${attempt} failed:`, refErr);
               }
-            } catch (refErr) {
-              console.error('[Versions] Refetch after create failed:', refErr);
+              await new Promise(r => setTimeout(r, delayMs));
             }
             
-            const validVersions = (refreshedAfterCreate || [])
-              .filter(v => v && typeof v.id === 'number' && v.id > 0);
-            const newestVersion = validVersions
-              .slice()
-              .sort((a, b) => (b.id || 0) - (a.id || 0))[0];
-            
-            if (newestVersion && newestVersion.id > 0) {
-              console.log('[Versions] Using newly created version id:', newestVersion.id, newestVersion);
-              setSubjectVersions(validVersions);
-              setActiveKey(String(newestVersion.id));
+            if (!Array.isArray(refreshedAfterCreate) || refreshedAfterCreate.length === 0) {
+              console.warn('[Versions] No valid version found after creation refetch');
+              handleError('Failed to load created version');
+              setInitLoading(null);
+              setLoading(false);
+              return;
+            }
+
+            // Prefer an explicitly default version if present; otherwise choose the newest by id
+            const defaultVersion = refreshedAfterCreate.find(v => v?.isDefault) || null;
+            const newestVersion = refreshedAfterCreate.reduce((acc, v) => (acc && acc.id > v.id ? acc : v), refreshedAfterCreate[0]);
+            let selectedVersion = defaultVersion || newestVersion;
+
+            // Ensure there is a default; if none, set the selected as default
+            try {
+              if (!defaultVersion && selectedVersion?.id) {
+                console.log('[Versions] No default version; setting version as default:', selectedVersion.id);
+                await setDefaultSubjectVersionMutation.mutateAsync(selectedVersion.id);
+                // refetch once to get the updated default flag
+                const afterDefaultSet = await getSubjectVersionsBySubjectId.mutateAsync(Number(subjectId));
+                if (Array.isArray(afterDefaultSet) && afterDefaultSet.length > 0) {
+                  setSubjectVersions(afterDefaultSet);
+                  const confirmedDefault = afterDefaultSet.find(v => v?.isDefault) || selectedVersion;
+                  selectedVersion = confirmedDefault;
+                } else {
+                  setSubjectVersions(refreshedAfterCreate);
+                }
+              } else {
+                setSubjectVersions(refreshedAfterCreate);
+              }
+            } catch (defaultErr) {
+              console.error('[Versions] Failed to set default version:', defaultErr);
+              setSubjectVersions(refreshedAfterCreate);
+            }
+
+            if (selectedVersion) {
+              console.log('[Versions] Using selected version id:', selectedVersion.id, selectedVersion);
+              setActiveKey(String(selectedVersion.id));
               
               // Ensure backend has finalized creation
               setInitLoading('Preparing syllabus...');
               await new Promise(resolve => setTimeout(resolve, 800));
               
-              // Create syllabus for the new version
-              await fetchOrCreateSyllabus(newestVersion.id, subjectData);
+              // Create syllabus for the selected version (or fetch if exists)
+              await fetchOrCreateSyllabus(selectedVersion.id, subjectData);
               
-              // Fetch prerequisites for the new version
+              // Fetch prerequisites for the selected version
               setInitLoading('Fetching prerequisites...');
               await new Promise(resolve => setTimeout(resolve, 300));
-              await fetchPrerequisitesForVersion(newestVersion.id);
+              await fetchPrerequisitesForVersion(selectedVersion.id);
               setInitLoading(null);
             } else {
-              console.warn('[Versions] No valid version found after creation refetch', refreshedAfterCreate);
-              handleError('Failed to load created version');
+              console.warn('[Versions] No valid selected version after creation flow');
+              handleError('Failed to select created version');
               setInitLoading(null);
               setLoading(false);
               return;
