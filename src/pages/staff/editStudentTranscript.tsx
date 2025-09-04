@@ -833,6 +833,7 @@ const EditStudentTranscript: React.FC = () => {
                         <Text className={styles.subjectDescription} style={{ whiteSpace: 'pre-line' }}>
                           Credits: {subject.credits ?? '-'} • Block: {subject.semesterStudyBlockType}
                         </Text>
+                        <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
                         <Button 
                             danger 
                             size="small"
@@ -853,9 +854,11 @@ const EditStudentTranscript: React.FC = () => {
                             }}
                             onClick={(e) => handleDeleteInProgress(subject, e)}
                             loading={isDeleteing}
+                            disabled={subject.isPassed}
                           >
                             Remove
                           </Button>
+                          </div>
                       </Card>
                     </motion.div>
                   </Col>
@@ -897,6 +900,7 @@ const EditStudentTranscript: React.FC = () => {
                         <Text className={styles.subjectDescription} style={{ whiteSpace: 'pre-line' }}>
                           Block: {subject.semesterStudyBlockType} • Semester: {subject.semesterName || 'N/A'}
                         </Text>
+                        <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
                         <Button 
                             danger 
                             size="small"
@@ -917,9 +921,11 @@ const EditStudentTranscript: React.FC = () => {
                             }}
                             onClick={(e) => handleDeleteInProgress(subject, e)}
                             loading={isDeleteing}
+                            disabled={true}
                           >
                             Remove
                           </Button>
+                          </div>
                       </Card>
                     </motion.div>
                   </Col>
