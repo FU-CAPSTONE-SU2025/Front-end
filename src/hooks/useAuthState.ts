@@ -50,6 +50,7 @@ export const useAuths = create<AuthState>()(
           accessToken: null,
           refreshToken: null 
         });
+        sessionStorage.clear()
       },
     }),
     {
