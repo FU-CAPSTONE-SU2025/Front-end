@@ -59,6 +59,12 @@ const CourseTracking = () => {
     return subject?.completedPercentage || 0;
   };
 
+  const getSubjectStatus = (subjectId: number): string | undefined => {
+    if (!statusData) return undefined;
+    const subject = statusData.find((item: any) => item.joinedSubjectId === subjectId);
+    return subject?.status;
+  };
+
 
   // Group subjects by semester
   const semesterSubjects: SemesterSubjects = useMemo(() => {
@@ -167,6 +173,7 @@ const CourseTracking = () => {
                     credits={subject.credits}
                     isPassed={subject.isPassed}
                     isCompleted={subject.isCompleted}
+                    status={getSubjectStatus(subject.id)}
                   />
                 </motion.div>
               ))}

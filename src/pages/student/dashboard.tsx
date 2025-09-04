@@ -50,7 +50,7 @@ const Dashboard = () => {
   // Fetch checkpoint completion percentage and status mapping using actual studentProfileId
   const { data: completionData, isLoading: completionLoading } = useCheckpointCompletionPercentage(studentProfileId);
   const { data: statusData, isLoading: statusLoading } = useJoinedSubjectStatusMapping(studentProfileId);
-
+  console.log(statusData)
   // Fetch transcript data
   const { data: transcriptData, isLoading: transcriptLoading } = usePersonalAcademicTranscript();
 
@@ -59,14 +59,7 @@ const Dashboard = () => {
   const { data: categoryPerformance } = useStudentCategoryPerformance(studentProfileId);
   const { data: checkpointTimeline } = useStudentCheckpointTimeline(studentProfileId);
 
-  // Debug logging for chart data
-  console.log('=== CHART DATA DEBUG ===');
-  console.log('studentProfileId:', studentProfileId);
-  console.log('semesterPerformance:', semesterPerformance);
-  console.log('categoryPerformance:', categoryPerformance);
-  console.log('checkpointTimeline:', checkpointTimeline);
-  console.log('hasApiData:', !!(semesterPerformance || categoryPerformance || checkpointTimeline));
-  console.log('========================');
+
 
   // Group subjects by semester
   const semesterSubjects: SemesterSubjects = useMemo(() => {
@@ -123,6 +116,12 @@ const Dashboard = () => {
     if (!completionData) return 0;
     const subject = completionData.find((item: any) => item.joinedSubjectId === subjectId);
     return subject?.completedPercentage || 0;
+  };
+
+  const getSubjectStatus = (subjectId: number): string | undefined => {
+    if (!statusData) return undefined;
+    const subject = statusData.find((item: any) => item.joinedSubjectId === subjectId);
+    return subject?.status;
   };
 
   // Fetch personal curriculum and combo subjects
@@ -313,6 +312,7 @@ const Dashboard = () => {
                           credits={subject.credits}
                           isPassed={subject.isPassed}
                           isCompleted={subject.isCompleted}
+                          status={getSubjectStatus(subject.id)}
                         />
                       </motion.div>
                     ))}
